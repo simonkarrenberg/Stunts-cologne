@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>STUNTS KÖLLE 4D — Chicago am Rhein Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<!-- ============ MENU ============ -->
+<div id="menu">
+  <div class="menuInner">
+    <header>
+      <div class="title">
+        <span class="kicker">Der Lange Tünn präsentiert</span>
+        <h1>STUNTS <span>KÖLLE</span> 4D</h1>
+        <span class="sub">★ Chicago am Rhein Edition ★</span>
+      </div>
+      <div class="tuenn">
+        <div class="hat">🎩</div>
+        <div class="bubble"><b>Der Lange Tünn:</b> <span id="tuennIntro"></span></div>
+      </div>
+    </header>
+    <div class="columns">
+      <section>
+        <h2>🏁 Streck</h2>
+        <ul id="trackList" class="list"></ul>
+        <p id="trackDesc" class="desc"></p>
+      </section>
+      <section>
+        <h2>🚗 Karre</h2>
+        <ul id="carList" class="list"></ul>
+        <div id="carDesc" class="desc"></div>
+      </section>
+      <section>
+        <h2>😈 Rivale</h2>
+        <ul id="rivalList" class="list"></ul>
+        <p id="rivalDesc" class="desc"></p>
+      </section>
+    </div>
+    <footer>
+      <div class="controls">
+        <b>Steuerung:</b> ↑/W Gas · ↓/S Bremse · ←/→ Lenken · C Kamera · P Pixel · R Reset · M Ton · Esc Menü
+      </div>
+      <div id="menuBest" class="best"></div>
+      <button id="startBtn">FOTT DOMET! ▶</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ============ HUD ============ -->
+<div id="hud" hidden>
+  <div class="hudTop">
+    <div class="hudBox"><span class="lbl">Streck</span><span id="hudTrack"></span></div>
+    <div class="hudBox"><span class="lbl">Rivale</span><span id="hudRival"></span></div>
+    <div class="hudBox"><span class="lbl">Bestzeit</span><span id="best"></span></div>
+  </div>
+  <canvas id="minimap" width="200" height="200"></canvas>
+  <div id="countdown" hidden></div>
+  <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
+  <div id="msg"><div id="msgWho"></div><div id="msgText"></div></div>
+  <div class="hudBottom">
+    <div class="hudBox big"><span id="speed">0</span><span class="unit">km/h</span></div>
+    <div class="hudBox"><span class="lbl">Runde</span><span id="lap">1 / 3</span></div>
+    <div class="hudBox"><span class="lbl">Zeit</span><span id="time">0:00.00</span></div>
+    <div class="hudBox"><span class="lbl">Beste Runde</span><span id="lapBest">--:--.--</span></div>
+    <div class="hudBox pos"><span id="pos">1.</span></div>
+  </div>
+  <div class="hudBtns">
+    <button id="camBtn" title="Kamera (C)">🎥</button>
+    <button id="muteBtn" title="Ton (M)">🔊</button>
+    <button id="pixBtn" title="Pixelgröße (P)">▪▪▪</button>
+    <button id="escBtn" title="Menü (Esc)">☰</button>
+  </div>
+</div>
+
+<!-- ============ TOUCH ============ -->
+<div id="touch" hidden>
+  <div class="tGroup"><button id="tLeft">◀</button><button id="tRight">▶</button></div>
+  <div class="tGroup"><button id="tBrake">■</button><button id="tGas">▲</button></div>
+</div>
+
+<!-- ============ RESULTS ============ -->
+<div id="results" hidden>
+  <div class="resInner">
+    <h2 id="resTitle"></h2>
+    <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt uff de Bierdeckel.</div>
+    <table>
+      <tr><td>Deine Zeit</td><td id="resTime"></td></tr>
+      <tr><td>Beste Runde</td><td id="resBest"></td></tr>
+      <tr><td>Rivale</td><td id="resRivalTime"></td></tr>
+    </table>
+    <p class="quote">🎩 <b>Der Lange Tünn:</b> <span id="resTuenn"></span></p>
+    <p class="quote" id="resRival"></p>
+    <div class="resBtns">
+      <button id="againBtn">Nochmal (Enter)</button>
+      <button id="menuBtn">Menü (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/pixel.js"></script>
+<script src="js/track.js"></script>
+<script src="js/data.js"></script>
+<script src="js/world.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
