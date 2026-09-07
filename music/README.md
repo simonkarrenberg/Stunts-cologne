@@ -1,6 +1,6 @@
 # Musik
 
-Lege hier deinen Song als `lamborghina.mp3` ab (MP3, M4A/AAC oder OGG – dann in
+Hier liegt `lamborghina.mp3` (LamboGina), der Standard-Song beim Rennen. Zum Tauschen einfach die Datei ersetzen (MP3, M4A/AAC oder OGG – dann in
 `js/game.js` bei `musicInit` den Dateinamen anpassen). Das Spiel spielt ihn beim Rennen
 in Schleife.
 
