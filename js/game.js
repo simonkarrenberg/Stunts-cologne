@@ -63,6 +63,60 @@
     notes.forEach((f, i) => setTimeout(() => beep(f, 0.35, 'triangle', 0.2), i * 180));
   }
 
+  // ---------------- music ----------------
+  // Plays a song file (default: music/lamborghina.mp3) or one the player picks from their phone /
+  // iCloud Drive via the file dialog. The picked file is kept in IndexedDB so it survives reloads.
+  // Without any file, a small chiptune loop plays so the race is never silent.
+  const music = { el: null, title: '', muted: false, chip: null, ready: false, wanted: false };
+  function idb(cb) {
+    try { const r = indexedDB.open('stuntskoelle', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => cb(r.result); r.onerror = () => cb(null); } catch (e) { cb(null); }
+  }
+  function musicStore(file) { idb((db) => { if (!db) return; const tx = db.transaction('files', 'readwrite'); tx.objectStore('files').put(file, 'song'); }); }
+  function musicLoadStored(cb) { idb((db) => { if (!db) return cb(null); const tx = db.transaction('files', 'readonly'); const rq = tx.objectStore('files').get('song'); rq.onsuccess = () => cb(rq.result || null); rq.onerror = () => cb(null); }); }
+  function musicUse(fileOrUrl, title) {
+    if (music.el) { music.el.pause(); music.el = null; }
+    const el = new Audio(); el.loop = true; el.volume = 0.7; el.preload = 'auto';
+    el.src = typeof fileOrUrl === 'string' ? fileOrUrl : URL.createObjectURL(fileOrUrl);
+    music.el = el; music.title = title; music.ready = false;
+    el.addEventListener('canplaythrough', () => { music.ready = true; if (music.wanted) musicPlay(); }, { once: true });
+    el.addEventListener('error', () => { music.el = null; music.title = ''; updateMusicUI(); if (music.wanted) chipStart(); });
+    el.load();
+    updateMusicUI();
+  }
+  function musicPlay() {
+    music.wanted = true;
+    if (music.muted) return;
+    if (music.el) { const p = music.el.play(); if (p && p.catch) p.catch(() => { /* needs a gesture; retried on next input */ }); chipStop(); }
+    else chipStart();
+  }
+  function musicStop() { music.wanted = false; if (music.el) music.el.pause(); chipStop(); }
+  function updateMusicUI() {
+    const t = music.el ? '♪ ' + music.title : '♪ Chiptune (eigenen Song laden)';
+    $('#musicTitle').textContent = t; $('#hudMusic').textContent = music.muted ? '' : t;
+  }
+  // tiny chiptune: two oscillators playing a Kölsch-party progression
+  function chipStart() {
+    if (!audio.ctx || music.chip || music.muted) return;
+    const ctx = audio.ctx, g = ctx.createGain(); g.gain.value = 0.05; g.connect(ctx.destination);
+    const bass = ctx.createOscillator(); bass.type = 'square'; const lead = ctx.createOscillator(); lead.type = 'triangle';
+    const lg = ctx.createGain(); lg.gain.value = 0.6; lead.connect(lg); lg.connect(g); bass.connect(g); bass.start(); lead.start();
+    const chords = [[0, 4, 7], [5, 9, 12], [7, 11, 14], [9, 12, 16]]; const root = 110; let step = 0;
+    const tick = () => { const c = chords[Math.floor(step / 8) % 4]; const n = c[step % 3]; const oct = step % 2 ? 2 : 1;
+      bass.frequency.setValueAtTime(root * Math.pow(2, c[0] / 12) * (step % 4 < 2 ? 1 : 0.5), ctx.currentTime);
+      lead.frequency.setValueAtTime(root * 2 * Math.pow(2, n / 12) * oct, ctx.currentTime); step++; };
+    music.chip = { timer: setInterval(tick, 150), stop: () => { bass.stop(); lead.stop(); g.disconnect(); } };
+  }
+  function chipStop() { if (music.chip) { clearInterval(music.chip.timer); music.chip.stop(); music.chip = null; } }
+  function musicInit() {
+    musicLoadStored((file) => {
+      if (file) musicUse(file, file.name.replace(/\.[^.]+$/, ''));
+      else musicUse('music/lamborghina.mp3', 'Lamborghina');
+    });
+    const inp = $('#musicFile');
+    inp.addEventListener('change', () => { const f = inp.files && inp.files[0]; if (!f) return; musicStore(f); musicUse(f, f.name.replace(/\.[^.]+$/, '')); music.wanted = true; musicPlay(); });
+    $('#musicBtn').onclick = () => inp.click();
+  }
+
   // ---------------- messages ----------------
   function say(who, text, ms) {
     const box = $('#msg');
@@ -373,7 +427,9 @@
     audioInit();
     buildScene();
     raceTime = 0; countdown = 4.2; phase = 'countdown';
+    musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#touch').hidden = !isTouch;
+    document.body.classList.add('racing');
     say(tuenn, pick(tuenn.intro), 3500);
     setTimeout(() => { if (phase !== 'menu') say(rival.rival, pick(rival.rival.lines.start), 3000); }, 3600);
     cdShown = -1;
@@ -399,14 +455,17 @@
   function toMenu() {
     phase = 'menu';
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#touch').hidden = true;
+    document.body.classList.remove('racing');
     $('#msg').classList.remove('show');
     audioEngine(0, 0);
+    musicStop();
   }
 
   // ---------------- main loop ----------------
   function frame(t) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
+    renderer.info.reset();
     if (!scene) return;
     if (phase === 'countdown') {
       countdown -= dt;
@@ -440,6 +499,7 @@
 
   // ---------------- input ----------------
   const isTouch = ('ontouchstart' in window) && matchMedia('(pointer: coarse)').matches;
+  const isMobile = isTouch || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
   function readKeys() {
     const left = keys.ArrowLeft || keys.KeyA, right = keys.ArrowRight || keys.KeyD;
     input.steer = (left ? -1 : 0) + (right ? 1 : 0);
@@ -460,7 +520,7 @@
     }
     if (e.code === 'KeyC') { camMode = (camMode + 1) % 4; tvCam = null; }
     if (e.code === 'KeyP') cyclePixel();
-    if (e.code === 'KeyM') { audio.muted = !audio.muted; $('#muteBtn').textContent = audio.muted ? '🔇' : '🔊'; }
+    if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; }
     if (e.code === 'Escape') toMenu();
     if (e.code === 'Enter' && phase === 'finished') startRace();
@@ -499,6 +559,12 @@
   }
   function stat(label, v) { return `<div class="stat"><span>${label}</span><i><b style="width:${Math.round(clamp(v, 0.1, 1) * 100)}%"></b></i></div>`; }
 
+  function toggleMute() {
+    audio.muted = !audio.muted; music.muted = audio.muted;
+    $('#muteBtn').textContent = audio.muted ? '🔇' : '🔊';
+    if (audio.muted) { if (music.el) music.el.pause(); chipStop(); } else if (music.wanted) musicPlay();
+    updateMusicUI();
+  }
   function cyclePixel() {
     pixelScale = pixelScale >= 4 ? 1 : pixelScale + 1;
     post.setScale(pixelScale);
@@ -512,10 +578,12 @@
     sel.track = clamp(sel.track | 0, 0, D.TRACKS.length - 1); sel.car = clamp(sel.car | 0, 0, D.CARS.length - 1); sel.rival = clamp(sel.rival | 0, 0, D.RIVALS.length - 1);
     renderer = new THREE.WebGLRenderer({ antialias: false, canvas: $('#gl') });
     renderer.setPixelRatio(1);
+    renderer.info.autoReset = false;
     renderer.setSize(window.innerWidth, window.innerHeight);
     try { pixelScale = clamp(parseInt(localStorage.getItem('stuntskoelle.pixel')) || 3, 1, 5); } catch (e) { /* ignore */ }
     post = new window.Pixel.PixelPost(renderer, pixelScale);
-    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1.0, 4000);
+    camera = new THREE.PerspectiveCamera(isMobile ? 76 : 70, window.innerWidth / window.innerHeight, 1.0, isMobile ? 2600 : 4000);
+    if (isMobile) document.body.classList.add('mobile');
     window.addEventListener('resize', () => { renderer.setSize(window.innerWidth, window.innerHeight); post.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); });
     $('#pixBtn').onclick = cyclePixel;
     renderMenu();
@@ -523,7 +591,10 @@
     $('#againBtn').onclick = startRace;
     $('#menuBtn').onclick = toMenu;
     $('#camBtn').onclick = () => { camMode = (camMode + 1) % 4; tvCam = null; };
-    $('#muteBtn').onclick = () => { audio.muted = !audio.muted; $('#muteBtn').textContent = audio.muted ? '🔇' : '🔊'; };
+    $('#muteBtn').onclick = toggleMute;
+    musicInit();
+    // iOS unlocks audio only inside a touch/click handler: resume on the first touch of the race
+    document.addEventListener('touchstart', () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
     $('#escBtn').onclick = toMenu;
     $('#tuennIntro').textContent = pick(tuenn.intro);
     // idle background: show the selected track spinning behind the menu
@@ -537,6 +608,7 @@
     renderMenu();
     if (phase === 'menu' && builtTrack !== sel.track) { builtTrack = sel.track; buildScene(); }
   }
+  window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_DEBUG = () => ({ phase, player: player && { s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished }, rival: rival && { s: rival.s, lat: rival.lat, v: rival.v, lap: rival.lap, finished: rival.finished }, raceTime, trackLen: track && track.length });
   if (typeof THREE === 'undefined') {

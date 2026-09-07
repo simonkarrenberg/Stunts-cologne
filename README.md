@@ -12,7 +12,18 @@ Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVB-Haltestellen und jede Men
 
 Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
-## Spielen
+## Spielen (auch auf dem Handy)
+
+Die fertige Version läuft als Web-App auf GitHub Pages und lässt sich einfach als Link
+per WhatsApp teilen. Einmalig in den Repo-Einstellungen aktivieren:
+**Settings → Pages → Build and deployment → Source: „GitHub Actions“**. Der Workflow in
+`.github/workflows/pages.yml` veröffentlicht danach bei jedem Push automatisch unter
+
+    https://simonkarrenberg.github.io/stunts-cologne/
+
+Auf dem iPhone/Android: Link öffnen, Handy quer halten, Touch-Buttons benutzen. Über
+„Zum Home-Bildschirm“ wird es eine Vollbild-App und läuft dank Service Worker auch offline.
+
 
 ```bash
 # beliebiger statischer Webserver, z.B.
@@ -36,6 +47,18 @@ es wird nichts nachgeladen). Läuft auch auf dem Handy (Touch-Buttons).
 | M | Ton an/aus |
 | Enter | Rennen starten / nochmal |
 | Esc | Menü |
+
+## Musik
+
+Beim Rennen läuft ein Song in Schleife. Drei Wege:
+
+1. Im Menü **🎵 Musik laden** tippen und die Datei auswählen. Auf dem iPhone öffnet sich die
+   Dateien-App, dort **iCloud Drive** wählen und z.B. *Lamborghina* antippen. Der Song wird im
+   Browser (IndexedDB) gespeichert und bei jedem Start wieder benutzt.
+2. Die Datei als `music/lamborghina.mp3` ins Repo legen, dann lädt das Spiel sie automatisch.
+3. Nichts tun: dann spielt ein kleiner Chiptune-Loop.
+
+M schaltet Motor und Musik stumm.
 
 ## Strecken
 
@@ -77,7 +100,11 @@ Karnevalsjeck Jupp, Taxi-Ali, Klüngel-Klaus und Schäl. Jeder mit eigenem Fahrs
 - `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft
   vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, KI-Rivale,
   Kollisionen, Kameras, HUD, Minimap, WebAudio-Motor, Bestzeiten im `localStorage`.
-- `js/data.js` — Strecken, Karren, Archetypen und alle kölschen Sprüche.
+- `js/data.js` — Strecken, Karren, Archetypen, Straßennamen, Ladenschilder und alle kölschen Sprüche.
+- Alle statischen Requisiten werden pro Material zu einem Mesh zusammengefasst (ein paar Dutzend
+  Draw Calls statt tausenden), damit es auch auf dem Handy flüssig läuft.
+- `manifest.json` + `sw.js` machen das Spiel installierbar und offline-fähig; `og.png` ist das
+  Vorschaubild für WhatsApp & Co.
 
 Three.js r128 liegt unter `vendor/` (MIT-Lizenz, siehe `vendor/THREE-LICENSE`).
 

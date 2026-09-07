@@ -10,8 +10,24 @@
   const WATER_Y = -0.08;
   const mulberry = PX.mulberry;
 
-  const mat = (color, opts) => new THREE.MeshLambertMaterial(Object.assign({ color }, opts || {}));
-  const tmat = (tex, color, opts) => new THREE.MeshLambertMaterial(Object.assign({ map: tex, color: color == null ? 0xffffff : color }, opts || {}));
+  // Materials are cached so that the static-geometry merger can batch by material.
+  const matCache = new Map();
+  function mat(color, opts) {
+    const key = 'c' + color + JSON.stringify(opts || {});
+    if (!matCache.has(key)) matCache.set(key, new THREE.MeshLambertMaterial(Object.assign({ color }, opts || {})));
+    return matCache.get(key);
+  }
+  function bmat(color) {
+    const key = 'b' + color;
+    if (!matCache.has(key)) matCache.set(key, new THREE.MeshBasicMaterial({ color }));
+    return matCache.get(key);
+  }
+  function tmat(tex, color, opts) {
+    if (opts && opts.nocache) { const o = Object.assign({}, opts); delete o.nocache; return new THREE.MeshLambertMaterial(Object.assign({ map: tex, color: color == null ? 0xffffff : color }, o)); }
+    const key = 't' + tex.uuid + '|' + color + JSON.stringify(opts || {});
+    if (!matCache.has(key)) matCache.set(key, new THREE.MeshLambertMaterial(Object.assign({ map: tex, color: color == null ? 0xffffff : color }, opts || {})));
+    return matCache.get(key);
+  }
   const V = (o) => new THREE.Vector3(o.x, o.y, o.z);
   let THEME = { night: false };
   const animated = [];   // objects with userData.update(t, dt)
@@ -22,14 +38,94 @@
     m.position.set(x || 0, y == null ? h / 2 : y, z || 0);
     return m;
   }
-  function tbox(w, h, d, tex, x, y, z, color, scaleUV) {
-    // textured box, texture repeats scale with size (scaleUV = metres per tile [x, y])
+  function tbox(w, h, d, tex, x, y, z, color, scaleUV, topColor) {
+    // textured box; the texture repeat is baked into the UVs (scaleUV = metres per tile [u, v])
+    // so one shared texture/material serves every building -> mergeable into a few draw calls.
     const su = scaleUV ? scaleUV[0] : 8, sv = scaleUV ? scaleUV[1] : 8;
-    const mk = (a, b) => { const t = tex.clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, Math.round(a / su)), Math.max(1, Math.round(b / sv))); return tmat(t, color); };
-    const mats = [mk(d, h), mk(d, h), mk(w, d), mk(w, d), mk(w, h), mk(w, h)];
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats);
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const uv = geo.attributes.uv;
+    const rep = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+    for (let f = 0; f < 6; f++) {
+      const ru = Math.max(1, Math.round(rep[f][0] / su)), rv = Math.max(1, Math.round(rep[f][1] / sv));
+      for (let i = f * 4; i < f * 4 + 4; i++) uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+    }
+    // sides get the texture, top/bottom a plain colour
+    geo.clearGroups();
+    geo.addGroup(0, 12, 0); geo.addGroup(12, 12, 1); geo.addGroup(24, 12, 0);
+    const m = new THREE.Mesh(geo, [tmat(tex, color), mat(topColor == null ? 0x6a6a6a : topColor)]);
     m.position.set(x || 0, y == null ? h / 2 : y, z || 0);
     return m;
+  }
+  // textured cylinder with UV repeat baked in
+  function tcyl(rt, rb, h, tex, ru, rv, color, seg) {
+    const geo = new THREE.CylinderGeometry(rt, rb, h, seg || 8);
+    const uv = geo.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv);
+    return new THREE.Mesh(geo, tmat(tex, color == null ? 0xffffff : color));
+  }
+
+  // merge a small group (a crowd) into ONE vertex-coloured mesh so it costs a single draw call
+  function mergeVertexColored(group) {
+    group.updateMatrixWorld(true);
+    const pos = [], nor = [], col = [], idx = []; let base = 0; const v = new THREE.Vector3(); const nm = new THREE.Matrix3(); const c = new THREE.Color();
+    const meshes = []; group.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    const inv = new THREE.Matrix4().copy(group.matrixWorld).invert();
+    for (const m of meshes) {
+      const geo = m.geometry, p = geo.attributes.position, n = geo.attributes.normal; const mw = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld); nm.getNormalMatrix(mw);
+      const material = Array.isArray(m.material) ? m.material[0] : m.material; c.copy(material.color || new THREE.Color(0xffffff));
+      for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(mw); pos.push(v.x, v.y, v.z); v.fromBufferAttribute(n, i).applyMatrix3(nm).normalize(); nor.push(v.x, v.y, v.z); col.push(c.r, c.g, c.b); }
+      const index = geo.index ? geo.index.array : null; const cnt = index ? index.length : p.count;
+      for (let i = 0; i < cnt; i++) idx.push(base + (index ? index[i] : i));
+      base += p.count;
+    }
+    for (const m of meshes) m.parent.remove(m);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setIndex(idx);
+    const mesh = new THREE.Mesh(geo, vcMat()); group.add(mesh); return mesh;
+  }
+  let _vc; function vcMat() { if (!_vc) _vc = new THREE.MeshLambertMaterial({ vertexColors: true }); return _vc; }
+
+  // ---------- static geometry merger: one mesh per material ----------
+  function mergeStatic(group, animatedSet) {
+    group.updateMatrixWorld(true);
+    const isAnimated = (o) => { for (let p = o; p; p = p.parent) { if (animatedSet.has(p) || p.userData.keep) return true; } return false; };
+    const meshes = [];
+    group.traverse((o) => { if (o.isMesh && !isAnimated(o) && o.geometry.attributes.position && !o.geometry.attributes.color) meshes.push(o); });
+    const buckets = new Map();
+    const nm = new THREE.Matrix3(); const v = new THREE.Vector3();
+    for (const m of meshes) {
+      const geo = m.geometry;
+      const pos = geo.attributes.position, nor = geo.attributes.normal, uv = geo.attributes.uv;
+      const index = geo.index ? geo.index.array : null;
+      const groups = geo.groups && geo.groups.length ? geo.groups : [{ start: 0, count: index ? index.length : pos.count, materialIndex: 0 }];
+      nm.getNormalMatrix(m.matrixWorld);
+      for (const g of groups) {
+        const material = Array.isArray(m.material) ? m.material[g.materialIndex] : m.material;
+        if (!material) continue;
+        let b = buckets.get(material);
+        if (!b) { b = { pos: [], nor: [], uv: [], idx: [], base: 0, hasUv: !!uv }; buckets.set(material, b); }
+        // copy the vertices used by this group (all of them; simple and fine)
+        for (let i = 0; i < pos.count; i++) {
+          v.fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld); b.pos.push(v.x, v.y, v.z);
+          if (nor) { v.fromBufferAttribute(nor, i).applyMatrix3(nm).normalize(); b.nor.push(v.x, v.y, v.z); } else b.nor.push(0, 1, 0);
+          if (uv) b.uv.push(uv.getX(i), uv.getY(i)); else b.uv.push(0, 0);
+        }
+        const end = Math.min(g.start + g.count, index ? index.length : pos.count);
+        for (let i = g.start; i < end; i++) b.idx.push(b.base + (index ? index[i] : i));
+        b.base += pos.count;
+      }
+      m.parent.remove(m);
+    }
+    const out = new THREE.Group();
+    for (const [material, b] of buckets) {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(b.pos, 3));
+      geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.nor, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.uv, 2));
+      geo.setIndex(b.idx);
+      const mesh = new THREE.Mesh(geo, material); mesh.frustumCulled = true; out.add(mesh);
+    }
+    group.add(out);
+    return out;
   }
   function cone(r, h, color, x, y, z, seg) {
     const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, seg || 4), mat(color));
@@ -104,14 +200,14 @@
   const INDUSTRIAL = [0x8a4a3a, 0x9a5a48, 0x7a4636, 0xa06a50];
 
   /** generic building: style + wall color + roof type ('flat' | 'gable' | 'stepped' | 'hip') */
-  function building(w, h, d, style, wall, roof, seed) {
+  const SHOPS = ['APOTHEKE', 'CAFÉ', 'DÖNER', 'BÄCKEREI', 'FRISEUR', 'BLUMEN', 'PIZZERIA', 'BRAUHAUS', 'OPTIK', 'RIEVKOOCHE', 'HALVE HAHN', 'KÖLSCH', 'KAMELLE', 'EAU DE COLOGNE', 'FC FANSHOP', 'METZGEREI', 'BUCHLADEN', 'EISDIELE', 'REISEBÜRO', 'SCHNEIDEREI', 'WEINHANDLUNG', 'FLÖNZ & CO'];
+  function building(w, h, d, style, wall, roof, seed, opts) {
+    opts = opts || {};
     const g = new THREE.Group();
     const facade = T.facade(style, wall, seed, THEME.night);
     const bay = style === 'altstadt' ? 2.6 : style === 'modern' || style === 'glass' ? 3.0 : 3.4;
     const floorH = style === 'altstadt' ? 3.0 : 3.6;
-    const b = tbox(w, h, d, facade, 0, h / 2, 0, 0xffffff, [bay * 4, floorH * 4]);
-    // plain top
-    b.material[2] = mat(PX.shade(wall, 0.8));
+    const b = tbox(w, h, d, facade, 0, h / 2, 0, 0xffffff, [bay * 4, floorH * 4], new THREE.Color(PX.shade(wall, 0.8)).getHex());
     g.add(b);
     const roofC = style === 'industrial' ? 0x555555 : style === 'altstadt' ? [0x9a3a2a, 0x7a3a30, 0x5a5a66][seed % 3] : [0x8a3a2c, 0x5a5a66, 0x7a4a3a, 0x6a4030][seed % 4];
     const roofTex = T.roof(roofC, seed);
@@ -128,6 +224,21 @@
     }
     // dormer / chimney
     if (seed % 2 === 0 && roof !== 'flat') g.add(box(1, 2.2, 1, 0x6a5a50, w / 4, h + 1.6, -d / 4));
+    // shop front on the street side (+z)
+    if (opts.shop) {
+      const sw = Math.min(w - 1, 9);
+      const sign = textPlane(opts.shop, opts.night ? '#fff3b0' : '#f8f4e8', opts.signBg || ['#7a1a1a', '#1c3f95', '#2d6a4f', '#3a2a5a', '#8a4a1a'][seed % 5], sw, 1.1, opts.night, { border: '#ffd400' });
+      sign.position.set(0, 3.55, d / 2 + 0.06); g.add(sign);
+      g.add(box(sw, 0.2, 0.3, 0x2a2a2a, 0, 3.0, d / 2 + 0.15));
+      if (style !== 'modern') { const aw = new THREE.Mesh(new THREE.PlaneGeometry(sw, 1.5), tmat(T.stripes(opts.awning || 0xc1121f, 0xffffff), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.55; aw.position.set(0, 2.9, d / 2 + 0.8); g.add(aw); }
+      // shop window
+      g.add(box(sw - 1, 2.0, 0.15, opts.night ? 0xffe8a0 : 0x9fd3ff, 0, 1.5, d / 2 + 0.02));
+      g.add(box(0.9, 2.1, 0.12, 0x5a3a2a, sw / 2 - 0.2, 1.1, d / 2 + 0.05));
+    }
+    // balconies for Gründerzeit
+    if (opts.balconies) {
+      for (let f = 1; f < Math.floor(h / 3.6); f++) { if ((seed + f) % 2) continue; const bx = ((seed * 7 + f * 3) % 3 - 1) * (w / 3.2); g.add(box(2.2, 0.25, 1.0, PX.shade(wall, 0.7), bx, f * 3.6 + 0.4, d / 2 + 0.5)); g.add(box(2.2, 0.9, 0.08, 0x2a2a2a, bx, f * 3.6 + 1.0, d / 2 + 1.0)); }
+    }
     return g;
   }
 
@@ -146,7 +257,7 @@
     // crossing spire (Vierungsturm)
     g.add(cone(5 * S, 40 * S, spireC, 0, 84 * S, -30 * S, 8));
     // choir end (round apse)
-    const apse = cyl(22 * S, 22 * S, 42 * S, 0xffffff, 0, 21 * S, -66 * S, 8); apse.material = tmat(tr.clone(), stone); apse.material.map.needsUpdate = true; apse.material.map.repeat.set(8, 2); g.add(apse);
+    const apse = tcyl(22 * S, 22 * S, 42 * S, tr, 8, 2, stone, 8); apse.position.set(0, 21 * S, -66 * S); g.add(apse);
     g.add(cone(23 * S, 22 * S, roofC, 0, 53 * S, -66 * S, 8));
     // twin towers with spires
     for (const x of [-15 * S, 15 * S]) {
@@ -155,6 +266,11 @@
       for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) g.add(cone(1.6 * S, 12 * S, spireC, x + dx * 6.5 * S, 106 * S, 45 * S + dz * 6.5 * S, 4));
       g.add(box(0.8, 5, 0.8, 0xffd700, x, 159 * S, 45 * S));
     }
+    // west front: rose window and three portals between the towers
+    const rose = new THREE.Mesh(new THREE.CylinderGeometry(6 * S, 6 * S, 0.6, 12), mat(0x1c1c26)); rose.rotation.x = Math.PI / 2; rose.position.set(0, 60 * S, 45 * S + 7.6 * S); g.add(rose);
+    for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI; const spoke = box(0.5, 11.6 * S, 0.3, 0x8a8a94, 0, 60 * S, 45 * S + 8 * S); spoke.rotation.z = a; g.add(spoke); }
+    g.add(tbox(30 * S, 60 * S, 6 * S, tr, 0, 30 * S, 45 * S + 4 * S, stone, [16, 24]));
+    for (const x of [-9, 0, 9]) { g.add(box(5 * S, 16 * S, 0.5, 0x15151c, x * S, 8 * S, 45 * S + 7.4 * S)); g.add(cone(3.2 * S, 5 * S, 0x15151c, x * S, 18.5 * S, 45 * S + 7.4 * S, 4)); }
     // flying buttresses & piers along the nave
     for (let z = -60; z <= 30; z += 12) {
       for (const sx of [-1, 1]) {
@@ -164,7 +280,8 @@
       }
     }
     // Domplatte: stone plaza
-    const plate = new THREE.Mesh(new THREE.PlaneGeometry(150, 190), tmat(T.cobble(0xb8b0a4, 4).clone(), 0xffffff)); plate.material.map.needsUpdate = true; plate.material.map.repeat.set(40, 50);
+    const pg = new THREE.PlaneGeometry(150, 190); { const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 40, uv.getY(i) * 50); }
+    const plate = new THREE.Mesh(pg, tmat(T.cobble(0xb8b0a4, 4), 0xffffff));
     plate.rotation.x = -Math.PI / 2; plate.position.set(0, 0.03, 0); g.add(plate);
     // pigeons... a few grey dots
     for (let i = 0; i < 10; i++) g.add(box(0.5, 0.4, 0.7, 0x8a8a90, -40 + i * 8, 0.25, 70 + (i % 3) * 4));
@@ -235,8 +352,7 @@
   };
   P.triangle = () => {
     const g = new THREE.Group();
-    const t = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 100, 3), tmat(T.facade('glass', 0x6f9fc8, 8, THEME.night).clone(), 0xffffff));
-    t.material.map.needsUpdate = true; t.material.map.repeat.set(12, 8); t.position.y = 50; g.add(t);
+    const t = tcyl(22, 22, 100, T.facade('glass', 0x6f9fc8, 8, THEME.night), 12, 8, 0xffffff, 3); t.position.y = 50; g.add(t);
     g.add(new THREE.Mesh(new THREE.CylinderGeometry(23, 23, 2, 3), mat(0xdddddd))).position.y = 101;
     return g;
   };
@@ -271,18 +387,18 @@
   P.hahnentor = P.severinstor;
   P.colonius = () => {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(new THREE.CylinderGeometry(3, 5, 250, 10), tmat(T.steel(0xbfc4c9).clone(), 0xffffff))).position.y = 125;
-    g.children[0].material.map.needsUpdate = true; g.children[0].material.map.repeat.set(4, 40);
+    const shaft = tcyl(3, 5, 250, T.steel(0xbfc4c9), 4, 40, 0xffffff, 10); shaft.position.y = 125; g.add(shaft);
     const disc = new THREE.Mesh(new THREE.CylinderGeometry(16, 12, 14, 12), tmat(T.facade('glass', 0xd9dde0, 5, THEME.night), 0xffffff)); disc.position.y = 170; g.add(disc);
     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1, 40, 6), mat(0xff3333))).position.y = 270;
-    const l = new THREE.Mesh(new THREE.SphereGeometry(1.5, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff2020 })); l.position.y = 290; l.userData.blink = true; g.add(l); animated.push(l);
+    const l = new THREE.Mesh(new THREE.SphereGeometry(1.5, 6, 6), bmat(0xff2020)); l.position.y = 290; l.userData.blink = true; g.add(l); animated.push(l);
     return g;
   };
-  P.helios = () => { const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 40, 8), tmat(T.brick(0xe6dccb), 0xffffff)); t.position.y = 20; g.add(t); const top = cyl(4.5, 4.5, 4, 0x3f3f3f, 0, 42, 0, 8); g.add(top); const l = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffee88 })); l.position.y = 46; g.add(l); return g; };
+  P.helios = () => { const g = new THREE.Group(); const t = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 40, 8), tmat(T.brick(0xe6dccb), 0xffffff)); t.position.y = 20; g.add(t); const top = cyl(4.5, 4.5, 4, 0x3f3f3f, 0, 42, 0, 8); g.add(top); const l = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), bmat(0xffee88)); l.position.y = 46; g.add(l); return g; };
   P.arena = () => {
     const g = new THREE.Group();
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(45, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), tmat(T.facade('glass', 0x3a4a70, 9, THEME.night).clone(), 0xffffff)); dome.material.map.needsUpdate = true; dome.material.map.repeat.set(10, 4); g.add(dome);
-    const arch = new THREE.Mesh(new THREE.TorusGeometry(52, 2.2, 6, 24, Math.PI), new THREE.MeshBasicMaterial({ color: THEME.night ? 0x7fd3ff : 0xd8e8f0 })); arch.position.y = 2; g.add(arch);
+    const dg = new THREE.SphereGeometry(45, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2); { const uv = dg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 10, uv.getY(i) * 4); }
+    const dome = new THREE.Mesh(dg, tmat(T.facade('glass', 0x3a4a70, 9, THEME.night), 0xffffff)); g.add(dome);
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(52, 2.2, 6, 24, Math.PI), bmat(THEME.night ? 0x7fd3ff : 0xd8e8f0)); arch.position.y = 2; g.add(arch);
     const sign = textPlane('ARENA KÖLLE', '#00e5ff', '#0b0f2a', 40, 5, true); sign.position.set(0, 50, 0); g.add(sign);
     return g;
   };
@@ -350,7 +466,7 @@
     g.add(box(3, 2.4, 1.2, 0x9fb0b8, 2.5, 1.2, -0.5)); g.add(box(3.4, 0.2, 1.6, 0x444444, 2.5, 2.5, -0.5));
     return g;
   };
-  P.lamp = () => { const g = new THREE.Group(); g.add(cyl(0.12, 0.16, 7, 0x444444, 0, 3.5, 0, 6)); const arm = box(1.6, 0.15, 0.15, 0x444444, 0.7, 7, 0); g.add(arm); const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.5), THEME.night ? new THREE.MeshBasicMaterial({ color: 0xffe8a0 }) : mat(0xdddddd)); head.position.set(1.4, 6.9, 0); g.add(head); return g; };
+  P.lamp = () => { const g = new THREE.Group(); g.add(cyl(0.12, 0.16, 7, 0x444444, 0, 3.5, 0, 6)); const arm = box(1.6, 0.15, 0.15, 0x444444, 0.7, 7, 0); g.add(arm); const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.5), THEME.night ? bmat(0xffe8a0) : mat(0xdddddd)); head.position.set(1.4, 6.9, 0); g.add(head); return g; };
   P.flag = (o) => { const g = new THREE.Group(); g.add(cyl(0.08, 0.1, 6, 0x777777, 0, 3, 0, 6)); const f = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), tmat(T.stripes((o && o.a) || 0xc1121f, (o && o.b) || 0xffffff), 0xffffff, { side: THREE.DoubleSide })); f.position.set(1.15, 5.2, 0); f.userData.flag = true; g.add(f); animated.push(f); return g; };
   P.bunting = () => {
     // carnival bunting across the street
@@ -360,7 +476,7 @@
     g.add(cyl(0.12, 0.12, 7, 0x555555, -15, 3.5, 0, 6)); g.add(cyl(0.12, 0.12, 7, 0x555555, 15, 3.5, 0, 6));
     return g;
   };
-  P.chimney = () => { const g = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.2, 70, 8), tmat(T.brick(0x8a4a3a).clone(), 0xffffff)); c.material.map.needsUpdate = true; c.material.map.repeat.set(3, 12); c.position.y = 35; g.add(c); g.add(cyl(2.4, 2.4, 3, 0xdddddd, 0, 60, 0, 8)); g.add(cyl(2.4, 2.4, 3, 0xc1121f, 0, 66, 0, 8)); g.add(tbox(50, 16, 30, T.facade('industrial', 0x8a4a3a, 4, THEME.night), 20, 8, 0, 0xffffff, [14, 14])); return g; };
+  P.chimney = () => { const g = new THREE.Group(); const c = tcyl(2.2, 3.2, 70, T.brick(0x8a4a3a), 3, 12, 0xffffff, 8); c.position.y = 35; g.add(c); g.add(cyl(2.4, 2.4, 3, 0xdddddd, 0, 60, 0, 8)); g.add(cyl(2.4, 2.4, 3, 0xc1121f, 0, 66, 0, 8)); g.add(tbox(50, 16, 30, T.facade('industrial', 0x8a4a3a, 4, THEME.night), 20, 8, 0, 0xffffff, [14, 14])); return g; };
   P.figure = (h, coat, hat, skin) => {
     const g = new THREE.Group();
     g.add(box(0.8 * h, 1.7 * h, 0.5 * h, coat, 0, 1.75 * h, 0));
@@ -381,7 +497,8 @@
     const r = mulberry(31);
     for (let i = 0; i < 10; i++) { const f = P.figure(0.55 + r() * 0.25, cols[i % cols.length], r() < 0.3 ? cols[(i + 3) % cols.length] : null); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.userData.bounce = r() * 6; g.add(f); }
     g.add(box(14, 0.8, 0.3, 0x8a5a2a, 0, 0.4, 1.4)); // barrier
-    g.userData.crowd = true; animated.push(g);
+    mergeVertexColored(g);
+    g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
     return g;
   };
   P.lastenrad = () => { const g = new THREE.Group(); g.add(box(2.4, 0.8, 1.2, 0x9b5de5, 0, 0.9, 0)); for (const x of [-1.6, 1.6]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.1, 6, 10), mat(0x222222)); w.position.set(x, 0.5, 0); w.rotation.y = Math.PI / 2; g.add(w); } return g; };
@@ -389,7 +506,7 @@
   P.barge = () => { const g = new THREE.Group(); g.add(box(60, 2, 9, 0x4a4a52, 0, 0.8, 0)); g.add(box(50, 1.2, 8, 0x2f2f36, 0, 2.2, 0)); g.add(box(6, 4, 6, 0xf0f0f0, -25, 3.8, 0)); g.userData.boat = true; animated.push(g); return g; };
   function water(w, l) {
     const tex = T.water(THEME.water).clone(); tex.needsUpdate = true; tex.repeat.set(w / 16, l / 8);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), tmat(tex, 0xffffff, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), tmat(tex, 0xffffff, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, nocache: true }));
     m.rotation.x = -Math.PI / 2; m.position.y = WATER_Y - GROUND_Y; m.userData.water = tex; animated.push(m);
     return m;
   }
@@ -405,7 +522,8 @@
   P.rhineSide = (o) => { const g = new THREE.Group(); g.add(water((o && o.w) || 260, (o && o.l) || 800)); g.rotation.y = Math.PI / 2; return g; }; // runs alongside
   P.promenade = () => { // Rhine promenade: plane trees + railing
     const g = new THREE.Group(); for (let x = -90; x <= 90; x += 15) { g.add(P.tree(2)).position.set(x, 0, 0); } g.add(box(200, 1, 0.2, 0x3a3a3a, 0, 0.6, 4)); for (let x = -100; x <= 100; x += 5) g.add(box(0.2, 1.1, 0.2, 0x3a3a3a, x, 0.55, 4)); return g; };
-  P.rails = () => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.PlaneGeometry(300, 8), tmat(T.rails().clone(), 0xffffff)); m.material.map.needsUpdate = true; m.material.map.repeat.set(75, 2); m.rotation.x = -Math.PI / 2; m.position.y = 0.05; g.add(m); return g; };
+  function tplane(w, h, tex, ru, rv, color, opts) { const pg = new THREE.PlaneGeometry(w, h); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ru, uv.getY(i) * rv); return new THREE.Mesh(pg, tmat(tex, color == null ? 0xffffff : color, opts)); }
+  P.rails = () => { const g = new THREE.Group(); const m = tplane(300, 8, T.rails(), 75, 2); m.rotation.x = -Math.PI / 2; m.position.y = 0.05; g.add(m); return g; };
   P.hbarch = () => {
     // Hohenzollernbrücke: tied steel arches beside the road + parallel rail bridge with a train
     const g = new THREE.Group(); const steel = tmat(T.steel(0x2f6b4f), 0xffffff);
@@ -414,7 +532,7 @@
     arch(-8.6); arch(8.6); arch(24); arch(40);
     // rail deck between the second pair of arches
     g.add(box(120, 1.2, 16, 0x555555, 0, 0.4, 32));
-    const r = new THREE.Mesh(new THREE.PlaneGeometry(120, 16), tmat(T.rails().clone(), 0xffffff)); r.material.map.needsUpdate = true; r.material.map.repeat.set(30, 4); r.rotation.x = -Math.PI / 2; r.position.set(0, 1.05, 32); g.add(r);
+    const r = tplane(120, 16, T.rails(), 30, 4); r.rotation.x = -Math.PI / 2; r.position.set(0, 1.05, 32); g.add(r);
     const train = new THREE.Group(); train.add(box(60, 3.8, 3, 0xf4f4f4, 0, 3, 0)); train.add(box(60, 0.7, 3.1, 0xc1121f, 0, 2.2, 0)); train.add(box(60, 1, 3.05, 0x1c2a3a, 0, 3.6, 0)); train.position.set(-30, 0, 30); train.userData.train = true; g.add(train); animated.push(train);
     // love locks
     g.add(box(90, 1.2, 0.25, 0xffd700, 0, 1.4, -8.7));
@@ -447,10 +565,99 @@
     return g; };
   P.tree = (seed) => { const g = new THREE.Group(); const s = 1 + ((seed || 0) % 3) * 0.3; g.add(box(0.6, 2.5 * s, 0.6, 0x5a3a1a, 0, 1.25 * s, 0)); const c1 = box(3.2 * s, 2.6 * s, 3.2 * s, 0x2f7a3a, 0, 3.6 * s, 0); g.add(c1); g.add(box(2.2 * s, 1.6 * s, 2.2 * s, 0x3f9a48, 0, 5.4 * s, 0)); return g; };
   P.tram = () => { const g = new THREE.Group(); g.add(box(2.4, 2.2, 14, 0xe30613, 0, 1.5, 0)); g.add(box(2.42, 0.8, 13.6, 0x9fd3ff, 0, 1.9, 0)); g.add(box(2.4, 0.3, 14.2, 0xdddddd, 0, 2.75, 0)); g.add(box(0.1, 1.2, 1.6, 0x333333, 0, 3.4, 0)); const s = textPlane('KVB  1  WEIDEN WEST', '#ffb000', '#222222', 2.2, 0.5); s.position.set(0, 2.9, 7.01); g.add(s); return g; };
+  // --- more Cologne ---
+  P.rathaus = () => {
+    // Historisches Rathaus: Gothic tower with figure tiers, Renaissance loggia in front
+    const g = new THREE.Group(); const tex = T.romanesque(0xd9cdb5);
+    g.add(tbox(14, 40, 14, tex, 0, 20, 0, 0xffffff, [16, 16]));
+    g.add(tbox(11, 12, 11, tex, 0, 46, 0, 0xffffff, [16, 16]));
+    g.add(tbox(8, 8, 8, tex, 0, 56, 0, 0xffffff, [16, 16]));
+    g.add(cone(5, 12, 0x3a3a44, 0, 66, 0, 8));
+    for (let t = 0; t < 3; t++) for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; const r = [8.3, 6.6, 5.0][t]; g.add(box(0.7, 1.6, 0.7, 0xf0e6d0, Math.cos(a) * r, [12, 26, 41][t], Math.sin(a) * r)); }
+    // loggia
+    g.add(tbox(34, 12, 12, tex, 0, 6, 13, 0xffffff, [16, 16]));
+    for (let x = -14; x <= 14; x += 7) { const arch = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 1.2, 8, 1, false, 0, Math.PI), mat(0x2a2a30)); arch.rotation.x = Math.PI / 2; arch.rotation.z = 0; arch.position.set(x, 3.2, 19.3); g.add(arch); g.add(box(4.4, 3.2, 0.6, 0x2a2a30, x, 1.6, 19.2)); }
+    g.add(box(36, 1, 14, 0x9a8a70, 0, 12.5, 13));
+    const sign = textPlane('HISTORISCHES RATHAUS · ALTER MARKT', '#3a2a10', '#f0e6d0', 22, 1.6); sign.position.set(0, 9.8, 19.4); g.add(sign);
+    // Jan von Werth fountain on Alter Markt
+    g.add(cyl(4, 4.5, 1, 0x8a8a8a, 0, 0.5, 36, 8)); g.add(cyl(0.8, 1, 5, 0x9a9a9a, 0, 3.5, 36, 6)); g.add(P.figure(0.9, 0x6a6a70, 0x555555, 0x777777)).position.set(0, 6, 36);
+    return g;
+  };
+  P.rgm = () => { // Römisch-Germanisches Museum: low concrete box, glass front, Dionysus mosaic inside
+    const g = new THREE.Group();
+    g.add(tbox(58, 13, 40, T.facade('concrete', 0xb5b0a6, 6, THEME.night), 0, 6.5, 0, 0xffffff, [12, 12]));
+    g.add(box(50, 8, 0.6, THEME.night ? 0xffe8a0 : 0x8fc0e8, 0, 5, 20.3));
+    const mosaic = textPlane('DIONYSOS-MOSAIK', '#c9a34a', '#3a2a1a', 20, 2.4); mosaic.position.set(0, 2.5, 20.7); g.add(mosaic);
+    const sign = textPlane('RÖMISCH-GERMANISCHES MUSEUM', '#111', '#e8e0d0', 30, 2); sign.position.set(0, 11, 20.4); g.add(sign);
+    g.add(box(6, 9, 6, 0x9a9088, -22, 4.5, 24)); // Roman tomb of Poblicius-ish
+    return g;
+  };
+  P.eaudecologne = () => { // the neo-gothic Glockengasse house with the carillon
+    const g = new THREE.Group();
+    g.add(tbox(30, 22, 18, T.facade('gruenderzeit', 0xf1e9d6, 15, THEME.night), 0, 11, 0, 0xffffff, [14, 14]));
+    g.add(gable(31, 6, 19, T.roof(0x5a5a66, 3), 0xffffff, 0, 22, 0));
+    for (const x of [-12, 12]) { g.add(box(3, 8, 3, 0xe8dcc0, x, 26, 6)); g.add(cone(2.2, 4, 0x5a5a66, x, 32, 6, 4)); }
+    const sign = textPlane('EAU DE COLOGNE · GLOCKENGASSE', '#ffd400', '#0b6e6e', 22, 2.2, THEME.night, { border: '#ffd400' }); sign.position.set(0, 16, 9.2); g.add(sign);
+    const carillon = textPlane('♪ GLOCKENSPIEL ♪', '#0b6e6e', '#f6f0e0', 10, 1.2); carillon.position.set(0, 20, 9.2); g.add(carillon);
+    return g;
+  };
+  P.reiter = () => { // Heumarkt equestrian statue
+    const g = new THREE.Group(); g.add(box(8, 6, 12, 0x8a8a90, 0, 3, 0)); g.add(box(2.4, 2.2, 6, 0x3a4a3a, 0, 7, 0)); g.add(box(1.2, 2, 1.4, 0x3a4a3a, 0, 8.6, 3.2)); for (const [x, z] of [[-0.8, -2], [0.8, -2], [-0.8, 2], [0.8, 2]]) g.add(box(0.5, 2.2, 0.5, 0x3a4a3a, x, 4.9, z)); g.add(P.figure(0.8, 0x3a4a3a, 0x3a4a3a, 0x3a4a3a)).position.set(0, 7.8, 0); return g; };
+  P.flatbridge = () => { const g = new THREE.Group(); g.add(box(340, 3, 26, 0x6f6f74, 0, 12, 0)); for (let x = -140; x <= 140; x += 70) g.add(box(6, 12, 8, 0x5a5a5e, x, 5, 0)); for (let x = -160; x <= 160; x += 26) g.add(P.lamp()).position.set(x, 13.5, 12); return g; };
+  P.archbridge = () => { // Südbrücke style: two steel arches over the deck
+    const g = new THREE.Group(); const steel = tmat(T.steel(0x4a6a5a), 0xffffff);
+    g.add(box(320, 2.5, 18, 0x555555, 0, 10, 0));
+    for (const cx of [-100, 0, 100]) for (const z of [-8, 8]) { const a = new THREE.Mesh(new THREE.TorusGeometry(46, 1.4, 6, 20, Math.PI), steel); a.position.set(cx, 10, z); g.add(a); }
+    for (let x = -150; x <= 150; x += 100) g.add(box(6, 10, 18, 0x5a5a5e, x, 5, 0));
+    return g;
+  };
+  P.moschee = () => { // DITIB central mosque in Ehrenfeld: concrete shell dome and two slim minarets
+    const g = new THREE.Group();
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(22, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xd8d4cc)); dome.position.y = 10; g.add(dome);
+    for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.4; const shell = box(3, 30, 26, 0xc9c5bd, Math.cos(a) * 16, 15, Math.sin(a) * 16); shell.rotation.y = -a; g.add(shell); }
+    g.add(box(40, 10, 40, 0xb9b5ad, 0, 5, 0));
+    for (const x of [-26, 26]) { g.add(cyl(1.3, 1.6, 55, 0xd8d4cc, x, 27.5, 8, 8)); g.add(cone(1.8, 5, 0x8a8a90, x, 57, 8, 8)); }
+    g.add(box(50, 1, 60, 0x9a9690, 0, 0.5, 5));
+    return g;
+  };
+  P.vulkanhalle = () => { const g = new THREE.Group(); g.add(tbox(70, 14, 36, T.facade('industrial', 0x8a4a3a, 5, THEME.night), 0, 7, 0, 0xffffff, [14, 14])); for (let i = 0; i < 5; i++) g.add(gable(14, 5, 36, T.steel(0x6a6a6a), 0xffffff, -28 + i * 14, 14, 0)); const s = textPlane('VULKAN HALLEN · EHRENFELD', '#f0e0c0', '#4a2a1a', 24, 1.8, THEME.night); s.position.set(0, 10, 18.3); g.add(s); g.add(cyl(1.6, 2, 30, 0x8a4a3a, 30, 15, -12, 8)); return g; };
+  P.halle = (o) => { const g = new THREE.Group(); g.add(tbox(60, 16, 30, T.facade('industrial', 0x7a4636, 8, THEME.night), 0, 8, 0, 0xffffff, [14, 14])); g.add(gable(62, 6, 32, T.steel(0x555555), 0xffffff, 0, 16, 0)); const s = textPlane((o && o.text) || 'HALLEN KALK', '#ffd400', '#2a1a1a', 20, 1.8, THEME.night); s.position.set(0, 12, 15.3); g.add(s); return g; };
+  P.zootor = () => { const g = new THREE.Group(); for (const x of [-9, 9]) g.add(tbox(3, 9, 3, T.brick(0x8a4a3a), x, 4.5, 0, 0xffffff, [4, 4])); g.add(box(21, 1.2, 1, 0x2a2a2a, 0, 9.3, 0)); const s = textPlane('KÖLNER ZOO', '#ffd400', '#1a5a2a', 14, 2.4, false, { border: '#ffd400' }); s.position.set(0, 11.2, 0); g.add(s); g.add(P.giraffe()).position.set(-16, 0, -6); g.add(P.giraffe()).position.set(16, 0, -8); for (let i = 0; i < 6; i++) g.add(box(0.5, 1.6, 0.5, 0xff8fb0, -6 + i * 2.4, 1.0, -10)); return g; };
+  P.giraffe = () => { const g = new THREE.Group(); const c = 0xd9a24a; g.add(box(4, 2.4, 1.6, c, 0, 3.2, 0)); for (const [x, z] of [[-1.5, -0.5], [1.5, -0.5], [-1.5, 0.5], [1.5, 0.5]]) g.add(box(0.5, 2.2, 0.5, c, x, 1.1, z)); g.add(box(0.9, 4.5, 0.9, c, 1.8, 6.4, 0)); g.add(box(1.8, 1, 1, c, 2.2, 9, 0)); for (let i = 0; i < 6; i++) g.add(box(0.5, 0.5, 0.2, 0x7a4a1a, -1.5 + i * 0.7, 3.2 + (i % 2) * 0.8, 0.85)); return g; };
+  P.tanzbrunnen = () => { const g = new THREE.Group(); for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; g.add(cone(7, 10, 0xf4f4f4, Math.cos(a) * 9, 9, Math.sin(a) * 9, 4)); g.add(cyl(0.3, 0.3, 14, 0x555555, Math.cos(a) * 9, 7, Math.sin(a) * 9, 6)); } g.add(cyl(20, 20, 0.6, 0x8a8a90, 0, 0.3, 0, 12)); g.add(cyl(6, 6, 0.4, 0x3f7fc0, 0, 0.8, 0, 12)); const s = textPlane('TANZBRUNNEN', '#1c3f95', '#ffffff', 10, 1.2); s.position.set(0, 4, 20); g.add(s); return g; };
+  P.tribuene = () => { // carnival grandstand full of Jecken
+    const g = new THREE.Group(); const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800, 0x7fff00];
+    const r = mulberry(77);
+    for (let row = 0; row < 4; row++) { g.add(box(22, 0.8, 1.6, 0x6a5a4a, 0, 0.4 + row * 0.9, -row * 1.6)); for (let i = 0; i < 12; i++) { const f = P.figure(0.5 + r() * 0.2, cols[Math.floor(r() * cols.length)], r() < 0.5 ? cols[Math.floor(r() * cols.length)] : null); f.position.set(-9.5 + i * 1.75, 0.8 + row * 0.9, -row * 1.6); f.userData.bounce = r() * 6; g.add(f); } }
+    mergeVertexColored(g);
+    const s = textPlane('KÖLLE ALAAF!', '#ffffff', '#c1121f', 12, 1.6, false, { border: '#ffd400' }); s.position.set(0, 5.5, -6); g.add(s);
+    g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
+    return g;
+  };
+  P.zochwagen = () => { const g = buildCar({ shape: 'float', color: [0x00a0ff, 0x7fff00, 0xff8800][Math.floor(Math.random() * 3)] }); g.scale.set(1.4, 1.4, 1.4); g.add(P.figure(0.7, 0xffd400, 0xc1121f)).position.set(0, 1.6, 0.6); return g; };
+  P.kirche = (o) => { const g = new THREE.Group(); const tex = T.romanesque((o && o.color) || 0xc4ad8c); const h = (o && o.h) || 40; g.add(tbox(14, 18, 34, tex, 0, 9, -6, 0xffffff, [16, 16])); g.add(gable(15, 8, 35, T.roof(0x6a3a2a, 2), 0xffffff, 0, 18, -6)); g.add(tbox(9, h, 9, tex, 0, h / 2, 12, 0xffffff, [16, 16])); g.add(cone(6, 16, 0x3a3a44, 0, h + 8, 12, 4)); return g; };
+  P.hyatt = () => { const g = new THREE.Group(); g.add(tbox(50, 42, 30, T.facade('modern', 0xb8c8d8, 4, THEME.night), 0, 21, 0, 0xffffff, [12, 12])); g.add(box(52, 1.5, 32, 0xdddddd, 0, 42.7, 0)); return g; };
+  P.cafe = () => { const g = new THREE.Group(); const r = mulberry(88); for (let i = 0; i < 3; i++) { const x = -3 + i * 3; g.add(cyl(0.6, 0.6, 0.1, 0xf4f4f4, x, 0.9, 0, 8)); g.add(cyl(0.06, 0.08, 0.9, 0x555555, x, 0.45, 0, 6)); g.add(cyl(0.1, 0.1, 2.6, 0x8a8a8a, x, 1.3, 0, 6)); g.add(cone(1.6, 0.9, [0xc1121f, 0xffd400, 0xf4f4f4][i % 3], x, 2.9, 0, 8)); if (r() < 0.7) g.add(P.figure(0.5, [0x3a3a5a, 0xc1121f, 0x2d6a4f][i % 3], null)).position.set(x + 0.9, 0, 0.5); } return g; };
+  P.ampel = () => { const g = new THREE.Group(); g.add(cyl(0.1, 0.12, 4.2, 0x444444, 0, 2.1, 0, 6)); g.add(box(0.5, 1.4, 0.4, 0x222222, 0, 3.6, 0)); g.add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.1), bmat(0xff2020))).position.set(0, 4.05, 0.22); g.add(box(0.28, 0.28, 0.1, 0x3a2a00, 0, 3.6, 0.22)); g.add(box(0.28, 0.28, 0.1, 0x0a3a1a, 0, 3.15, 0.22)); return g; };
+  P.schild = (o) => { const g = new THREE.Group(); g.add(cyl(0.06, 0.08, 3, 0x777777, 0, 1.5, 0, 6)); const s = textPlane((o && o.text) || 'HOHE STRASSE', '#ffffff', '#1c3f95', 2.6, 0.5, false, { border: '#ffffff', sizeK: 0.5 }); s.position.set(0.9, 2.7, 0); g.add(s); return g; };
+  P.parkedcar = (o) => { const g = new THREE.Group(); const c = (o && o.color) || 0x888888; g.add(box(1.8, 0.6, 4.0, c, 0, 0.7, 0)); g.add(box(1.6, 0.55, 2.0, c, 0, 1.25, -0.2)); g.add(box(1.62, 0.3, 1.8, 0x223344, 0, 1.3, -0.2)); for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z)); return g; };
+  P.passant = (o) => P.figure(0.55 + ((o && o.k) || 0) * 0.04, [0x3a3a5a, 0xc1121f, 0x2d6a4f, 0x8a5a2a, 0x555555, 0xffd400, 0x1c3f95][((o && o.k) || 0) % 7], ((o && o.k) || 0) % 4 === 0 ? 0x222222 : null);
+  P.muell = () => { const g = new THREE.Group(); g.add(cyl(0.4, 0.4, 1.1, 0xff7a00, 0, 0.55, 0, 8)); g.add(cyl(0.45, 0.45, 0.15, 0x333333, 0, 1.15, 0, 8)); return g; };
+  P.fahrrad = () => { const g = new THREE.Group(); for (const x of [-0.5, 0.5]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.05, 5, 8), mat(0x222222)); w.position.set(x, 0.36, 0); w.rotation.y = Math.PI / 2; g.add(w); } g.add(box(1.0, 0.08, 0.08, 0x2a6a9a, 0, 0.7, 0)); g.add(box(0.08, 0.6, 0.08, 0x2a6a9a, 0.2, 0.7, 0)); return g; };
+  P.tramline = (o) => { // rails alongside the street with a KVB tram shuttling back and forth
+    const g = new THREE.Group(); const len = (o && o.len) || 160;
+    const r = tplane(4, len, T.rails(), 1, len / 4); r.rotation.x = -Math.PI / 2; r.position.y = 0.06; g.add(r);
+    for (let z = -len / 2; z <= len / 2; z += 30) { g.add(cyl(0.1, 0.12, 6, 0x555555, 2.4, 3, z, 6)); g.add(box(3, 0.1, 0.1, 0x555555, 1, 6, z)); }
+    g.add(box(0.05, 0.05, len, 0x333333, 0, 5.4, 0));
+    const tram = P.tram(); tram.userData.tramline = { len, dir: 1, speed: 9 + Math.random() * 3 }; tram.userData.keep = true; g.add(tram); animated.push(tram);
+    return g;
+  };
   P.house = (seed) => { const r = mulberry(seed); const styles = THEME.street === 'altstadt' ? ['altstadt'] : THEME.street === 'industrial' ? ['industrial', 'concrete'] : THEME.street === 'modern' ? ['modern', 'concrete'] : ['gruenderzeit', 'gruenderzeit', 'concrete']; const st = styles[Math.floor(r() * styles.length)];
     const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'industrial' ? INDUSTRIAL : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE;
     const w = st === 'altstadt' ? 6 + r() * 3 : 9 + r() * 6, d = 10 + r() * 6, h = st === 'altstadt' ? 11 + r() * 6 : 12 + r() * 10;
-    return building(w, h, d, st, cols[Math.floor(r() * cols.length)], st === 'altstadt' ? (r() < 0.5 ? 'stepped' : 'gable') : st === 'gruenderzeit' ? 'hip' : 'flat', Math.floor(r() * 1000)); };
+    const shops = (THEME.shops || []).concat(SHOPS);
+    const opts = { shop: r() < 0.4 ? shops[Math.floor(r() * shops.length)] : null, balconies: st === 'gruenderzeit' && r() < 0.7, night: THEME.night, awning: [0xc1121f, 0x1c3f95, 0x2d6a4f, 0xffd400][Math.floor(r() * 4)] };
+    return building(w, h, d, st, cols[Math.floor(r() * cols.length)], st === 'altstadt' ? (r() < 0.5 ? 'stepped' : 'gable') : st === 'gruenderzeit' ? 'hip' : 'flat', Math.floor(r() * 1000), opts); };
 
   // ------------------------------------------------ road ----
   function buildRoad(track, theme) {
@@ -519,7 +726,7 @@
         if (i % 12 === 0) { const p = off(s, 0, -0.5); const pyl = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W * 2 + 3, 1.4, 1.5), steel); pyl.position.set(p.x, p.y - 0.9, p.z); g.add(pyl); }
         if (i % 24 === 0) { const l = P.lamp(); const p = off(s, ROAD_W + 1.6, 0); l.position.copy(p); l.rotation.y = Math.atan2(s.T.x, s.T.z) + Math.PI; g.add(l); }
       }
-      if (s.kind === 'tunnel' && i % 2 === 0) { const ring = new THREE.Mesh(new THREE.TorusGeometry(ROAD_W + 1.8, 0.9, 6, 12, Math.PI), tunnelM); const p = off(s, 0, 0.6); ring.position.copy(p); ring.lookAt(p.clone().add(V(s.T))); g.add(ring); if (i % 10 === 0) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 1.5), new THREE.MeshBasicMaterial({ color: 0xfff0b0 })); l.position.copy(off(s, 0, 7.0)); g.add(l); } }
+      if (s.kind === 'tunnel' && i % 2 === 0) { const ring = new THREE.Mesh(new THREE.TorusGeometry(ROAD_W + 1.8, 0.9, 6, 12, Math.PI), tunnelM); const p = off(s, 0, 0.6); ring.position.copy(p); ring.lookAt(p.clone().add(V(s.T))); g.add(ring); if (i % 10 === 0) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 1.5), bmat(0xfff0b0)); l.position.copy(off(s, 0, 7.0)); g.add(l); } }
       if (s.kind === 'ramp' && i % 4 === 0) { const p = off(s, 0, -0.3); const h = Math.max(0.2, p.y - GROUND_Y); const b = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W * 2 + 1.5, h, 2.2), tmat(T.stripes(0xffd400, 0x222222), 0xffffff)); b.position.set(p.x, GROUND_Y + h / 2, p.z); g.add(b); }
     }
     // start gantry
@@ -527,6 +734,7 @@
     const banner = textPlane('STUNTS KÖLLE 4D  •  START / ZIEL', '#ffffff', '#c1121f', 20, 2.2, theme.night, { border: '#ffd400' });
     const bp = off(s0, 0, 6.5); banner.position.copy(bp); banner.lookAt(bp.clone().sub(V(s0.T))); g.add(banner);
     for (const side of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7.5, 6), post); pole.position.copy(off(s0, side * 10, 3.5)); g.add(pole); }
+    mergeStatic(g, new Set());
     return g;
   }
 
@@ -624,28 +832,47 @@
         if (prop.children.length && rnd() < 0.5) prop.rotation.y += (rnd() - 0.5) * 0.1;
         g.add(prop); count++;
       }
-      // lamps / flags on the sidewalk
-      if (street !== 'park' && i % (step * 2) === 0) {
-        const side = (i / step) % 2 ? 1 : -1;
+      // sidewalk life: lamps, flags, street signs, traffic lights, parked cars, people, bins, bikes, cafés, trees
+      const flat = (s.kind === 'straight' || s.kind === 'curve') && Math.abs(s.p.y) < 0.5;
+      if (street !== 'park' && flat) {
         const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
-        const x = s.p.x + bx / bl * side * (ROAD_W + 3.2), z = s.p.z + bz / bl * side * (ROAD_W + 3.2);
-        const flat = s.kind === 'straight' || s.kind === 'curve';
-        if (flat && Math.abs(s.p.y) < 0.5) {
+        const at = (side, lat) => [s.p.x + bx / bl * side * lat, s.p.z + bz / bl * side * lat];
+        const put = (prop, side, lat, face) => { const [x, z] = at(side, lat); prop.position.set(x, GROUND_Y, z); if (face) prop.lookAt(s.p.x, GROUND_Y, s.p.z); else prop.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(prop); };
+        const k = i / step;
+        if (k % 2 === 0) {
+          const side = k % 4 ? 1 : -1;
           const l = theme.confetti && rnd() < 0.5 ? P.flag({ a: [0xff5fa2, 0xffd400, 0x00a0ff][i % 3], b: 0xffffff }) : rnd() < 0.15 ? P.flag() : P.lamp();
-          l.position.set(x, GROUND_Y, z); l.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(l);
+          put(l, side, ROAD_W + 3.4, true);
         }
+        if (k % 7 === 3 && theme.streets) put(P.schild({ text: theme.streets[Math.floor(k / 7) % theme.streets.length] }), k % 2 ? 1 : -1, ROAD_W + 3.9, true);
+        if (Math.abs(s.curv || 0) > 0.02 && k % 5 === 0) put(P.ampel(), 1, ROAD_W + 2.0, true);
+        if (rnd() < 0.35) put(P.parkedcar({ color: [0x888888, 0xdddddd, 0x223355, 0x7a1a1a, 0x2d6a4f, 0x111111, 0xd9a24a][Math.floor(rnd() * 7)] }), rnd() < 0.5 ? 1 : -1, ROAD_W + 2.6, false);
+        if (rnd() < 0.5) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x, GROUND_Y, z); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+        if (rnd() < 0.15) put(P.muell(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.0, false);
+        if (rnd() < 0.15) put(P.fahrrad(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.1, false);
+        if (street === 'altstadt' && rnd() < 0.25) put(P.cafe(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
+        if ((street === 'gruenderzeit' || street === 'modern') && k % 3 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false);
+      } else if (street === 'park' && flat && (i / step) % 3 === 0) {
+        const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1; const side = (i / step) % 2 ? 1 : -1;
+        const l = P.lamp(); l.position.set(s.p.x + bx / bl * side * (ROAD_W + 3.4), GROUND_Y, s.p.z + bz / bl * side * (ROAD_W + 3.4)); l.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(l);
       }
     }
     // background skyline ring: far blocks all around so the city never ends
     let cx = 0, cz = 0; for (const s of S) { cx += s.p.x; cz += s.p.z; } cx /= n; cz /= n;
     let maxR = 0; for (const s of S) maxR = Math.max(maxR, Math.hypot(s.p.x - cx, s.p.z - cz));
     const ringR = maxR + 260;
-    for (let k = 0; k < 44; k++) {
-      const a = k / 44 * Math.PI * 2 + rnd() * 0.1; const rr = ringR + rnd() * 160;
+    const ringN = 44;
+    for (let k = 0; k < ringN; k++) {
+      const a = k / ringN * Math.PI * 2 + rnd() * 0.1; const rr = ringR + rnd() * 160;
       const x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
-      const w = 30 + rnd() * 40, h = theme.night ? 30 + rnd() * 70 : 18 + rnd() * 40, d = 30 + rnd() * 30;
-      const st = rnd() < 0.3 ? 'modern' : 'concrete';
-      const b = building(w, h, d, st, (st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE)[Math.floor(rnd() * 2)], 'flat', k);
+      let b;
+      if (k % 9 === 4) b = P.kirche({ h: 30 + rnd() * 30, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][k % 3] });        // the romanesque churches of Kölle
+      else if (k % 11 === 7) b = P.chimney();
+      else {
+        const w = 30 + rnd() * 40, h = theme.night ? 30 + rnd() * 70 : 18 + rnd() * 40, d = 30 + rnd() * 30;
+        const st = rnd() < 0.3 ? 'modern' : 'concrete';
+        b = building(w, h, d, st, (st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE)[Math.floor(rnd() * 2)], 'flat', k);
+      }
       b.position.set(x, GROUND_Y, z); b.lookAt(cx, GROUND_Y, cz); g.add(b);
     }
     // far landmarks (the Dom is visible from everywhere in Kölle)
@@ -654,6 +881,8 @@
       prop.position.set(cx + Math.cos(a) * (ringR + (fl.dist || 120)), GROUND_Y, cz + Math.sin(a) * (ringR + (fl.dist || 120)));
       prop.lookAt(cx, GROUND_Y, cz); g.add(prop);
     }
+    // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
+    mergeStatic(g, new Set(animated));
     return { group: g, animated, props: propList };
   }
 
@@ -661,12 +890,13 @@
     for (const a of animated) {
       const u = a.userData;
       if (u.wave) a.rotation.z = Math.sin(t * 0.003) * 0.06;
-      else if (u.crowd) a.children.forEach((f) => { if (f.userData.bounce != null) f.position.y = Math.abs(Math.sin(t * 0.006 + f.userData.bounce)) * 0.5; });
+      else if (u.crowd) { a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.rotation.z = Math.sin(t * 0.003 + u.phase) * 0.03; }
       else if (u.boat) a.position.x += Math.sin(t * 0.0002) * 0.02;
       else if (u.gondola != null) { a.position.x += dt * 4; if (a.position.x > 110) a.position.x = -110; }
       else if (u.water) a.userData.water.offset.x = (t * 0.00004) % 1;
       else if (u.sky && center) { a.position.set(center.x, GROUND_Y - 200, center.z); }
       else if (u.train) { a.position.x += dt * 12; if (a.position.x > 70) a.position.x = -110; }
+      else if (u.tramline) { const t2 = u.tramline; a.position.z += t2.dir * t2.speed * dt; if (Math.abs(a.position.z) > t2.len / 2 - 8) { t2.dir *= -1; a.rotation.y = t2.dir > 0 ? 0 : Math.PI; } }
       else if (u.flag) a.rotation.y = Math.sin(t * 0.004) * 0.35;
       else if (u.blink) a.visible = Math.floor(t / 600) % 2 === 0;
     }
@@ -721,7 +951,7 @@
 
   // ------------------------------------------------ confetti ----
   function buildConfetti() {
-    const N = 500;
+    const N = 260;
     const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
     const cols = [0xff5fa2, 0xffd400, 0x00a0ff, 0x7fff00, 0xffffff, 0xff2d2d];
     for (let i = 0; i < N; i++) {
@@ -731,7 +961,7 @@
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.7, vertexColors: true }));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.5, vertexColors: true }));
     pts.userData.update = (dt, center) => {
       const a = g.attributes.position.array;
       for (let i = 0; i < N; i++) {

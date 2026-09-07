@@ -92,3 +92,32 @@ footer { margin-top: 20px; display: flex; align-items: center; justify-content: 
 .resBtns { display: flex; gap: 10px; margin-top: 14px; }
 .resBtns button { flex: 1; background: var(--red); color: #fff; border: 3px solid var(--ink); box-shadow: 4px 4px 0 #000; padding: 12px; font-weight: bold; font-size: 11px; font-family: "Press Start 2P", monospace; }
 .resBtns #menuBtn { background: #444; }
+
+/* ---------- Music ---------- */
+.music { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #ddd; }
+.music button { background: #1c3f95; color: #fff; border: 3px solid var(--ink); box-shadow: 3px 3px 0 #000; padding: 8px 12px; font-size: 12px; font-family: "Press Start 2P", monospace; }
+.hudBox.music span:not(.lbl) { font-size: 10px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Mobile ---------- */
+#rotate { display: none; }
+body.mobile { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+body.mobile #menu { padding-bottom: env(safe-area-inset-bottom); }
+body.mobile .title h1 { font-size: clamp(20px, 6vw, 40px); }
+body.mobile .list li { padding: 7px 8px; }
+body.mobile .list li b { font-size: 13px; } body.mobile .list li small { font-size: 10px; }
+body.mobile .controls { display: none; }
+body.mobile .hudTop .hudBox:nth-child(2), body.mobile .hudTop .hudBox:nth-child(3), body.mobile .hudTop .hudBox.music { display: none; }
+body.mobile .hudBox.big #speed { font-size: 26px; }
+body.mobile .hudBox { padding: 4px 8px; min-width: 60px; }
+body.mobile .hudBox span:not(.lbl) { font-size: 11px; }
+body.mobile #minimap { width: 96px; height: 96px; }
+body.mobile .hudBtns { top: 112px; }
+body.mobile .hudBtns button { width: 36px; height: 36px; font-size: 14px; }
+body.mobile #msg { bottom: 150px; font-size: 13px; padding: 8px 12px; }
+body.mobile #msgText { font-size: 13px; }
+body.mobile #touch { bottom: max(70px, env(safe-area-inset-bottom)); padding: 0 max(12px, env(safe-area-inset-left)) 0 max(12px, env(safe-area-inset-right)); }
+body.mobile #touch button { width: 84px; height: 84px; font-size: 32px; opacity: .85; }
+@media (orientation: portrait) {
+  body.mobile #rotate { display: flex; position: fixed; inset: 0; z-index: 60; align-items: center; justify-content: center; background: rgba(10,8,30,.92); color: var(--yellow); text-align: center; font-family: "Press Start 2P", monospace; font-size: 14px; line-height: 2; pointer-events: none; }
+  body.mobile:not(.racing) #rotate { display: none; }
+}

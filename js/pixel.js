@@ -74,6 +74,7 @@
   // ---------- facades ----------
   /** style: altstadt | gruenderzeit | modern | industrial | concrete | glass  */
   T.facade = (style, wall, seed, night) => {
+    seed = (seed || 0) % 4; // a handful of variants per wall colour keeps the texture count low
     const key = `fac${style}${wall}${seed}${night}`;
     return cached(key, () => {
       const W = 64, H = 64, c = canvas(W, H), x = c.getContext('2d'), r = mulberry(seed || 11);
@@ -228,7 +229,10 @@
     this.setSize(window.innerWidth, window.innerHeight);
   }
   PixelPost.prototype.setSize = function (w, h) {
-    const rw = Math.max(160, Math.floor(w / this.scale)), rh = Math.max(100, Math.floor(h / this.scale));
+    // "scale" device pixels per texel: on a 3x phone screen the buffer is computed from
+    // physical pixels, otherwise a 390px-wide viewport would collapse to 130 texels.
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const rw = Math.max(160, Math.min(w, Math.floor(w * dpr / this.scale))), rh = Math.max(100, Math.min(h, Math.floor(h * dpr / this.scale)));
     this.rt.setSize(rw, rh);
     this.mat.uniforms.res.value.set(rw, rh);
   };

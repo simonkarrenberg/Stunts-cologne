@@ -2,8 +2,22 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>STUNTS KÖLLE 4D — Chicago am Rhein Edition</title>
+<meta name="description" content="Pixel-Art-Rennspiel im Stil von Stunts – aber in Kölle. Loopings über der Zoobrücke, Sprünge im Rheinauhafen, Nacht in Kalk. Kommentiert vom Langen Tünn.">
+<meta name="theme-color" content="#c1121f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stunts Kölle">
+<meta property="og:title" content="STUNTS KÖLLE 4D – Chicago am Rhein Edition">
+<meta property="og:description" content="Pixel-Rennspiel in Kölle: Dom, Rheinauhafen, Zoobrücke-Looping, Kalk bei Nacht, Rusenmondaach. Fott domet!">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://simonkarrenberg.github.io/stunts-cologne/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -47,6 +61,11 @@
         <b>Steuerung:</b> ↑/W Gas · ↓/S Bremse · ←/→ Lenken · C Kamera · P Pixel · R Reset · M Ton · Esc Menü
       </div>
       <div id="menuBest" class="best"></div>
+      <div class="music">
+        <button id="musicBtn" title="Eigenen Song laden (z.B. Lamborghina aus iCloud Drive)">🎵 Musik laden</button>
+        <span id="musicTitle"></span>
+        <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
+      </div>
       <button id="startBtn">FOTT DOMET! ▶</button>
     </footer>
   </div>
@@ -58,6 +77,7 @@
     <div class="hudBox"><span class="lbl">Streck</span><span id="hudTrack"></span></div>
     <div class="hudBox"><span class="lbl">Rivale</span><span id="hudRival"></span></div>
     <div class="hudBox"><span class="lbl">Bestzeit</span><span id="best"></span></div>
+    <div class="hudBox music"><span class="lbl">Musik</span><span id="hudMusic"></span></div>
   </div>
   <canvas id="minimap" width="200" height="200"></canvas>
   <div id="countdown" hidden></div>
@@ -83,6 +103,7 @@
   <div class="tGroup"><button id="tLeft">◀</button><button id="tRight">▶</button></div>
   <div class="tGroup"><button id="tBrake">■</button><button id="tGas">▲</button></div>
 </div>
+<div id="rotate"><div>📱↻<br>Handy quer halten, Jung!</div></div>
 
 <!-- ============ RESULTS ============ -->
 <div id="results" hidden>
@@ -109,5 +130,8 @@
 <script src="js/data.js"></script>
 <script src="js/world.js"></script>
 <script src="js/game.js"></script>
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') { navigator.serviceWorker.register('sw.js').catch(function () {}); }
+</script>
 </body>
 </html>
