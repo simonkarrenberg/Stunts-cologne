@@ -393,7 +393,15 @@
     m.rotation.x = -Math.PI / 2; m.position.y = WATER_Y - GROUND_Y; m.userData.water = tex; animated.push(m);
     return m;
   }
-  P.rhine = () => { const g = new THREE.Group(); g.add(water(900, 130)); return g; };          // crosses the track
+  P.rhine = (o) => {
+    // crosses the track under a bridge / jump; extent per side is clipped so the river never
+    // runs under other parts of the circuit (o.extent = [left, right] metres, filled in by buildScenery)
+    const g = new THREE.Group(); const ex = (o && o.extent) || [450, 450]; const wd = (o && o.w) || 130;
+    // extent[0] was measured along -B, which is local +x after the yaw; extent[1] along +B = local -x
+    const right = water(ex[0], wd); right.position.x = ex[0] / 2; g.add(right);
+    const left = water(ex[1], wd); left.position.x = -ex[1] / 2; g.add(left);
+    return g;
+  };
   P.rhineSide = (o) => { const g = new THREE.Group(); g.add(water((o && o.w) || 260, (o && o.l) || 800)); g.rotation.y = Math.PI / 2; return g; }; // runs alongside
   P.promenade = () => { // Rhine promenade: plane trees + railing
     const g = new THREE.Group(); for (let x = -90; x <= 90; x += 15) { g.add(P.tree(2)).position.set(x, 0, 0); } g.add(box(200, 1, 0.2, 0x3a3a3a, 0, 0.6, 4)); for (let x = -100; x <= 100; x += 5) g.add(box(0.2, 1.1, 0.2, 0x3a3a3a, x, 0.55, 4)); return g; };
@@ -557,8 +565,25 @@
     const keepOut = []; const propList = [];
     for (const pd of (track.def.props || [])) {
       const fn = P[pd.type]; if (!fn) { console.warn('unknown prop', pd.type); continue; }
-      const prop = fn(pd, theme);
       const at = pd.seg != null ? segAt(pd.seg, pd.u) : pd.at;
+      if (pd.type === 'rhine' && !pd.extent) {
+        // walk outwards along the crossing axis until we get close to a road that is not a bridge/gap
+        const f = TB.frameAt(track, at * L); const bx = f.B.x, bz = f.B.z; const bl = Math.hypot(bx, bz) || 1;
+        const ext = [450, 450];
+        for (let sideI = 0; sideI < 2; sideI++) {
+          const sgn = sideI === 0 ? 1 : -1; // sideI 0 walks along -B (local +x), sideI 1 along +B (local -x)
+          const dirx = -bx / bl * sgn, dirz = -bz / bl * sgn;
+          let d = 20;
+          for (; d < 450; d += 10) {
+            const x = f.p.x + dirx * d, z = f.p.z + dirz * d; let hit = false;
+            for (let i = 0; i < n; i += 2) { const q = S[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp') continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < 24 * 24) { hit = true; break; } }
+            if (hit) break;
+          }
+          ext[sideI] = Math.max(30, d - 20);
+        }
+        pd.extent = ext;
+      }
+      const prop = fn(pd, theme);
       place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
