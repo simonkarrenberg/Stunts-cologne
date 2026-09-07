@@ -1,4 +1,4 @@
-# STUNTS KÖLLE 4D — Chicago am Rhein Edition
+# KÖLLE 4D — Chicago am Rhein
 
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,
@@ -40,6 +40,7 @@ es wird nichts nachgeladen). Läuft auch auf dem Handy (Touch-Buttons).
 |---|---|
 | ↑ / W | Gas |
 | ↓ / S / Leertaste | Bremse / Rückwärts |
+| Shift / N / X | Turbo (Nitro) |
 | ← / → / A / D | Lenken |
 | C | Kamera (Verfolger, Motorhaube, weit, TV-Kamera) |
 | P | Pixelgröße (1–4) |
@@ -62,26 +63,34 @@ M schaltet Motor und Musik stumm.
 
 ## Strecken
 
-| Strecke | Veedel | Besonderheiten |
-|---|---|---|
-| Domplatte-Runde | Altstadt / Deutz | Dom, Hbf, Hohenzollernbrücke, Steilkurven. Einsteiger. |
-| Rheinufer-Sprung | Rheinauhafen / Südstadt | Zwei Sprünge übers Hafenbecken, Kranhäuser, Schokoladenmuseum. Zu kurz gesprungen = Rhing. |
-| Zoobrücke-Looping | Riehl / Mülheim | Looping an der Flora, Seilbahn, Elefanten. Nicht bremsen im Looping! |
-| Ehrenfelder Haken | Ehrenfeld | Enge Haken, Tunnel, Colonius, Helios-Turm, Graffiti, Lastenräder. |
-| Kalker Klüngel-Nacht | Kalk / Deutz | Nacht, Neon, Arena, zwei Loopings, Sprung über die Gleise. Chicago am Rhein pur. |
-| Rusenmondaach-Chaos | Severinsviertel | Konfetti, Hügel, Sprung, Severinstor, jeckes Volk am Straßenrand. |
+| # | Strecke | Route | Besonderheiten |
+|---|---|---|---|
+| 1 | Chicago am Rhein | Friesenplatz – Rudolfplatz – Hansaring – Eigelsteintor | Nacht, Neon, nasse Straßen, Hansahochhaus, Hahnentor, zwei Loopings, Sprung über die Gleise. |
+| 2 | Domblitz 4D | Dom – Heumarkt – Hohenzollernbrücke – Rheinsprung | Dom, Rathaus, Altstadt, über die Brücke nach Deutz, mit Rheinsprung zurück. |
+| 3 | Schäl Sick Schraube | Deutzer Freiheit – Messe – Rheinpark – Mülheimer Hafen | Looping (die Schraube), Zoobrücke, Seilbahn, Hafenkräne, Mülheimer Brücke. |
+| 4 | Ehrenfeld Tape Run | Venloer – Odonien – Bahnbögen – Subbelrath – Köln West | Enge Haken, Tunnel, Colonius, Moschee, Kassettenladen, Graffiti. |
+| 5 | Karneval Krawall | Heumarkt – Alter Markt – Rathaus – Schmitzengasse | Tribünen, Zochwagen, Konfetti, Severinstor, Hügel und Sprung. |
+| 6 | Rheinauhafen 4D | Agrippinawerft – Holzmarkt – Kranhäuser – Rheinsprung | Sonnenuntergang, zwei Sprünge übers Hafenbecken, Kranhäuser, Severinsbrücke. |
 
-## Karren
 
-Ehrenfeld Capri (Ford, klar), Kranz-Kart, Klüngel-Limousine (Baujahr 1928, Chicago am Rhein),
-KVB Linie 1, Chicago-Taxi und der Karnevalswagen. Jede Karre mit eigenem Speed, Antritt,
-Grip und Lenkung.
+## Fahrer, Wagen, Rennen
 
-## Rivalen (kölsche Archetypen)
+Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen: **Tünnes** (leicht), **Schäl**
+(mittel), **Heinzel** (schwer) und **Langer T.** (Experte). Gegen dich fahren sieben weitere:
+Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 
-Der Lange Tünn, Köbes Hermann, Oma Käthe aus Nippes, FC-Andi, Ehrenfeld-Finn,
-Karnevalsjeck Jupp, Taxi-Ali, Klüngel-Klaus und Schäl. Jeder mit eigenem Fahrstil
-(Können, Wackligkeit) und eigenen Sprüchen beim Start, Überholen, Crash und im Ziel.
+Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Kölnie GTI, Ehrenfeld Turbo,
+Rheinland Rocket, Langer T. Special.
+
+Im Rennen: **TURBO** lädt beim Fahren und Driften auf, Shift/N zündet ihn. **SCHADEN** steigt
+bei Crashs und Rempeleien und kostet Topspeed; bei 100 % ist der Wagen kurz hin. Vier Kameras
+(C), darunter das Cockpit mit Lenkrad und Armaturen.
+
+**Klüngel-Baukasten:** eigener Streckeneditor im Menü. Teile aneinanderreihen (Gerade, Kurven,
+Steilkurven, Hügel, Senke, Looping, Sprung, Brücke, Tunnel), Kulisse wählen, speichern, fahren.
+Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel automatisch an.
+
+**Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert.
 
 ## Wie es funktioniert
 

@@ -63,6 +63,15 @@
     for (let i = 0; i < 10; i++) { x.fillStyle = '#e8f4ff'; const px = Math.floor(r() * 60), py = Math.floor(r() * 32); x.fillRect(px, py, 2, 1); }
     return toTex(c);
   });
+  T.wet = () => cached('wet', () => {
+    // rain-soaked asphalt: dark with pale streaks and puddle highlights
+    const c = canvas(32, 64), x = c.getContext('2d'), r = mulberry(23);
+    x.fillStyle = '#e0e4f0'; x.fillRect(0, 0, 32, 64);
+    for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.5 ? '#c8ccdc' : '#f0f2fa'; x.fillRect(Math.floor(r() * 32), Math.floor(r() * 64), 1, 1); }
+    for (let i = 0; i < 14; i++) { x.fillStyle = '#ffffff'; const px = Math.floor(r() * 32), py = Math.floor(r() * 64); x.fillRect(px, py, 1, 3 + Math.floor(r() * 6)); }
+    for (let i = 0; i < 5; i++) { x.fillStyle = '#b8c0d8'; x.fillRect(Math.floor(r() * 28), Math.floor(r() * 60), 3 + Math.floor(r() * 4), 2); }
+    return toTex(c);
+  });
   T.rails = () => cached('rails', () => {
     const c = canvas(16, 16), x = c.getContext('2d');
     x.fillStyle = '#5a4a3a'; x.fillRect(0, 0, 16, 16);
