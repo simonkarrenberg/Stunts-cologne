@@ -197,3 +197,7 @@ body.mobile .edBody { grid-template-columns: 1fr; } body.mobile .edPalette { fle
 @media (orientation: portrait) {
   body.mobile.racing #rotate { display: flex; position: fixed; inset: 0; z-index: 60; align-items: center; justify-content: center; background: rgba(10,8,30,.92); color: var(--yellow); text-align: center; font-size: 13px; line-height: 2; pointer-events: none; }
 }
+
+#flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 40; }
+.menuFooter .tipp { color: var(--yellow); font-size: 8px; width: 100%; text-align: center; }
+.resInner .stats { color: var(--cyan); line-height: 1.8; } .resInner .stats b { color: var(--yellow); }

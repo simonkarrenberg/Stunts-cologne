@@ -23,6 +23,7 @@
   let racers = [], player = null, raceTime = 0, countdown = 0, phase = 'menu'; // menu | countdown | race | finished | editor
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
+  let radioTimer = 12, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0;
   const input = { gas: 0, brake: 0, steer: 0, turbo: 0 };
   const keys = {};
   let customTracks = [];
@@ -324,6 +325,7 @@
     $('#hudBeste').textContent = fmtTime(player.bestLap);
     const pos = standings().indexOf(player) + 1;
     $('#hudPos').textContent = `${pos} / ${racers.length}`;
+    $('#hudKn').textContent = knoellchen ? `${knoellchen} × 60 €` : '–';
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
       const byTuenn = Math.random() < 0.5; const other = pick(racers.filter((r) => r.isAI)).driver;
       if (pos < lastPos) say(byTuenn ? tuenn : other, byTuenn ? pick(tuenn.overtake) : pick(other.lines.overtaken), 2200);
@@ -372,6 +374,8 @@
     player.s = 6; player.lat = -2.8;
     camPos.set(0, 5, -15); camUp.set(0, 1, 0); camLook.set(0, 0, 10);
     buildMinimap(); lastPos = null;
+    blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
+    knoellchen = 0; koelsch = 0; radioTimer = 12; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
     $('#hudTrack').textContent = `${idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
   }
@@ -410,6 +414,7 @@
       const tb = $('#resTable'); tb.innerHTML = '';
       order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
       $('#resBest').textContent = fmtTime(player.bestLap);
+      $('#resStats').innerHTML = `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 60} €, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: uff Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
       $('#resTuenn').textContent = record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
       const rd = order[won ? 1 : 0].driver;
@@ -449,6 +454,17 @@
       for (const r of racers) if (r.isAI) updateRacer(r, dt, r.finished ? { gas: 0, brake: 0.3, steer: 0, turbo: 0 } : aiControl(r, dt));
       for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) collide(racers[i], racers[j]);
       for (const r of racers) placeRacer(r, dt);
+      if (phase === 'race') {
+        radioTimer -= dt; eventTimer -= dt;
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 18 + Math.random() * 14; say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); }
+        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 35 + Math.random() * 25; const ev = pick(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
+        for (const b of blitzers) {
+          b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
+          let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;
+          if (ds > 0 && ds < 4 && b.cool <= 0) { b.cool = 8; if (Math.abs(player.v) * 3.6 > 120 && !player.air) { knoellchen++; if (b.flash) b.flash.material.opacity = 1; flashTimer = 0.25; beep(1400, 0.12, 'square', 0.12); say({ name: 'Blitzer Kölle', emoji: '📸' }, pick(tuenn.blitzer), 2600); } }
+        }
+        if (flashTimer > 0) { flashTimer -= dt; $('#flash').style.opacity = String(Math.max(0, flashTimer * 3)); }
+      }
       if (player.finished && phase === 'race') finishRace();
       if (phase === 'race') updateHUD();
       drawMinimap();
@@ -552,6 +568,7 @@
     $('#trackDesc').textContent = t.desc || 'Eigene Streck aus dem Klüngel-Baukasten.';
     $('#langerQuote').textContent = '„' + pick(tuenn.intro) + '“';
     $('#slogan').textContent = pick(tuenn.slogans);
+    $('#tipp').textContent = pick(tuenn.tips);
     try { localStorage.setItem('stuntskoelle.sel', JSON.stringify(sel)); } catch (e) { /* ignore */ }
   }
   let builtTrackId = null;
@@ -681,6 +698,7 @@
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_DEBUG = () => ({ phase, player: player && { s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
+  window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_FINISH = () => { if (player) { player.lap = trackDef.laps; player.s = track.length - 3; player.v = 30; } };
   if (typeof THREE === 'undefined') {
     document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Der Lange T. sagt: Internet anmachen, Jung.</div>';

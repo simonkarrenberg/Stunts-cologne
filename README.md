@@ -92,6 +92,12 @@ Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel autom
 
 **Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert.
 
+**Chicago am Rhein mit Miami-Vice-Touch:** Neonkanten an den Dächern, Palmen und der
+Rheinstrand km 689 am Rheinauhafen, Speedboote, Riesenrad, Kölner Lichter über dem Rhein,
+der Kölsch-Zeppelin, Polizei Köln mit Blaulicht. Dazu **Blitzer** (ab 120 km/h gibt es ein
+Knöllchen, Klüngel Tom regelt dat), **Radio Kölle** mit Verkehrsmeldungen aus der Hölle,
+zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus) und der Tipp des Tages vom Langen T.
+
 ## Wie es funktioniert
 
 - `js/track.js` — Streckenbau aus Stunts-artigen Segmenten (Gerade, Kurve mit Überhöhung,

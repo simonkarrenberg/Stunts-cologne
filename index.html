@@ -67,6 +67,7 @@
   <footer class="menuFooter">
     <span class="keys"><kbd>↑</kbd><kbd>↓</kbd> STRECK <kbd>←</kbd><kbd>→</kbd> WAGEN <kbd>1-4</kbd> FAHRER <kbd>ENTER</kbd> OK <kbd>ESC</kbd> ZURÜCK</span>
     <span id="slogan" class="slogan"></span>
+    <span id="tipp" class="tipp"></span>
     <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET</span>
   </footer>
 </div>
@@ -106,7 +107,9 @@
     <div><span>RUNDE</span><b id="hudRunde">1 / 3</b></div>
     <div><span>BESTE</span><b id="hudBeste">--:--.--</b></div>
     <div><span>POS</span><b id="hudPos">8 / 8</b></div>
+    <div><span>KNÖLLCHEN</span><b id="hudKn">–</b></div>
   </div>
+  <div id="flash"></div>
   <div class="hudMini"><canvas id="minimap" width="200" height="200"></canvas></div>
   <canvas id="cockpit" width="1280" height="480" hidden></canvas>
   <div id="countdown" hidden></div>
@@ -141,6 +144,7 @@
       <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt uff de Bierdeckel.</div>
       <table><tbody id="resTable"></tbody></table>
       <p class="small">Beste Runde: <b id="resBest"></b> · * = noch unterwegs, Zeit jeschätzt</p>
+      <p class="small stats" id="resStats"></p>
       <div class="resBtns"><button id="againBtn">NOCHMAL (ENTER)</button><button id="menuBtn">MENÜ (ESC)</button></div>
     </div>
     <div class="resRight">

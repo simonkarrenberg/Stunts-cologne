@@ -224,6 +224,14 @@
     }
     // dormer / chimney
     if (seed % 2 === 0 && roof !== 'flat') g.add(box(1, 2.2, 1, 0x6a5a50, w / 4, h + 1.6, -d / 4));
+    // Miami-Vice neon strip along the roof line at night
+    if (opts.night && seed % 3 === 0) {
+      const nc = [0xff2d95, 0x00e5ff, 0xc04dff, 0xffd400][seed % 4];
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.18, 0.18), bmat(nc))).position.set(0, h + 0.1, d / 2 + 0.1);
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.18, h, 0.18), bmat(nc))).position.set(-w / 2 - 0.05, h / 2, d / 2 + 0.1);
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.18, h, 0.18), bmat(nc))).position.set(w / 2 + 0.05, h / 2, d / 2 + 0.1);
+      g.add(glow(w + 4, 6, nc, 0, d / 2 + 2));
+    }
     // shop front on the street side (+z)
     if (opts.shop) {
       const sw = Math.min(w - 1, 9);
@@ -687,6 +695,76 @@
     return g;
   };
   P.rheinsprung = () => { const g = new THREE.Group(); const s = textPlane('RHEIN SPRUNG  →', '#c1121f', '#f6f0e0', 6, 2.2, false, { border: '#c1121f' }); s.position.set(0, 3.2, 0); g.add(s); g.add(cyl(0.12, 0.14, 2.2, 0x555555, -2.5, 1.1, 0, 6)); g.add(cyl(0.12, 0.14, 2.2, 0x555555, 2.5, 1.1, 0, 6)); return g; };
+  // --- Chicago am Rhein / Miami Vice extras & more street life ---
+  P.palm = (o) => { const g = new THREE.Group(); const h = (o && o.h) || 7; const r = mulberry((o && o.seed) || 3);
+    for (let i = 0; i < 6; i++) { const seg = box(0.7, h / 6 + 0.1, 0.7, i % 2 ? 0x8a6a3a : 0x7a5a2a, Math.sin(i * 0.4) * 0.4, (i + 0.5) * h / 6, 0); g.add(seg); }
+    for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const leaf = box(0.5, 0.25, 3.6, k % 2 ? 0x2f9a48 : 0x3fb858, Math.cos(a) * 1.6, h + 0.3 - Math.abs(Math.sin(k)) * 0.3, Math.sin(a) * 1.6); leaf.rotation.y = -a + Math.PI / 2; leaf.rotation.x = 0.35; g.add(leaf); }
+    g.add(box(0.5, 0.5, 0.5, 0x8a5a1a, 0.3, h - 0.2, 0.3)); // coconuts (Kölsch-Kokos)
+    if (THEME.night) g.add(new THREE.Mesh(new THREE.BoxGeometry(0.25, h, 0.25), bmat(r() < 0.5 ? 0xff2d95 : 0x00e5ff))).position.set(-0.55, h / 2, 0);
+    return g; };
+  P.beach = () => { // "Rheinstrand km 689": sand, parasols, palms, beach bar
+    const g = new THREE.Group(); const sand = tplane(60, 30, T.grass(0xe8d8a0, 5), 8, 4); sand.rotation.x = -Math.PI / 2; sand.position.y = 0.06; g.add(sand);
+    for (let i = 0; i < 6; i++) { const x = -22 + i * 9; g.add(cyl(0.08, 0.08, 2.6, 0x8a8a8a, x, 1.3, -4 + (i % 2) * 6, 6)); g.add(cone(1.8, 0.9, [0xff2d95, 0x00e5ff, 0xffd400, 0xffffff][i % 4], x, 2.9, -4 + (i % 2) * 6, 8)); g.add(box(1.8, 0.4, 0.8, [0xff2d95, 0x00e5ff][i % 2], x + 1.2, 0.35, -4 + (i % 2) * 6)); }
+    for (let i = 0; i < 4; i++) g.add(P.palm({ h: 6 + i, seed: i })).position.set(-26 + i * 17, 0, -12);
+    const bar = new THREE.Group(); bar.add(box(8, 3, 3, 0x8a5a2a, 0, 1.5, 0)); bar.add(box(9, 0.3, 4, 0xd0a060, 0, 3.1, 0)); bar.add(cone(5.5, 1.6, 0xb0864a, 0, 4, 0, 4)); const sg = textPlane('RHEINSTRAND KM 689 · KÖLSCH & COCKTAILS', THEME.night ? '#ff2d95' : '#c1121f', '#f6f0e0', 8, 1.2, THEME.night, { border: '#ff2d95' }); sg.position.set(0, 2.3, 1.55); bar.add(sg); bar.position.set(18, 0, 10); g.add(bar);
+    for (let i = 0; i < 5; i++) { const f = P.figure(0.5, [0xff2d95, 0xffd400, 0x00e5ff, 0xffffff, 0xff8800][i], null); f.position.set(-16 + i * 7, 0, 2 + (i % 2) * 4); g.add(f); }
+    if (THEME.night) g.add(glow(40, 20, 0xff2d95, 10, 4));
+    return g; };
+  P.speedboat = () => { const g = new THREE.Group(); g.add(box(9, 1.2, 3, 0xf4f4f4, 0, 0.6, 0)); g.add(box(4, 0.8, 2.6, 0xff2d95, -1, 1.5, 0)); g.add(box(2, 0.5, 2.2, 0x00e5ff, 1.5, 1.4, 0)); g.add(box(0.15, 0.15, 3, 0x00e5ff, 0, 1.3, 0)); g.add(box(1.5, 0.3, 1.5, 0xffffff, 3.5, 1.0, 0)); g.userData.speedboat = { phase: Math.random() * 10 }; animated.push(g); return g; };
+  P.riesenrad = () => { // Ferris wheel by the harbour, slowly turning
+    const g = new THREE.Group(); const R = 22;
+    for (const z of [-2, 2]) { g.add(box(3, R + 6, 2, 0x8a8a92, -6, (R + 6) / 2, z)).rotation.z = 0.25; g.add(box(3, R + 6, 2, 0x8a8a92, 6, (R + 6) / 2, z)).rotation.z = -0.25; }
+    const wheel = new THREE.Group(); wheel.position.y = R + 3;
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; const sp = box(0.5, R, 0.5, 0xdddddd, Math.cos(a) * R / 2, Math.sin(a) * R / 2, 0); sp.rotation.z = a + Math.PI / 2; wheel.add(sp); const gondola = box(2.6, 2.2, 2, [0xff2d95, 0x00e5ff, 0xffd400, 0xffffff][k % 4], Math.cos(a) * R, Math.sin(a) * R, 0); gondola.userData.gondolaK = k; wheel.add(gondola); if (THEME.night) wheel.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), bmat([0xff2d95, 0x00e5ff][k % 2]))).position.set(Math.cos(a) * R, Math.sin(a) * R, 1.3); }
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 6, 24), THEME.night ? bmat(0xff2d95) : mat(0xdddddd)); wheel.add(rim);
+    wheel.userData.wheel = true; wheel.userData.keep = true; g.add(wheel); animated.push(wheel);
+    const s = textPlane('RIESENRAD AM RHING', '#ffd400', '#2a1a3a', 12, 1.6, THEME.night); s.position.set(0, 3.5, 6); g.add(s);
+    return g; };
+  P.zeppelin = () => { // the Kölsch airship cruising over the city
+    const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), mat(0xf4f4f4)); body.scale.set(3.2, 1, 1); g.add(body);
+    g.add(box(6, 2, 2.5, 0xdddddd, 0, -5.5, 0)); g.add(box(2, 4, 0.3, 0xc1121f, -17, 1, 0)); g.add(box(2, 0.3, 4, 0xc1121f, -17, 1, 0));
+    const s = textPlane('TÜNN KÖLSCH – ET LÄUFT', '#c1121f', '#f4f4f4', 14, 3, THEME.night); s.position.set(0, 0, 6.2); g.add(s); const s2 = s.clone(); s2.position.z = -6.2; s2.rotation.y = Math.PI; g.add(s2);
+    g.position.y = 120; g.userData.zeppelin = { phase: Math.random() * 100 }; g.userData.keep = true; animated.push(g);
+    return g; };
+  P.fireworks = () => { // Kölner Lichter: bursts over the Rhine (night)
+    const N = 420; const pos = new Float32Array(N * 3), col = new Float32Array(N * 3); const vel = new Float32Array(N * 3); const life = new Float32Array(N);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 1.6, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    for (let i = 0; i < N; i++) life[i] = -Math.random() * 6;
+    pts.userData.fw = { pos, col, vel, life, N, timer: 0 }; pts.userData.keep = true; pts.frustumCulled = false; animated.push(pts);
+    return pts; };
+  P.moewen = () => { const g = new THREE.Group(); for (let i = 0; i < 6; i++) { const m = new THREE.Group(); m.add(box(1.2, 0.1, 0.25, 0xf4f4f4, -0.6, 0, 0)).rotation.z = 0.3; m.add(box(1.2, 0.1, 0.25, 0xf4f4f4, 0.6, 0, 0)).rotation.z = -0.3; m.position.set((i - 3) * 6, 14 + (i % 3) * 3, (i % 2) * 5); m.userData.moewe = { phase: i }; g.add(m); animated.push(m); } return g; };
+  P.litfass = (o) => { const g = new THREE.Group(); g.add(cyl(1.1, 1.1, 3.2, 0x3a3a44, 0, 1.6, 0, 10)); g.add(cyl(1.3, 1.3, 0.3, 0x2a2a30, 0, 3.35, 0, 10)); g.add(cone(1.2, 0.6, 0x2a2a30, 0, 3.8, 0, 10));
+    const posters = (o && o.texts) || ['ROSENMONTAG', 'KÖLSCH-FEST', 'FC HEIMSPIEL', 'TÜNN LIVE', 'BOXKELLER'];
+    for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; const pl = textPlane(posters[k % posters.length], ['#ffffff', '#ffd400', '#111', '#ff2d95'][k % 4], ['#c1121f', '#1c3f95', '#ffd400', '#2a1a3a'][k % 4], 1.6, 2.2, false, { sizeK: 0.35 }); pl.position.set(Math.sin(a) * 1.13, 1.7, Math.cos(a) * 1.13); pl.rotation.y = a; g.add(pl); }
+    return g; };
+  P.telefonzelle = () => { const g = new THREE.Group(); g.add(box(1.2, 2.4, 1.2, 0xffd400, 0, 1.2, 0)); g.add(box(1.0, 1.4, 0.05, 0x9fd3ff, 0, 1.5, 0.61)); g.add(box(1.3, 0.2, 1.3, 0x1c1c1c, 0, 2.5, 0)); const s = textPlane('TELEFON', '#111', '#ffd400', 1.1, 0.25, false, { sizeK: 0.6 }); s.position.set(0, 2.25, 0.63); g.add(s); return g; };
+  P.bude = (o) => { // Currywurst / Halve Hahn stand
+    const g = new THREE.Group(); const txt = (o && o.text) || 'CURRYWURST & HALVE HAHN';
+    g.add(tbox(4.5, 2.6, 2.6, T.facade('concrete', 0xd8c8a8, 3, THEME.night), 0, 1.3, 0, 0xffffff, [4, 3]));
+    const aw = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.4), tmat(T.stripes(0xffd400, 0xc1121f), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.5; aw.position.set(0, 2.9, 1.9); g.add(aw);
+    const s = textPlane(txt, THEME.night ? '#ffd400' : '#111', THEME.night ? '#2a1a1a' : '#f6f0e0', 4.4, 0.7, THEME.night, { border: '#c1121f' }); s.position.set(0, 3.1, 1.35); g.add(s);
+    g.add(box(4, 0.15, 0.6, 0x8a5a2a, 0, 1.0, 1.5)); g.add(box(0.5, 0.6, 0.5, 0xffffff, -1.2, 1.4, 0.6)); g.add(box(0.3, 0.3, 0.3, 0xffd400, 0.8, 1.2, 1.6)); g.add(box(0.3, 0.3, 0.3, 0xc1121f, 1.3, 1.2, 1.6));
+    g.add(P.figure(0.55, 0xffffff, null)).position.set(-1.5, 0, 2.6); g.add(P.figure(0.5, 0x3a3a5a, null)).position.set(0.6, 0, 3.0);
+    if (THEME.night) g.add(glow(8, 6, 0xffd400, 0, 2));
+    return g; };
+  P.marktstand = () => { const g = new THREE.Group(); g.add(box(3.5, 0.9, 1.6, 0x8a5a2a, 0, 0.7, 0)); for (const x of [-1.6, 1.6]) g.add(cyl(0.06, 0.06, 2.6, 0x555555, x, 1.3, -0.7, 6)); const aw = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 2.2), tmat(T.stripes([0xc1121f, 0x2d6a4f, 0x1c3f95][Math.floor(Math.random() * 3)], 0xffffff), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.25; aw.position.set(0, 2.6, 0); g.add(aw); for (let i = 0; i < 6; i++) g.add(box(0.45, 0.35, 0.45, [0xff2020, 0x7fff00, 0xffd400, 0xff8800, 0x2f9a48, 0xf0e0c0][i], -1.3 + i * 0.5, 1.3, 0.3)); return g; };
+  P.bank = () => { const g = new THREE.Group(); g.add(box(2.2, 0.12, 0.5, 0x6a4a2a, 0, 0.5, 0)); g.add(box(2.2, 0.5, 0.1, 0x6a4a2a, 0, 0.85, -0.25)); g.add(box(0.15, 0.5, 0.5, 0x333333, -1, 0.25, 0)); g.add(box(0.15, 0.5, 0.5, 0x333333, 1, 0.25, 0)); return g; };
+  P.fahrradstaender = () => { const g = new THREE.Group(); for (let i = 0; i < 4; i++) { const b = P.fahrrad(); b.position.set(i * 0.7 - 1, 0, 0); b.rotation.y = Math.PI / 2; g.add(b); } return g; };
+  P.bus = () => { const g = new THREE.Group(); g.add(box(2.5, 2.6, 12, 0xe30613, 0, 1.6, 0)); g.add(box(2.52, 1.0, 11.4, 0x9fd3ff, 0, 2.2, 0)); g.add(box(2.5, 0.2, 12.2, 0xf4f4f4, 0, 2.95, 0)); const s = textPlane('KVB 132 · ZOOBRÜCKE', '#ffb000', '#222', 2.2, 0.45, THEME.night); s.position.set(0, 2.5, 6.05); g.add(s); for (const z of [3.8, -3.8]) { for (const x of [-1.1, 1.1]) g.add(cyl(0.45, 0.45, 0.4, 0x111111, x, 0.45, z, 8)).rotation.z = Math.PI / 2; } return g; };
+  P.polizei = () => { // Polizei Köln, blue lights blinking
+    const g = new THREE.Group(); g.add(box(1.9, 0.6, 4.4, 0xf4f4f4, 0, 0.7, 0)); g.add(box(1.75, 0.6, 2.2, 0xf4f4f4, 0, 1.3, -0.3)); g.add(box(1.77, 0.35, 2.1, 0x9fd3ff, 0, 1.35, -0.3)); g.add(box(1.95, 0.35, 4.4, 0x1c3f95, 0, 0.55, 0));
+    const s = textPlane('POLIZEI', '#1c3f95', '#f4f4f4', 1.6, 0.35, false, { sizeK: 0.6 }); s.position.set(0.98, 0.85, 0); s.rotation.y = Math.PI / 2; g.add(s);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.25, 0.4), bmat(0x2060ff)); bar.position.set(0, 1.72, -0.3); bar.userData.blink = true; g.add(bar); animated.push(bar);
+    if (THEME.night) { const gl = glow(10, 10, 0x2060ff, 0, 0); gl.userData.blink = true; g.add(gl); animated.push(gl); }
+    for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z));
+    g.add(P.figure(0.55, 0x1c3f95, 0x1c3f95)).position.set(1.6, 0, 0.6);
+    return g; };
+  P.blitzer = () => { // Kölle's favourite: the speed camera. Flash handled by the game.
+    const g = new THREE.Group(); g.add(cyl(0.15, 0.18, 3, 0x555555, 0, 1.5, 0, 6)); g.add(box(0.9, 1.0, 0.7, 0x3a3a44, 0, 3.4, 0)); g.add(box(0.35, 0.35, 0.1, 0x111111, 0, 3.4, 0.4));
+    const flash = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide })); flash.position.set(0, 3.4, 0.45); g.add(flash); g.userData.flash = flash;
+    const s = textPlane('BLITZER', '#fff', '#c1121f', 1.4, 0.35, false, { sizeK: 0.6 }); s.position.set(0, 2.2, 0.3); g.add(s);
+    return g; };
   P.house = (seed) => { const r = mulberry(seed); const styles = THEME.street === 'altstadt' ? ['altstadt'] : THEME.street === 'industrial' ? ['industrial', 'concrete'] : THEME.street === 'modern' ? ['modern', 'concrete'] : ['gruenderzeit', 'gruenderzeit', 'concrete']; const st = styles[Math.floor(r() * styles.length)];
     const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'industrial' ? INDUSTRIAL : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE;
     const w = st === 'altstadt' ? 6 + r() * 3 : 9 + r() * 6, d = 10 + r() * 6, h = st === 'altstadt' ? 11 + r() * 6 : 12 + r() * 10;
@@ -804,7 +882,7 @@
       if (faceTrack) { const fb = TB.frameAt(track, at * L - 30); prop.lookAt(fb.p.x, GROUND_Y, fb.p.z); }
       return prop;
     }
-    const FACING = ['hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
+    const FACING = ['beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
     const keepOut = []; const propList = [];
     for (const pd of (track.def.props || [])) {
       const fn = P[pd.type]; if (!fn) { console.warn('unknown prop', pd.type); continue; }
@@ -830,7 +908,7 @@
       place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
-      prop.userData.type = pd.type; propList.push(prop);
+      prop.userData.type = pd.type; prop.userData.at = at; propList.push(prop);
       g.add(prop);
       keepOut.push({ x: prop.position.x, z: prop.position.z, r: pd.keep || (pd.type === 'dom' ? 110 : pd.type.match(/altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney/) ? 55 : 30) });
     }
@@ -885,6 +963,12 @@
         if (rnd() < 0.5) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x, GROUND_Y, z); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
         if (rnd() < 0.15) put(P.muell(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.0, false);
         if (rnd() < 0.15) put(P.fahrrad(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.1, false);
+        if (k % 9 === 5) put(P.litfass({ texts: theme.posters }), k % 2 ? 1 : -1, ROAD_W + 5.0, false);
+        if (k % 13 === 6) put(P.telefonzelle(), k % 2 ? -1 : 1, ROAD_W + 4.6, true);
+        if (rnd() < 0.08) put(P.bank(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.2, true);
+        if (rnd() < 0.05) put(P.fahrradstaender(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.4, false);
+        if (k % 17 === 9 && street !== 'altstadt') put(P.bus(), k % 2 ? 1 : -1, ROAD_W + 2.9, false);
+        if (street === 'altstadt' && k % 11 === 4) put(P.marktstand(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
         if (street === 'altstadt' && rnd() < 0.25) put(P.cafe(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
         if ((street === 'gruenderzeit' || street === 'modern') && k % 3 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false);
       } else if (street === 'park' && flat && (i / step) % 3 === 0) {
@@ -896,9 +980,9 @@
     let cx = 0, cz = 0; for (const s of S) { cx += s.p.x; cz += s.p.z; } cx /= n; cz /= n;
     let maxR = 0; for (const s of S) maxR = Math.max(maxR, Math.hypot(s.p.x - cx, s.p.z - cz));
     const ringR = maxR + 260;
-    const ringN = 44;
+    const ringN = 64;
     for (let k = 0; k < ringN; k++) {
-      const a = k / ringN * Math.PI * 2 + rnd() * 0.1; const rr = ringR + rnd() * 160;
+      const a = k / ringN * Math.PI * 2 + rnd() * 0.1; const rr = ringR + (k % 2 ? 0 : 140) + rnd() * 120;
       const x = cx + Math.cos(a) * rr, z = cz + Math.sin(a) * rr;
       let b;
       if (k % 9 === 4) b = P.kirche({ h: 30 + rnd() * 30, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][k % 3] });        // the romanesque churches of Kölle
@@ -933,7 +1017,21 @@
       else if (u.train) { a.position.x += dt * 12; if (a.position.x > 70) a.position.x = -110; }
       else if (u.tramline) { const t2 = u.tramline; a.position.z += t2.dir * t2.speed * dt; if (Math.abs(a.position.z) > t2.len / 2 - 8) { t2.dir *= -1; a.rotation.y = t2.dir > 0 ? 0 : Math.PI; } }
       else if (u.flag) a.rotation.y = Math.sin(t * 0.004) * 0.35;
-      else if (u.blink) a.visible = Math.floor(t / 600) % 2 === 0;
+      else if (u.blink) a.visible = Math.floor(t / 300) % 2 === 0;
+      else if (u.speedboat) { a.position.x += Math.cos(t * 0.0004 + u.speedboat.phase) * dt * 14; a.rotation.y = Math.cos(t * 0.0004 + u.speedboat.phase) > 0 ? 0 : Math.PI; }
+      else if (u.wheel) a.rotation.z = t * 0.00025;
+      else if (u.zeppelin) { const z = u.zeppelin; a.position.x += dt * 6; a.position.y = 120 + Math.sin(t * 0.0003 + z.phase) * 6; if (!z.origin) z.origin = a.position.x; if (a.position.x - z.origin > 900) a.position.x = z.origin - 300; }
+      else if (u.moewe) { a.position.x += Math.sin(t * 0.0006 + u.moewe.phase) * dt * 5; a.position.y += Math.cos(t * 0.0011 + u.moewe.phase) * dt * 1.5; a.rotation.z = Math.sin(t * 0.008 + u.moewe.phase) * 0.4; }
+      else if (u.fw) {
+        const f = u.fw; f.timer -= dt;
+        if (f.timer <= 0) { // launch a burst
+          f.timer = 1.2 + Math.random() * 2.2; const cx = (center ? center.x : 0) + (Math.random() - 0.5) * 300, cz = (center ? center.z : 0) + (Math.random() - 0.5) * 300, cy = 60 + Math.random() * 50;
+          const hue = Math.random(); const c = new THREE.Color().setHSL(hue, 1, 0.6);
+          let n = 0; for (let i = 0; i < f.N && n < 70; i++) { if (f.life[i] > 0) continue; n++; f.life[i] = 1.6 + Math.random() * 0.8; f.pos[i * 3] = cx; f.pos[i * 3 + 1] = cy; f.pos[i * 3 + 2] = cz; const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1), sp = 14 + Math.random() * 10; f.vel[i * 3] = Math.sin(ph) * Math.cos(th) * sp; f.vel[i * 3 + 1] = Math.cos(ph) * sp; f.vel[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * sp; f.col[i * 3] = c.r; f.col[i * 3 + 1] = c.g; f.col[i * 3 + 2] = c.b; }
+        }
+        for (let i = 0; i < f.N; i++) { if (f.life[i] <= 0) { f.pos[i * 3 + 1] = -100; continue; } f.life[i] -= dt; f.vel[i * 3 + 1] -= 9 * dt; f.pos[i * 3] += f.vel[i * 3] * dt; f.pos[i * 3 + 1] += f.vel[i * 3 + 1] * dt; f.pos[i * 3 + 2] += f.vel[i * 3 + 2] * dt; const k = Math.max(0, f.life[i]) / 2; f.col[i * 3] *= 0.995; }
+        a.geometry.attributes.position.needsUpdate = true; a.geometry.attributes.color.needsUpdate = true;
+      }
     }
   }
 
