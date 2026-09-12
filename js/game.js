@@ -24,6 +24,7 @@
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
   let radioTimer = 12, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0;
+  let stories = [], telefon = { ready: true, active: 0, used: 0 };
   let player2 = null, twoPlayer = false, camera2 = null;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
   const input2 = { gas: 0, brake: 0, steer: 0, turbo: 0 };
@@ -233,7 +234,7 @@
       if (r.bestLap == null || lapTime < r.bestLap) r.bestLap = lapTime;
       r.lap++;
       if (r.lap > trackDef.laps) { r.finished = true; r.finishTime = raceTime; r.lap = trackDef.laps; }
-      else if (!r.isAI) say(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === trackDef.laps ? 1 : 0))], 2500);
+      else if (!r.isAI) { say(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === trackDef.laps ? 1 : 0))], 2500); if (r === player) { telefon.ready = true; $('#hudTel').textContent = 'K = ANRUFEN'; } }
     }
     r.steerVis += (ctl.steer - r.steerVis) * Math.min(1, dt * 10);
   }
@@ -242,7 +243,7 @@
     r.aiTimer -= dt;
     if (r.aiTimer <= 0) { r.aiTimer = 4 + Math.random() * 8; r.aiSlow = Math.random() < r.wobble * 0.6 ? 0.55 + Math.random() * 0.3 : 1; r.laneBias = (Math.random() - 0.5) * 6; }
     const i = Math.floor(((r.s % track.length) + track.length) % track.length / track.ds) % track.samples.length;
-    const target = Math.min(r.car.top * r.skill * 1.05, track.safe[i] * (0.9 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1);
+    const target = Math.min(r.car.top * r.skill * 1.05, track.safe[i] * (0.9 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1);
     let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     let wantLat = Math.sin(raceTime * 0.7 + r.wobblePhase) * r.wobble * 2 + r.laneBias * 0.5;
     // avoid the car ahead
@@ -392,10 +393,10 @@
     scene = new THREE.Scene();
     scene.background = new THREE.Color(theme.sky);
     scene.fog = new THREE.Fog(theme.fog, theme.night ? 90 : 220, theme.night ? 520 : 1300);
-    hemi = new THREE.HemisphereLight(theme.night ? 0x8090c0 : theme.sky, theme.ground, theme.night ? 0.7 : 0.75); scene.add(hemi);
-    sunLight = new THREE.DirectionalLight(theme.sun, theme.night ? 0.45 : 1.0); sunLight.position.set(120, 200, 80); scene.add(sunLight);
+    hemi = new THREE.HemisphereLight(theme.night ? 0x8090c0 : theme.sky, theme.ground, theme.night ? 0.7 : 0.5); scene.add(hemi);
+    sunLight = new THREE.DirectionalLight(theme.sun, theme.night ? 0.45 : 0.8); sunLight.position.set(120, 200, 80); scene.add(sunLight);
     if (renderer.shadowMap.enabled) { sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048); const sc = sunLight.shadow.camera; sc.left = -170; sc.right = 170; sc.top = 170; sc.bottom = -170; sc.near = 10; sc.far = 700; sunLight.shadow.bias = -0.0008; sunLight.shadow.normalBias = 0.6; scene.add(sunLight.target); }
-    scene.add(new THREE.AmbientLight(theme.night ? 0x223055 : 0x404050, theme.night ? 0.5 : 0.35));
+    scene.add(new THREE.AmbientLight(theme.night ? 0x223055 : 0x404050, theme.night ? 0.5 : 0.25));
     if (theme.night) { carLight = new THREE.PointLight(0xfff2cc, 2.0, 90); scene.add(carLight); } else carLight = null;
     road = W.buildRoad(track, theme); scene.add(road);
     scenery = W.buildScenery(track, theme); scene.add(scenery.group);
@@ -428,6 +429,9 @@
     buildMinimap(); lastPos = null;
     rec.frames = []; rec.t = []; rec.acc = 0; loadGhost();
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
+    // the Lange Tünn "verzällt": tour anecdotes when you pass the places of his tour
+    stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, told: false }));
+    telefon = { ready: true, active: 0, used: 0 };
     knoellchen = 0; koelsch = 0; radioTimer = 12; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
     $('#hudTrack').textContent = `${idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
@@ -447,7 +451,8 @@
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing');
-    say(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : pick(tuenn.intro), 3800);
+    say(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
+    $('#hudTel').textContent = 'K = ANRUFEN';
     setTimeout(() => { if (phase !== 'menu') { const d = pick(racers.filter((r) => r.isAI)).driver; say(d, pick(d.lines.start), 2500); } }, 3900);
     cdShown = -1;
   }
@@ -468,7 +473,7 @@
       const tb = $('#resTable'); tb.innerHTML = '';
       order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
       $('#resBest').textContent = fmtTime(player.bestLap);
-      $('#resStats').innerHTML = `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 60} €, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: uff Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
+      $('#resStats').innerHTML = `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 60} €, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · TÜNN’S TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} Kölsch) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: uff Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
       $('#resTuenn').textContent = record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
       const rd = order[won ? 1 : 0].driver;
@@ -515,7 +520,9 @@
       for (const r of racers) placeRacer(r, dt);
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt;
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 18 + Math.random() * 14; say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); }
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 18 + Math.random() * 14; const roll = Math.random(); if (roll < 0.4) say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); else if (roll < 0.7) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
+        for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; say({ name: 'Langer T. verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 8); } }
+        if (telefon.active > 0) telefon.active -= dt;
         if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 35 + Math.random() * 25; const ev = pick(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
         for (const b of blitzers) {
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
@@ -590,6 +597,7 @@
     if (e.code === 'KeyP') cyclePixel();
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; }
+    if (e.code === 'KeyK' && phase === 'race') tuennsTelefon();
     if (e.code === 'Escape') toMenu();
     if (e.code === 'Enter' && phase === 'finished') startRace();
   });
@@ -724,6 +732,13 @@
     edRender();
   }
 
+  // ---------------- Tünn's Telefon: one call per lap, the doormen hold the field ----------------
+  function tuennsTelefon() {
+    if (!telefon.ready || telefon.active > 0) { say(tuenn, 'Besetzt, Jung. Ich telefonier nur eimol pro Rund.', 2000); return; }
+    telefon.ready = false; telefon.active = 6; telefon.used++;
+    say(tuenn, pick(tuenn.tuennsTelefon), 3500); beep(660, 0.12, 'triangle', 0.15); setTimeout(() => beep(880, 0.12, 'triangle', 0.15), 150);
+    $('#hudTel').textContent = 'BESETZT'; setTimeout(() => { $('#hudTel').textContent = telefon.ready ? 'K = ANRUFEN' : 'NÄCHSTE RUND'; }, 6000);
+  }
   // ---------------- replay ----------------
   function recordFrame(dt) {
     rec.acc += dt; if (rec.acc < 0.05 || rec.frames.length > 6000) return; rec.acc = 0;
@@ -889,6 +904,7 @@
     $('#replayBtn').onclick = startReplay;
     $('#replayExit').onclick = stopReplay;
     $('#p2Btn').onclick = toggleTwoPlayer;
+    $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice;
     voiceInit();
     for (const id of ['turboBar2']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
@@ -909,8 +925,9 @@
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
-  window.STUNTS_DEBUG = () => ({ phase, player: player && { s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
+  window.STUNTS_SCENE = () => scene;
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {

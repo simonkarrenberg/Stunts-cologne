@@ -48,12 +48,11 @@
   });
   T.cobble = (color, seed) => cached('cobble' + color + seed, () => {
     const c = canvas(128, 128), x = c.getContext('2d'), r = mulberry(seed || 2);
-    x.fillStyle = shade(color, 0.62); x.fillRect(0, 0, 128, 128);
-    for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) {
-      const ox = (j % 2) * 8; const px = (i * 16 + ox) % 128, py = j * 16; const k = 0.88 + r() * 0.22;
-      const g = x.createLinearGradient(px, py, px + 14, py + 14); g.addColorStop(0, shade(color, k * 1.12)); g.addColorStop(1, shade(color, k * 0.82));
-      x.fillStyle = g; x.beginPath(); x.roundRect ? x.roundRect(px + 1, py + 1, 13, 13, 4) : x.rect(px + 1, py + 1, 13, 13); x.fill();
-      x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(px + 3, py + 3, 6, 2);
+    x.fillStyle = shade(color, 0.8); x.fillRect(0, 0, 128, 128);
+    for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
+      const ox = (j % 2) * 4; const px = (i * 8 + ox) % 128, py = j * 8; const k = 0.93 + r() * 0.12;
+      const g = x.createLinearGradient(px, py, px + 7, py + 7); g.addColorStop(0, shade(color, k * 1.05)); g.addColorStop(1, shade(color, k * 0.9));
+      x.fillStyle = g; x.beginPath(); x.roundRect ? x.roundRect(px + 1, py + 1, 6, 6, 2) : x.rect(px + 1, py + 1, 6, 6); x.fill();
     }
     return toTex(c);
   });

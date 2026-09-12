@@ -465,7 +465,7 @@
     const awning = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.6), tmat(T.stripes(0xc1121f, 0xffffff), 0xffffff, { side: THREE.DoubleSide })); awning.rotation.x = -Math.PI / 2 + 0.5; awning.position.set(0, 3.3, 2.3); g.add(awning);
     const sign = textPlane('BÜDCHE · KÖLSCH · KAMELLE', '#111', '#ffd400', 5, 0.8, THEME.night); sign.position.set(0, 3.5, 1.8); g.add(sign);
     for (let i = 0; i < 3; i++) g.add(box(0.9, 0.6, 0.6, [0xc1121f, 0x1c3f95, 0x2d6a4f][i], -3 + i * 1, 0.3, 1.5));
-    g.add(box(0.5, 1.2, 0.5, 0xf1c27d, 3.4, 0.6, 1.4)); // Büdchen-Kunde
+    g.add(human({ shirt: 0x8a5a2a, koelsch: true })).position.set(3.4, 0, 1.6); // Büdchen-Kunde
     return g;
   };
   P.haltestelle = () => {
@@ -490,25 +490,91 @@
     return g;
   };
   P.chimney = () => { const g = new THREE.Group(); const c = tcyl(2.2, 3.2, 70, T.brick(0x8a4a3a), 3, 12, 0xffffff, 8); c.position.y = 35; g.add(c); g.add(cyl(2.4, 2.4, 3, 0xdddddd, 0, 60, 0, 8)); g.add(cyl(2.4, 2.4, 3, 0xc1121f, 0, 66, 0, 8)); g.add(tbox(50, 16, 30, T.facade('industrial', 0x8a4a3a, 4, THEME.night), 20, 8, 0, 0xffffff, [14, 14])); return g; };
-  P.figure = (h, coat, hat, skin) => {
-    const g = new THREE.Group();
-    g.add(box(0.8 * h, 1.7 * h, 0.5 * h, coat, 0, 1.75 * h, 0));
-    const head = box(0.6 * h, 0.6 * h, 0.55 * h, skin || 0xf1c27d, 0, 3.0 * h, 0); g.add(head);
-    g.add(box(0.3 * h, 0.9 * h, 0.3 * h, 0x222222, -0.25 * h, 0.45 * h, 0)); g.add(box(0.3 * h, 0.9 * h, 0.3 * h, 0x222222, 0.25 * h, 0.45 * h, 0));
-    if (hat) { g.add(box(1.0 * h, 0.1 * h, 1.0 * h, hat, 0, 3.32 * h, 0)); g.add(box(0.6 * h, 0.6 * h, 0.6 * h, hat, 0, 3.65 * h, 0)); }
+  // Rounded human figure. o: { h (metres, default 1.75), skin, hair, shirt, pants, shoes, hat: cap|fedora|gnome|tricorn|helmet|none,
+  //   hatColor, beard, glasses, cigar, scarf, koelsch, briefcase, dress, bronze, wave }
+  function human(o) {
+    o = o || {}; const H = (o.h || 1.75) / 1.75; const g = new THREE.Group();
+    const skin = o.bronze ? 0x6a4a2a : (o.skin || [0xf1c27d, 0xe0ac69, 0xc68642, 0xffdbac, 0x8d5524][Math.floor(Math.random() * 5)]);
+    const shirt = o.bronze ? 0x6a4a2a : (o.shirt || 0x3a4a6a), pants = o.bronze ? 0x5a3a20 : (o.pants || 0x2a2a34), shoes = o.bronze ? 0x4a2a18 : (o.shoes || 0x1a1a1a), hair = o.bronze ? 0x5a3a20 : (o.hair || 0x3a2a1a);
+    const M = (c) => mat(c);
+    const part = (geo, c, x, y, z, rx, rz) => { const m = new THREE.Mesh(geo, M(c)); m.position.set(x * H, y * H, z * H); if (rx) m.rotation.x = rx; if (rz) m.rotation.z = rz; m.scale.set(H, H, H); g.add(m); return m; };
+    // legs & shoes
+    for (const sx of [-1, 1]) { part(new THREE.CylinderGeometry(0.075, 0.065, 0.82, 10), pants, sx * 0.1, 0.42, 0); part(new THREE.BoxGeometry(0.12, 0.08, 0.26), shoes, sx * 0.1, 0.04, 0.04); }
+    if (o.dress) part(new THREE.CylinderGeometry(0.17, 0.3, 0.5, 12), o.dress, 0, 0.68, 0);
+    // torso (tapered) + shoulders
+    part(new THREE.CylinderGeometry(0.17, 0.14, 0.62, 12), shirt, 0, 1.13, 0).scale.set(H, H, 0.72 * H);
+    part(new THREE.SphereGeometry(0.19, 12, 10), shirt, 0, 1.42, 0).scale.set(H, 0.5 * H, 0.75 * H);
+    // arms
+    for (const sx of [-1, 1]) { const wave = o.wave && sx === 1; const a = part(new THREE.CylinderGeometry(0.048, 0.042, 0.62, 8), shirt, sx * 0.24, wave ? 1.55 : 1.12, wave ? 0.05 : 0.02, 0, wave ? -sx * 2.6 : sx * 0.15); if (wave) a.userData.waveArm = true; part(new THREE.SphereGeometry(0.05, 8, 8), skin, sx * (wave ? 0.5 : 0.27), wave ? 1.85 : 0.82, wave ? 0.05 : 0.06); }
+    // neck & head
+    part(new THREE.CylinderGeometry(0.05, 0.06, 0.1, 8), skin, 0, 1.5, 0);
+    part(new THREE.SphereGeometry(0.115, 14, 12), skin, 0, 1.64, 0).scale.set(H, 1.12 * H, H);
+    // hair / hat
+    if (!o.bald && o.hat !== 'gnome') { const hr = part(new THREE.SphereGeometry(0.12, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hair, 0, 1.66, -0.01); hr.scale.set(H, 1.05 * H, H); }
+    if (o.hat === 'cap') { part(new THREE.SphereGeometry(0.125, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0x555555, 0, 1.68, 0); part(new THREE.BoxGeometry(0.12, 0.02, 0.1), o.hatColor || 0x555555, 0, 1.68, 0.16); }
+    if (o.hat === 'fedora') { part(new THREE.CylinderGeometry(0.19, 0.2, 0.02, 16), o.hatColor || 0x111111, 0, 1.72, 0); part(new THREE.CylinderGeometry(0.1, 0.12, 0.13, 12), o.hatColor || 0x111111, 0, 1.79, 0); part(new THREE.CylinderGeometry(0.121, 0.121, 0.03, 12), 0x8a1a1a, 0, 1.745, 0); }
+    if (o.hat === 'gnome') { part(new THREE.ConeGeometry(0.13, 0.42, 12), o.hatColor || 0xc1121f, 0, 1.9, 0).rotation.x = -0.15; }
+    if (o.hat === 'tricorn') { part(new THREE.CylinderGeometry(0.2, 0.2, 0.05, 3), o.hatColor || 0xc1121f, 0, 1.74, 0); part(new THREE.SphereGeometry(0.12, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0xc1121f, 0, 1.72, 0); part(new THREE.SphereGeometry(0.03, 6, 6), 0xffffff, 0, 1.9, 0); }
+    if (o.hat === 'helmet') { part(new THREE.SphereGeometry(0.13, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), o.hatColor || 0x1c3f95, 0, 1.66, 0); }
+    // face details: eyes, brows, nose, mouth
+    for (const sx of [-1, 1]) { part(new THREE.SphereGeometry(0.014, 6, 6), 0xffffff, sx * 0.045, 1.665, 0.098); part(new THREE.SphereGeometry(0.008, 6, 6), 0x1a1a22, sx * 0.045, 1.665, 0.11); part(new THREE.BoxGeometry(0.04, 0.008, 0.01), hair, sx * 0.045, 1.695, 0.105); }
+    part(new THREE.ConeGeometry(0.018, 0.045, 6), skin, 0, 1.64, 0.118).rotation.x = Math.PI / 2;
+    part(new THREE.BoxGeometry(0.05, 0.008, 0.01), 0x8a3a3a, 0, 1.6, 0.108);
+    if (o.beard) { part(new THREE.SphereGeometry(0.1, 10, 8, 0, Math.PI * 2, Math.PI * 0.45, Math.PI * 0.55), o.beard, 0, 1.6, 0.02).scale.set(1.05 * H, 1.3 * H, 1.05 * H); }
+    if (o.glasses) { for (const sx of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.006, 6, 12), M(0x111111)); r.position.set(sx * 0.045 * H, 1.665 * H, 0.112 * H); r.scale.set(H, H, H); g.add(r); const lens = new THREE.Mesh(new THREE.CircleGeometry(0.028, 10), M(0x111122)); lens.position.set(sx * 0.045 * H, 1.665 * H, 0.113 * H); lens.scale.set(H, H, H); g.add(lens); } }
+    if (o.cigar) { part(new THREE.CylinderGeometry(0.009, 0.009, 0.12, 6), 0x7a4a2a, 0.04, 1.6, 0.16).rotation.x = Math.PI / 2; const tip = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 6), bmat(0xff6a00)); tip.position.set(0.04 * H, 1.6 * H, 0.22 * H); g.add(tip); }
+    if (o.scarf) { part(new THREE.TorusGeometry(0.1, 0.035, 8, 12), o.scarf, 0, 1.5, 0).rotation.x = Math.PI / 2; part(new THREE.BoxGeometry(0.07, 0.3, 0.03), o.scarf, 0.07, 1.32, 0.13); part(new THREE.BoxGeometry(0.07, 0.3, 0.03), o.scarf === 0xc1121f ? 0xffffff : o.scarf, -0.05, 1.3, 0.13); }
+    if (o.koelsch) { part(new THREE.CylinderGeometry(0.025, 0.022, 0.13, 10), 0xffc300, 0.3, 0.9, 0.08); part(new THREE.CylinderGeometry(0.026, 0.026, 0.025, 10), 0xffffff, 0.3, 0.975, 0.08); }
+    if (o.kranz) { part(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 12), 0x8a5a2a, -0.32, 0.95, 0.08); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(new THREE.CylinderGeometry(0.02, 0.018, 0.12, 8), 0xffc300, -0.32 + Math.cos(a) * 0.11, 1.02, 0.08 + Math.sin(a) * 0.11); } }
+    if (o.briefcase) part(new THREE.BoxGeometry(0.28, 0.2, 0.08), 0x3a2a1a, 0.3, 0.72, 0.06);
+    if (o.wrench) part(new THREE.BoxGeometry(0.03, 0.3, 0.03), 0x9a9aa0, -0.3, 0.9, 0.08);
+    g.userData.human = true;
     return g;
-  };
-  P.tuenn = () => { const g = P.figure(1.5, 0x1a1a1a, 0x111111); g.userData.wave = true; animated.push(g);
-    g.add(box(0.6, 0.1, 0.1, 0xd0a060, 0.6, 4.4, 0.4));
-    const glass = cyl(0.12, 0.1, 0.5, 0xffc300, -0.9, 3.2, 0.4, 6); g.add(glass);
-    const sign = textPlane('DER LANGE TÜNN', '#ffd400', '#111111', 6, 1.2, THEME.night, { border: '#ffd400' }); sign.position.set(0, 6.6, 0); g.add(sign); return g; };
-  P.schael = () => { const g = P.figure(0.9, 0x2d6a4f, 0x8a5a2a); const sign = textPlane('SCHÄL', '#ffffff', '#2d6a4f', 3, 0.9, false, { border: '#fff' }); sign.position.set(0, 4.1, 0); g.add(sign); return g; };
-  P.gangster = () => P.figure(1.0, 0x2a2a2a, 0x1a1a1a);
+  }
+  const CROWD_OUTFITS = [
+    { shirt: 0xc1121f, scarf: 0xc1121f }, { shirt: 0xffffff, scarf: 0xc1121f, koelsch: true }, { shirt: 0x1c3f95, koelsch: true }, { shirt: 0xff5fa2, hat: 'tricorn', hatColor: 0xff5fa2 }, { shirt: 0x2d6a4f, hat: 'cap' },
+    { shirt: 0xffd400, hat: 'gnome', hatColor: 0xffd400 }, { shirt: 0x8a5a2a, koelsch: true }, { shirt: 0x3a3a5a, hat: 'fedora' }, { shirt: 0xff8800, dress: 0xff8800 }, { shirt: 0x7fbf7f, koelsch: true, hat: 'cap', hatColor: 0xc1121f }
+  ];
+  P.figure = (h, coat, hat, skin) => human({ h: 1.75 * (h || 0.55) / 0.55 * 0.55, shirt: coat, pants: coat === 0x1a1a1a ? 0x1a1a1a : 0x2a2a34, hat: hat ? 'fedora' : 'none', hatColor: hat, skin: skin });
+  P.human = human;
+  P.tuenn = () => { const g = human({ h: 2.1, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true, koelsch: true, wave: true }); g.userData.wave = true; animated.push(g);
+    const sign = textPlane('DER LANGE TÜNN', '#ffd400', '#111111', 4, 0.8, THEME.night, { border: '#ffd400' }); sign.position.set(0, 2.9, 0); g.add(sign); return g; };
+  P.schael = () => { const g = human({ h: 1.62, skin: 0xf1c27d, shirt: 0x3a2a22, pants: 0x2a2a2a, hat: 'none', hair: 0x1a1a1a, scarf: 0xc1121f }); const sign = textPlane('SCHÄL', '#ffffff', '#2d6a4f', 2.2, 0.6, false, { border: '#fff' }); sign.position.set(0, 2.3, 0); g.add(sign); return g; };
+  P.tuennes = () => human({ h: 1.7, skin: 0xffdbac, shirt: 0x2a4a8a, pants: 0x2a2a34, hat: 'cap', hatColor: 0x777777, scarf: 0xc1121f, koelsch: true });
+  P.heinzel = () => human({ h: 1.2, skin: 0xffdbac, shirt: 0x2d6a4f, pants: 0x5a3a20, hat: 'gnome', beard: 0xf4f4f4, wrench: true });
+  P.koebes = () => human({ h: 1.78, skin: 0xe0ac69, shirt: 0x1c3f95, pants: 0x14141a, hat: 'none', hair: 0x4a4a4a, kranz: true });
+  P.anna = () => human({ h: 1.68, skin: 0xffdbac, shirt: 0xc1121f, dress: 0xffffff, pants: 0xffffff, hat: 'tricorn', hatColor: 0xc1121f, hair: 0xd9a24a });
+  P.gangster = () => human({ h: 1.8, shirt: 0x2a2a30, pants: 0x2a2a30, hat: 'fedora', hatColor: 0x1a1a1a, cigar: Math.random() < 0.5, skin: 0xe0ac69 });
+  P.polizist = () => human({ h: 1.78, shirt: 0x1c3f95, pants: 0x1c3f95, hat: 'cap', hatColor: 0x1c3f95 });
+  P.denkmal = () => { // Tünnes & Schäl bronze statue by Groß St. Martin
+    const g = new THREE.Group(); g.add(box(3.2, 0.8, 2.2, 0x6a6a70, 0, 0.4, 0));
+    const t = human({ h: 1.6, bronze: true, hat: 'cap', hatColor: 0x6a4a2a }); t.position.set(-0.6, 0.8, 0); g.add(t);
+    const sc = human({ h: 1.75, bronze: true, hat: 'none' }); sc.position.set(0.6, 0.8, 0); g.add(sc);
+    const s = textPlane('TÜNNES & SCHÄL', '#f0e0c0', '#3a3a40', 3, 0.5, false, { sizeK: 0.5 }); s.position.set(0, 0.4, 1.12); g.add(s);
+    return g; };
+  P.heinzelbrunnen = () => { // Heinzelmännchenbrunnen at the Brauhaus
+    const g = new THREE.Group(); g.add(box(8, 1.2, 4, 0x8a8a90, 0, 0.6, 0)); g.add(box(7, 0.3, 3, 0x3f7fc0, 0, 1.25, 0.3));
+    const stairs = [0, 1, 2, 3]; for (const k of stairs) g.add(box(2.4 - k * 0.4, 0.5, 1.2, 0x9a9aa0, 0, 1.4 + k * 0.5, -1.2 + k * 0.2));
+    for (let k = 0; k < 5; k++) { const hz = human({ h: 0.8, bronze: true, hat: 'gnome', hatColor: 0x6a4a2a, beard: 0x6a4a2a }); hz.position.set(-1 + (k % 3) * 1.0, 1.65 + Math.floor(k / 3) * 0.5, -0.8 + (k % 2) * 0.4); hz.rotation.y = (k - 2) * 0.4; g.add(hz); }
+    const w = human({ h: 1.65, bronze: true, hat: 'none', dress: 0x6a4a2a }); w.position.set(0, 3.4, -1.4); g.add(w);
+    const s = textPlane('HEINZELMÄNNCHENBRUNNEN', '#f0e0c0', '#3a3a40', 5, 0.6, false, { sizeK: 0.45 }); s.position.set(0, 1.0, 2.05); g.add(s);
+    return g; };
+  P.stadion = () => { // RheinEnergieStadion, Müngersdorf: bowl with four pylons (far landmark)
+    const g = new THREE.Group(); const bowl = new THREE.Mesh(new THREE.CylinderGeometry(70, 60, 22, 24, 1, true), mat(0x9aa0aa, { side: THREE.DoubleSide })); bowl.position.y = 11; g.add(bowl);
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(72, 3, 8, 24), mat(0xdddddd))).position.y = 22; g.children[1].rotation.x = Math.PI / 2;
+    for (const [x, z] of [[-60, -40], [60, -40], [-60, 40], [60, 40]]) { g.add(box(4, 70, 4, 0xd0d0d0, x, 35, z)); g.add(new THREE.Mesh(new THREE.SphereGeometry(3, 8, 8), bmat(0xff3333))).position.set(x, 71, z); }
+    const s = textPlane('RHEINENERGIESTADION · MÜNGERSDORF', '#c1121f', '#ffffff', 60, 6); s.position.set(0, 26, 62); g.add(s);
+    return g; };
+  P.rain = () => { // drizzle for Chicago-am-Rhein nights, follows the camera
+    const N = 900; const pos = new Float32Array(N * 3); for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 80; pos[i * 3 + 1] = Math.random() * 40; pos[i * 3 + 2] = (Math.random() - 0.5) * 80; }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaab4d0, size: 0.35, transparent: true, opacity: 0.55, depthWrite: false }));
+    pts.userData.rain = true; pts.userData.keep = true; pts.frustumCulled = false; animated.push(pts); return pts; };
   P.crowd = () => {
     const g = new THREE.Group();
     const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800];
     const r = mulberry(31);
-    for (let i = 0; i < 10; i++) { const f = P.figure(0.55 + r() * 0.25, cols[i % cols.length], r() < 0.3 ? cols[(i + 3) % cols.length] : null); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.userData.bounce = r() * 6; g.add(f); }
+    for (let i = 0; i < 10; i++) { const f = human(Object.assign({ h: 1.6 + r() * 0.3 }, CROWD_OUTFITS[Math.floor(r() * CROWD_OUTFITS.length)])); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.rotation.y = (r() - 0.5) * 0.6; g.add(f); }
     g.add(box(14, 0.8, 0.3, 0x8a5a2a, 0, 0.4, 1.4)); // barrier
     mergeVertexColored(g);
     g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
@@ -596,7 +662,7 @@
     g.add(box(36, 1, 14, 0x9a8a70, 0, 12.5, 13));
     const sign = textPlane('HISTORISCHES RATHAUS · ALTER MARKT', '#3a2a10', '#f0e6d0', 22, 1.6); sign.position.set(0, 9.8, 19.4); g.add(sign);
     // Jan von Werth fountain on Alter Markt
-    g.add(cyl(4, 4.5, 1, 0x8a8a8a, 0, 0.5, 36, 8)); g.add(cyl(0.8, 1, 5, 0x9a9a9a, 0, 3.5, 36, 6)); g.add(P.figure(0.9, 0x6a6a70, 0x555555, 0x777777)).position.set(0, 6, 36);
+    g.add(cyl(4, 4.5, 1, 0x8a8a8a, 0, 0.5, 36, 8)); g.add(cyl(0.8, 1, 5, 0x9a9a9a, 0, 3.5, 36, 6)); g.add(human({ h: 2.2, bronze: true, hat: 'fedora', hatColor: 0x6a4a2a })).position.set(0, 6, 36);
     return g;
   };
   P.rgm = () => { // Römisch-Germanisches Museum: low concrete box, glass front, Dionysus mosaic inside
@@ -618,7 +684,7 @@
     return g;
   };
   P.reiter = () => { // Heumarkt equestrian statue
-    const g = new THREE.Group(); g.add(box(8, 6, 12, 0x8a8a90, 0, 3, 0)); g.add(box(2.4, 2.2, 6, 0x3a4a3a, 0, 7, 0)); g.add(box(1.2, 2, 1.4, 0x3a4a3a, 0, 8.6, 3.2)); for (const [x, z] of [[-0.8, -2], [0.8, -2], [-0.8, 2], [0.8, 2]]) g.add(box(0.5, 2.2, 0.5, 0x3a4a3a, x, 4.9, z)); g.add(P.figure(0.8, 0x3a4a3a, 0x3a4a3a, 0x3a4a3a)).position.set(0, 7.8, 0); return g; };
+    const g = new THREE.Group(); g.add(box(8, 6, 12, 0x8a8a90, 0, 3, 0)); g.add(box(2.4, 2.2, 6, 0x3a4a3a, 0, 7, 0)); g.add(box(1.2, 2, 1.4, 0x3a4a3a, 0, 8.6, 3.2)); for (const [x, z] of [[-0.8, -2], [0.8, -2], [-0.8, 2], [0.8, 2]]) g.add(box(0.5, 2.2, 0.5, 0x3a4a3a, x, 4.9, z)); const rider = human({ h: 1.9, bronze: true, hat: 'fedora', hatColor: 0x3a4a3a }); rider.position.set(0, 7.8, 0); g.add(rider); return g; };
   P.flatbridge = () => { const g = new THREE.Group(); g.add(box(340, 3, 26, 0x6f6f74, 0, 12, 0)); for (let x = -140; x <= 140; x += 70) g.add(box(6, 12, 8, 0x5a5a5e, x, 5, 0)); for (let x = -160; x <= 160; x += 26) g.add(P.lamp()).position.set(x, 13.5, 12); return g; };
   P.archbridge = () => { // Südbrücke style: two steel arches over the deck
     const g = new THREE.Group(); const steel = tmat(T.steel(0x4a6a5a), 0xffffff);
@@ -644,7 +710,7 @@
   P.tribuene = () => { // carnival grandstand full of Jecken
     const g = new THREE.Group(); const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800, 0x7fff00];
     const r = mulberry(77);
-    for (let row = 0; row < 4; row++) { g.add(box(22, 0.8, 1.6, 0x6a5a4a, 0, 0.4 + row * 0.9, -row * 1.6)); for (let i = 0; i < 12; i++) { const f = P.figure(0.5 + r() * 0.2, cols[Math.floor(r() * cols.length)], r() < 0.5 ? cols[Math.floor(r() * cols.length)] : null); f.position.set(-9.5 + i * 1.75, 0.8 + row * 0.9, -row * 1.6); f.userData.bounce = r() * 6; g.add(f); } }
+    for (let row = 0; row < 4; row++) { g.add(box(22, 0.8, 1.6, 0x6a5a4a, 0, 0.4 + row * 0.9, -row * 1.6)); for (let i = 0; i < 12; i++) { const f = human(Object.assign({ h: 1.55 + r() * 0.3 }, CROWD_OUTFITS[Math.floor(r() * CROWD_OUTFITS.length)])); f.position.set(-9.5 + i * 1.75, 0.8 + row * 0.9, -row * 1.6); g.add(f); } }
     mergeVertexColored(g);
     const s = textPlane('KÖLLE ALAAF!', '#ffffff', '#c1121f', 12, 1.6, false, { border: '#ffd400' }); s.position.set(0, 5.5, -6); g.add(s);
     g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
@@ -653,11 +719,11 @@
   P.zochwagen = () => { const g = buildCar({ shape: 'float', color: [0x00a0ff, 0x7fff00, 0xff8800][Math.floor(Math.random() * 3)] }); g.scale.set(1.4, 1.4, 1.4); g.add(P.figure(0.7, 0xffd400, 0xc1121f)).position.set(0, 1.6, 0.6); return g; };
   P.kirche = (o) => { const g = new THREE.Group(); const tex = T.romanesque((o && o.color) || 0xc4ad8c); const h = (o && o.h) || 40; g.add(tbox(14, 18, 34, tex, 0, 9, -6, 0xffffff, [16, 16])); g.add(gable(15, 8, 35, T.roof(0x6a3a2a, 2), 0xffffff, 0, 18, -6)); g.add(tbox(9, h, 9, tex, 0, h / 2, 12, 0xffffff, [16, 16])); g.add(cone(6, 16, 0x3a3a44, 0, h + 8, 12, 4)); return g; };
   P.hyatt = () => { const g = new THREE.Group(); g.add(tbox(50, 42, 30, T.facade('modern', 0xb8c8d8, 4, THEME.night), 0, 21, 0, 0xffffff, [12, 12])); g.add(box(52, 1.5, 32, 0xdddddd, 0, 42.7, 0)); return g; };
-  P.cafe = () => { const g = new THREE.Group(); const r = mulberry(88); for (let i = 0; i < 3; i++) { const x = -3 + i * 3; g.add(cyl(0.6, 0.6, 0.1, 0xf4f4f4, x, 0.9, 0, 8)); g.add(cyl(0.06, 0.08, 0.9, 0x555555, x, 0.45, 0, 6)); g.add(cyl(0.1, 0.1, 2.6, 0x8a8a8a, x, 1.3, 0, 6)); g.add(cone(1.6, 0.9, [0xc1121f, 0xffd400, 0xf4f4f4][i % 3], x, 2.9, 0, 8)); if (r() < 0.7) g.add(P.figure(0.5, [0x3a3a5a, 0xc1121f, 0x2d6a4f][i % 3], null)).position.set(x + 0.9, 0, 0.5); } return g; };
+  P.cafe = () => { const g = new THREE.Group(); const r = mulberry(88); for (let i = 0; i < 3; i++) { const x = -3 + i * 3; g.add(cyl(0.6, 0.6, 0.1, 0xf4f4f4, x, 0.9, 0, 8)); g.add(cyl(0.06, 0.08, 0.9, 0x555555, x, 0.45, 0, 6)); g.add(cyl(0.1, 0.1, 2.6, 0x8a8a8a, x, 1.3, 0, 6)); g.add(cone(1.6, 0.9, [0xc1121f, 0xffd400, 0xf4f4f4][i % 3], x, 2.9, 0, 8)); if (r() < 0.7) { const hm = human({ shirt: [0x3a3a5a, 0xc1121f, 0x2d6a4f][i % 3], koelsch: true }); hm.position.set(x + 0.9, 0, 0.5); hm.rotation.y = Math.PI; g.add(hm); } } return g; };
   P.ampel = () => { const g = new THREE.Group(); g.add(cyl(0.1, 0.12, 4.2, 0x444444, 0, 2.1, 0, 6)); g.add(box(0.5, 1.4, 0.4, 0x222222, 0, 3.6, 0)); g.add(new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.1), bmat(0xff2020))).position.set(0, 4.05, 0.22); g.add(box(0.28, 0.28, 0.1, 0x3a2a00, 0, 3.6, 0.22)); g.add(box(0.28, 0.28, 0.1, 0x0a3a1a, 0, 3.15, 0.22)); return g; };
   P.schild = (o) => { const g = new THREE.Group(); g.add(cyl(0.06, 0.08, 3, 0x777777, 0, 1.5, 0, 6)); const s = textPlane((o && o.text) || 'HOHE STRASSE', '#ffffff', '#1c3f95', 2.6, 0.5, false, { border: '#ffffff', sizeK: 0.5 }); s.position.set(0.9, 2.7, 0); g.add(s); return g; };
   P.parkedcar = (o) => { const g = new THREE.Group(); const c = (o && o.color) || 0x888888; g.add(box(1.8, 0.6, 4.0, c, 0, 0.7, 0)); g.add(box(1.6, 0.55, 2.0, c, 0, 1.25, -0.2)); g.add(box(1.62, 0.3, 1.8, 0x223344, 0, 1.3, -0.2)); for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z)); return g; };
-  P.passant = (o) => P.figure(0.55 + ((o && o.k) || 0) * 0.04, [0x3a3a5a, 0xc1121f, 0x2d6a4f, 0x8a5a2a, 0x555555, 0xffd400, 0x1c3f95][((o && o.k) || 0) % 7], ((o && o.k) || 0) % 4 === 0 ? 0x222222 : null);
+  P.passant = (o) => { const k = (o && o.k) || 0; return human(Object.assign({ h: 1.55 + (k % 5) * 0.07 }, CROWD_OUTFITS[k % CROWD_OUTFITS.length])); };
   P.muell = () => { const g = new THREE.Group(); g.add(cyl(0.4, 0.4, 1.1, 0xff7a00, 0, 0.55, 0, 8)); g.add(cyl(0.45, 0.45, 0.15, 0x333333, 0, 1.15, 0, 8)); return g; };
   P.fahrrad = () => { const g = new THREE.Group(); for (const x of [-0.5, 0.5]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.05, 5, 8), mat(0x222222)); w.position.set(x, 0.36, 0); w.rotation.y = Math.PI / 2; g.add(w); } g.add(box(1.0, 0.08, 0.08, 0x2a6a9a, 0, 0.7, 0)); g.add(box(0.08, 0.6, 0.08, 0x2a6a9a, 0.2, 0.7, 0)); return g; };
   P.tramline = (o) => { // rails alongside the street with a KVB tram shuttling back and forth
@@ -710,7 +776,7 @@
     for (let i = 0; i < 6; i++) { const x = -22 + i * 9; g.add(cyl(0.08, 0.08, 2.6, 0x8a8a8a, x, 1.3, -4 + (i % 2) * 6, 6)); g.add(cone(1.8, 0.9, [0xff2d95, 0x00e5ff, 0xffd400, 0xffffff][i % 4], x, 2.9, -4 + (i % 2) * 6, 8)); g.add(box(1.8, 0.4, 0.8, [0xff2d95, 0x00e5ff][i % 2], x + 1.2, 0.35, -4 + (i % 2) * 6)); }
     for (let i = 0; i < 4; i++) g.add(P.palm({ h: 6 + i, seed: i })).position.set(-26 + i * 17, 0, -12);
     const bar = new THREE.Group(); bar.add(box(8, 3, 3, 0x8a5a2a, 0, 1.5, 0)); bar.add(box(9, 0.3, 4, 0xd0a060, 0, 3.1, 0)); bar.add(cone(5.5, 1.6, 0xb0864a, 0, 4, 0, 4)); const sg = textPlane('RHEINSTRAND KM 689 · KÖLSCH & COCKTAILS', THEME.night ? '#ff2d95' : '#c1121f', '#f6f0e0', 8, 1.2, THEME.night, { border: '#ff2d95' }); sg.position.set(0, 2.3, 1.55); bar.add(sg); bar.position.set(18, 0, 10); g.add(bar);
-    for (let i = 0; i < 5; i++) { const f = P.figure(0.5, [0xff2d95, 0xffd400, 0x00e5ff, 0xffffff, 0xff8800][i], null); f.position.set(-16 + i * 7, 0, 2 + (i % 2) * 4); g.add(f); }
+    for (let i = 0; i < 5; i++) { const f = human({ shirt: [0xff2d95, 0xffd400, 0x00e5ff, 0xffffff, 0xff8800][i], pants: 0xf4e0c0, koelsch: i % 2 === 0 }); f.position.set(-16 + i * 7, 0, 2 + (i % 2) * 4); f.rotation.y = Math.random() * 6; g.add(f); }
     if (THEME.night) g.add(glow(40, 20, 0xff2d95, 10, 4));
     return g; };
   P.speedboat = () => { const g = new THREE.Group(); g.add(box(9, 1.2, 3, 0xf4f4f4, 0, 0.6, 0)); g.add(box(4, 0.8, 2.6, 0xff2d95, -1, 1.5, 0)); g.add(box(2, 0.5, 2.2, 0x00e5ff, 1.5, 1.4, 0)); g.add(box(0.15, 0.15, 3, 0x00e5ff, 0, 1.3, 0)); g.add(box(1.5, 0.3, 1.5, 0xffffff, 3.5, 1.0, 0)); g.userData.speedboat = { phase: Math.random() * 10 }; animated.push(g); return g; };
@@ -748,7 +814,7 @@
     const aw = new THREE.Mesh(new THREE.PlaneGeometry(5, 1.4), tmat(T.stripes(0xffd400, 0xc1121f), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.5; aw.position.set(0, 2.9, 1.9); g.add(aw);
     const s = textPlane(txt, THEME.night ? '#ffd400' : '#111', THEME.night ? '#2a1a1a' : '#f6f0e0', 4.4, 0.7, THEME.night, { border: '#c1121f' }); s.position.set(0, 3.1, 1.35); g.add(s);
     g.add(box(4, 0.15, 0.6, 0x8a5a2a, 0, 1.0, 1.5)); g.add(box(0.5, 0.6, 0.5, 0xffffff, -1.2, 1.4, 0.6)); g.add(box(0.3, 0.3, 0.3, 0xffd400, 0.8, 1.2, 1.6)); g.add(box(0.3, 0.3, 0.3, 0xc1121f, 1.3, 1.2, 1.6));
-    g.add(P.figure(0.55, 0xffffff, null)).position.set(-1.5, 0, 2.6); g.add(P.figure(0.5, 0x3a3a5a, null)).position.set(0.6, 0, 3.0);
+    g.add(human({ shirt: 0xffffff, hat: 'cap', hatColor: 0xffffff, koelsch: true })).position.set(-1.5, 0, 2.6); g.add(human({ shirt: 0x3a3a5a })).position.set(0.6, 0, 3.0);
     if (THEME.night) g.add(glow(8, 6, 0xffd400, 0, 2));
     return g; };
   P.marktstand = () => { const g = new THREE.Group(); g.add(box(3.5, 0.9, 1.6, 0x8a5a2a, 0, 0.7, 0)); for (const x of [-1.6, 1.6]) g.add(cyl(0.06, 0.06, 2.6, 0x555555, x, 1.3, -0.7, 6)); const aw = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 2.2), tmat(T.stripes([0xc1121f, 0x2d6a4f, 0x1c3f95][Math.floor(Math.random() * 3)], 0xffffff), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.25; aw.position.set(0, 2.6, 0); g.add(aw); for (let i = 0; i < 6; i++) g.add(box(0.45, 0.35, 0.45, [0xff2020, 0x7fff00, 0xffd400, 0xff8800, 0x2f9a48, 0xf0e0c0][i], -1.3 + i * 0.5, 1.3, 0.3)); return g; };
@@ -761,12 +827,81 @@
     const bar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.25, 0.4), bmat(0x2060ff)); bar.position.set(0, 1.72, -0.3); bar.userData.blink = true; g.add(bar); animated.push(bar);
     if (THEME.night) { const gl = glow(10, 10, 0x2060ff, 0, 0); gl.userData.blink = true; g.add(gl); animated.push(gl); }
     for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z));
-    g.add(P.figure(0.55, 0x1c3f95, 0x1c3f95)).position.set(1.6, 0, 0.6);
+    g.add(P.polizist()).position.set(1.6, 0, 0.6);
     return g; };
   P.blitzer = () => { // Kölle's favourite: the speed camera. Flash handled by the game.
     const g = new THREE.Group(); g.add(cyl(0.15, 0.18, 3, 0x555555, 0, 1.5, 0, 6)); g.add(box(0.9, 1.0, 0.7, 0x3a3a44, 0, 3.4, 0)); g.add(box(0.35, 0.35, 0.1, 0x111111, 0, 3.4, 0.4));
     const flash = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide })); flash.position.set(0, 3.4, 0.45); g.add(flash); g.userData.flash = flash;
     const s = textPlane('BLITZER', '#fff', '#c1121f', 1.4, 0.35, false, { sizeK: 0.6 }); s.position.set(0, 2.2, 0.3); g.add(s);
+    return g; };
+  // --- Chicago am Rhein: the real Ringe venues of the 60s/70s ---
+  function clubFront(w, h, d, wall, style, seed) { const b = building(w, h, d, style || 'gruenderzeit', wall, 'hip', seed || 3, { night: THEME.night, balconies: true }); return b; }
+  P.kleinkoeln = () => { // Friesenstraße: first Cologne bar with a night licence (1926), boxers weighed in here
+    const g = new THREE.Group(); g.add(clubFront(16, 14, 12, 0xd8c8a8, 'gruenderzeit', 21));
+    const sign = textPlane('KLEIN KÖLN · SEIT 1926', '#ffd400', '#7a1010', 12, 1.6, THEME.night, { border: '#ffd400' }); sign.position.set(0, 4.6, 6.1); g.add(sign);
+    const n2 = textPlane('BOXER · NACHTLIZENZ · KÖLSCH', THEME.night ? '#ff2d95' : '#ffffff', '#1a1020', 9, 0.9, THEME.night); n2.position.set(0, 3.5, 6.1); g.add(n2);
+    // weigh-in scale and a couple of boxers out front
+    g.add(box(0.9, 0.15, 0.9, 0x333333, -5, 0.08, 7.2)); g.add(cyl(0.05, 0.05, 1.6, 0x888888, -5, 0.9, 6.9, 6)); g.add(cyl(0.3, 0.3, 0.08, 0xffffff, -5, 1.7, 6.9, 12));
+    const b1 = human({ h: 1.82, shirt: 0xe0ac69, pants: 0xc1121f, hat: 'none', skin: 0xe0ac69 }); b1.position.set(-4, 0, 8); b1.rotation.y = 0.6; g.add(b1);
+    const b2 = human({ h: 1.9, shirt: 0xc68642, pants: 0x1c3f95, hat: 'none', skin: 0xc68642 }); b2.position.set(-2.6, 0, 8.4); b2.rotation.y = -0.4; g.add(b2);
+    for (const sx of [-1, 1]) { const gl = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mat(0xc1121f)); gl.position.set(sx * 5.5, 5.6, 6.2); g.add(gl); }
+    if (THEME.night) g.add(glow(16, 8, 0xffd400, 0, 8));
+    return g; };
+  P.loversclub = () => { // the club where the Lange Tünn started as a doorman in the early 60s
+    const g = new THREE.Group(); g.add(clubFront(18, 12, 12, 0x3a2a3a, 'concrete', 8));
+    const sign = textPlane('LOVERS CLUB', '#ff2d95', '#14061a', 12, 2.2, THEME.night, { border: '#ff2d95' }); sign.position.set(0, 7, 6.1); g.add(sign);
+    for (const sx of [-1, 1]) { const heart = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), THEME.night ? bmat(0xff2d95) : mat(0xff2d95)); heart.position.set(sx * 7.5, 7, 6.3); g.add(heart); }
+    g.add(box(4, 0.05, 6, 0xa01020, 0, 0.13, 9)); // red carpet
+    for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { g.add(cyl(0.05, 0.05, 1, 0xd0b060, sx * 1.6, 0.5, 6.8 + k * 1.6, 6)); g.add(box(0.06, 0.06, 1.6, 0xc1121f, sx * 1.6, 0.95, 7.6 + k * 1.6)); }
+    const door = box(2.4, 3.2, 0.2, 0x2a1020, 0, 1.6, 6.05); g.add(door); g.add(new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 0.3), bmat(0xff2d95))).position.set(0, 3.3, 6.15);
+    const tuenn = human({ h: 2.08, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true }); tuenn.position.set(2.4, 0, 7.4); tuenn.rotation.y = 0.5; g.add(tuenn);
+    const s2 = textPlane('TÜRSTEHER: DER LANGE TÜNN', '#ffd400', '#111', 3.4, 0.5, THEME.night, { sizeK: 0.5 }); s2.position.set(2.4, 2.6, 7.4); g.add(s2);
+    const q = [{ shirt: 0xffffff, dress: 0xff2d95, hair: 0xd9a24a }, { shirt: 0x2a2a30, hat: 'fedora' }, { shirt: 0xffd400 }, { shirt: 0x1c3f95, hat: 'cap' }];
+    q.forEach((o, i) => { const hm = human(Object.assign({ h: 1.6 + (i % 2) * 0.2 }, o)); hm.position.set(-2.2 - i * 0.9, 0, 7.6 + i * 0.7); hm.rotation.y = 0.9; g.add(hm); });
+    if (THEME.night) { g.add(glow(20, 12, 0xff2d95, 0, 9)); const pl = new THREE.PointLight(0xff2d95, 1.4, 40); pl.position.set(0, 6, 8); g.add(pl); }
+    return g; };
+  P.sartory = () => { // Sartory-Säle on Friesenstraße: ballroom, boxing nights, carnival sessions
+    const g = new THREE.Group(); g.add(building(30, 16, 22, 'concrete', 0xe8dcc4, 'flat', 5, { night: THEME.night }));
+    g.add(box(32, 1.2, 24, 0xc8b898, 0, 16.4, 0));
+    const sign = textPlane('SARTORY SÄLE', '#111', '#f4e8c0', 20, 2.6, THEME.night, { border: '#c1121f' }); sign.position.set(0, 12.5, 11.1); g.add(sign);
+    const s2 = textPlane('HEUTE: BOXNACHT · MORGEN: PRUNKSITZUNG', '#ffd400', '#2a1a1a', 18, 1.2, THEME.night); s2.position.set(0, 10.3, 11.1); g.add(s2);
+    for (let k = 0; k < 6; k++) g.add(box(0.5, 9, 0.5, 0xd8ccb0, -12.5 + k * 5, 4.5, 11.3));
+    g.add(box(30, 0.6, 5, 0x8a7a60, 0, 9.2, 13));
+    return g; };
+  P.residenz = () => { // Residenz cinema, Christophstraße: start of the Lange Tünn's tour
+    const g = new THREE.Group(); g.add(building(22, 15, 18, 'concrete', 0xc9c2b4, 'flat', 12, { night: THEME.night }));
+    g.add(box(24, 1.6, 6, 0x2a2a30, 0, 6.5, 11)); for (let k = 0; k < 8; k++) g.add(new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 6), bmat(0xffe08a))).position.set(-10.5 + k * 3, 7.4, 13.6);
+    const m = textPlane('RESIDENZ · HEUTE: CHICAGO AM RHEIN', '#111', '#fff8e0', 22, 1.4, THEME.night, { border: '#c1121f' }); m.position.set(0, 6.5, 14.05); g.add(m);
+    const s2 = textPlane('KINO', '#ff2d95', '#1a1020', 6, 2.2, THEME.night, { border: '#ff2d95' }); s2.position.set(0, 11, 9.1); g.add(s2);
+    for (let k = 0; k < 3; k++) { const p = textPlane(['DER PATE VOM RING', 'ZOCKER', 'FRISCHSE PITTER'][k], '#ffd400', ['#5a1020', '#102a5a', '#2a2a2a'][k], 3, 4, false, { sizeK: 0.35 }); p.position.set(-7 + k * 7, 3.2, 9.1); g.add(p); }
+    return g; };
+  P.spielclub = () => { // Zocker den
+    const g = new THREE.Group(); g.add(clubFront(14, 12, 12, 0x2a2a34, 'concrete', 15));
+    const sign = textPlane('SPIEL-CLUB · ROULETTE · POKER · 24 H', '#00e5ff', '#0a0a18', 12, 1.4, THEME.night, { border: '#00e5ff' }); sign.position.set(0, 5, 6.1); g.add(sign);
+    const dice = box(0.9, 0.9, 0.9, 0xffffff, -6, 7.5, 6.2); dice.rotation.set(0.4, 0.6, 0.2); g.add(dice); for (let k = 0; k < 3; k++) g.add(box(0.15, 0.15, 0.1, 0x111111, -6.3 + k * 0.3, 7.5 + (k % 2) * 0.3, 6.7));
+    const z = human({ h: 1.75, shirt: 0x8a1a1a, pants: 0x2a2a2a, hat: 'fedora', hatColor: 0x8a1a1a, cigar: true }); z.position.set(3, 0, 7.5); z.rotation.y = -0.4; g.add(z);
+    if (THEME.night) g.add(glow(14, 8, 0x00e5ff, 0, 8));
+    return g; };
+  P.expresskiosk = (o) => { // EXPRESS newspaper stand with today's Chicago-am-Rhein headline
+    const g = new THREE.Group(); g.add(box(3.2, 2.6, 2.2, 0xc1121f, 0, 1.3, 0)); g.add(box(3.4, 0.2, 2.4, 0xffffff, 0, 2.7, 0));
+    const s = textPlane('EXPRESS', '#ffffff', '#c1121f', 3, 0.7, THEME.night, { border: '#fff' }); s.position.set(0, 2.2, 1.12); g.add(s);
+    const h = textPlane((o && o.text) || 'CHICAGO AM RHEIN: 50.000 STRAFTATEN!', '#111', '#f4f0e0', 2.8, 1.0, false, { sizeK: 0.3 }); h.position.set(0, 1.2, 1.12); g.add(h);
+    g.add(human({ shirt: 0x8a5a2a, hat: 'cap', hatColor: 0x555555 })).position.set(1.9, 0, 1.4);
+    return g; };
+  P.kripo = () => { // 1960s Polizei Köln patrol car, green & white
+    const g = buildCar({ shape: 'sedan', color: 0xf4f4f4, stripe: 0x2a6a3a, plate: 'K-PZ 61' }, THEME.night);
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.3, 10), bmat(0x2060ff)); bar.position.set(0, 1.55, -0.2); bar.userData.blink = true; g.add(bar); animated.push(bar);
+    const s = textPlane('POLIZEI', '#2a6a3a', '#f4f4f4', 1.4, 0.3, false, { sizeK: 0.6 }); s.position.set(0.9, 0.75, 0); s.rotation.y = Math.PI / 2; g.add(s);
+    g.add(P.polizist()).position.set(1.5, 0, 0.8);
+    return g; };
+  P.boxring = () => { // street boxing night
+    const g = new THREE.Group(); g.add(box(7, 0.8, 7, 0x2a2a34, 0, 0.4, 0)); for (const [x, z] of [[-3.3, -3.3], [3.3, -3.3], [-3.3, 3.3], [3.3, 3.3]]) g.add(cyl(0.08, 0.08, 1.6, 0xdddddd, x, 1.6, z, 6));
+    for (let k = 1; k <= 3; k++) { for (const z of [-3.3, 3.3]) g.add(box(6.6, 0.04, 0.04, [0xc1121f, 0xffffff, 0x1c3f95][k - 1], 0, 0.8 + k * 0.4, z)); for (const x of [-3.3, 3.3]) g.add(box(0.04, 0.04, 6.6, [0xc1121f, 0xffffff, 0x1c3f95][k - 1], x, 0.8 + k * 0.4, 0)); }
+    const a = human({ h: 1.85, shirt: 0xe0ac69, pants: 0xc1121f, skin: 0xe0ac69 }); a.position.set(-0.9, 0.8, 0); a.rotation.y = Math.PI / 2; g.add(a);
+    const b = human({ h: 1.8, shirt: 0xc68642, pants: 0x1c3f95, skin: 0xc68642 }); b.position.set(0.9, 0.8, 0); b.rotation.y = -Math.PI / 2; g.add(b);
+    const ref = human({ h: 1.7, shirt: 0xffffff, pants: 0x1a1a1a }); ref.position.set(0, 0.8, -2); g.add(ref);
+    const s = textPlane('BOXNACHT AM RING · TÜNN WIEGT', '#ffd400', '#2a1a1a', 6, 0.8, THEME.night); s.position.set(0, 2.9, 3.4); g.add(s);
+    g.add(P.crowd()).position.set(0, 0, 6);
     return g; };
   P.house = (seed) => { const r = mulberry(seed); const styles = THEME.street === 'altstadt' ? ['altstadt'] : THEME.street === 'industrial' ? ['industrial', 'concrete'] : THEME.street === 'modern' ? ['modern', 'concrete'] : ['gruenderzeit', 'gruenderzeit', 'concrete']; const st = styles[Math.floor(r() * styles.length)];
     const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'industrial' ? INDUSTRIAL : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE;
@@ -886,7 +1021,7 @@
       if (faceTrack) { const fb = TB.frameAt(track, at * L - 30); prop.lookAt(fb.p.x, GROUND_Y, fb.p.z); }
       return prop;
     }
-    const FACING = ['beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
+    const FACING = ['kleinkoeln', 'loversclub', 'sartory', 'residenz', 'spielclub', 'expresskiosk', 'boxring', 'denkmal', 'heinzelbrunnen', 'tuennes', 'heinzel', 'koebes', 'anna', 'polizist', 'beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
     const keepOut = []; const propList = [];
     for (const pd of (track.def.props || [])) {
       const fn = P[pd.type]; if (!fn) { console.warn('unknown prop', pd.type); continue; }
@@ -912,7 +1047,7 @@
       place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
-      prop.userData.type = pd.type; prop.userData.at = at; propList.push(prop);
+      prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) prop.userData.story = pd.story; propList.push(prop);
       g.add(prop);
       keepOut.push({ x: prop.position.x, z: prop.position.z, r: pd.keep || (pd.type === 'dom' ? 110 : pd.type.match(/altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney/) ? 55 : 30) });
     }
@@ -1009,11 +1144,13 @@
     return { group: g, animated, props: propList };
   }
 
+  const _qTmp = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0), _zAxis = new THREE.Vector3(0, 0, 1);
   function animate(t, dt, center) {
     for (const a of animated) {
       const u = a.userData;
-      if (u.wave) a.rotation.z = Math.sin(t * 0.003) * 0.06;
-      else if (u.crowd) { a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.rotation.z = Math.sin(t * 0.003 + u.phase) * 0.03; }
+      if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
+      else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
+      else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
       else if (u.boat) a.position.x += Math.sin(t * 0.0002) * 0.02;
       else if (u.gondola != null) { a.position.x += dt * 4; if (a.position.x > 110) a.position.x = -110; }
       else if (u.water) a.userData.water.offset.x = (t * 0.00004) % 1;
@@ -1040,7 +1177,61 @@
   }
 
   // ------------------------------------------------ cars ----
+  // Side-profile definitions (z along the car, y up), extruded across the width with bevelled edges.
+  // 1960s/70s Cologne: Ford Capri & Taunus were built here; the black Benz is the Milieu-Benz of the Ringe.
+  const PROFILES = {
+    hatch:  { L: 3.9, W: 1.72, pts: [[1.95, 0.32], [1.95, 0.62], [1.7, 0.78], [0.55, 0.86], [0.2, 1.35], [-0.9, 1.4], [-1.5, 1.35], [-1.85, 0.9], [-1.95, 0.5], [-1.95, 0.32]], ws: [0.55, 0.86, 0.2, 1.35], rw: [-1.5, 1.35, -1.85, 0.9] },
+    coupe:  { L: 4.4, W: 1.76, pts: [[2.2, 0.3], [2.2, 0.58], [1.95, 0.7], [0.75, 0.78], [0.35, 1.28], [-0.55, 1.32], [-1.3, 1.1], [-1.9, 0.86], [-2.2, 0.8], [-2.2, 0.3]], ws: [0.75, 0.78, 0.35, 1.28], rw: [-0.55, 1.32, -1.3, 1.1] },
+    coupe2: { L: 4.75, W: 1.78, pts: [[2.38, 0.3], [2.38, 0.6], [2.1, 0.72], [0.7, 0.8], [0.3, 1.3], [-0.6, 1.34], [-1.4, 1.14], [-2.1, 0.88], [-2.38, 0.82], [-2.38, 0.3]], ws: [0.7, 0.8, 0.3, 1.3], rw: [-0.6, 1.34, -1.4, 1.14] },
+    sport:  { L: 4.5, W: 1.85, pts: [[2.25, 0.3], [2.25, 0.5], [1.9, 0.6], [0.6, 0.72], [0.15, 1.2], [-0.7, 1.24], [-1.5, 1.0], [-2.1, 0.86], [-2.25, 0.8], [-2.25, 0.3]], ws: [0.6, 0.72, 0.15, 1.2], rw: [-0.7, 1.24, -1.5, 1.0] },
+    sedan:  { L: 4.7, W: 1.78, pts: [[2.35, 0.32], [2.35, 0.65], [2.1, 0.8], [0.7, 0.86], [0.3, 1.38], [-0.7, 1.4], [-1.15, 1.35], [-1.6, 0.95], [-2.35, 0.9], [-2.35, 0.32]], ws: [0.7, 0.86, 0.3, 1.38], rw: [-0.7, 1.4, -1.15, 1.35] },
+    limo:   { L: 5.4, W: 1.86, pts: [[2.7, 0.32], [2.7, 0.7], [2.4, 0.86], [0.9, 0.92], [0.5, 1.42], [-0.9, 1.45], [-1.5, 1.4], [-1.9, 1.0], [-2.7, 0.94], [-2.7, 0.32]], ws: [0.9, 0.92, 0.5, 1.42], rw: [-0.9, 1.45, -1.5, 1.4] }
+  };
+  const paintCache = new Map();
+  function paint(color) { const k = 'p' + color; if (!paintCache.has(k)) paintCache.set(k, new THREE.MeshStandardMaterial({ color, metalness: 0.55, roughness: 0.32 })); return paintCache.get(k); }
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x2a3a50, metalness: 0.9, roughness: 0.15, transparent: true, opacity: 0.85 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.95, roughness: 0.2 });
+  const tyreMat = new THREE.MeshStandardMaterial({ color: 0x151517, roughness: 0.9 });
+  function bodyShape(pts) { const sh = new THREE.Shape(); pts.forEach((p, i) => (i ? sh.lineTo(p[0], p[1]) : sh.moveTo(p[0], p[1]))); sh.closePath(); return sh; }
+  function buildCarReal(car, night) {
+    const P = PROFILES[car.shape] || PROFILES.coupe; const g = new THREE.Group(); const W = P.W;
+    const body = new THREE.Mesh(new THREE.ExtrudeGeometry(bodyShape(P.pts), { depth: W - 0.24, bevelEnabled: true, bevelThickness: 0.12, bevelSize: 0.12, bevelSegments: 4, curveSegments: 4 }), paint(car.color));
+    // profile x -> world z (nose at +z), extrusion (local z) -> world x, centred
+    body.rotation.set(0, -Math.PI / 2, 0); body.position.set((W - 0.24) / 2, 0, 0); g.add(body);
+    // windows: windshield & rear window quads on the slanted faces, side windows
+    const quad = (z0, y0, z1, y1, out) => { const geo = new THREE.BufferGeometry(); const hw = W / 2 - 0.16; const dz = z1 - z0, dy = y1 - y0, len = Math.hypot(dz, dy) || 1; const nz = dy / len * out, ny = -dz / len * out;
+      const v = [-hw, y0 + ny, z0 + nz, hw, y0 + ny, z0 + nz, hw, y1 + ny, z1 + nz, -hw, y1 + ny, z1 + nz]; geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); geo.setIndex([0, 1, 2, 0, 2, 3]); geo.computeVertexNormals(); const m = new THREE.Mesh(geo, glassMat); m.material.side = THREE.DoubleSide; return m; };
+    g.add(quad(P.ws[0], P.ws[1], P.ws[2], P.ws[3], 0.03)); g.add(quad(P.rw[0], P.rw[1], P.rw[2], P.rw[3], 0.03));
+    const cabLen = Math.abs(P.ws[2] - P.rw[0]) + 0.1; const cabMid = (P.ws[2] + P.rw[0]) / 2; const cabH = Math.min(P.ws[3], P.rw[1]) - P.ws[1];
+    for (const sx of [-1, 1]) { const sw = new THREE.Mesh(new THREE.BoxGeometry(0.03, cabH * 0.75, cabLen), glassMat); sw.position.set(sx * (W / 2 - 0.09), P.ws[1] + cabH * 0.55, cabMid); g.add(sw); const pillar = box(0.04, cabH * 0.8, 0.08, 0x111111, sx * (W / 2 - 0.09), P.ws[1] + cabH * 0.55, cabMid); g.add(pillar); }
+    // chrome bumpers, grille, headlights, tail lights, mirrors, door line, plate
+    const nose = P.pts[0][0], tail = P.pts[P.pts.length - 1][0], noseH = P.pts[1][1];
+    for (const z of [nose + 0.08, tail - 0.08]) { const b = new THREE.Mesh(new THREE.BoxGeometry(W + 0.06, 0.14, 0.16), chromeMat); b.position.set(0, 0.42, z); g.add(b); }
+    g.add(box(W * 0.55, noseH - 0.5, 0.06, 0x1a1a1a, 0, 0.5 + (noseH - 0.5) / 2, nose + 0.02));
+    for (const sx of [-1, 1]) { const hl = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.06, 14), bmat(night ? 0xfff6d0 : 0xe8f0ff)); hl.rotation.x = Math.PI / 2; hl.position.set(sx * (W / 2 - 0.28), noseH - 0.02, nose + 0.03); g.add(hl); const ring = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 6, 14), chromeMat); ring.position.copy(hl.position); g.add(ring);
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.05), bmat(0xff2020)); tl.position.set(sx * (W / 2 - 0.28), P.pts[P.pts.length - 2][1] - 0.12, tail - 0.02); g.add(tl);
+      const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.09, 0.16), paint(car.color)); mirror.position.set(sx * (W / 2 + 0.08), P.ws[1] + 0.32, P.ws[2] + 0.35); g.add(mirror);
+      g.add(box(0.012, 0.45, cabLen * 0.9, 0x111111, sx * (W / 2 + 0.005), P.ws[1] - 0.1, cabMid));
+    }
+    if (car.stripe != null && car.stripe !== 0xffffff) g.add(box(W + 0.02, 0.05, (nose - tail) * 0.9, car.stripe, 0, 0.66, (nose + tail) / 2));
+    if (car.shape === 'sport') g.add(box(W * 0.9, 0.05, 0.4, 0x111111, 0, P.pts[P.pts.length - 2][1] + 0.16, tail + 0.3));
+    // wheels with rims & arches
+    const wr = 0.34, axF = nose - 0.85, axR = tail + 0.85;
+    for (const [sx, z] of [[-1, axF], [1, axF], [-1, axR], [1, axR]]) {
+      const tyre = new THREE.Mesh(new THREE.CylinderGeometry(wr, wr, 0.24, 18), tyreMat); tyre.rotation.z = Math.PI / 2; tyre.position.set(sx * (W / 2 - 0.1), wr, z); g.add(tyre);
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(wr * 0.6, wr * 0.6, 0.26, 12), chromeMat); rim.rotation.z = Math.PI / 2; rim.position.copy(tyre.position); g.add(rim);
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(wr + 0.06, 0.05, 6, 14, Math.PI), paint(car.color)); arch.rotation.y = Math.PI / 2; arch.position.set(sx * (W / 2 - 0.02), wr, z); g.add(arch);
+    }
+    const backZ = tail;
+    if (car.plate) { const pl = textPlane(car.plate, '#111', '#f4f4f4', 0.52, 0.12, false, { sizeK: 0.6 }); pl.position.set(0, 0.56, backZ - 0.03); pl.rotation.y = Math.PI; g.add(pl); const pf = textPlane(car.plate, '#111', '#f4f4f4', 0.52, 0.12, false, { sizeK: 0.6 }); pf.position.set(0, 0.5, nose + 0.11); g.add(pf); }
+    if (car.shape === 'sport') { const bk = textPlane('BOXKELLER', '#ff2d95', '#0e0e12', 1.4, 0.3, true); bk.position.set(W / 2 + 0.012, 0.95, -0.2); bk.rotation.y = Math.PI / 2; g.add(bk); }
+    if (night) { for (const x of [-0.5, 0.5]) { const beam = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 14), new THREE.MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: 0.025, blending: THREE.AdditiveBlending, depthWrite: false })); beam.rotation.x = -Math.PI / 2; beam.position.set(x, 0.05, nose + 7.5); g.add(beam); } }
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    g.userData.backZ = backZ;
+    return g;
+  }
   function buildCar(car, night) {
+    if (PROFILES[car.shape]) return buildCarReal(car, night);
     const g = new THREE.Group();
     const c = car.color, dark = 0x1b1b1b, glass = 0x9fd3ff, stripe = car.stripe == null ? 0xffffff : car.stripe;
     const wheel = (x, z, r) => { const w = new THREE.Mesh(new THREE.CylinderGeometry(r || 0.42, r || 0.42, 0.35, 8), mat(dark)); w.rotation.z = Math.PI / 2; w.position.set(x, r || 0.42, z); g.add(w); const hub = new THREE.Mesh(new THREE.CylinderGeometry((r || 0.42) * 0.5, (r || 0.42) * 0.5, 0.37, 6), mat(0xbbbbbb)); hub.rotation.z = Math.PI / 2; hub.position.copy(w.position); g.add(hub); return w; };
@@ -1141,5 +1332,5 @@
     return pts;
   }
 
-  root.World = { buildRoad, buildScenery, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y };
+  root.World = { buildRoad, buildScenery, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored };
 })(window);
