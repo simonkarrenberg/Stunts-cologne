@@ -102,7 +102,8 @@ Alle Stadtstrecken haben jetzt mindestens einen Looping oder Sprung im Stunts-St
 
 ## Fahrer, Wagen, Rennen
 
-Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen: **Tünnes** (leicht), **Schäl**
+Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen (auf LEICHT nimmt das Feld vorne
+den Fuß vom Gas, wenn du hinten hängst; auf EXPERTE kaum noch): **Tünnes** (leicht), **Schäl**
 (mittel), **Heinzel** (schwer) und **Dä Lange** (Experte). Gegen dich fahren sieben weitere:
 Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 

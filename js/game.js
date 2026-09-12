@@ -215,8 +215,9 @@
     } else {
       r.s += r.v * dt;
       r.lat += ctl.steer * car.steer * 1.5 * dt;
-      r.y += r.vy * dt; r.vy -= G * dt;
       const f2 = TB.frameAt(track, r.s);
+      const landing = f2.kind !== 'gap' && f2.kind !== 'ramp';
+      r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt;
       const ry = f2.p.y;
       if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } }
       else if (r.y <= ry + 0.12) {
@@ -243,7 +244,9 @@
     r.aiTimer -= dt;
     if (r.aiTimer <= 0) { r.aiTimer = 4 + Math.random() * 8; r.aiSlow = Math.random() < r.wobble * 0.6 ? 0.55 + Math.random() * 0.3 : 1; r.laneBias = (Math.random() - 0.5) * 6; }
     const i = Math.floor(((r.s % track.length) + track.length) % track.length / track.ds) % track.samples.length;
-    const target = Math.min(r.car.top * r.skill * 1.05, track.safe[i] * (0.9 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1);
+    let band = 1;
+    if (r.isAI && player && !player.finished && phase === 'race') { const L = track.length; const gap = (r.s + r.lap * L) - (player.s + player.lap * L); const k = [0.22, 0.14, 0.07, 0.025][PLAYABLE[sel.driver].diffN || 0]; band = clamp(1 - gap / 300 * k, 1 - k * 0.9, 1 + k * 0.5); }
+    const target = Math.min(r.car.top * r.skill * 1.05, track.safe[i] * (0.9 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * band;
     let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     let wantLat = Math.sin(raceTime * 0.7 + r.wobblePhase) * r.wobble * 2 + r.laneBias * 0.5;
     // avoid the car ahead
