@@ -137,7 +137,7 @@
       speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
-  const VOICES = { 'Langer T.': [0.55, 0.92], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95] };
+  const VOICES = { 'Dä Lange': [0.55, 0.92], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95] };
 
   // ---------------- messages ----------------
   function say(who, text, ms) {
@@ -523,10 +523,10 @@
       for (const r of racers) placeRacer(r, dt);
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt;
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 18 + Math.random() * 14; const roll = Math.random(); if (roll < 0.4) say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); else if (roll < 0.7) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
-        for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; say({ name: 'Langer T. verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 8); } }
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 13 + Math.random() * 10; const roll = Math.random(); if (roll < 0.4) say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); else if (roll < 0.7) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
+        for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 8); } }
         if (telefon.active > 0) telefon.active -= dt;
-        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 35 + Math.random() * 25; const ev = pick(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
+        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 26 + Math.random() * 18; const ev = pick(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
         for (const b of blitzers) {
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
           let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;

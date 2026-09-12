@@ -3,7 +3,7 @@
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,
 Nachtrennen in Kalk und der Rosenmontagszoch als Rennstrecke. Kommentiert vom
-**Langen Tünn**, dem Boss von *Chicago am Rhein*.
+**Langen vum Ring**, dem Türsteher-Boss von *Chicago am Rhein*.
 
 Die Stadt ist aus Pixeln gebaut: Dom mit Doppelspitze und Strebepfeilern, Groß St. Martin,
 Hohenzollernbrücke mit Liebesschlössern und ICE, Kranhäuser, KölnTriangle, Musical Dome,
@@ -62,7 +62,7 @@ Christophstraße, der Banküberfall am Dom und der Einbruch in die Domschatzkamm
 Im Spiel: Die Strecke **Chicago am Rhein** folgt der Tour vom Langen Tünn (Residenz-Kino,
 Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** er
 eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Du kütts hee nit rein!“,
-kommentiert das Rennen, und mit **Tünn’s Telefon** (K) ruft man einmal pro Runde seine
+kommentiert das Rennen, und mit dem **Klüngel-Telefon** (K) ruft man einmal pro Runde seine
 Türsteher, die das Feld sechs Sekunden aufhalten. Dazu EXPRESS-Schlagzeilen, das Kölsche
 Grundgesetz, Boxnacht am Ring, Spiel-Club, Kripo Köln im 60er-Jahre-Streifenwagen.
 
@@ -95,13 +95,15 @@ M schaltet Motor und Musik stumm.
 | 3 | Schäl Sick Schraube | Deutzer Freiheit – Messe – Rheinpark – Mülheimer Hafen | Looping (die Schraube), Zoobrücke, Seilbahn, Hafenkräne, Mülheimer Brücke. |
 | 4 | Ehrenfeld Tape Run | Venloer – Odonien – Bahnbögen – Subbelrath – Köln West | Enge Haken, Tunnel, Colonius, Moschee, Kassettenladen, Graffiti. |
 | 5 | Karneval Krawall | Heumarkt – Alter Markt – Rathaus – Schmitzengasse | Tribünen, Zochwagen, Konfetti, Severinstor, Hügel und Sprung. |
-| 6 | Rheinauhafen 4D | Agrippinawerft – Holzmarkt – Kranhäuser – Rheinsprung | Sonnenuntergang, zwei Sprünge übers Hafenbecken, Kranhäuser, Severinsbrücke. |
+| 6 | Rheinauhafen 4D | Agrippinawerft – Holzmarkt – Kranhäuser – Rheinsprung | Sonnenuntergang, zwei Sprünge übers Hafenbecken, Kranhäuser, Severinsbrücke, Looping. |
+| 7 | Poller Wiesen Stunt-Park | Poller Wiesen – Lanxess Arena – Deutzer Werft – Rheinpark | Drei Loopings, zwei Sprünge, Tunnel, Hügel, Steilkurven; Tribünen, Kölsch-Stände, Riesenrad, Rhing. |
 
+Alle Stadtstrecken haben jetzt mindestens einen Looping oder Sprung im Stunts-Stil.
 
 ## Fahrer, Wagen, Rennen
 
 Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen: **Tünnes** (leicht), **Schäl**
-(mittel), **Heinzel** (schwer) und **Langer T.** (Experte). Gegen dich fahren sieben weitere:
+(mittel), **Heinzel** (schwer) und **Dä Lange** (Experte). Gegen dich fahren sieben weitere:
 Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 
 Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
@@ -130,7 +132,7 @@ bleibt bei acht Wagen.
 (WhatsApp), am Rechner landet der Link in der Zwischenablage. Wer den Link öffnet, hat die
 Strecke sofort in seiner Liste.
 
-**Stimme:** Langer T., Radio Kölle und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
+**Stimme:** Dä Lange, Radio Kölle und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
 des Browsers (deutsche Stimme, tief für den Langen T., hoch für Heinzel). 🗣 STIMME im Menü
 schaltet sie aus.
 
@@ -162,9 +164,14 @@ zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus) und der Tipp des
   Blockrandbebauung entlang jeder Straße (Gründerzeit-Stuck, 50er-Jahre-Wiederaufbau, Ehrenfelder
   Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVB-Bahnen in Weiß-Rot mit
   Oberleitung auf den Ringen, Straßenschilder, Hinterhof-Blöcke und Kirchtürme hinter der ersten
-  Reihe, Skyline-Ring im Hintergrund. Die Figuren (Tünn, Schäl, Tünnes, Heinzelmännchen, Köbes,
+  Reihe, Skyline-Ring im Hintergrund. Die Figuren (dä Lange, Schäl, Tünnes, Heinzelmännchen, Köbes,
   Anna, Zocker, Polizist, Passanten) haben Gelenke, Hände, Mäntel mit Revers und Krawatte und ein
   gezeichnetes Gesicht (Augen, Brauen, Mund, Schnauzer, Bart) als Textur auf dem Kopf.
+  Zwischen den Häuserzeilen liegen Parks (Rasen, Hecken, Platanen, Bänke, Spielplatz oder Brunnen),
+  kleine Plätze in den Seitenstraßen (Marktstand, Kölsch-Stand, Denkmal, Litfaßsäule), Graffiti-Wände
+  und Plakate mit Türsteher-Weisheiten, Rasenstreifen am Rheinufer, Alleebäume und Kölsch-Trinker
+  vor jedem Brauhaus. Der Gastgeber „Dä Lange“ verzällt an Brauhäusern, Büdchen, Blitzern, Kirchen,
+  Haltestellen, Parks, Loopings und Sprüngen – ohne dass ein echter Name fällt.
   Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
 - `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft
   vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, KI-Rivale,

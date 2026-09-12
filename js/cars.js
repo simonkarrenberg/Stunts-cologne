@@ -108,7 +108,7 @@
     return g;
   }
 
-  function liteWheel(spec, side) { const g = new THREE.Group(); const t = cylM(spec.wr, spec.wr, 0.22, tyre, 14); t.rotation.z = Math.PI / 2; g.add(t); const rim = cylM(spec.wr * 0.6, spec.wr * 0.6, 0.24, chrome, 10); rim.rotation.z = Math.PI / 2; g.add(rim); return g; }
+  function liteWheel(spec, side) { const g = new THREE.Group(); const t = cylM(spec.wr, spec.wr, 0.22, tyre, 10); t.rotation.z = Math.PI / 2; g.add(t); const rim = cylM(spec.wr * 0.6, spec.wr * 0.6, 0.24, chrome, 8); rim.rotation.z = Math.PI / 2; g.add(rim); return g; }
   Cars.build = function (car, night, H, opts) {
     opts = opts || {}; const lite = !!opts.lite; H = H || {};
     const spec = SPECS[car.shape] || SPECS.coupe; const g = new THREE.Group();
@@ -116,14 +116,14 @@
     const floorAt = (z) => spec.floor + Math.max(0, Math.abs(z) - (spec.L / 2 - 0.55)) * 0.5;
     // ---- body: belt line loft with a bit of tumblehome and a flat nose / tail face
     const bodySt = [];
-    const zs = []; for (let z = tail; z < nose - 0.01; z += lite ? 0.45 : 0.22) zs.push(z); zs.push(nose);
-    for (const z of zs) bodySt.push({ z, ring: superRing(hw * interp(spec.body, z, 2), floorAt(z), interp(spec.body, z, 1), 5.5, 0.07, lite ? 18 : RING) });
+    const zs = []; for (let z = tail; z < nose - 0.01; z += lite ? 0.6 : 0.22) zs.push(z); zs.push(nose);
+    for (const z of zs) bodySt.push({ z, ring: superRing(hw * interp(spec.body, z, 2), floorAt(z), interp(spec.body, z, 1), 5.5, 0.07, lite ? 12 : RING) });
     const body = loft(bodySt, paint(car.color), true); g.add(body);
     // ---- cabin: glass loft from cowl to rear window; painted roof panel + pillars on top
     const cab = spec.cabin; const cabSt = [];
-    const cz = []; for (let z = cab[cab.length - 1][0]; z < cab[0][0] - 0.01; z += lite ? 0.25 : 0.12) cz.push(z); cz.push(cab[0][0]);
+    const cz = []; for (let z = cab[cab.length - 1][0]; z < cab[0][0] - 0.01; z += lite ? 0.4 : 0.12) cz.push(z); cz.push(cab[0][0]);
     const belt = (z) => interp(spec.body, z, 1);
-    for (const z of cz) cabSt.push({ z, ring: superRing(hw * interp(cab.slice().reverse(), z, 2) * 0.96, belt(z) - 0.08, interp(cab.slice().reverse(), z, 1), 3.2, 0.18, lite ? 18 : RING) });
+    for (const z of cz) cabSt.push({ z, ring: superRing(hw * interp(cab.slice().reverse(), z, 2) * 0.96, belt(z) - 0.08, interp(cab.slice().reverse(), z, 1), 3.2, 0.18, lite ? 12 : RING) });
     g.add(loft(cabSt, glass, false));
     const roofW = hw * cab[1][2] * 0.96 * 0.78;
     const roofLen = cab[1][0] - cab[2][0];
@@ -185,8 +185,7 @@
       g.add(boxM(0.14, 0.07, 0.04, amber, sx * (hw - 0.12), bumperY + 0.12, nz));
       const tailTop = interp(spec.body, tail, 1);
       g.add(boxM(spec.lights === 'vertical' ? 0.42 : 0.3, 0.13, 0.05, night ? tailOn : tailOff, sx * (hw - 0.3), tailTop - 0.16, tail - 0.02));
-      g.add(boxM(0.12, 0.13, 0.05, amber, sx * (hw - 0.52), tailTop - 0.16, tail - 0.02));
-      g.add(boxM(0.1, 0.13, 0.05, lampOff, sx * (hw - 0.09), tailTop - 0.16, tail - 0.02));
+      if (!lite) { g.add(boxM(0.12, 0.13, 0.05, amber, sx * (hw - 0.52), tailTop - 0.16, tail - 0.02)); g.add(boxM(0.1, 0.13, 0.05, lampOff, sx * (hw - 0.09), tailTop - 0.16, tail - 0.02)); }
     }
     // hood ornament / badge, antenna, exhaust
     g.add(boxM(0.09, 0.09, 0.02, chrome, 0, ly + 0.02, nz + 0.01));
@@ -197,8 +196,8 @@
     // ---- wheels: wells + spinning wheels (front ones steer)
     const wells = []; g.userData.wheels = []; g.userData.steer = [];
     for (const [ai, z] of [[0, spec.ax[0]], [1, spec.ax[1]]]) for (const sx of [-1, 1]) {
-      const well = cylM(spec.wr + 0.08, spec.wr + 0.08, 0.3, dark, 20); well.rotation.z = Math.PI / 2; well.position.set(sx * (hw - 0.14), spec.wr + 0.02, z); g.add(well); wells.push(well);
-      const lip = new THREE.Mesh(new THREE.TorusGeometry(spec.wr + 0.09, 0.035, 6, 20, Math.PI), paint(car.color)); lip.rotation.y = Math.PI / 2; lip.position.set(sx * hw * 0.99, spec.wr + 0.02, z); g.add(lip);
+      const well = cylM(spec.wr + 0.08, spec.wr + 0.08, 0.3, dark, lite ? 10 : 20); well.rotation.z = Math.PI / 2; well.position.set(sx * (hw - 0.14), spec.wr + 0.02, z); g.add(well); wells.push(well);
+      if (!lite) { const lip = new THREE.Mesh(new THREE.TorusGeometry(spec.wr + 0.09, 0.035, 6, 20, Math.PI), paint(car.color)); lip.rotation.y = Math.PI / 2; lip.position.set(sx * hw * 0.99, spec.wr + 0.02, z); g.add(lip); }
       const steer = new THREE.Group(); steer.position.set(sx * (hw - 0.12), spec.wr, z); g.add(steer);
       const w = lite ? liteWheel(spec, sx) : wheel(spec, sx); w.userData.wheelGroup = true; steer.userData.wheelGroup = true; steer.add(w); g.userData.wheels.push(w); if (ai === 0) g.userData.steer.push(steer);
     }

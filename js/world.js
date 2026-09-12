@@ -5,6 +5,8 @@
 (function (root) {
   'use strict';
   const TB = root.TrackBuilder, PX = root.Pixel, T = PX.T;
+  const GD = () => root.GameData || { TUENN: { places: {}, walls: [], shops: [] } };
+  const pickR = (arr, r) => arr[Math.floor((r ? r() : Math.random()) * arr.length)];
   const ROAD_W = 6;        // half width
   const GROUND_Y = -0.3;
   const WATER_Y = -0.08;
@@ -446,7 +448,7 @@
     const g = new THREE.Group();
     const glass = cyl(3, 3, 16, 0xffc300, 0, 8, 0, 12); glass.material.transparent = true; glass.material.opacity = 0.92; g.add(glass);
     g.add(cyl(3.2, 3.2, 2.5, 0xffffff, 0, 17, 0, 12));
-    const label = textPlane('TÜNN KÖLSCH', '#c1121f', '#ffffff', 5.5, 2.4, false, { border: '#c1121f' }); label.position.set(0, 9, 3.05); g.add(label);
+    const label = textPlane('RING KÖLSCH', '#c1121f', '#ffffff', 5.5, 2.4, false, { border: '#c1121f' }); label.position.set(0, 9, 3.05); g.add(label);
     const label2 = label.clone(); label2.position.set(0, 9, -3.05); label2.rotation.y = Math.PI; g.add(label2);
     return g;
   };
@@ -482,7 +484,7 @@
     const wall = tbox(160, 9, 8, b, 0, 4.5, 0, 0xffffff, [4, 4]); g.add(wall);
     for (let x = -72; x <= 72; x += 16) {
       const arch = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 8.4, 10, 1, false, 0, Math.PI), mat(0x1c1a20)); arch.rotation.z = Math.PI / 2; arch.rotation.y = Math.PI / 2; arch.position.set(x, 0, 0); g.add(arch);
-      const art = textPlane(['KÖLLE', 'EHRENFELD', 'ALAAF', 'TÜNN', 'FC', 'JECK'][((x + 72) / 16) % 6], ['#ff2d95', '#ffd400', '#00e5ff', '#7fff00'][((x + 72) / 16) % 4], '#2a2a35', 8, 4, false); art.position.set(x + 8, 2.5, 4.05); g.add(art);
+      const art = textPlane(['KÖLLE', 'EHRENFELD', 'ALAAF', 'LANGE', 'FC', 'JECK'][((x + 72) / 16) % 6], ['#ff2d95', '#ffd400', '#00e5ff', '#7fff00'][((x + 72) / 16) % 4], '#2a2a35', 8, 4, false); art.position.set(x + 8, 2.5, 4.05); g.add(art);
     }
     g.add(box(160, 0.5, 8.5, 0x555555, 0, 9.25, 0));
     const tram = box(28, 3.4, 2.6, 0xe30613, 20, 11.2, 0); g.add(tram); g.add(box(28, 1, 2.7, 0xffffff, 20, 11.6, 0));
@@ -494,7 +496,7 @@
     const awning = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.6), tmat(T.stripes(0xc1121f, 0xffffff), 0xffffff, { side: THREE.DoubleSide })); awning.rotation.x = -Math.PI / 2 + 0.5; awning.position.set(0, 3.3, 2.3); g.add(awning);
     const sign = textPlane('BÜDCHE · KÖLSCH · KAMELLE', '#111', '#ffd400', 5, 0.8, THEME.night); sign.position.set(0, 3.5, 1.8); g.add(sign);
     for (let i = 0; i < 3; i++) g.add(box(0.9, 0.6, 0.6, [0xc1121f, 0x1c3f95, 0x2d6a4f][i], -3 + i * 1, 0.3, 1.5));
-    addm(g, human({ shirt: 0x8a5a2a, koelsch: true })).position.set(3.4, 0, 1.6); // Büdchen-Kunde
+    addm(g, human({ shirt: 0x8a5a2a, koelsch: true, lite: true })).position.set(3.4, 0, 1.6); // Büdchen-Kunde
     return g;
   };
   P.haltestelle = () => {
@@ -562,17 +564,16 @@
     const M = (c) => o.bronze ? mat(c) : mat(c);
     const add = (m, x, y, z) => { m.position.set(x, y, z); g.add(m); return m; };
     const part = (geo, c, x, y, z, rx, rz) => { const m = new THREE.Mesh(geo, M(c)); m.position.set(x, y, z); if (rx) m.rotation.x = rx; if (rz) m.rotation.z = rz; g.add(m); return m; };
-    const lite = !!o.lite, SS = lite ? 6 : 10, SR = lite ? 5 : 8, HS = lite ? 12 : 20, HR = lite ? 9 : 16;
+    const lite = !!o.lite, SS = lite ? 5 : 10, SR = lite ? 4 : 8, HS = lite ? 8 : 20, HR = lite ? 6 : 16;
     const limb = (a, b, r0, r1, c) => { const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b); const len = va.distanceTo(vb); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, len, SS), M(c)); m.position.copy(va).lerp(vb, 0.5); m.quaternion.setFromUnitVectors(_up, vb.clone().sub(va).normalize()); g.add(m); return m; };
-    const lathe = (pts, c, seg) => new THREE.Mesh(new THREE.LatheGeometry(pts.map((p) => new THREE.Vector2(p[0], p[1])), seg || (lite ? 10 : 18)), M(c));
+    const lathe = (pts, c, seg) => new THREE.Mesh(new THREE.LatheGeometry(pts.map((p) => new THREE.Vector2(p[0], p[1])), seg || (lite ? 7 : 18)), M(c));
     const heavy = o.heavy ? 1.18 : 1, coat = o.coat || (o.hat === 'fedora' && !o.bronze), suit = o.suit || coat || o.hat === 'fedora';
     // legs: thigh, shin, shoe (slightly apart, knees a touch forward)
     for (const sx of [-1, 1]) {
       const hip = [sx * 0.1, 0.86, 0], knee = [sx * 0.11, 0.47, 0.02], ankle = [sx * 0.11, 0.09, -0.01];
       limb(hip, knee, 0.085 * heavy, 0.065, pants); limb(knee, ankle, 0.066, 0.05, pants);
-      part(new THREE.SphereGeometry(0.066, SR, SR), pants, sx * 0.11, 0.47, 0.02);
-      const sh = part(new THREE.SphereGeometry(0.075, SR + 2, SR), shoes, sx * 0.11, 0.05, 0.06); sh.scale.set(0.85, 0.6, 1.8);
-      part(new THREE.BoxGeometry(0.11, 0.04, 0.12), shoes, sx * 0.11, 0.02, -0.02);
+      if (!lite) part(new THREE.SphereGeometry(0.066, SR, SR), pants, sx * 0.11, 0.47, 0.02);
+      if (lite) part(new THREE.BoxGeometry(0.12, 0.07, 0.27), shoes, sx * 0.11, 0.035, 0.04); else { const sh = part(new THREE.SphereGeometry(0.075, SR + 2, SR), shoes, sx * 0.11, 0.05, 0.06); sh.scale.set(0.85, 0.6, 1.8); part(new THREE.BoxGeometry(0.11, 0.04, 0.12), shoes, sx * 0.11, 0.02, -0.02); }
     }
     // skirt / dress
     if (o.dress) add(lathe([[0.15, 0.95], [0.19, 0.85], [0.26, 0.6], [0.3, 0.5]], o.dress), 0, 0, 0);
@@ -603,7 +604,7 @@
         const hold = o.koelsch && sx === 1 || o.kranz && sx === -1 || o.briefcase && sx === 1;
         const el = [sx * 0.25, 1.06, hold ? 0.05 : 0.0], wr = hold ? [sx * 0.26, 0.92, 0.16] : [sx * 0.24, 0.8, 0.05];
         limb(sh, el, 0.058 * heavy, 0.046, shirt); limb(el, wr, 0.046, 0.036, shirt);
-        part(new THREE.SphereGeometry(0.047, SR, SR), shirt, el[0], el[1], el[2]);
+        if (!lite) part(new THREE.SphereGeometry(0.047, SR, SR), shirt, el[0], el[1], el[2]);
         part(new THREE.SphereGeometry(0.042, SR, SR), skin, wr[0], wr[1] - 0.04, wr[2] + 0.01).scale.set(0.8, 1.25, 0.55);
       }
       part(new THREE.SphereGeometry(0.075, SR + 2, SR), shirt, sx * 0.2, 1.37, 0).scale.set(1, 0.8, 0.85); // shoulder
@@ -621,17 +622,17 @@
       if (hairStyle === 'sides') { for (const sx of [-1, 1]) part(new THREE.SphereGeometry(0.06, 8, 8), hair, sx * 0.1, 1.62, -0.03).scale.set(0.6, 1, 1); }
     }
     if (o.bald && !o.hat) { for (const sx of [-1, 1]) part(new THREE.SphereGeometry(0.05, 8, 8), hair, sx * 0.1, 1.61, -0.03).scale.set(0.5, 0.9, 1); }
-    if (o.hat === 'cap') { part(new THREE.SphereGeometry(0.128, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0x555555, 0, 1.685, 0); part(new THREE.BoxGeometry(0.13, 0.02, 0.11), o.hatColor || 0x555555, 0, 1.685, 0.16); }
-    if (o.hat === 'fedora') { part(new THREE.CylinderGeometry(0.2, 0.21, 0.02, 20), o.hatColor || 0x111111, 0, 1.735, 0).rotation.x = -0.08; const crown = part(new THREE.CylinderGeometry(0.105, 0.125, 0.14, 16), o.hatColor || 0x111111, 0, 1.805, 0); crown.scale.z = 0.92; part(new THREE.CylinderGeometry(0.127, 0.127, 0.035, 16), 0x8a1a1a, 0, 1.755, 0); part(new THREE.BoxGeometry(0.06, 0.02, 0.2), o.hatColor || 0x111111, 0, 1.875, 0); }
-    if (o.hat === 'gnome') { part(new THREE.ConeGeometry(0.135, 0.44, 14), o.hatColor || 0xc1121f, 0, 1.92, 0).rotation.x = -0.15; part(new THREE.TorusGeometry(0.125, 0.02, 6, 16), PX.shade(o.hatColor || 0xc1121f, 0.7), 0, 1.71, 0).rotation.x = Math.PI / 2; }
-    if (o.hat === 'tricorn') { part(new THREE.CylinderGeometry(0.21, 0.21, 0.05, 3), o.hatColor || 0xc1121f, 0, 1.75, 0); part(new THREE.SphereGeometry(0.125, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0xc1121f, 0, 1.73, 0); part(new THREE.SphereGeometry(0.035, 6, 6), 0xffffff, 0, 1.92, 0); }
+    if (o.hat === 'cap') { part(new THREE.SphereGeometry(0.128, lite ? 8 : 14, lite ? 5 : 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0x555555, 0, 1.685, 0); part(new THREE.BoxGeometry(0.13, 0.02, 0.11), o.hatColor || 0x555555, 0, 1.685, 0.16); }
+    if (o.hat === 'fedora') { part(new THREE.CylinderGeometry(0.2, 0.21, 0.02, lite ? 10 : 20), o.hatColor || 0x111111, 0, 1.735, 0).rotation.x = -0.08; const crown = part(new THREE.CylinderGeometry(0.105, 0.125, 0.14, lite ? 8 : 16), o.hatColor || 0x111111, 0, 1.805, 0); crown.scale.z = 0.92; part(new THREE.CylinderGeometry(0.127, 0.127, 0.035, lite ? 8 : 16), 0x8a1a1a, 0, 1.755, 0); part(new THREE.BoxGeometry(0.06, 0.02, 0.2), o.hatColor || 0x111111, 0, 1.875, 0); }
+    if (o.hat === 'gnome') { part(new THREE.ConeGeometry(0.135, 0.44, lite ? 8 : 14), o.hatColor || 0xc1121f, 0, 1.92, 0).rotation.x = -0.15; part(new THREE.TorusGeometry(0.125, 0.02, lite ? 4 : 6, lite ? 8 : 16), PX.shade(o.hatColor || 0xc1121f, 0.7), 0, 1.71, 0).rotation.x = Math.PI / 2; }
+    if (o.hat === 'tricorn') { part(new THREE.CylinderGeometry(0.21, 0.21, 0.05, 3), o.hatColor || 0xc1121f, 0, 1.75, 0); part(new THREE.SphereGeometry(0.125, lite ? 6 : 10, lite ? 4 : 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0xc1121f, 0, 1.73, 0); part(new THREE.SphereGeometry(0.035, 6, 6), 0xffffff, 0, 1.92, 0); }
     if (o.hat === 'helmet') { part(new THREE.SphereGeometry(0.135, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), o.hatColor || 0x1c3f95, 0, 1.665, 0); part(new THREE.BoxGeometry(0.12, 0.02, 0.1), 0x111111, 0, 1.64, 0.14); }
     if (o.hat === 'polizei') { part(new THREE.CylinderGeometry(0.125, 0.12, 0.09, 16), o.hatColor || 0x2d5a3a, 0, 1.75, 0); part(new THREE.CylinderGeometry(0.13, 0.13, 0.02, 16), 0x111111, 0, 1.705, 0); part(new THREE.BoxGeometry(0.14, 0.015, 0.09), 0x111111, 0, 1.7, 0.14); part(new THREE.SphereGeometry(0.02, 6, 6), 0xffd400, 0, 1.75, 0.125); }
     if (o.beard) { const b = part(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), o.beard, 0, 1.62, 0.03); b.scale.set(1.08, 1.5, 1.05); }
     if (o.glasses) { for (const sx of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.005, 6, 14), M(0x111111)); r.position.set(sx * 0.048, 1.664, 0.112); g.add(r); const lens = new THREE.Mesh(new THREE.CircleGeometry(0.03, 12), o.shades ? M(0x101018) : mat(0x99bbdd, { transparent: true, opacity: 0.35 })); lens.position.set(sx * 0.048, 1.664, 0.113); g.add(lens); } part(new THREE.BoxGeometry(0.035, 0.005, 0.005), 0x111111, 0, 1.667, 0.115); }
     if (o.cigar) { part(new THREE.CylinderGeometry(0.01, 0.01, 0.13, 8), 0x6a3a1a, 0.04, 1.6, 0.17).rotation.x = Math.PI / 2 + 0.2; const tip = new THREE.Mesh(new THREE.SphereGeometry(0.013, 6, 6), bmat(0xff6a00)); tip.position.set(0.04, 1.615, 0.235); g.add(tip); }
-    if (o.scarf) { part(new THREE.TorusGeometry(0.1, 0.038, 8, 14), o.scarf, 0, 1.49, 0).rotation.x = Math.PI / 2; part(new THREE.BoxGeometry(0.075, 0.32, 0.03), o.scarf, 0.07, 1.31, 0.14); part(new THREE.BoxGeometry(0.075, 0.3, 0.03), o.scarf === 0xc1121f ? 0xffffff : o.scarf, -0.05, 1.29, 0.14); }
-    if (o.koelsch) { const gl = add(new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.023, 0.14, 12), mat(0xffc300, { transparent: true, opacity: 0.85 })), 0.27, 0.95, 0.19); part(new THREE.CylinderGeometry(0.027, 0.027, 0.025, 12), 0xffffff, 0.27, 1.03, 0.19); }
+    if (o.scarf) { part(new THREE.TorusGeometry(0.1, 0.038, lite ? 4 : 8, lite ? 8 : 14), o.scarf, 0, 1.49, 0).rotation.x = Math.PI / 2; part(new THREE.BoxGeometry(0.075, 0.32, 0.03), o.scarf, 0.07, 1.31, 0.14); part(new THREE.BoxGeometry(0.075, 0.3, 0.03), o.scarf === 0xc1121f ? 0xffffff : o.scarf, -0.05, 1.29, 0.14); }
+    if (o.koelsch) { const gl = add(new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.023, 0.14, lite ? 6 : 12), mat(0xffc300, { transparent: true, opacity: 0.85 })), 0.27, 0.95, 0.19); part(new THREE.CylinderGeometry(0.027, 0.027, 0.025, lite ? 6 : 12), 0xffffff, 0.27, 1.03, 0.19); }
     if (o.kranz) { part(new THREE.CylinderGeometry(0.16, 0.16, 0.03, 16), 0x8a5a2a, -0.3, 0.9, 0.2); for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; part(new THREE.CylinderGeometry(0.02, 0.018, 0.12, 8), 0xffc300, -0.3 + Math.cos(a) * 0.11, 0.97, 0.2 + Math.sin(a) * 0.11); } part(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6), 0x8a5a2a, -0.3, 1.05, 0.2); }
     if (o.briefcase) part(new THREE.BoxGeometry(0.3, 0.22, 0.08), 0x3a2a1a, 0.28, 0.7, 0.2);
     if (o.wrench) part(new THREE.BoxGeometry(0.03, 0.32, 0.03), 0x9a9aa0, -0.27, 0.86, 0.06);
@@ -647,7 +648,7 @@
   P.figure = (h, coat, hat, skin) => human({ h: 1.75 * (h || 0.55) / 0.55 * 0.55, shirt: coat, pants: coat === 0x1a1a1a ? 0x1a1a1a : 0x2a2a34, hat: hat ? 'fedora' : 'none', hatColor: hat, skin: skin });
   P.human = human;
   P.tuenn = () => { const g = human({ h: 2.1, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true, shades: true, koelsch: true, wave: true, coat: true, age: 1, moustache: 0x2a2a2a, tie: 0x8a1a1a, heavy: true, smile: 0.5 }); g.userData.wave = true; animated.push(g);
-    const sign = textPlane('DER LANGE TÜNN', '#ffd400', '#111111', 4, 0.8, THEME.night, { border: '#ffd400' }); sign.position.set(0, 2.9, 0); g.add(sign); return g; };
+    const sign = textPlane('DÄ LANGE VUM RING', '#ffd400', '#111111', 4, 0.8, THEME.night, { border: '#ffd400' }); sign.position.set(0, 2.9, 0); g.add(sign); return g; };
   P.schael = () => { const g = human({ h: 1.62, skin: 0xf1c27d, shirt: 0x3a2a22, pants: 0x2a2a2a, hat: 'none', hair: 0x1a1a1a, scarf: 0xc1121f, wink: true, smile: -0.5, suit: true, tie: 0x2d6a4f }); const sign = textPlane('SCHÄL', '#ffffff', '#2d6a4f', 2.2, 0.6, false, { border: '#fff' }); sign.position.set(0, 2.3, 0); g.add(sign); return g; };
   P.tuennes = () => human({ h: 1.7, skin: 0xffdbac, shirt: 0x2a4a8a, pants: 0x2a2a34, hat: 'cap', hatColor: 0x777777, scarf: 0xc1121f, koelsch: true, heavy: true, smile: 1, moustache: 0x5a3a20 });
   P.heinzel = () => human({ h: 1.2, skin: 0xffdbac, shirt: 0x2d6a4f, pants: 0x5a3a20, hat: 'gnome', beard: 0xf4f4f4, wrench: true, smile: 1, apron: 0x8a5a2a });
@@ -752,7 +753,7 @@
     for (let i = 0; i < 6; i++) { const c = box(2.5, 2.5, 2.5, [0xff5fa2, 0xffd400, 0x00a0ff][i % 3], -100 + i * 40, 33.5, 0); c.userData.gondola = i; g.add(c); animated.push(c); }
     return g; };
   P.tree = (seed) => { const g = new THREE.Group(); const s = 1 + ((seed || 0) % 3) * 0.3; g.add(cyl(0.25 * s, 0.4 * s, 2.6 * s, 0x5a3a1a, 0, 1.3 * s, 0, 7));
-    const crown = (r, y, dx, dz, col) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), mat(col)); m.position.set(dx, y, dz); g.add(m); };
+    const crown = (r, y, dx, dz, col) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col)); m.position.set(dx, y, dz); g.add(m); };
     crown(1.9 * s, 3.8 * s, 0, 0, 0x2f7a3a); crown(1.4 * s, 4.9 * s, 0.6 * s, 0.3 * s, 0x3f9a48); crown(1.3 * s, 4.4 * s, -0.8 * s, -0.4 * s, 0x2a6e34); crown(1.1 * s, 3.4 * s, 0.9 * s, -0.7 * s, 0x358a40);
     return g; };
   P.tram = (o) => { // KVB Stadtbahn: white with the red band, black window strip, pantograph, line number
@@ -917,7 +918,7 @@
   P.zeppelin = () => { // the Kölsch airship cruising over the city
     const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.SphereGeometry(6, 10, 8), mat(0xf4f4f4)); body.scale.set(3.2, 1, 1); g.add(body);
     g.add(box(6, 2, 2.5, 0xdddddd, 0, -5.5, 0)); g.add(box(2, 4, 0.3, 0xc1121f, -17, 1, 0)); g.add(box(2, 0.3, 4, 0xc1121f, -17, 1, 0));
-    const s = textPlane('TÜNN KÖLSCH – ET LÄUFT', '#c1121f', '#f4f4f4', 14, 3, THEME.night); s.position.set(0, 0, 6.2); g.add(s); const s2 = s.clone(); s2.position.z = -6.2; s2.rotation.y = Math.PI; g.add(s2);
+    const s = textPlane('RING KÖLSCH – ET LÄUFT', '#c1121f', '#f4f4f4', 14, 3, THEME.night); s.position.set(0, 0, 6.2); g.add(s); const s2 = s.clone(); s2.position.z = -6.2; s2.rotation.y = Math.PI; g.add(s2);
     g.position.y = 120; g.userData.zeppelin = { phase: Math.random() * 100 }; g.userData.keep = true; animated.push(g);
     return g; };
   P.fireworks = () => { // Kölner Lichter: bursts over the Rhine (night)
@@ -929,7 +930,7 @@
     return pts; };
   P.moewen = () => { const g = new THREE.Group(); for (let i = 0; i < 6; i++) { const m = new THREE.Group(); m.add(box(1.2, 0.1, 0.25, 0xf4f4f4, -0.6, 0, 0)).rotation.z = 0.3; m.add(box(1.2, 0.1, 0.25, 0xf4f4f4, 0.6, 0, 0)).rotation.z = -0.3; m.position.set((i - 3) * 6, 14 + (i % 3) * 3, (i % 2) * 5); m.userData.moewe = { phase: i }; g.add(m); animated.push(m); } return g; };
   P.litfass = (o) => { const g = new THREE.Group(); g.add(cyl(1.1, 1.1, 3.2, 0x3a3a44, 0, 1.6, 0, 10)); g.add(cyl(1.3, 1.3, 0.3, 0x2a2a30, 0, 3.35, 0, 10)); g.add(cone(1.2, 0.6, 0x2a2a30, 0, 3.8, 0, 10));
-    const posters = (o && o.texts) || ['ROSENMONTAG', 'KÖLSCH-FEST', 'FC HEIMSPIEL', 'TÜNN LIVE', 'BOXKELLER'];
+    const posters = ((o && o.texts) || ['ROSENMONTAG', 'KÖLSCH-FEST', 'FC HEIMSPIEL', 'DÄ LANGE LIVE', 'BOXKELLER']).concat(GD().TUENN.walls || []);
     for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; const pl = textPlane(posters[k % posters.length], ['#ffffff', '#ffd400', '#111', '#ff2d95'][k % 4], ['#c1121f', '#1c3f95', '#ffd400', '#2a1a3a'][k % 4], 1.6, 2.2, false, { sizeK: 0.35 }); pl.position.set(Math.sin(a) * 1.13, 1.7, Math.cos(a) * 1.13); pl.rotation.y = a; g.add(pl); }
     return g; };
   P.telefonzelle = () => { const g = new THREE.Group(); g.add(box(1.2, 2.4, 1.2, 0xffd400, 0, 1.2, 0)); g.add(box(1.0, 1.4, 0.05, 0x9fd3ff, 0, 1.5, 0.61)); g.add(box(1.3, 0.2, 1.3, 0x1c1c1c, 0, 2.5, 0)); const s = textPlane('TELEFON', '#111', '#ffd400', 1.1, 0.25, false, { sizeK: 0.6 }); s.position.set(0, 2.25, 0.63); g.add(s); return g; };
@@ -981,7 +982,7 @@
     for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { g.add(cyl(0.05, 0.05, 1, 0xd0b060, sx * 1.6, 0.5, 6.8 + k * 1.6, 6)); g.add(box(0.06, 0.06, 1.6, 0xc1121f, sx * 1.6, 0.95, 7.6 + k * 1.6)); }
     const door = box(2.4, 3.2, 0.2, 0x2a1020, 0, 1.6, 6.05); g.add(door); addm(g, new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 0.3), bmat(0xff2d95))).position.set(0, 3.3, 6.15);
     const tuenn = human({ h: 2.08, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true }); tuenn.position.set(2.4, 0, 7.4); tuenn.rotation.y = 0.5; g.add(tuenn);
-    const s2 = textPlane('TÜRSTEHER: DER LANGE TÜNN', '#ffd400', '#111', 3.4, 0.5, THEME.night, { sizeK: 0.5 }); s2.position.set(2.4, 2.6, 7.4); g.add(s2);
+    const s2 = textPlane('TÜRSTEHER: DÄ LANGE · 2,10 M', '#ffd400', '#111', 3.4, 0.5, THEME.night, { sizeK: 0.5 }); s2.position.set(2.4, 2.6, 7.4); g.add(s2);
     const q = [{ shirt: 0xffffff, dress: 0xff2d95, hair: 0xd9a24a }, { shirt: 0x2a2a30, hat: 'fedora' }, { shirt: 0xffd400 }, { shirt: 0x1c3f95, hat: 'cap' }];
     q.forEach((o, i) => { const hm = human(Object.assign({ h: 1.6 + (i % 2) * 0.2 }, o)); hm.position.set(-2.2 - i * 0.9, 0, 7.6 + i * 0.7); hm.rotation.y = 0.9; g.add(hm); });
     if (THEME.night) { g.add(glow(20, 12, 0xff2d95, 0, 9)); const pl = new THREE.PointLight(0xff2d95, 1.4, 40); pl.position.set(0, 6, 8); g.add(pl); }
@@ -1026,19 +1027,58 @@
     const a = human({ h: 1.85, shirt: 0xe0ac69, pants: 0xc1121f, skin: 0xe0ac69 }); a.position.set(-0.9, 0.8, 0); a.rotation.y = Math.PI / 2; g.add(a);
     const b = human({ h: 1.8, shirt: 0xc68642, pants: 0x1c3f95, skin: 0xc68642 }); b.position.set(0.9, 0.8, 0); b.rotation.y = -Math.PI / 2; g.add(b);
     const ref = human({ h: 1.7, shirt: 0xffffff, pants: 0x1a1a1a }); ref.position.set(0, 0.8, -2); g.add(ref);
-    const s = textPlane('BOXNACHT AM RING · TÜNN WIEGT', '#ffd400', '#2a1a1a', 6, 0.8, THEME.night); s.position.set(0, 2.9, 3.4); g.add(s);
+    const s = textPlane('BOXNACHT AM RING · DÄ LANGE WIEGT', '#ffd400', '#2a1a1a', 6, 0.8, THEME.night); s.position.set(0, 2.9, 3.4); g.add(s);
     addm(g, P.crowd()).position.set(0, 0, 6);
     return g; };
   P.house = (seed, o) => { const r = mulberry(seed); o = o || {};
     const styles = THEME.street === 'altstadt' ? ['altstadt', 'altstadt', 'altstadt', 'wiederaufbau'] : THEME.street === 'industrial' ? ['industrial', 'brick', 'brick', 'concrete'] : THEME.street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'gruenderzeit', 'gruenderzeit', 'wiederaufbau', 'wiederaufbau', 'brick']; const st = styles[Math.floor(r() * styles.length)];
     const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'industrial' ? INDUSTRIAL : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE;
     const w = o.w || (st === 'altstadt' ? 6 + r() * 3 : st === 'wiederaufbau' ? 10 + r() * 6 : 9 + r() * 5), d = o.d || 11 + r() * 5, h = st === 'altstadt' ? 11 + r() * 6 : st === 'wiederaufbau' ? 12.8 + Math.floor(r() * 3) * 3.2 : st === 'brick' ? 12 + r() * 5 : 14.4 + Math.floor(r() * 3) * 3.6;
-    const shops = (THEME.shops || []).concat(SHOPS);
+    const shops = (THEME.shops || []).concat(SHOPS, GD().TUENN.shops || []);
     const pub = o.pub != null ? !!o.pub : r() < (THEME.street === 'altstadt' ? 0.22 : 0.09);
     const shop = pub ? PUBS[Math.floor(r() * PUBS.length)] : r() < 0.45 ? shops[Math.floor(r() * shops.length)] : null;
     const opts = { shop, brauhaus: pub, signBg: pub ? ['#7a1a1a', '#1c3f95', '#2d6a4f', '#111111'][Math.floor(r() * 4)] : null, balconies: st === 'gruenderzeit' && r() < 0.7, night: THEME.night, awning: [0xc1121f, 0x1c3f95, 0x2d6a4f, 0xffd400][Math.floor(r() * 4)] };
     const g = building(w, h, d, st, cols[Math.floor(r() * cols.length)], st === 'altstadt' ? (r() < 0.5 ? 'stepped' : 'gable') : st === 'gruenderzeit' ? 'hip' : st === 'brick' ? (r() < 0.5 ? 'gable' : 'flat') : st === 'wiederaufbau' ? (r() < 0.6 ? 'hip' : 'flat') : 'flat', Math.floor(r() * 1000), opts);
-    g.userData.w = w; g.userData.d = d; return g; };
+    g.userData.w = w; g.userData.d = d; g.userData.pub = pub; return g; };
+
+  P.park = (o) => { // a Veedel park: lawn with hedge, plane trees, benches, a lamp, people, sometimes a playground or a fountain
+    o = o || {}; const r = mulberry(o.seed || 7); const w = o.w || 44, d = o.d || 44; const g = new THREE.Group();
+    const lawn = tplane(w, d, T.grass(0x5e9a4a, 1), w / 8, d / 8); lawn.rotation.x = -Math.PI / 2; lawn.position.y = 0.04; g.add(lawn);
+    for (const [x, z, bw, bd] of [[0, d / 2, w, 0.8], [0, -d / 2, w, 0.8], [w / 2, 0, 0.8, d], [-w / 2, 0, 0.8, d]]) if (r() < 0.8) g.add(box(bw, 1.1, bd, 0x2f6b3a, x, 0.55, z));
+    const nT = 6 + Math.floor(r() * 7); for (let i = 0; i < nT; i++) addm(g, P.tree(Math.floor(r() * 3))).position.set((r() - 0.5) * (w - 8), 0, (r() - 0.5) * (d - 8));
+    for (let i = 0; i < 2 + Math.floor(r() * 2); i++) { const b = P.bank(); b.position.set((r() - 0.5) * (w - 10), 0, (r() - 0.5) * (d - 10)); b.rotation.y = r() * Math.PI * 2; g.add(b); }
+    addm(g, P.lamp()).position.set((r() - 0.5) * 10, 0, (r() - 0.5) * 10);
+    for (let i = 0; i < 1 + Math.floor(r() * 3); i++) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * (w - 12), 0, (r() - 0.5) * (d - 12)); f.rotation.y = r() * Math.PI * 2; g.add(f); }
+    const roll = r();
+    if (roll < 0.35) { // fountain
+      g.add(cyl(4, 4.3, 0.6, 0x8a8a90, 0, 0.3, 0, 16)); const wtr = new THREE.Mesh(new THREE.CircleGeometry(3.7, 16), tmat(T.water(0x3f7fc0), 0xffffff)); wtr.rotation.x = -Math.PI / 2; wtr.position.y = 0.62; g.add(wtr); g.add(cyl(0.4, 0.6, 2.2, 0x8a8a90, 0, 1.6, 0, 8)); g.add(cyl(1.2, 1.2, 0.2, 0x8a8a90, 0, 2.7, 0, 12));
+    } else if (roll < 0.65) { // playground: swing + sandbox + slide
+      g.add(box(3, 0.4, 3, 0xe0c890, 5, 0.2, 5)); for (const x of [3.5, 6.5]) g.add(box(0.1, 2.4, 0.1, 0x1c3f95, x, 1.2, -5)); g.add(box(3.2, 0.1, 0.1, 0x1c3f95, 5, 2.4, -5)); g.add(box(0.5, 0.06, 0.2, 0x8a5a2a, 5, 1.0, -5)); g.add(box(0.03, 1.4, 0.03, 0x555555, 4.8, 1.7, -5)); g.add(box(0.03, 1.4, 0.03, 0x555555, 5.2, 1.7, -5));
+      const sl = box(0.8, 0.1, 3, 0xc1121f, -5, 1.0, 4); sl.rotation.x = 0.5; g.add(sl); g.add(box(0.1, 2, 0.1, 0x555555, -5, 1, 2.6)); g.add(box(0.1, 2, 0.1, 0x555555, -4.6, 1, 2.6));
+    } else if (roll < 0.8) { // Kiosk / Büdchen in the park
+      addm(g, P.buedchen()).position.set(w / 2 - 6, 0, d / 2 - 6);
+    }
+    if (r() < 0.3) { const kd = P.parkedcar({ taxi: false, color: 0x2d6a4f }); kd.position.set(-w / 2 + 4, 0, -d / 2 + 5); g.add(kd); }
+    return g; };
+  P.greenstrip = (o) => { // lawn strip with plane trees, a bench and a stroller – the Rheingarten look
+    const r = mulberry((o && o.seed) || 5); const g = new THREE.Group();
+    const lawn = tplane(10, 13, T.grass(0x5e9a4a, 1), 2, 3); lawn.rotation.x = -Math.PI / 2; lawn.position.y = 0.04; g.add(lawn);
+    addm(g, P.tree(Math.floor(r() * 3))).position.set(-2.5, 0, -3.5); addm(g, P.tree(Math.floor(r() * 3))).position.set(2.5, 0, 3.5);
+    if (r() < 0.6) { const b = P.bank(); b.position.set(0, 0, 0); b.rotation.y = -Math.PI / 2; g.add(b); }
+    if (r() < 0.7) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 6, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
+    if (r() < 0.25) addm(g, P.lamp()).position.set(3, 0, -5);
+    return g; };
+  P.platz = (o) => { // a small square in a side street: cobbles, market stand or Kölsch stand, benches, people, a Litfaß
+    o = o || {}; const r = mulberry(o.seed || 3); const g = new THREE.Group(); const w = 16, d = 14;
+    const pl = tplane(w, d, T.cobble(0xb8b0a4, 2), w / 4, d / 4); pl.rotation.x = -Math.PI / 2; pl.position.y = 0.05; g.add(pl);
+    const roll = r();
+    if (roll < 0.4) addm(g, P.marktstand()).position.set(0, 0, -3); else if (roll < 0.7) { g.add(box(3, 1.0, 1.4, 0xffd400, 0, 0.5, -3)); g.add(box(3.4, 0.1, 1.8, 0xc1121f, 0, 2.3, -3)); for (const x of [-1.5, 1.5]) g.add(cyl(0.05, 0.05, 2.3, 0x333333, x, 1.15, -3.7, 6)); const sg = textPlane('KÖLSCH · 2 DM', '#111', '#ffd400', 2.6, 0.5, THEME.night, { sizeK: 0.6 }); sg.position.set(0, 1.9, -2.3); g.add(sg); }
+    else { g.add(cyl(2.2, 2.4, 0.5, 0x8a8a90, 0, 0.25, -3, 12)); g.add(cyl(0.3, 0.4, 2.6, 0x6a6a70, 0, 1.6, -3, 8)); const st = human({ h: 1.7, bronze: true, hat: 'fedora' }); st.position.set(0, 2.8, -3); g.add(st); const sg = textPlane('DER UNBEKANNTE TÜRSTEHER', '#f0e0c0', '#3a3a40', 3, 0.45, false, { sizeK: 0.45 }); sg.position.set(0, 0.6, -0.55); g.add(sg); }
+    for (const x of [-5, 5]) { const b = P.bank(); b.position.set(x, 0, 2); b.rotation.y = Math.PI; g.add(b); }
+    for (let i = 0; i < 2 + Math.floor(r() * 2); i++) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 12, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
+    if (r() < 0.5) addm(g, P.tree(1)).position.set(-6, 0, -5); if (r() < 0.5) addm(g, P.litfass({ texts: THEME.posters })).position.set(6.5, 0, -5.5);
+    addm(g, P.lamp()).position.set(6, 0, 5);
+    return g; };
 
   // ------------------------------------------------ road ----
   function buildRoad(track, theme) {
@@ -1152,7 +1192,7 @@
       return prop;
     }
     const FACING = ['kleinkoeln', 'loversclub', 'sartory', 'residenz', 'spielclub', 'expresskiosk', 'boxring', 'denkmal', 'heinzelbrunnen', 'tuennes', 'heinzel', 'koebes', 'anna', 'polizist', 'beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
-    const keepOut = []; const propList = [];
+    const keepOut = []; const propList = []; const pendingStories = [];
     for (const pd of (track.def.props || [])) {
       const fn = P[pd.type]; if (!fn) { console.warn('unknown prop', pd.type); continue; }
       const at = pd.seg != null ? segAt(pd.seg, pd.u) : pd.at;
@@ -1178,6 +1218,7 @@
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
       prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) prop.userData.story = pd.story; propList.push(prop);
+      if (!pd.story && (pd.type === 'polizei' || pd.type === 'blitzer' || pd.type === 'kirche' || pd.type === 'tramline')) pendingStories.push([pd.type === 'tramline' ? 'tram' : pd.type, at * L, prop]);
       g.add(prop);
       const BIG = /altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney|kranhaus|musicaldome|schoko|museum|triangle|lvr|colonius|helios|flora|moschee|vulkanhalle|halle|zootor|tanzbrunnen|tribuene|rathaus|rgm|hyatt|stadion|hansahochhaus|koelnturm|odonien|hafenkran|kleinkoeln|loversclub|sartory|residenz|spielclub|kripo|boxring|eigelsteintor|hahnentor|severinstor|riesenrad|beach|rheinsprung|severinsbruecke|suspension|zoobruecke|seilbahn/;
       const MID = /buedchen|haltestelle|cafe|bude|marktstand|expresskiosk|denkmal|heinzelbrunnen|eaudecologne|reiter|crowd|tramline|koelsch|elephant|giraffe|palm|zochwagen|bus|polizei|tram|kirche|house/;
@@ -1186,6 +1227,7 @@
     // street fillers along the track
     const rnd = mulberry(1234 + track.def.id.length * 77);
     const grid = S.map((s) => [s.p.x, s.p.z]);
+    function trackFree(x, z, minD, iSkip) { for (let i = 0; i < grid.length; i += 3) { if (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; } return true; }
     function freeAt(x, z, minD, iSkip) {
       for (let i = 0; i < grid.length; i += 3) { if (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; }
       for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < k.r * k.r) return false; }
@@ -1193,6 +1235,17 @@
     }
     const street = theme.street || 'mixed';
     let count = 0;
+    // "dä Lange verzällt": anecdotes tied to the places along the road (spaced out so he does not talk all the time)
+    const storyAt = []; const placeLines = GD().TUENN.places || {}; const used = {};
+    function story(kind, sPos, prop) {
+      const lines = placeLines[kind]; if (!lines || !lines.length) return;
+      for (const a of storyAt) if (Math.abs(a - sPos) < 90 || Math.abs(a - sPos) > L - 90) return;
+      used[kind] = (used[kind] || 0); if (used[kind] >= 3) return; const text = lines[used[kind] % lines.length]; used[kind]++;
+      storyAt.push(sPos); const holder = prop || new THREE.Object3D(); holder.userData.story = text; holder.userData.at = (sPos % L) / L; holder.userData.type = holder.userData.type || kind; propList.push(holder);
+    }
+    for (const ps of pendingStories) story(ps[0], ps[1]);
+    { let seenLoop = false, seenJump = false, seenTunnel = false;
+      for (let i = 0; i < n; i++) { const k = S[i].kind; if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
     // closed street walls (Blockrandbebauung): houses shoulder to shoulder along both sides, a side street now and then
     if (street !== 'park') {
       for (const side of [-1, 1]) {
@@ -1205,10 +1258,29 @@
           const curv = s.curv || 0; const inner = curv * side < 0 && Math.abs(curv) > 0.012;
           const dist = ROAD_W + (street === 'altstadt' ? 3.6 : 4.8) + d / 2 + (inner ? 3 : 0);
           const x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
-          if (!freeAt(x, z, 13, i)) { sPos += 5; continue; }
+          if (!freeAt(x, z, 13, i)) {
+            const gx = s.p.x + bx / bl * side * (ROAD_W + 9), gz = s.p.z + bz / bl * side * (ROAD_W + 9);
+            if (trackFree(gx, gz, 7, i) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
+            continue;
+          }
           house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(house); count++; houses++; sinceGap++;
+          if (house.userData.pub) { // Kölsch drinkers in front of every Brauhaus
+            for (let k = 0; k < 2; k++) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const lat = ROAD_W + 2.6 + rnd() * 1.6; const off = (rnd() - 0.5) * w * 0.6; f.position.set(x + bx / bl * side * (lat - dist) + s.T.x * off, GROUND_Y, z + bz / bl * side * (lat - dist) + s.T.z * off); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+            story('brauhaus', sPos + w / 2, house);
+          }
           sPos += w + (inner ? w * 0.25 : 0) + 0.15;
-          if (sinceGap > 5 + rnd() * 6) { sinceGap = 0; sPos += 9 + rnd() * 5; if (theme.streets) { const sg = P.schild({ text: theme.streets[Math.floor(rnd() * theme.streets.length)] }); sg.position.set(s.p.x + bx / bl * side * (ROAD_W + 3.9), GROUND_Y, s.p.z + bz / bl * side * (ROAD_W + 3.9)); sg.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(sg); } }
+          if (sinceGap > 4 + rnd() * 5) { // a side street: sign + something in the gap (square, graffiti wall, billboard, Büdchen)
+            sinceGap = 0; const gapLen = 12 + rnd() * 6; const gi = Math.floor(((sPos + gapLen / 2) / track.ds)) % n; const gs = S[gi]; const gbx = gs.B.x, gbz = gs.B.z; const gbl = Math.hypot(gbx, gbz) || 1;
+            const putGap = (prop, lat, face) => { prop.position.set(gs.p.x + gbx / gbl * side * lat, GROUND_Y, gs.p.z + gbz / gbl * side * lat); if (face) prop.lookAt(gs.p.x, GROUND_Y, gs.p.z); else prop.rotation.y = Math.atan2(gs.T.x, gs.T.z); g.add(prop); return prop; };
+            if (theme.streets) putGap(P.schild({ text: theme.streets[Math.floor(rnd() * theme.streets.length)] }), ROAD_W + 3.9, true);
+            const gr = rnd();
+            if (gr < 0.3) { putGap(P.platz({ seed: Math.floor(rnd() * 1000) }), ROAD_W + 4.5 + 7, true); story('platz', sPos + gapLen / 2); }
+            else if (gr < 0.5) putGap(P.graffiti({ text: pickR(GD().TUENN.walls || ['KÖLLE'], rnd), color: ['#ff2d95', '#ffd400', '#00e5ff', '#7fff00'][Math.floor(rnd() * 4)] }), ROAD_W + 4.5 + 8, true);
+            else if (gr < 0.65) putGap(P.billboard({ text: pickR(GD().TUENN.walls || ['KÖLLE'], rnd) }), ROAD_W + 4.5 + 6, true);
+            else if (gr < 0.85) { putGap(P.buedchen(), ROAD_W + 4.5 + 3, true); story('buedchen', sPos + gapLen / 2); }
+            else { for (let k = 0; k < 3; k++) putGap(P.tree(k), ROAD_W + 4.5 + 3 + k * 4, false); }
+            sPos += gapLen;
+          }
         }
       }
     }
@@ -1264,35 +1336,40 @@
         }
         if (k % 7 === 3 && theme.streets) put(P.schild({ text: theme.streets[Math.floor(k / 7) % theme.streets.length] }), k % 2 ? 1 : -1, ROAD_W + 3.9, true);
         if (Math.abs(s.curv || 0) > 0.02 && k % 5 === 0) put(P.ampel(), 1, ROAD_W + 2.0, true);
-        if (rnd() < 0.32) put(P.parkedcar(rnd() < 0.22 ? { taxi: true } : { color: [0x8a8a90, 0xdddddd, 0x223355, 0x7a1a1a, 0x2d6a4f, 0x111111, 0xd9a24a, 0xe0b060, 0x4a6a8a][Math.floor(rnd() * 9)] }), rnd() < 0.5 ? 1 : -1, ROAD_W + 2.4, false);
-        if (rnd() < 0.5) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x, GROUND_Y, z); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+        if (rnd() < 0.32) { const taxi = rnd() < 0.22; put(P.parkedcar(taxi ? { taxi: true } : { color: [0x8a8a90, 0xdddddd, 0x223355, 0x7a1a1a, 0x2d6a4f, 0x111111, 0xd9a24a, 0xe0b060, 0x4a6a8a][Math.floor(rnd() * 9)] }), rnd() < 0.5 ? 1 : -1, ROAD_W + 2.4, false); if (taxi) story('taxi', i * track.ds); }
+        for (let pp = 0; pp < 2; pp++) if (rnd() < 0.45) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2.2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x + s.T.x * (rnd() - 0.5) * 8, GROUND_Y, z + s.T.z * (rnd() - 0.5) * 8); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
         if (rnd() < 0.15) put(P.muell(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.0, false);
         if (rnd() < 0.15) put(P.fahrrad(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.1, false);
         if (k % 9 === 5) put(P.litfass({ texts: theme.posters }), k % 2 ? 1 : -1, ROAD_W + 5.0, false);
         if (k % 13 === 6) put(P.telefonzelle(), k % 2 ? -1 : 1, ROAD_W + 4.6, true);
+        if (k % 10 === 2) story('haltestelle', i * track.ds);
         if (rnd() < 0.08) put(P.bank(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.2, true);
         if (rnd() < 0.05) put(P.fahrradstaender(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.4, false);
         if (k % 17 === 9 && street !== 'altstadt') put(P.bus(), k % 2 ? 1 : -1, ROAD_W + 2.9, false);
         if (street === 'altstadt' && k % 11 === 4) put(P.marktstand(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
         if (street === 'altstadt' && rnd() < 0.25) put(P.cafe(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
-        if ((street === 'gruenderzeit' || street === 'modern') && k % 3 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false);
+        if (k % 2 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false); if (k % 4 === 3 && street !== 'altstadt') put(P.tree(Math.floor(rnd() * 3)), k % 2 ? -1 : 1, ROAD_W + 4.3, false);
       } else if (street === 'park' && flat && (i / step) % 3 === 0) {
         const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1; const side = (i / step) % 2 ? 1 : -1;
         const l = P.lamp(); l.position.set(s.p.x + bx / bl * side * (ROAD_W + 3.4), GROUND_Y, s.p.z + bz / bl * side * (ROAD_W + 3.4)); l.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(l);
+        const kk = i / step; if (kk % 6 === 0) { const b = P.bank(); b.position.set(s.p.x - bx / bl * side * (ROAD_W + 4), GROUND_Y, s.p.z - bz / bl * side * (ROAD_W + 4)); b.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(b); }
+        for (let pp = 0; pp < 2; pp++) if (rnd() < 0.5) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const sd = rnd() < 0.5 ? 1 : -1; f.position.set(s.p.x + bx / bl * sd * (ROAD_W + 3 + rnd() * 4) + s.T.x * (rnd() - 0.5) * 10, GROUND_Y, s.p.z + bz / bl * sd * (ROAD_W + 3 + rnd() * 4) + s.T.z * (rnd() - 0.5) * 10); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+        if (kk % 9 === 3) { const bd = rnd() < 0.5 ? P.bude({ text: ['KÖLSCH · 2 DM', 'RIEVKOOCHE', 'HALVE HAHN', 'KAMELLE'][kk % 4] }) : P.marktstand(); bd.position.set(s.p.x - bx / bl * side * (ROAD_W + 7), GROUND_Y, s.p.z - bz / bl * side * (ROAD_W + 7)); bd.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(bd); }
       }
     }
     // the blocks behind the street walls: courtyards, back houses and the odd church tower, so the city has depth
     if (street !== 'park') {
       let cx0 = 0, cz0 = 0; for (const s of S) { cx0 += s.p.x; cz0 += s.p.z; } cx0 /= n; cz0 /= n;
       let rmax = 0; for (const s of S) rmax = Math.max(rmax, Math.hypot(s.p.x - cx0, s.p.z - cz0));
-      const cell = 55; let placed = 0;
-      for (let gx = -rmax - 200; gx <= rmax + 200 && placed < 160; gx += cell) for (let gz = -rmax - 200; gz <= rmax + 200 && placed < 160; gz += cell) {
+      const cell = 44; let placed = 0, parks = 0;
+      for (let gx = -rmax - 220; gx <= rmax + 220 && placed < 420; gx += cell) for (let gz = -rmax - 220; gz <= rmax + 220 && placed < 420; gz += cell) {
         const x = cx0 + gx + (rnd() - 0.5) * 30, z = cz0 + gz + (rnd() - 0.5) * 30;
         let dmin = 1e9; for (let i = 0; i < n; i += 4) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < dmin) dmin = d2; }
-        dmin = Math.sqrt(dmin); if (dmin < 46 || dmin > 260) continue;
+        dmin = Math.sqrt(dmin); if (dmin < 40 || dmin > 300) continue;
         let ok = true; for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < (k.r + 12) * (k.r + 12)) { ok = false; break; } } if (!ok) continue;
         let b;
-        if (rnd() < 0.06) b = P.kirche({ h: 26 + rnd() * 20, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][placed % 3] });
+        if (rnd() < 0.28 && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
+        else if (rnd() < 0.06) b = P.kirche({ h: 26 + rnd() * 20, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][placed % 3] });
         else { const styles = street === 'altstadt' ? ['altstadt', 'wiederaufbau', 'gruenderzeit'] : street === 'industrial' ? ['brick', 'industrial', 'concrete'] : street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'wiederaufbau', 'brick', 'concrete']; const st = styles[Math.floor(rnd() * styles.length)];
           const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : st === 'industrial' ? INDUSTRIAL : CONCRETE;
           const w = 18 + rnd() * 26, d = 14 + rnd() * 18, h = st === 'altstadt' ? 12 + rnd() * 5 : 13 + rnd() * 12;
