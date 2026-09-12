@@ -55,9 +55,12 @@
     </section>
     <div class="startRow">
       <button id="startBtn">🏁 RENNEN STARTEN 🏁</button>
+      <div id="p2Info" class="p2Info" hidden></div>
       <div class="subBtns">
         <button id="editorBtn">🧱 KLÜNGEL-BAUKASTEN</button>
         <button id="recordsBtn">🏆 REKORDE</button>
+        <button id="p2Btn">👥 2 SPIELER: AUS</button>
+        <button id="voiceBtn">🗣 STIMME: AN</button>
         <button id="musicBtn">🎵 MUSIK LADEN</button>
         <span id="musicTitle"></span>
         <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
@@ -68,7 +71,7 @@
     <span class="keys"><kbd>↑</kbd><kbd>↓</kbd> STRECK <kbd>←</kbd><kbd>→</kbd> WAGEN <kbd>1-4</kbd> FAHRER <kbd>ENTER</kbd> OK <kbd>ESC</kbd> ZURÜCK</span>
     <span id="slogan" class="slogan"></span>
     <span id="tipp" class="tipp"></span>
-    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET</span>
+    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET</span>
   </footer>
 </div>
 
@@ -94,7 +97,7 @@
     </div>
   </div>
   <div class="edFoot">
-    <button id="edDrive">🏁 FAHREN</button><button id="edSave">S SPEICHERN</button><button id="edLoad">L LADEN</button><button id="edUndo">DEL LÖSCHEN</button><button id="edClear">LEEREN</button><button id="edBack">ESC ZURÜCK</button>
+    <button id="edDrive">🏁 FAHREN</button><button id="edShare">🔗 LINK TEILEN</button><button id="edSave">S SPEICHERN</button><button id="edLoad">L LADEN</button><button id="edUndo">DEL LÖSCHEN</button><button id="edClear">LEEREN</button><button id="edBack">ESC ZURÜCK</button>
     <span class="hint">Teile anklicken zum Einfügen · Teil in der Reihe anklicken zum Entfernen · Kurven müssen sich zu 360° ergänzen, den Rest schließt der Klüngel.</span>
   </div>
 </div>
@@ -115,6 +118,12 @@
   <div id="countdown" hidden></div>
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
   <div id="msg"><div id="msgWho"></div><div id="msgText"></div></div>
+  <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
+  <div id="replayUI" hidden>
+    <div class="replayTop"><span id="replayState">▶ REPLAY</span><span id="replayTime"></span></div>
+    <div class="replayTrack"><div id="replayBar"></div></div>
+    <div class="replayKeys"><kbd>SPACE</kbd> PAUSE <kbd>→</kbd> SCHNELLER <kbd>←</kbd> −5 S <kbd>C</kbd> KAMERA <kbd>ESC</kbd> ENDE <button id="replayExit">✕ ENDE</button></div>
+  </div>
   <div class="hudDash">
     <div class="speedBox"><b id="speed">000</b><span>KM/H</span></div>
     <div class="barBox"><span>TURBO</span><div id="turboBar" class="bar turbo"></div></div>
@@ -145,7 +154,7 @@
       <table><tbody id="resTable"></tbody></table>
       <p class="small">Beste Runde: <b id="resBest"></b> · * = noch unterwegs, Zeit jeschätzt</p>
       <p class="small stats" id="resStats"></p>
-      <div class="resBtns"><button id="againBtn">NOCHMAL (ENTER)</button><button id="menuBtn">MENÜ (ESC)</button></div>
+      <div class="resBtns"><button id="againBtn">NOCHMAL (ENTER)</button><button id="replayBtn">📼 REPLAY</button><button id="menuBtn">MENÜ (ESC)</button></div>
     </div>
     <div class="resRight">
       <canvas id="resFace"></canvas>

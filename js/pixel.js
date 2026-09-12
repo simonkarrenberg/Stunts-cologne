@@ -247,11 +247,23 @@
   };
   PixelPost.prototype.setScale = function (s) { this.scale = s; this.setSize(window.innerWidth, window.innerHeight); };
   PixelPost.prototype.render = function (scene, camera) {
-    this.renderer.setRenderTarget(this.rt);
-    this.renderer.render(scene, camera);
-    this.renderer.setRenderTarget(null);
-    this.renderer.render(this.scene, this.cam);
+    const r = this.renderer;
+    r.setRenderTarget(this.rt);
+    if (Array.isArray(camera)) {
+      // split screen: player 1 on top, player 2 below
+      const rw = this.rt.width, rh = this.rt.height, hh = Math.floor(rh / 2);
+      r.setScissorTest(true);
+      r.setViewport(0, hh, rw, rh - hh); r.setScissor(0, hh, rw, rh - hh); r.render(scene, camera[0]);
+      r.setViewport(0, 0, rw, hh); r.setScissor(0, 0, rw, hh); r.render(scene, camera[1]);
+      r.setScissorTest(false); r.setViewport(0, 0, rw, rh);
+    } else {
+      r.render(scene, camera);
+    }
+    r.setRenderTarget(null);
+    r.setViewport(0, 0, r.domElement.width, r.domElement.height);
+    r.render(this.scene, this.cam);
   };
+  PixelPost.prototype.size = function () { return { w: this.rt.width, h: this.rt.height }; };
 
   root.Pixel = { T, PixelPost, mulberry, shade, hex };
 })(window);

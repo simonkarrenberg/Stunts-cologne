@@ -92,6 +92,23 @@ Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel autom
 
 **Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert.
 
+**Replay:** nach dem Rennen 📼 REPLAY drücken. Streckenkameras wie im alten Stunts, Leertaste
+Pause, → schneller, ← fünf Sekunden zurück, C für Verfolger/Cockpit, Esc zurück.
+
+**Geist:** deine beste Runde fährt beim nächsten Rennen als durchsichtiger Geisterwagen mit.
+
+**2 Spieler** an einer Tastatur (nicht am Handy): im Menü 👥 2 SPIELER einschalten. Oben P1
+mit Pfeiltasten + Shift, unten P2 mit W/A/S/D + Q. V wechselt die Kamera von P2. Das Feld
+bleibt bei acht Wagen.
+
+**Strecken teilen:** im Klüngel-Baukasten 🔗 LINK TEILEN. Am Handy öffnet sich das Teilen-Menü
+(WhatsApp), am Rechner landet der Link in der Zwischenablage. Wer den Link öffnet, hat die
+Strecke sofort in seiner Liste.
+
+**Stimme:** Langer T., Radio Kölle und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
+des Browsers (deutsche Stimme, tief für den Langen T., hoch für Heinzel). 🗣 STIMME im Menü
+schaltet sie aus.
+
 **Chicago am Rhein mit Miami-Vice-Touch:** Neonkanten an den Dächern, Palmen und der
 Rheinstrand km 689 am Rheinauhafen, Speedboote, Riesenrad, Kölner Lichter über dem Rhein,
 der Kölsch-Zeppelin, Polizei Köln mit Blaulicht. Dazu **Blitzer** (ab 120 km/h gibt es ein
