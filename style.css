@@ -10,6 +10,8 @@ button { font: inherit; cursor: pointer; }
 [hidden] { display: none !important; }
 kbd { background: #1c2040; border: 2px solid var(--line2); padding: 1px 5px; color: #fff; font-size: 9px; }
 body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50; background: repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+body.hd::after { background: repeating-linear-gradient(0deg, rgba(0,0,0,.03) 0 1px, transparent 1px 4px); }
+body.hd #gl { image-rendering: auto; }
 .panel { background: rgba(11,13,26,.93); border: 3px solid var(--line); box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #1a1e3a; padding: 10px 12px; }
 .panel h2 { margin: 0 0 10px; font-size: 14px; color: var(--pink); text-align: center; letter-spacing: .05em; text-shadow: 2px 2px 0 #000; }
 .p1 { position: absolute; top: 4px; left: 4px; background: var(--yellow); color: #000; font-size: 8px; padding: 2px 4px; min-width: 14px; text-align: center; }

@@ -329,6 +329,7 @@
     }
     const fr = player.frame;
     if (carLight) carLight.position.copy(fr.pos).addScaledVector(fr.up, 3).addScaledVector(fr.fwd, 6);
+    if (sunLight && sunLight.castShadow) { sunLight.position.set(fr.pos.x + 120, fr.pos.y + 200, fr.pos.z + 80); sunLight.target.position.copy(fr.pos); sunLight.target.updateMatrixWorld(); }
     if (player.mesh) player.mesh.visible = !(camMode === 1 && phase !== 'replay' && !player2);
   }
 
@@ -392,7 +393,9 @@
     scene.background = new THREE.Color(theme.sky);
     scene.fog = new THREE.Fog(theme.fog, theme.night ? 90 : 220, theme.night ? 520 : 1300);
     hemi = new THREE.HemisphereLight(theme.night ? 0x8090c0 : theme.sky, theme.ground, theme.night ? 0.7 : 0.75); scene.add(hemi);
-    sunLight = new THREE.DirectionalLight(theme.sun, theme.night ? 0.45 : 0.9); sunLight.position.set(120, 200, 80); scene.add(sunLight);
+    sunLight = new THREE.DirectionalLight(theme.sun, theme.night ? 0.45 : 1.0); sunLight.position.set(120, 200, 80); scene.add(sunLight);
+    if (renderer.shadowMap.enabled) { sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048); const sc = sunLight.shadow.camera; sc.left = -170; sc.right = 170; sc.top = 170; sc.bottom = -170; sc.near = 10; sc.far = 700; sunLight.shadow.bias = -0.0008; sunLight.shadow.normalBias = 0.6; scene.add(sunLight.target); }
+    scene.add(new THREE.AmbientLight(theme.night ? 0x223055 : 0x404050, theme.night ? 0.5 : 0.35));
     if (theme.night) { carLight = new THREE.PointLight(0xfff2cc, 2.0, 90); scene.add(carLight); } else carLight = null;
     road = W.buildRoad(track, theme); scene.add(road);
     scenery = W.buildScenery(track, theme); scene.add(scenery.group);
@@ -420,7 +423,7 @@
     // starting grid: 2 columns, player at the back like in Stunts
     racers.forEach((r, i) => { const row = Math.floor(i / 2); r.s = 6 + (racers.length / 2 - row) * 7; r.lat = (i % 2 ? 1 : -1) * 2.8; r.safeS = r.s; });
     player.s = 6; player.lat = -2.8; if (player2) { player2.s = 6; player2.lat = 2.8; }
-    const sz = post ? post.size() : { w: 640, h: 360 }; if (camera2) { camera2.aspect = sz.w / (sz.h / 2); camera2.updateProjectionMatrix(); camera.aspect = player2 ? sz.w / (sz.h / 2) : window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); } else { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
+    const sz = pixelScale === 1 ? { w: renderer.domElement.width, h: renderer.domElement.height } : (post ? post.size() : { w: 640, h: 360 }); if (camera2) { camera2.aspect = sz.w / (sz.h / 2); camera2.updateProjectionMatrix(); camera.aspect = player2 ? sz.w / (sz.h / 2) : window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); } else { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
     for (const v of views) { v.pos.set(0, 5, -15); v.up.set(0, 1, 0); v.look.set(0, 0, 10); v.tv = null; }
     buildMinimap(); lastPos = null;
     rec.frames = []; rec.t = []; rec.acc = 0; loadGhost();
@@ -536,9 +539,20 @@
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
     if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
     updateCamera(dt);
-    if (post) post.render(scene, (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera); else renderer.render(scene, camera);
+    const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
+    if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
   }
 
+  function renderDirect(cams) {
+    const r = renderer;
+    if (Array.isArray(cams)) {
+      const w = r.domElement.width, h = r.domElement.height, hh = Math.floor(h / 2);
+      r.setScissorTest(true);
+      r.setViewport(0, hh, w, h - hh); r.setScissor(0, hh, w, h - hh); r.render(scene, cams[0]);
+      r.setViewport(0, 0, w, hh); r.setScissor(0, 0, w, hh); r.render(scene, cams[1]);
+      r.setScissorTest(false); r.setViewport(0, 0, w, h);
+    } else { r.setViewport(0, 0, r.domElement.width, r.domElement.height); r.render(scene, cams); }
+  }
   // ---------------- input ----------------
   const isTouch = ('ontouchstart' in window) && matchMedia('(pointer: coarse)').matches;
   const isMobile = isTouch || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
@@ -824,21 +838,31 @@
   }
 
   // ---------------- init ----------------
+  // pixelScale 1 = full HD rendering with smooth textures, 2-4 = retro pixel modes
+  function applyPixelMode() {
+    const hd = pixelScale === 1;
+    renderer.setPixelRatio(hd ? Math.min(2, window.devicePixelRatio || 1) : 1);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    window.Pixel.setSmooth(hd);
+    document.body.classList.toggle('hd', hd);
+    $('#pixBtn').textContent = hd ? 'HD' : pixelScale === 2 ? '▪▪' : pixelScale === 3 ? '▪▪▪' : '▪▪▪▪';
+  }
   function cyclePixel() {
     pixelScale = pixelScale >= 4 ? 1 : pixelScale + 1;
-    post.setScale(pixelScale);
+    applyPixelMode();
+    if (pixelScale > 1) post.setScale(pixelScale);
     try { localStorage.setItem('stuntskoelle.pixel', String(pixelScale)); } catch (e) { /* ignore */ }
-    $('#pixBtn').textContent = pixelScale === 1 ? '▪' : pixelScale === 2 ? '▪▪' : pixelScale === 3 ? '▪▪▪' : '▪▪▪▪';
   }
   function init() {
     try { const s = JSON.parse(localStorage.getItem('stuntskoelle.sel')); if (s) Object.assign(sel, s); } catch (e) { /* ignore */ }
     try { customTracks = JSON.parse(localStorage.getItem('stuntskoelle.custom') || '[]'); } catch (e) { customTracks = []; }
     sel.track = clamp(sel.track | 0, 0, TRACKS.length + customTracks.length - 1); sel.car = clamp(sel.car | 0, 0, D.CARS.length - 1); sel.driver = clamp(sel.driver | 0, 0, PLAYABLE.length - 1);
-    renderer = new THREE.WebGLRenderer({ antialias: false, canvas: $('#gl') });
-    renderer.setPixelRatio(1); renderer.info.autoReset = false;
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    try { pixelScale = clamp(parseInt(localStorage.getItem('stuntskoelle.pixel')) || 3, 1, 5); } catch (e) { /* ignore */ }
-    post = new window.Pixel.PixelPost(renderer, pixelScale);
+    renderer = new THREE.WebGLRenderer({ antialias: true, canvas: $('#gl'), powerPreference: 'high-performance' });
+    renderer.info.autoReset = false;
+    renderer.shadowMap.enabled = !isMobile; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    try { pixelScale = clamp(parseInt(localStorage.getItem('stuntskoelle.pixel')) || 1, 1, 4); } catch (e) { /* ignore */ }
+    applyPixelMode();
+    post = new window.Pixel.PixelPost(renderer, Math.max(2, pixelScale));
     camera = new THREE.PerspectiveCamera(isMobile ? 76 : 70, window.innerWidth / window.innerHeight, 1.0, isMobile ? 2600 : 4000);
     if (isMobile) document.body.classList.add('mobile');
     window.addEventListener('resize', () => { renderer.setSize(window.innerWidth, window.innerHeight); post.setSize(window.innerWidth, window.innerHeight); camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); drawBanner(); });

@@ -43,7 +43,7 @@ es wird nichts nachgeladen). Läuft auch auf dem Handy (Touch-Buttons).
 | Shift / N / X | Turbo (Nitro) |
 | ← / → / A / D | Lenken |
 | C | Kamera (Verfolger, Motorhaube, weit, TV-Kamera) |
-| P | Pixelgröße (1–4) |
+| P | Grafik: HD (Standard, mit Schatten) oder Pixel-Modus in drei Stufen |
 | R | Auto zurücksetzen |
 | M | Ton an/aus |
 | Enter | Rennen starten / nochmal |
