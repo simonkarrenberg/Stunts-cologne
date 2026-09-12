@@ -974,7 +974,7 @@
     for (const sx of [-1, 1]) { const gl = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mat(0xc1121f)); gl.position.set(sx * 5.5, 5.6, 6.2); g.add(gl); }
     if (THEME.night) g.add(glow(16, 8, 0xffd400, 0, 8));
     return g; };
-  P.loversclub = () => { // the club where the Lange Tünn started as a doorman in the early 60s
+  P.loversclub = () => { // the club where dä Lange started as a doorman in the early 60s
     const g = new THREE.Group(); g.add(clubFront(18, 12, 12, 0x3a2a3a, 'concrete', 8));
     const sign = textPlane('LOVERS CLUB', '#ff2d95', '#14061a', 12, 2.2, THEME.night, { border: '#ff2d95' }); sign.position.set(0, 7, 6.1); g.add(sign);
     for (const sx of [-1, 1]) { const heart = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), THEME.night ? bmat(0xff2d95) : mat(0xff2d95)); heart.position.set(sx * 7.5, 7, 6.3); g.add(heart); }
@@ -995,7 +995,7 @@
     for (let k = 0; k < 6; k++) g.add(box(0.5, 9, 0.5, 0xd8ccb0, -12.5 + k * 5, 4.5, 11.3));
     g.add(box(30, 0.6, 5, 0x8a7a60, 0, 9.2, 13));
     return g; };
-  P.residenz = () => { // Residenz cinema, Christophstraße: start of the Lange Tünn's tour
+  P.residenz = () => { // Residenz cinema, Christophstraße: start of the night tour
     const g = new THREE.Group(); g.add(building(22, 15, 18, 'concrete', 0xc9c2b4, 'flat', 12, { night: THEME.night }));
     g.add(box(24, 1.6, 6, 0x2a2a30, 0, 6.5, 11)); for (let k = 0; k < 8; k++) addm(g, new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 6), bmat(0xffe08a))).position.set(-10.5 + k * 3, 7.4, 13.6);
     const m = textPlane('RESIDENZ · HEUTE: CHICAGO AM RHEIN', '#111', '#fff8e0', 22, 1.4, THEME.night, { border: '#c1121f' }); m.position.set(0, 6.5, 14.05); g.add(m);

@@ -38,30 +38,28 @@ Ton kommt: einmal auf den Bildschirm tippen (Autoplay-Regel von iOS/Android).
 | Enter | Rennen starten / nochmal |
 | Esc | Menü |
 
-## Der Lange Tünn und Chicago am Rhein
+## Dä Lange und Chicago am Rhein
 
-Das Spiel ist eine Hommage an den echten **Langen Tünn**, Anton Claaßen: ab 1961 Türsteher im
-Lovers Club, Zocker-Legende vom Kölner Milieu, heute EXPRESS-Kolumnist, Autor („Wenn es Nacht
-wird in Köln – Der Lange Tünn verzällt“) und Stadtführer über die Ringe. **Chicago am Rhein**
-nannte die Boulevardpresse Köln in den 60ern und 70ern: rund 50.000 Straftaten im Jahr,
-Zuhälter, Zocker, Hehler, Spielclubs, Boxer im „Klein Köln“ (Friesenstraße, seit 1926 mit
-Nachtlizenz und Wiegestation für Profiboxer), die Sartory-Säle, das Residenz-Kino an der
-Christophstraße, der Banküberfall am Dom und der Einbruch in die Domschatzkammer.
+Der Gastgeber des Spiels ist **dä Lange**, ein erfundener Türsteher von den Kölner Ringen: seit den
+60ern an der Tür, Zocker, Kölsch-Philosoph, zwei Meter zehn. **Chicago am Rhein** nannte die
+Boulevardpresse Köln in den 60ern und 70ern: rund 50.000 Straftaten im Jahr, Zuhälter, Zocker,
+Hehler, Spielclubs, Boxer im „Klein Köln“ (Friesenstraße, seit 1926 mit Nachtlizenz und
+Wiegestation für Profiboxer), die Sartory-Säle, das Residenz-Kino an der Christophstraße, der
+Banküberfall am Dom und der Einbruch in die Domschatzkammer.
 
-Im Spiel: Die Strecke **Chicago am Rhein** folgt der Tour vom Langen Tünn (Residenz-Kino,
-Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** er
+Im Spiel: Die Strecke **Chicago am Rhein** führt als Nachttour über die Ringe (Residenz-Kino,
+Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** dä Lange
 eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Du kütts hee nit rein!“,
 kommentiert das Rennen, und mit dem **Klüngel-Telefon** (K) ruft man einmal pro Runde seine
 Türsteher, die das Feld sechs Sekunden aufhalten. Dazu EXPRESS-Schlagzeilen, das Kölsche
 Grundgesetz, Boxnacht am Ring, Spiel-Club, Kripo Köln im 60er-Jahre-Streifenwagen.
 
-Die Charaktere sind jetzt gerundete Figuren mit Hüten, Bärten, Schals und Kölschgläsern, die
+Die Charaktere sind gerundete Figuren mit Hüten, Bärten, Schals und Kölschgläsern, die
 Wagen echte 60er/70er-Karosserien aus Kölner Produktion (Taunus, Capri) plus Coupé und dem
 schwarzen Milieu-Benz.
 
-Quellen: [Der Lange Tünn](https://derlangetuenn.de/), [Stadtführung](https://nachtwaechter-tour.de/stadtfuehrung-koeln-lange-tuenn/),
-[Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln), [Chicago am Rhein (Doku)](https://www.fernsehserien.de/filme/chicago-am-rhein),
-[Buch](https://www.rheinspirits.com/produkt/buch-wenn-es-nacht-wird-in-koeln/).
+Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
+[Chicago am Rhein (Doku)](https://www.fernsehserien.de/filme/chicago-am-rhein).
 
 ## Chicago am Rhein: Deckel, Kripo, Wette, Cup
 

@@ -446,7 +446,7 @@
     buildMinimap(); lastPos = null;
     rec.frames = []; rec.t = []; rec.acc = 0; loadGhost();
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
-    // the Lange Tünn "verzällt": tour anecdotes when you pass the places of his tour
+    // dä Lange "verzällt": anecdotes when you pass the places of his night tour
     stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, told: false }));
     telefon = { ready: true, active: 0, used: 0 };
     knoellchen = 0; koelsch = 0; radioTimer = 12; eventTimer = 30;
@@ -771,7 +771,7 @@
     edRender();
   }
 
-  // ---------------- Tünn's Telefon: one call per lap, the doormen hold the field ----------------
+  // ---------------- Klüngel-Telefon: one call per lap, the doormen hold the field ----------------
   function tuennsTelefon() {
     if (!telefon.ready || telefon.active > 0) { say(tuenn, 'Besetzt, Jung. Ich telefonier nur eimol pro Rund.', 2000); return; }
     telefon.ready = false; telefon.active = 6; telefon.used++;
