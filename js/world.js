@@ -1009,6 +1009,16 @@
     const z = human({ h: 1.75, shirt: 0x8a1a1a, pants: 0x2a2a2a, hat: 'fedora', hatColor: 0x8a1a1a, cigar: true }); z.position.set(3, 0, 7.5); z.rotation.y = -0.4; g.add(z);
     if (THEME.night) g.add(glow(14, 8, 0x00e5ff, 0, 8));
     return g; };
+  P.zockertisch = () => { // card table under a lamp: four Zocker, cards, chips, a Kölsch each
+    const g = new THREE.Group();
+    g.add(cyl(1.3, 1.3, 0.08, 0x2d6a3a, 0, 0.8, 0, 16)); g.add(cyl(0.12, 0.16, 0.8, 0x3a2a1a, 0, 0.4, 0, 8));
+    for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; g.add(box(0.16, 0.01, 0.24, 0xffffff, Math.cos(a) * 0.6, 0.86, Math.sin(a) * 0.6)).rotation.y = -a; }
+    for (let k = 0; k < 14; k++) g.add(cyl(0.08, 0.08, 0.02 + (k % 3) * 0.02, [0xc1121f, 0x1c3f95, 0xffd400][k % 3], (Math.random() - 0.5) * 0.7, 0.86, (Math.random() - 0.5) * 0.7, 8));
+    g.add(cyl(0.6, 0.6, 0.4, 0x2a2a30, 0, 3.4, 0, 12)); g.add(cyl(0.02, 0.02, 1.5, 0x222222, 0, 4.2, 0, 4)); const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), bmat(0xfff2c0)); lamp.position.set(0, 3.15, 0); g.add(lamp); if (THEME.night) g.add(glow(6, 6, 0xffe0a0, 0, 0));
+    const looks = [{ shirt: 0x2a2a30, hat: 'fedora', cigar: true }, { shirt: 0x8a1a1a, hat: 'fedora', hatColor: 0x8a1a1a, glasses: true, shades: true }, { shirt: 0x3a3a5a, hat: 'none', bald: true, moustache: 0x2a2a2a }, { shirt: 0xe0b060, hat: 'cap', hatColor: 0x222222, koelsch: true }];
+    for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.4; const z = human(Object.assign({ h: 1.7, suit: true, lite: true, smile: -0.5 }, looks[k])); z.position.set(Math.cos(a) * 1.9, 0, Math.sin(a) * 1.9); z.lookAt(0, 0, 0); g.add(z); }
+    g.add(box(5.5, 0.08, 5.5, 0x4a3a30, 0, 0.04, 0));
+    return g; };
   P.expresskiosk = (o) => { // EXPRESS newspaper stand with today's Chicago-am-Rhein headline
     const g = new THREE.Group(); g.add(box(3.2, 2.6, 2.2, 0xc1121f, 0, 1.3, 0)); g.add(box(3.4, 0.2, 2.4, 0xffffff, 0, 2.7, 0));
     const s = textPlane('EXPRESS', '#ffffff', '#c1121f', 3, 0.7, THEME.night, { border: '#fff' }); s.position.set(0, 2.2, 1.12); g.add(s);
@@ -1215,7 +1225,7 @@
       if (faceTrack) { const fb = TB.frameAt(track, at * L - 30); prop.lookAt(fb.p.x, GROUND_Y, fb.p.z); }
       return prop;
     }
-    const FACING = ['kleinkoeln', 'loversclub', 'sartory', 'residenz', 'spielclub', 'expresskiosk', 'boxring', 'denkmal', 'heinzelbrunnen', 'tuennes', 'heinzel', 'koebes', 'anna', 'polizist', 'beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
+    const FACING = ['zockertisch', 'kleinkoeln', 'loversclub', 'sartory', 'residenz', 'spielclub', 'expresskiosk', 'boxring', 'denkmal', 'heinzelbrunnen', 'tuennes', 'heinzel', 'koebes', 'anna', 'polizist', 'beach', 'bude', 'litfass', 'telefonzelle', 'marktstand', 'polizei', 'blitzer', 'riesenrad', 'bank', 'hansahochhaus', 'koelnturm', 'eigelsteintor', 'hahnentor', 'odonien', 'rheinsprung', 'billboard', 'neon', 'graffiti', 'tuenn', 'schael', 'gangster', 'crowd', 'koelsch', 'kranhaus', 'hbf', 'schoko', 'museum', 'arena', 'flora', 'lastenrad', 'altstadt', 'row', 'buedchen', 'haltestelle', 'viaduct', 'stmartin', 'dom', 'messeturm', 'chimney', 'triangle', 'lvr', 'musicaldome', 'promenade', 'elephant', 'tram', 'lamp', 'flag'];
     const keepOut = []; const propList = []; const pendingStories = [];
     for (const pd of (track.def.props || [])) {
       const fn = P[pd.type]; if (!fn) { console.warn('unknown prop', pd.type); continue; }
@@ -1245,7 +1255,7 @@
       if (!pd.story && (pd.type === 'polizei' || pd.type === 'blitzer' || pd.type === 'kirche' || pd.type === 'tramline')) pendingStories.push([pd.type === 'tramline' ? 'tram' : pd.type, at * L, prop]);
       g.add(prop);
       const BIG = /altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney|kranhaus|musicaldome|schoko|museum|triangle|lvr|colonius|helios|flora|moschee|vulkanhalle|halle|zootor|tanzbrunnen|tribuene|rathaus|rgm|hyatt|stadion|hansahochhaus|koelnturm|odonien|hafenkran|kleinkoeln|loversclub|sartory|residenz|spielclub|kripo|boxring|eigelsteintor|hahnentor|severinstor|riesenrad|beach|rheinsprung|severinsbruecke|suspension|zoobruecke|seilbahn/;
-      const MID = /buedchen|haltestelle|cafe|bude|marktstand|expresskiosk|denkmal|heinzelbrunnen|eaudecologne|reiter|crowd|tramline|koelsch|elephant|giraffe|palm|zochwagen|bus|polizei|tram|kirche|house/;
+      const MID = /zockertisch|buedchen|haltestelle|cafe|bude|marktstand|expresskiosk|denkmal|heinzelbrunnen|eaudecologne|reiter|crowd|tramline|koelsch|elephant|giraffe|palm|zochwagen|bus|polizei|tram|kirche|house/;
       keepOut.push({ x: prop.position.x, z: prop.position.z, r: pd.keep || (pd.type === 'dom' ? 110 : BIG.test(pd.type) ? 50 : MID.test(pd.type) ? 18 : 8) });
     }
     // street fillers along the track

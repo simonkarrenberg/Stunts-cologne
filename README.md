@@ -14,25 +14,14 @@ Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
 ## Spielen (auch auf dem Handy)
 
-Die fertige Version läuft als Web-App auf GitHub Pages und lässt sich einfach als Link
-per WhatsApp teilen. Einmalig in den Repo-Einstellungen aktivieren:
-**Settings → Pages → Build and deployment → Source: „GitHub Actions“**. Der Workflow in
-`.github/workflows/pages.yml` veröffentlicht danach bei jedem Push automatisch unter
-
-    https://simonkarrenberg.github.io/stunts-cologne/
-
-Auf dem iPhone/Android: Link öffnen, Handy quer halten, Touch-Buttons benutzen. Über
-„Zum Home-Bildschirm“ wird es eine Vollbild-App und läuft dank Service Worker auch offline.
-
-
-```bash
-# beliebiger statischer Webserver, z.B.
-python3 -m http.server 8000
-# dann http://localhost:8000 öffnen
-```
-
-Oder einfach `index.html` per Doppelklick im Browser öffnen (Three.js liegt in `vendor/`,
-es wird nichts nachgeladen). Läuft auch auf dem Handy (Touch-Buttons).
+**Auf dem Handy:** Das Spiel liegt als GitHub-Pages-Seite unter
+`https://simonkarrenberg.github.io/Stunts-cologne/` (der Workflow `.github/workflows/pages.yml`
+veröffentlicht jeden Push auf `main` oder einen `claude/**`-Branch; falls Pages im Repo noch nicht
+aktiv ist: Settings → Pages → Source „GitHub Actions“, danach den Workflow einmal neu starten).
+Link im Handy-Browser öffnen, quer halten, „Zum Home-Bildschirm“ – dann läuft es als App, auch offline.
+Den Link einfach per WhatsApp weiterschicken; das Vorschaubild kommt aus `og.png`.
+Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Telefon. Falls beim ersten Start kein
+Ton kommt: einmal auf den Bildschirm tippen (Autoplay-Regel von iOS/Android).
 
 ### Steuerung
 
@@ -88,6 +77,14 @@ Quellen: [Der Lange Tünn](https://derlangetuenn.de/), [Stadtführung](https://n
   Rivalen ins Ziel kommst. Gewonnen: doppelte Striche. Verloren: du schuldest ihm Kölsch.
 - **EXPRESS-Schlagzeile:** Das Rennergebnis bekommt eine Schlagzeile über dich – Rekord, Kripo,
   Rheinbad, Knöllchen-Rekord oder Blechschmied-Umsatz.
+- **Kölsch-Kurve:** Fünf Kölsch in einer Runde und das Auto fährt sieben Sekunden Schlangenlinie.
+- **Razzia:** Ab und zu kommt die Kripo ins Klein Köln – Blaulicht, Sirene, alle Rivalen ducken sich
+  und fahren langsam. Du nicht.
+- **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.
+- **Sprüche:** Rivalen lästern, wenn du crashst; dä Lange begrüßt dich je nach Uhrzeit; im Menü steht
+  dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
+- **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und EXPRESS-Schlagzeile samt Link
+  per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
 - **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 10-8-6-5-4-3-2-1 für alle acht Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung von dä Lange.
 
