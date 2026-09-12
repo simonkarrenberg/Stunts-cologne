@@ -301,3 +301,23 @@ body.mobile .trackRow .info b { font-size: 9px; } body.mobile .trackRow .info sp
 
 /* tilt steering: hide the left/right buttons, keep gas, brake, nitro, phone */
 body.tilt #touch .tGroup:first-child { visibility: hidden; }
+/* editor on phones: natural flow with scrolling, short preview, wrapped palette and footer */
+body.mobile #editor { display: block; overflow: auto; padding: 8px max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+body.mobile .edHead { margin-bottom: 6px; } body.mobile .edHead h2 { font-size: 10px; } body.mobile #edCount { font-size: 8px; }
+body.mobile .edBody { display: block; }
+body.mobile .edPalette { gap: 4px; margin-bottom: 6px; } body.mobile .edPalette button { padding: 6px 5px; font-size: 7px; }
+body.mobile #edPreview { height: 40vh; min-height: 140px; }
+body.mobile .edSeq span { font-size: 6px; padding: 3px 5px; }
+body.mobile .edRow { font-size: 8px; gap: 8px; margin-top: 4px; }
+body.mobile .edFoot { margin-top: 8px; gap: 5px; } body.mobile .edFoot button { padding: 7px 8px; font-size: 7px; } body.mobile .edFoot .hint { font-size: 7px; width: 100%; }
+/* replay on phones: only the ENDE button, no key hints, no driving buttons */
+body.mobile .replayKeys { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: 12px; justify-content: center; }
+body.mobile .replayKeys kbd, body.mobile .replayKeys > span, body.mobile .replayKeys::before { display: none; }
+body.mobile .replayKeys button { font-size: 10px; padding: 10px 22px; }
+body.mobile .replayTrack { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: 54px; }
+body.mobile .replayTop { font-size: 9px; padding: 4px 10px; gap: 10px; margin-top: 8px; }
+body.replaying #touch { display: none !important; }
+/* the "turn your phone" hint only while actually driving, not over the results */
+body.mobile.racing.resultsOpen #rotate, body.mobile.racing.replaying #rotate { display: none !important; }
+
+.replayKeys button { margin-left: 4px; }

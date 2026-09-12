@@ -609,7 +609,7 @@
     tuennsTelefon: ['Man kennt sich, man hilft sich. Ming Türsteher stonn jetz op der Streck. Die andere kumme hee nit durch.', 'Ich hab telefoniert. Sechs Sekunde Ruhe vor dä Jecke. Kost dich e Kölsch.', 'Klüngel, Jung. De Ampeln sin jrün, nur för dich.'],
     express: [
       'EXPRESS: KÖLN – CHICAGO AM RHEIN! 50.000 Straftaten, e Drittel jeklärt.',
-      'EXPRESS: Domschatz jeklaut! Der Lange T. hät e Alibi: Kölsch.',
+      'EXPRESS: Domschatz jeklaut! Dä Lange hät e Alibi: Kölsch.',
       'EXPRESS: Banküberfall am Dom! Geiseln, Kripo, Kamelle.',
       'EXPRESS: Zocker verliert Villa in Marienburg. Jewinnt se an der Tür zurück.',
       'EXPRESS: Boxnacht im Sartory – Sieger: dä Köbes met dem Kranz.',

@@ -122,7 +122,7 @@
     if (audio.muted) { if (music.el) music.el.pause(); chipStop(); } else if (music.wanted) musicPlay();
   }
 
-  // ---------------- voice: Langer T. & co. speak (Web Speech API) ----------------
+  // ---------------- voice: dä Lange & co. speak (Web Speech API) ----------------
   function voiceInit() {
     if (!('speechSynthesis' in window)) { voice.on = false; return; }
     const pickVoice = () => { const vs = speechSynthesis.getVoices(); voice.de = vs.find((v) => /de[-_]DE/i.test(v.lang) && /Google|Anna|Markus|Petra|Helena|Yannick/i.test(v.name)) || vs.find((v) => /^de/i.test(v.lang)) || null; voice.ready = true; };
@@ -131,7 +131,7 @@
     updateVoiceUI();
   }
   function updateVoiceUI() { const b = $('#voiceBtn'); if (b) b.textContent = ('speechSynthesis' in window) ? (voice.on ? '🗣 STIMME: AN' : '🗣 STIMME: AUS') : '🗣 STIMME: –'; }
-  function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin der Lange T. Jetz hörs du mich och.', 0.55, 0.95, true); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+  function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin dä Lange. Jetz hörs du mich och.', 0.55, 0.95, true); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
   function speak(text, pitch, rate, force) {
     if (!voice.on || !voice.ready || audio.muted) return;
     try {
@@ -468,7 +468,7 @@
     raceTime = 0; countdown = 4.2; phase = 'countdown';
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
-    document.body.classList.add('racing');
+    document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
     const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
     say(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = 'K = ANRUFEN';
@@ -508,7 +508,7 @@
       if (!wette) $('#resTuenn').textContent = record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
       const rd = order[won ? 1 : 0].driver;
       $('#resRival').textContent = `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“`;
-      $('#results').hidden = false;
+      $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1200);
   }
   function toMenu() {
@@ -516,7 +516,7 @@
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = true; $('#records').hidden = true; $('#replayUI').hidden = true;
     replay.on = false; if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (isMobile && twoPlayer) toggleTwoPlayer();
-    document.body.classList.remove('racing');
+    document.body.classList.remove('racing', 'resultsOpen', 'replaying');
     $('#msg').classList.remove('show');
     audioEngine(0, 0); musicStop();
     if (player && player.mesh) player.mesh.visible = true;
@@ -736,7 +736,7 @@
     TRACKS.forEach((t, i) => {
       const recs = getRecords(t);
       const div = document.createElement('div'); div.className = 'recTrack';
-      div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (recs.length ? '<ol>' + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>' : '<p>Noch keine Zeit. Der Lange T. wartet.</p>');
+      div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (recs.length ? '<ol>' + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>' : '<p>Noch keine Zeit. Dä Lange wartet.</p>');
       box.appendChild(div);
     });
     $('#records').hidden = false;
@@ -937,7 +937,7 @@
   }
   function startReplay() {
     if (rec.frames.length < 10) return;
-    phase = 'replay'; replay.on = true; replay.time = 0; replay.paused = false; replay.speed = 1; replay.camIdx = -1; replay.mode = 0;
+    phase = 'replay'; replay.on = true; document.body.classList.add('replaying'); document.body.classList.remove('resultsOpen'); replay.time = 0; replay.paused = false; replay.speed = 1; replay.camIdx = -1; replay.mode = 0;
     buildReplayCams();
     $('#results').hidden = true; $('#replayUI').hidden = false; $('#hud').hidden = false; $('#cockpit').hidden = true;
     for (const r of racers) { r.crashed = 0; r.mesh.visible = true; }
@@ -945,7 +945,7 @@
     if (player.mesh) player.mesh.visible = true;
     say(tuenn, 'Replay, Jung. Kuck dir an, wie et wirklich wor.', 2500);
   }
-  function stopReplay() { replay.on = false; phase = 'finished'; $('#replayUI').hidden = true; $('#results').hidden = false; if (ghost) ghost.visible = true; }
+  function stopReplay() { replay.on = false; phase = 'finished'; document.body.classList.remove('replaying'); document.body.classList.add('resultsOpen'); $('#replayUI').hidden = true; $('#results').hidden = false; if (ghost) ghost.visible = true; }
   function replayStep(dt) {
     if (!replay.paused) replay.time += dt * replay.speed;
     const T = rec.t; const last = T[T.length - 1];
@@ -1096,6 +1096,9 @@
     $('#edShare').onclick = shareTrack;
     $('#replayBtn').onclick = startReplay;
     $('#replayExit').onclick = stopReplay;
+    $('#replayPause').onclick = () => { replay.paused = !replay.paused; };
+    $('#replaySpeed').onclick = () => { replay.speed = replay.speed >= 4 ? 1 : replay.speed * 2; };
+    $('#replayCam').onclick = () => { replay.mode = (replay.mode + 1) % 4; };
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice;
@@ -1130,7 +1133,7 @@
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {
-    document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Der Lange T. sagt: Internet anmachen, Jung.</div>';
+    document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Dä Lange sagt: Internet anmachen, Jung.</div>';
   } else {
     init();
   }
