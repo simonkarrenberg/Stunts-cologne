@@ -190,5 +190,8 @@ Three.js r128 liegt unter `vendor/` (MIT-Lizenz, siehe `vendor/THREE-LICENSE`).
 In der Browser-Konsole: `STUNTS_AUTOPILOT = true` lässt die KI das eigene Auto fahren,
 `STUNTS_DEBUG()` gibt den aktuellen Rennzustand aus, `STUNTS_PROPS()` listet alle
 platzierten Wahrzeichen und `STUNTS_FREECAM = { pos: [x,y,z], look: [x,y,z] }` setzt eine freie Kamera.
+`STUNTS_SIMSTEPS = 60` lässt die Physik 60 Schritte pro gerendertem Bild laufen (für Autopilot-Tests
+auf langsamen Maschinen), `STUNTS_FIELD()` liefert Position, Runde und Zustand aller acht Wagen,
+`STUNTS_FRAME(s)` das Streckenkoordinatensystem samt Segmentart an Position s.
 
 *Et hätt noch immer jot jejange.*

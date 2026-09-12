@@ -1068,6 +1068,30 @@
     if (r() < 0.7) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 6, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
     if (r() < 0.25) addm(g, P.lamp()).position.set(3, 0, -5);
     return g; };
+  P.grove = (o) => { // a clump of trees with a path, a bench and a stroller (Rheinpark, Stadtwald)
+    const r = mulberry((o && o.seed) || 21); const g = new THREE.Group(); const n = 5 + Math.floor(r() * 6);
+    for (let i = 0; i < n; i++) { const a = r() * Math.PI * 2, d = 3 + r() * 14; addm(g, P.tree(Math.floor(r() * 3))).position.set(Math.cos(a) * d, 0, Math.sin(a) * d); }
+    const path = tplane(3, 30, T.cobble(0xb8b0a4, 2), 1, 8); path.rotation.x = -Math.PI / 2; path.rotation.z = r() * Math.PI; path.position.y = 0.04; g.add(path);
+    if (r() < 0.7) { const b = P.bank(); b.position.set(2, 0, 4); b.rotation.y = r() * Math.PI * 2; g.add(b); }
+    if (r() < 0.6) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 8, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
+    if (r() < 0.25) addm(g, P.lamp()).position.set(-3, 0, -3);
+    return g; };
+  P.flowerbed = (o) => { // Flora-style flower beds: coloured rings on a lawn with a hedge
+    const r = mulberry((o && o.seed) || 33); const g = new THREE.Group();
+    const cols = [0xff5fa2, 0xffd400, 0xc1121f, 0xffffff, 0xff8800, 0xc04dff];
+    for (let k = 0; k < 3; k++) { const rad = 6 - k * 1.8; const ring = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, 0.25 + k * 0.1, 18), mat(cols[(k + Math.floor(r() * 6)) % 6])); ring.position.y = 0.12 + k * 0.05; g.add(ring); }
+    g.add(cyl(0.9, 0.9, 0.6, 0x2f6b3a, 0, 0.3, 0, 12)); g.add(cone(1.4, 3.5, 0x2f6b3a, 0, 2.3, 0, 8));
+    for (const a of [0, 1.57, 3.14, 4.71]) { const b = P.bank(); b.position.set(Math.cos(a) * 9, 0, Math.sin(a) * 9); b.rotation.y = -a + Math.PI / 2; g.add(b); }
+    for (let i = 0; i < 2; i++) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set(Math.cos(i * 2.5) * 7.5, 0, Math.sin(i * 2.5) * 7.5); f.rotation.y = r() * Math.PI * 2; g.add(f); }
+    return g; };
+  P.pond = (o) => { // a park pond with reeds, ducks and a willow
+    const r = mulberry((o && o.seed) || 44); const g = new THREE.Group(); const w = 18 + r() * 10, d = 12 + r() * 8;
+    const bank = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.3, 20), mat(0x8a7a5a)); bank.scale.set(w / 2 + 1.2, 1, d / 2 + 1.2); bank.position.y = 0.05; g.add(bank);
+    const wtr = new THREE.Mesh(new THREE.CircleGeometry(1, 20), tmat(T.water(0x3f7fc0), 0xffffff)); wtr.rotation.x = -Math.PI / 2; wtr.scale.set(w / 2, d / 2, 1); wtr.position.y = 0.22; g.add(wtr);
+    for (let i = 0; i < 10; i++) { const a = r() * Math.PI * 2; g.add(cyl(0.05, 0.08, 1.2 + r() * 0.6, 0x4a7a2a, Math.cos(a) * (w / 2 + 0.4), 0.6, Math.sin(a) * (d / 2 + 0.4), 5)); }
+    for (let i = 0; i < 4; i++) { const a = r() * Math.PI * 2, dd = r() * 0.6; g.add(box(0.35, 0.2, 0.5, [0xf4f4f4, 0x6a4a2a, 0x3a5a2a][i % 3], Math.cos(a) * w / 2 * dd, 0.3, Math.sin(a) * d / 2 * dd)); }
+    addm(g, P.tree(2)).position.set(w / 2 + 3, 0, -2); addm(g, P.bank()).position.set(-w / 2 - 3, 0, 2);
+    return g; };
   P.platz = (o) => { // a small square in a side street: cobbles, market stand or Kölsch stand, benches, people, a Litfaß
     o = o || {}; const r = mulberry(o.seed || 3); const g = new THREE.Group(); const w = 16, d = 14;
     const pl = tplane(w, d, T.cobble(0xb8b0a4, 2), w / 4, d / 4); pl.rotation.x = -Math.PI / 2; pl.position.y = 0.05; g.add(pl);
@@ -1358,17 +1382,26 @@
       }
     }
     // the blocks behind the street walls: courtyards, back houses and the odd church tower, so the city has depth
-    if (street !== 'park') {
+    if (true) {
       let cx0 = 0, cz0 = 0; for (const s of S) { cx0 += s.p.x; cz0 += s.p.z; } cx0 /= n; cz0 /= n;
       let rmax = 0; for (const s of S) rmax = Math.max(rmax, Math.hypot(s.p.x - cx0, s.p.z - cz0));
-      const cell = 44; let placed = 0, parks = 0;
-      for (let gx = -rmax - 220; gx <= rmax + 220 && placed < 420; gx += cell) for (let gz = -rmax - 220; gz <= rmax + 220 && placed < 420; gz += cell) {
+      const cell = street === 'park' ? 52 : 44; const maxPlaced = street === 'park' ? 230 : 420; let placed = 0, parks = 0;
+      for (let gx = -rmax - 220; gx <= rmax + 220 && placed < maxPlaced; gx += cell) for (let gz = -rmax - 220; gz <= rmax + 220 && placed < maxPlaced; gz += cell) {
         const x = cx0 + gx + (rnd() - 0.5) * 30, z = cz0 + gz + (rnd() - 0.5) * 30;
         let dmin = 1e9; for (let i = 0; i < n; i += 4) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < dmin) dmin = d2; }
-        dmin = Math.sqrt(dmin); if (dmin < 40 || dmin > 300) continue;
+        dmin = Math.sqrt(dmin); if (dmin < (street === 'park' ? 26 : 40) || dmin > (street === 'park' ? 240 : 300)) continue;
         let ok = true; for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < (k.r + 12) * (k.r + 12)) { ok = false; break; } } if (!ok) continue;
         let b;
-        if (rnd() < 0.28 && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
+        if (street === 'park') { // Rheinpark / Poller Wiesen: groves, flower beds, ponds, the odd kiosk, Deutz blocks only far out
+          const pr = rnd();
+          if (dmin > 150 && pr < 0.45) { const st = ['wiederaufbau', 'modern', 'concrete'][Math.floor(rnd() * 3)]; const cols = st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE; b = building(24 + rnd() * 20, 12 + rnd() * 14, 16 + rnd() * 12, st, cols[Math.floor(rnd() * cols.length)], st === 'wiederaufbau' ? 'hip' : 'flat', Math.floor(rnd() * 1000), { night: theme.night }); }
+          else if (pr < 0.5) { b = P.pond({ seed: placed + 3 }); }
+          else if (pr < 0.62) { b = P.flowerbed({ seed: placed + 5 }); }
+          else if (pr < 0.72) { b = P.park({ seed: placed + 11, w: 30 + rnd() * 10, d: 30 + rnd() * 10 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
+          else if (pr < 0.78) { b = rnd() < 0.5 ? P.buedchen() : P.bude({ text: ['KÖLSCH · 2 DM', 'RIEVKOOCHE', 'EIS', 'HALVE HAHN'][placed % 4] }); }
+          else b = P.grove({ seed: placed + 7 });
+        }
+        else if (rnd() < 0.28 && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
         else if (rnd() < 0.06) b = P.kirche({ h: 26 + rnd() * 20, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][placed % 3] });
         else { const styles = street === 'altstadt' ? ['altstadt', 'wiederaufbau', 'gruenderzeit'] : street === 'industrial' ? ['brick', 'industrial', 'concrete'] : street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'wiederaufbau', 'brick', 'concrete']; const st = styles[Math.floor(rnd() * styles.length)];
           const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : st === 'industrial' ? INDUSTRIAL : CONCRETE;

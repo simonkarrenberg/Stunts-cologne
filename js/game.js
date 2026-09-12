@@ -502,6 +502,18 @@
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
     renderer.info.reset();
     if (!scene) return;
+    const steps = window.STUNTS_SIMSTEPS && (phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
+    for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
+    if (scenery) W.animate(t, dt, camPos);
+    if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
+    if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
+    updateCamera(dt);
+    const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
+    if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
+  }
+
+  // one simulation step (physics, AI, commentary); the frame loop may run several per render for headless testing
+  function tick(dt) {
     if (phase === 'countdown') {
       countdown -= dt;
       const idx = 3 - Math.ceil(countdown - 0.2); const cd = $('#countdown');
@@ -545,12 +557,6 @@
       // idle drive-by behind the menu
       if (player) { player.s = (player.s + dt * 30) % track.length; placeRacer(player, dt); racers.forEach((r, i) => { if (r.isAI) { r.s = (player.s + 8 + i * 7) % track.length; placeRacer(r, dt); } }); }
     }
-    if (scenery) W.animate(t, dt, camPos);
-    if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
-    if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
-    updateCamera(dt);
-    const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
-    if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
   }
 
   function renderDirect(cams) {
@@ -931,7 +937,8 @@
   window.STUNTS_DEBUG = () => ({ phase, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_SCENE = () => scene;
-  window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length }; };
+  window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
+  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage }));
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {
