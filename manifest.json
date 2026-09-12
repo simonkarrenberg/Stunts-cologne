@@ -1,7 +1,7 @@
 {
   "name": "STUNTS KÖLLE 4D – Chicago am Rhein Edition",
   "short_name": "Stunts Kölle",
-  "description": "Pixel-Art-Rennspiel in Kölle: Dom, Rheinauhafen, Zoobrücke-Looping, Kalk bei Nacht, Rusenmondaach.",
+  "description": "Rennspiel in Kölle: Dom, Ringe bei Nacht, Rheinauhafen, Loopings, Kölsch, Kripo – Chicago am Rhein.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "fullscreen",
@@ -10,6 +10,11 @@
   "theme_color": "#c1121f",
   "lang": "de",
   "icons": [
-    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
