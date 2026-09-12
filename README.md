@@ -20,7 +20,9 @@ veröffentlicht jeden Push auf `main` oder einen `claude/**`-Branch; falls Pages
 aktiv ist: Settings → Pages → Source „GitHub Actions“, danach den Workflow einmal neu starten).
 Link im Handy-Browser öffnen, quer halten, „Zum Home-Bildschirm“ – dann läuft es als App, auch offline.
 Den Link einfach per WhatsApp weiterschicken; das Vorschaubild kommt aus `og.png`.
-Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Telefon. Falls beim ersten Start kein
+Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Telefon. Mit **NEIGEN: AN** im Menü lenkst du
+durch Kippen des Handys wie mit einem Lenkrad (iPhone fragt einmal nach Erlaubnis); die Haltung beim
+Start gilt als geradeaus, ein weiterer Tipp dreht die Richtung um. Falls beim ersten Start kein
 Ton kommt: einmal auf den Bildschirm tippen (Autoplay-Regel von iOS/Android).
 
 ### Steuerung

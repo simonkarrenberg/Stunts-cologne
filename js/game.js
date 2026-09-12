@@ -472,6 +472,7 @@
     const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
     say(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = 'K = ANRUFEN';
+    if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     setTimeout(() => { if (phase !== 'menu') { const d = pick(racers.filter((r) => r.isAI)).driver; say(d, pick(d.lines.start), 2500); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
@@ -551,6 +552,7 @@
       updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
       if (phase === 'race') raceTime += dt;
+      if (tilt.mode > 0 && tilt.listening) readKeys();
       const ctl = player.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : window.STUNTS_AUTOPILOT ? aiControl(player, dt) : input;
       updateRacer(player, dt, ctl);
       if (player2) updateRacer(player2, dt, player2.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : window.STUNTS_AUTOPILOT ? aiControl(player2, dt) : input2);
@@ -602,6 +604,32 @@
   const isTouch = ('ontouchstart' in window) && matchMedia('(pointer: coarse)').matches;
   const isMobile = isTouch || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
   const touch = { left: false, right: false, gas: false, brake: false, turbo: false };
+  // tilt steering: the phone's gravity vector along its long axis tells how far it is turned like a wheel
+  const tilt = { mode: 0, raw: 0, zero: 0, val: 0, listening: false, lastCal: 0 }; // mode 0 off, 1 on, 2 on + inverted
+  try { tilt.mode = parseInt(localStorage.getItem('stuntskoelle.tilt') || '0') || 0; } catch (e) { /* ignore */ }
+  function onMotion(e) { const a = e.accelerationIncludingGravity; if (!a || a.y == null) return; tilt.raw = a.y; }
+  function tiltListen() {
+    if (tilt.listening) return; tilt.listening = true;
+    window.addEventListener('devicemotion', onMotion);
+  }
+  function tiltCalibrate() { tilt.zero = tilt.raw; tilt.lastCal = Date.now(); }
+  function updateTiltUI() { const b = $('#tiltBtn'); if (b) b.textContent = tilt.mode === 0 ? '📱 NEIGEN: AUS' : tilt.mode === 1 ? '📱 NEIGEN: AN' : '📱 NEIGEN: AN (UMGEKEHRT)'; document.body.classList.toggle('tilt', tilt.mode > 0); }
+  function setTiltMode(m) { tilt.mode = m; try { localStorage.setItem('stuntskoelle.tilt', String(m)); } catch (e) { /* ignore */ } updateTiltUI(); if (m > 0) { tiltListen(); setTimeout(tiltCalibrate, 600); say(tuenn, m === 1 ? 'Handy neigen wie e Lenkrad, Jung. Links, rechts, un nit zo wild. Nochmal drücke dreht de Richtung um.' : 'Umjekehrt jelenkt. Wie de Schäl. Passt.', 3500); } }
+  function toggleTilt() {
+    const next = (tilt.mode + 1) % 3;
+    if (next > 0 && !tilt.listening && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      DeviceMotionEvent.requestPermission().then((st) => { if (st === 'granted') setTiltMode(next); else say(tuenn, 'Kein Zugriff op de Bewegungssensor. Dann halt mit de Knöpp.', 3000); }).catch(() => say(tuenn, 'Der Sensor sagt nä. Dann halt mit de Knöpp.', 3000));
+    } else setTiltMode(next);
+  }
+  function tiltSteer() {
+    if (tilt.mode === 0 || !tilt.listening) return 0;
+    const ang = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
+    const sign = (ang === 90 ? 1 : -1) * (tilt.mode === 2 ? -1 : 1);
+    let v = (tilt.raw - tilt.zero) / 9.81 * sign * 3.2;
+    if (Math.abs(v) < 0.08) v = 0; else v -= Math.sign(v) * 0.08;
+    tilt.val += (clamp(v, -1, 1) - tilt.val) * 0.35;
+    return tilt.val;
+  }
   function readKeys() {
     const left = keys.ArrowLeft || (!player2 && keys.KeyA), right = keys.ArrowRight || (!player2 && keys.KeyD);
     input.steer = (left ? -1 : 0) + (right ? 1 : 0);
@@ -609,6 +637,7 @@
     input.brake = (keys.ArrowDown || (!player2 && keys.KeyS) || keys.Space) ? 1 : 0;
     input.turbo = (keys.ShiftLeft || keys.ShiftRight || keys.KeyN || keys.KeyX) ? 1 : 0;
     if (touch.left) input.steer -= 1; if (touch.right) input.steer += 1; if (touch.gas) input.gas = 1; if (touch.brake) input.brake = 1; if (touch.turbo) input.turbo = 1;
+    if (tilt.mode > 0 && !touch.left && !touch.right && input.steer === 0) input.steer = tiltSteer();
     input.steer = clamp(input.steer, -1, 1);
   }
   window.addEventListener('keydown', (e) => {
@@ -1070,6 +1099,7 @@
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice;
+    $('#tiltBtn').onclick = toggleTilt; updateTiltUI(); if (!isMobile) $('#tiltBtn').hidden = true;
     voiceInit();
     for (const id of ['turboBar2']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
     // a track shared by link?
@@ -1094,7 +1124,7 @@
   window.STUNTS_SCENE = () => scene;
   window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; say(tuenn, pick(tuenn.razzia), 3500); };
   window.STUNTS_PROMILLE = () => { promille = 7; say(tuenn, pick(tuenn.promille), 3200); };
-  window.STUNTS_EXTRAS = () => ({ razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
+  window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
   window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage }));
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
