@@ -59,6 +59,7 @@
       <div class="subBtns">
         <button id="editorBtn">🧱 KLÜNGEL-BAUKASTEN</button>
         <button id="recordsBtn">🏆 REKORDE</button>
+        <button id="cupBtn">🍺 KÖLSCH-CUP (7 STRECKEN)</button>
         <button id="p2Btn">👥 2 SPIELER: AUS</button>
         <button id="voiceBtn">🗣 STIMME: AN</button>
         <button id="musicBtn">🎵 MUSIK LADEN</button>
@@ -112,6 +113,9 @@
     <div><span>POS</span><b id="hudPos">8 / 8</b></div>
     <div><span>KNÖLLCHEN</span><b id="hudKn">–</b></div>
     <div><span>KLÜNGEL-TELEFON</span><b id="hudTel">K = ANRUFEN</b></div>
+    <div><span>DECKEL</span><b id="hudDeckel">–</b></div>
+    <div><span>WETTE</span><b id="hudWette">–</b></div>
+    <div><span>KRIPO</span><b id="hudKripo">–</b></div>
   </div>
   <div id="flash"></div>
   <div class="hudMini"><canvas id="minimap" width="200" height="200"></canvas></div>
@@ -152,9 +156,12 @@
       <h2>RENNERGEBNIS</h2>
       <p id="resTitle" class="resTitle"></p>
       <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt uff de Bierdeckel.</div>
+      <div id="resExpress" class="express"></div>
       <table><tbody id="resTable"></tbody></table>
       <p class="small">Beste Runde: <b id="resBest"></b> · * = noch unterwegs, Zeit jeschätzt</p>
       <p class="small stats" id="resStats"></p>
+      <p class="small stats deckel" id="resDeckel"></p>
+      <div id="resCup" class="cupBox" hidden></div>
       <div class="resBtns"><button id="againBtn">NOCHMAL (ENTER)</button><button id="replayBtn">📼 REPLAY</button><button id="menuBtn">MENÜ (ESC)</button></div>
     </div>
     <div class="resRight">

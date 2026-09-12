@@ -22,28 +22,28 @@
   const DRIVERS = [
     { id: 'tuennes', name: 'Tünnes', diff: 'LEICHT', diffN: 0, quote: 'Et jitt nix, wat et nit jitt!', sub: 'Der jecke Herz am Rhein.',
       skill: 0.86, wobble: 0.5, color: 0x2a4a8a, car: 'gti', aiMul: 0.9,
-      lines: { start: ['Et jitt nix, wat et nit jitt!', 'Loss jonn, Jung!'], overtake: ['Ha! Do bes zo langsam, Kolleg!', 'Vörbei wie de Zoch!'], overtaken: ['Nä, wat is dat dann?', 'Ich hann dich jesinn!'], crash: ['Dat wor der Schäl, nit ich!', 'Autsch. Ävver et hätt jot jejange.'], win: ['Tünnes vörre! Alaaf!', 'Ne Kölsche jewinnt, wie immer.'], lose: ['Nächste Woch, Jung.', 'Dat wor ming Schonrund.'] } },
+      lines: { start: ['Et jitt nix, wat et nit jitt!', 'Loss jonn, Jung!'], overtake: ['Ha! Do bes zo langsam, Kolleg!', 'Vörbei wie de Zoch!', 'Kölle vörre, wie et sich jehört!', 'Ming Oma fährt schneller. Un die hät kein Auto.'], overtaken: ['Nä, wat is dat dann?', 'Ich hann dich jesinn!', 'Dat wor de Rhingnebel!', 'Ich hab dich vorjelosse. Aus Höflichkeit.'], crash: ['Dat wor der Schäl, nit ich!', 'Autsch. Ävver et hätt jot jejange.', 'Wer wor dat? Der Schäl! Immer der Schäl.'], win: ['Tünnes vörre! Alaaf!', 'Ne Kölsche jewinnt, wie immer.'], lose: ['Nächste Woch, Jung.', 'Dat wor ming Schonrund.'] } },
     { id: 'schael', name: 'Schäl', diff: 'MITTEL', diffN: 1, quote: 'Ich weiß eine Abkürzung!', sub: 'Et hätt noch immer jot jejange.',
       skill: 0.9, wobble: 0.35, color: 0x6a4a2a, car: 'turbo', aiMul: 0.95,
-      lines: { start: ['Ich weiß eine Abkürzung!', 'Tünnes, du bes zo lang för dat Auto.'], overtake: ['Do hab ich jar nit hinjeguckt.', 'Links oder rechts, för mich is dat ejal.'], overtaken: ['Dat wor ne optische Täuschung.', 'Ich seh zwei von dir. Un beide sin langsam.'], crash: ['Wor dat de Wand oder de Rhing?', 'Ich hab de Kurve doppelt jesehn.'], win: ['Schäl jewinnt. Tünnes zahlt.', 'Die Abkürzung wor jot!'], lose: ['Ich hab de Ziellinie zweimal jesehn un die falsche jenomme.', 'Nächstes Mol mit Brille.'] } },
+      lines: { start: ['Ich weiß eine Abkürzung!', 'Tünnes, du bes zo lang för dat Auto.'], overtake: ['Do hab ich jar nit hinjeguckt.', 'Links oder rechts, för mich is dat ejal.', 'Die Abkürzung jeht durch de Dom. Frag nit.', 'Ich seh dich doppelt, also überhol ich zweimal.'], overtaken: ['Dat wor ne optische Täuschung.', 'Ich seh zwei von dir. Un beide sin langsam.', 'Dat wor der linke Auge. Der rechte hät dich jesinn.'], crash: ['Wor dat de Wand oder de Rhing?', 'Ich hab de Kurve doppelt jesehn.', 'Die Kurve wor jestern noch woanders.'], win: ['Schäl jewinnt. Tünnes zahlt.', 'Die Abkürzung wor jot!'], lose: ['Ich hab de Ziellinie zweimal jesehn un die falsche jenomme.', 'Nächstes Mol mit Brille.'] } },
     { id: 'heinzel', name: 'Heinzel', diff: 'SCHWER', diffN: 2, quote: 'Mer stelle alles op Kopp!', sub: 'Nachts baut er, tags pennt er.',
       skill: 0.94, wobble: 0.22, color: 0xc1121f, car: 'rocket', aiMul: 1.0,
-      lines: { start: ['Mer stelle alles op Kopp!', 'Ich hab de Motor heut Nacht jebaut.'], overtake: ['Schraubenschlüssel raus, vorbei!', 'Dat Heinzelmännche is schneller als du kucks.'], overtaken: ['Hä? Wer wor dat?', 'Da fehlt ne Schraube. Bei dir.'], crash: ['Dat repariere ich heut Nacht.', 'Kein Problem, ich hab Ersatzteile.'], win: ['Heinzel vörre, un keiner hät et jesehn.', 'Nachts jebaut, tags jewonne.'], lose: ['Ich wor müd. Tagschicht.', 'Nächstes Mol schraub ich am Nitro.'] } },
+      lines: { start: ['Mer stelle alles op Kopp!', 'Ich hab de Motor heut Nacht jebaut.'], overtake: ['Schraubenschlüssel raus, vorbei!', 'Dat Heinzelmännche is schneller als du kucks.', 'Nachts jebaut, jetz jeschoben. Tschö!'], overtaken: ['Hä? Wer wor dat?', 'Da fehlt ne Schraube. Bei dir.', 'Du hast ne Schraube locker. Ich hab se heut Nacht jesucht.'], crash: ['Dat repariere ich heut Nacht.', 'Kein Problem, ich hab Ersatzteile.', 'Blech. Ich hol de Hammer.'], win: ['Heinzel vörre, un keiner hät et jesehn.', 'Nachts jebaut, tags jewonne.'], lose: ['Ich wor müd. Tagschicht.', 'Nächstes Mol schraub ich am Nitro.'] } },
     { id: 'langer', name: 'Dä Lange', diff: 'EXPERTE', diffN: 3, quote: 'Du kütts hee nit rein!', sub: 'Türsteher, Zocker, Legende. Seit 1961 op de Ringe.',
       skill: 0.985, wobble: 0.1, color: 0x111111, car: 'special', aiMul: 1.06,
-      lines: { start: ['Du kütts hee nit rein! Ausnahmsweise doch. Fahr.', 'Seit 1961 stonn ich an der Tür. Heut fahr ich vorbei.', 'Chicago am Rhein, Jung. Hee jilt nur eins: schneller sin.'], overtake: ['Du fährs wie en Ratssitzung: lang un ohne Ergebnis.', 'Ich schick dir de Rechnung för de Bremsspur.'], overtaken: ['Dat wor Klüngel, dat zählt nit!', 'Jenieß et, Jung. Dat hält nit lang.'], crash: ['Et hätt noch immer jot jejange. Bes jetz.', 'Ich kenn ne juten Blechschmied. Ming Schwager.'], win: ['Wie immer. Der Lange T. verliert nit in singer Stadt.', 'Kumm, ich jeb dir ene us. Zum Tröste.'], lose: ['Dat wor Zufall. Ich hatt den Zylinder im Auge.', 'Jut. Du kriss en Job. Fahrer. Bei mir.'] } },
+      lines: { start: ['Du kütts hee nit rein! Ausnahmsweise doch. Fahr.', 'Seit 1961 stonn ich an der Tür. Heut fahr ich vorbei.', 'Chicago am Rhein, Jung. Hee jilt nur eins: schneller sin.'], overtake: ['Du fährs wie en Ratssitzung: lang un ohne Ergebnis.', 'Ich schick dir de Rechnung för de Bremsspur.', 'Du kütts hee nit vorbei. Ich schon.', 'Zwei Meter zehn Vorsprung. Jenau ming Größe.'], overtaken: ['Dat wor Klüngel, dat zählt nit!', 'Jenieß et, Jung. Dat hält nit lang.', 'Hät ich dich rinjelosse? Nä. Trotzdem bes de drin.'], crash: ['Et hätt noch immer jot jejange. Bes jetz.', 'Ich kenn ne juten Blechschmied. Ming Schwager.', 'Blechschmied. Ming Schwager. Kost extra.'], win: ['Wie immer. Der Lange T. verliert nit in singer Stadt.', 'Kumm, ich jeb dir ene us. Zum Tröste.'], lose: ['Dat wor Zufall. Ich hatt den Zylinder im Auge.', 'Jut. Du kriss en Job. Fahrer. Bei mir.'] } },
     { id: 'anna', name: 'Fräulein Anna', sub: 'Funkenmariechen mit Bleifuß.',
       skill: 0.9, wobble: 0.3, color: 0xff5fa2, car: 'gti',
-      lines: { start: ['Alaaf, ihr Jecke!', 'Wer zuletzt kütt, zahlt de Kölsch.'], overtake: ['Bützje! Un tschüss!', 'Dat wor ne Tanzschritt, Jung.'], overtaken: ['Nit so frech!', 'Ich komm wieder, wie de Fastelovend.'], crash: ['Ups. Dat wor de Absatz.', 'Kamelle! Ich mein: Bremse!'], win: ['Anna vörre! Strüßjer för alle!', 'Ne Mariechen jewinnt.'], lose: ['Ming Schuh wor zo hoch.', 'Nächstes Mol im Zoch.'] } },
+      lines: { start: ['Alaaf, ihr Jecke!', 'Wer zuletzt kütt, zahlt de Kölsch.'], overtake: ['Bützje! Un tschüss!', 'Dat wor ne Tanzschritt, Jung.', 'Tanzmariechen vörre! Hebe, Jung, hebe!'], overtaken: ['Nit so frech!', 'Ich komm wieder, wie de Fastelovend.', 'Frech! Dat jibt kein Bützje.'], crash: ['Ups. Dat wor de Absatz.', 'Kamelle! Ich mein: Bremse!', 'Ming Schuh! Der Absatz hing am Gas.'], win: ['Anna vörre! Strüßjer för alle!', 'Ne Mariechen jewinnt.'], lose: ['Ming Schuh wor zo hoch.', 'Nächstes Mol im Zoch.'] } },
     { id: 'tom', name: 'Klüngel Tom', sub: 'Man kennt sich, man hilft sich.',
       skill: 0.92, wobble: 0.2, color: 0x444444, car: 'special',
-      lines: { start: ['Man kennt sich, man hilft sich.', 'Die Pole Position hab ich schon vorm Rennen gewonnen.'], overtake: ['Das wurde im Ausschuss so beschlossen.', 'Nicht persönlich nehmen. Rein geschäftlich.'], overtaken: ['Dazu gibt es einen Untersuchungsausschuss.', 'Das Protokoll wird angepasst.'], crash: ['Das war ein Bauprojekt. Wie die Oper.', 'Wir kannten das Ergebnis schon vorher.'], win: ['Wie vereinbart. Danke, Tünn.', 'Ein Sieg für die Stadt. Also für mich.'], lose: ['Wir lassen das Ergebnis prüfen.', 'Die Kosten explodieren übrigens.'] } },
+      lines: { start: ['Man kennt sich, man hilft sich.', 'Die Pole Position hab ich schon vorm Rennen gewonnen.'], overtake: ['Das wurde im Ausschuss so beschlossen.', 'Nicht persönlich nehmen. Rein geschäftlich.', 'Man kennt sich. Man überholt sich.'], overtaken: ['Dazu gibt es einen Untersuchungsausschuss.', 'Das Protokoll wird angepasst.', 'Das wird noch geprüft. Vom Ausschuss.'], crash: ['Das war ein Bauprojekt. Wie die Oper.', 'Wir kannten das Ergebnis schon vorher.', 'Das ist kein Unfall. Das ist eine Baumaßnahme.'], win: ['Wie vereinbart. Danke, Tünn.', 'Ein Sieg für die Stadt. Also für mich.'], lose: ['Wir lassen das Ergebnis prüfen.', 'Die Kosten explodieren übrigens.'] } },
     { id: 'willi', name: 'Taxi Willi', sub: '30 Jahre Nachtschicht am Ring.',
       skill: 0.9, wobble: 0.3, color: 0xf2e6b1, car: 'turbo',
-      lines: { start: ['Zoobrücke gesperrt, ich kenn ne Abkürzung.', 'Taxameter läuft, Kollege.'], overtake: ['Kurzstrecke. Sieben Euro.', 'Nachtzuschlag kommt noch dazu.'], overtaken: ['Ich lass dich vor. Trinkgeld?', 'Fahrgast drin, ruhig fahren.'], crash: ['Das war der Fahrgast, nicht ich.', 'Kein Problem, Bruder, alles Blech.'], win: ['Ziel erreicht. Zahlen bitte.', 'Sieg. Rückfahrt kostet extra.'], lose: ['Ich hatte noch Fahrgast drin.', 'Nächstes Mal ohne Taxameter.'] } },
+      lines: { start: ['Zoobrücke gesperrt, ich kenn ne Abkürzung.', 'Taxameter läuft, Kollege.'], overtake: ['Kurzstrecke. Sieben Euro.', 'Nachtzuschlag kommt noch dazu.', 'Taxi! Sie sind zu langsam für Köln.'], overtaken: ['Ich lass dich vor. Trinkgeld?', 'Fahrgast drin, ruhig fahren.', 'Fahrgast, festhalten. Der da vorne ist neu.'], crash: ['Das war der Fahrgast, nicht ich.', 'Kein Problem, Bruder, alles Blech.', 'Das zahlt die Versicherung. Also der Fahrgast.'], win: ['Ziel erreicht. Zahlen bitte.', 'Sieg. Rückfahrt kostet extra.'], lose: ['Ich hatte noch Fahrgast drin.', 'Nächstes Mal ohne Taxameter.'] } },
     { id: 'koebes', name: 'Köbes Hermann', sub: 'Grantig, schnell, bringt ungefragt Nachschub.',
       skill: 0.88, wobble: 0.4, color: 0x3a6ea5, car: 'rocket',
-      lines: { start: ['Wat willste? Kölsch oder Pokal?', 'Trink doch ene met. Nach dem Rennen.'], overtake: ['Ich bring dir jleich ene Kranz Rückspiejel.', 'Dat is kein Bier, dat is Beschleunigung.'], overtaken: ['Do verdiens dir keine Deckel bei mir.', 'Ich hab noch drei Tische. Wart ab.'], crash: ['Einer jeht noch. Einer jeht noch rein.', 'Dat jibt Bierdeckel-Striche för dich.'], win: ['Der Kellner jewinnt. Trinkgeld optional.', 'Dat macht 23,50. Plus Sieg.'], lose: ['Ich wor nur Deckel holen.', 'Bei mir jab et Stau am Tresen.'] } }
+      lines: { start: ['Wat willste? Kölsch oder Pokal?', 'Trink doch ene met. Nach dem Rennen.'], overtake: ['Ich bring dir jleich ene Kranz Rückspiejel.', 'Dat is kein Bier, dat is Beschleunigung.', 'Ene met? Nä, ich fahr vorbei.'], overtaken: ['Do verdiens dir keine Deckel bei mir.', 'Ich hab noch drei Tische. Wart ab.', 'Kein Deckel för dich. Nie mehr.'], crash: ['Einer jeht noch. Einer jeht noch rein.', 'Dat jibt Bierdeckel-Striche för dich.', 'Dat Kölsch is heil. Dat Auto nit.'], win: ['Der Kellner jewinnt. Trinkgeld optional.', 'Dat macht 23,50. Plus Sieg.'], lose: ['Ich wor nur Deckel holen.', 'Bei mir jab et Stau am Tresen.'] } }
   ];
   const RIVALS = DRIVERS; // backwards compat
 
@@ -673,6 +673,45 @@
     walls: ['DU KÜTTS HEE NIT REIN', 'MAN KENNT SICH · MAN HILFT SICH', 'ET HÄTT NOCH IMMER JOT JEJANGE', 'WER ZOLETZ KÜTT, ZAHLT DE KÖLSCH', 'KREDIT? NUR OP DECKEL', 'SEIT 1961 AN DER TÜR', 'KÖLSCH IS KEIN BIER, KÖLSCH IS NE HALTUNG', 'CHICAGO AM RHEIN – MER SIN DIE JUTE', 'GLÜCKSSPIEL: JEWINNE DEIT NUR DER TÜRSTEHER', 'DRINK DOCH ENE MET', 'HÄTZ UN VERSTAND – MEISTENS HÄTZ', 'KÖLLE IS E JEFÖHL', 'HEE RÄJIERT DER KLÜNGEL', 'DIE OPER KÜTT. IRJENDWANN.', 'JECK BLIEV JECK', 'KEIN EINLASS FÜR DÜSSELDORF', 'ZWEI METER ZEHN – UN KEINER KÜTT VORBEI', 'ET ES WIE ET ES', 'WAT FOTT ES, ES FOTT'],
     // shop signs with a wink
     shops: ['TÜRSTEHER-BEDARF', 'ZOCKERSTUBE', 'KLÜNGEL & SÖHNE', 'NACHTPORTIER-SCHULE', 'KREDIT & KÖLSCH', 'DECKEL-VERLEIH', 'ANWALT FÜR KNÖLLCHEN', 'BLECHSCHMIED · MING SCHWAGER', 'BÜTZJE-SERVICE', 'HÄTZ & VERSTAND GBR', 'FRISEUR ZUM LANGEN · 2,10 M', 'KAMELLE-GROSSHANDEL', 'HALVE HAHN – OHNE HAHN', 'DÜSSELDORF? NÄ.', 'AN- UND VERKAUF · FRAGEN SIE NICHT', 'CHANGE · WECHSELSTUBE · 1968', 'BOXSCHULE AM RING', 'SPIELCLUB · EINTRITT NUR MIT MIR'],
+    // Kripo Kölle: the Peterwagen that shows up after three Knöllchen
+    kripo: {
+      start: ['Kripo Kölle! Drei Knöllchen, Jung. Jetz kütt der Peterwagen.', 'Hier spricht die Polizei Köln. Rechts ranfahren. Oder schneller werden, wie de wells.', 'Dat is die Kripo. Dä Lange hät nix jesaht. Noch nit.'],
+      hit: ['Rammstoß! Dat jibt Punkte in Flensburg. Un ne Beule.', 'Der Peterwagen küsst dich. Ohne Bützje.', 'Kripo: „Anhalten!“ Du: „Später.“'],
+      off: ['Ich hab met dem Kommissar telefoniert. Mer kenne uns vum Kegeln. Die Kripo dreht ab.', 'Klüngel, Jung. Der Peterwagen hät plötzlich Feierabend.', 'Dat wor der Hauptkommissar. Ich hann ihm 1974 an der Tür jeholfe. Erledigt.'],
+      giveup: ['Kripo: „Schichtwechsel.“ Der Peterwagen dreht ab. Dat wor knapp.', 'Die Kripo hät dich verlore. Oder Hunger. Beides jut för dich.'],
+      caught: ['Die Kripo hät dich zerlegt. Der Blechschmied freut sich. Ming Schwager.']
+    },
+    // the doorman's bet before the race
+    wette: {
+      offer: ['Ich wett {n} Kölsch, dat de vor {r} ins Ziel kütts. Zocker-Ehrenwort.', 'Wette? {n} Kölsch, du bes vor {r}. Ich hab ne jute Nas för sowat.', 'Op de Ringe wett mer. {n} Kölsch op dich jejen {r}. Enttäusch mich nit.'],
+      won: ['Wette jewonne! {r} hinter dir. Ich schuld dir {n} Kölsch – kütt op der Deckel.', 'Jesaht, jetan: vor {r}. {n} Kölsch für dich. Ich zahl. Ausnahmsweise.'],
+      lost: ['Wette verlore. {r} wor vor dir. Du schuldest mir {n} Kölsch. Ich hann Zick, ävver ich verjess nix.', '{r} vor dir. Dat kost dich {n} Kölsch. Der Zocker jewinnt immer. Dat bin ich.']
+    },
+    // Köbes hands you a Kölsch on the road
+    koelschPick: ['Kölsch! Deckelstrich.', 'Ene met? Jo. Turbo!', 'Der Köbes kütt ungefragt. Wie immer.', 'Kölsch im Vorbeifahre. Dat kann nur Kölle.', 'Prost, Jung. Nit kleckern.', 'Deckel voll? Mer mache ne neue.'],
+    // the beer-mat ranks
+    ranks: [[0, 'LAUFKUNDSCHAFT'], [20, 'STAMMGAST'], [60, 'DECKELKÖNIG'], [150, 'EHRENMITGLIED VUM RING'], [400, 'LEGENDE VUM RING']],
+    // Kölsch-Cup
+    cup: {
+      next: ['Nächste Streck, Jung. Der Cup wartet nit.', 'Weiter jeht et. Sieben Strecke, ein Kölsch-Cup. Kein Ausruhen.', 'Punkte notiert. Op der Deckel. Weiter.'],
+      champion: ['KÖLSCH-CUP JEWONNE! Du bes jetz Stammgast vum Ring. Die Tür steht offe. Für immer.', 'Cup-Sieger! Selbst Klüngel Tom hät jeklatscht. Kurz.'],
+      podium: ['Podium im Kölsch-Cup. Fast ne Legende. Dat Kölsch jeht op mich.'],
+      loser: ['Cup vorbei. Nit jewonne, ävver jefahre. Dat is mieh als de meiste.', 'Der Cup is rum. Nächstes Johr, Jung. Ich stonn dann immer noch an der Tür.']
+    },
+    // EXPRESS headlines about your own race
+    express2: {
+      record: 'EXPRESS: NEUER STRECKENREKORD {track}! DÄ LANGE: „MING SCHULD.“',
+      win: 'EXPRESS: UNBEKANNTER RASER JEWINNT – KLÜNGEL TOM FORDERT UNTERSUCHUNGSAUSSCHUSS',
+      kripoCaught: 'EXPRESS: KRIPO STOPPT {car} OP DE RINGE – „ET WOR NOTWEHR“',
+      kripo: 'EXPRESS: VERFOLGUNGSJAGD OP DE RINGE – PETERWAGEN VERLIERT {car} IM VEEDEL',
+      knoellchen: 'EXPRESS: {n} KNÖLLCHEN IN DREI RUNDE – STADTKASSE SANIERT, OPER BEZAHLT',
+      water: 'EXPRESS: {car} BADET IM RHING – TAUCHER SUCHE NOCH DE DECKEL',
+      crashes: 'EXPRESS: BLECHSCHMIED MELDET REKORDUMSATZ – „MING SCHWAGER“, SAGT DÄ LANGE',
+      last: 'EXPRESS: LETZTER PLATZ – „ICH HANN MIR DE KÖLSCH-STÄND ANJEKUCK“',
+      koelsch: 'EXPRESS: {n} KÖLSCH IM VORBEIFAHRE – KÖBES: „DER HÄT NIT MOL JEBREMST“',
+      podium: 'EXPRESS: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
+      default: 'EXPRESS: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
+    },
     slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.']
   };
 

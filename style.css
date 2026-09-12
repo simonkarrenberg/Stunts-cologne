@@ -117,7 +117,7 @@ body.hd #gl { image-rendering: auto; }
 /* ---------- HUD ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; }
 .hudTitle { position: absolute; top: 10px; left: 12px; background: rgba(5,6,14,.85); border: 3px solid var(--line); box-shadow: 3px 3px 0 #000; padding: 6px 10px; color: var(--yellow); font-size: 11px; }
-.hudStats { position: absolute; top: 10px; right: 12px; background: rgba(5,6,14,.85); border: 3px solid var(--line); box-shadow: 3px 3px 0 #000; padding: 6px 10px; display: grid; gap: 2px; min-width: 190px; }
+.hudStats { position: absolute; top: 10px; right: 12px; background: rgba(5,6,14,.85); border: 3px solid var(--line); box-shadow: 3px 3px 0 #000; padding: 6px 10px; display: grid; gap: 2px; min-width: 230px; }
 .hudStats div { display: flex; justify-content: space-between; gap: 16px; font-size: 10px; }
 .hudStats span { color: var(--cream); } .hudStats b { color: var(--yellow); font-variant-numeric: tabular-nums; }
 .hudMini { position: absolute; bottom: 14px; left: 12px; background: rgba(5,6,14,.75); border: 3px solid var(--line); box-shadow: 3px 3px 0 #000; padding: 4px; }
@@ -138,7 +138,7 @@ body.hd #gl { image-rendering: auto; }
 #msg.show { opacity: 1; transform: translate(-50%, 0); }
 #msgWho { font-size: 8px; color: var(--pink); margin-bottom: 6px; }
 #msgText { font-size: 11px; color: var(--yellow); line-height: 1.7; }
-.hudBtns { position: absolute; top: 120px; right: 12px; display: flex; flex-direction: column; gap: 6px; pointer-events: auto; }
+.hudBtns { position: absolute; top: 200px; right: 12px; display: flex; flex-direction: column; gap: 6px; pointer-events: auto; }
 .hudBtns button { background: rgba(5,6,14,.85); color: #fff; border: 3px solid var(--line); box-shadow: 3px 3px 0 #000; width: 40px; height: 40px; font-size: 14px; }
 
 /* ---------- Touch ---------- */
@@ -223,3 +223,10 @@ body.split #msg { bottom: auto; top: 46%; }
 .replayKeys { position: absolute; left: 200px; right: 230px; bottom: 14px; font-size: 8px; color: #ccc; display: flex; gap: 10px; align-items: center; pointer-events: auto; flex-wrap: wrap; }
 .replayKeys button { background: var(--red2); color: #fff; border: 2px solid #000; font-size: 8px; padding: 4px 8px; }
 body.mobile #p2Btn { display: none; }
+
+/* Chicago am Rhein extras */
+.express { background: #f4efe0; color: #111; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 6px 10px; font-size: 9px; letter-spacing: .5px; margin-bottom: 8px; line-height: 1.5; }
+.express::before { content: 'EXPRESS · KÖLN · '; color: #c1121f; font-weight: bold; }
+.resInner .deckel { color: var(--yellow); }
+.cupBox { border: 3px solid var(--line); background: rgba(5,6,14,.7); padding: 6px 10px; margin: 6px 0 8px; font-size: 9px; }
+.cupBox b { color: var(--yellow); } .cupBox table { width: 100%; margin-top: 4px; border-collapse: collapse; } .cupBox td { padding: 2px 6px; } .cupBox tr.me td { color: var(--yellow); }

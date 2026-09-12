@@ -74,6 +74,23 @@ Quellen: [Der Lange Tünn](https://derlangetuenn.de/), [Stadtführung](https://n
 [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln), [Chicago am Rhein (Doku)](https://www.fernsehserien.de/filme/chicago-am-rhein),
 [Buch](https://www.rheinspirits.com/produkt/buch-wenn-es-nacht-wird-in-koeln/).
 
+## Chicago am Rhein: Deckel, Kripo, Wette, Cup
+
+- **Kölsch unterwegs:** Auf jeder Strecke stehen Kölsch-Gläser auf der Straße. Durchfahren gibt
+  Turbo, einen Strich auf dem Bierdeckel und einen Spruch vom Köbes. Jede Runde stehen sie wieder da.
+- **Bierdeckel:** Striche für Kölsch, saubere Loopings, gelandete Sprünge und Überholmanöver. Der
+  Deckel wird über alle Rennen gezählt: Laufkundschaft → Stammgast → Deckelkönig → Ehrenmitglied vum
+  Ring → Legende vum Ring.
+- **Kripo Kölle:** Beim dritten Knöllchen kommt der grün-weiße Peterwagen mit Blaulicht und Sirene
+  hinter dir her und rammt, was er kriegt. Das **Klüngel-Telefon** (K) ruft den Kommissar an – die
+  Kripo dreht ab. Sonst gibt sie nach einer Weile auf. Oder sie kriegt dich.
+- **Zocker-Wette:** Kurz nach dem Start wettet dä Lange ein paar Kölsch, dass du vor einem bestimmten
+  Rivalen ins Ziel kommst. Gewonnen: doppelte Striche. Verloren: du schuldest ihm Kölsch.
+- **EXPRESS-Schlagzeile:** Das Rennergebnis bekommt eine Schlagzeile über dich – Rekord, Kripo,
+  Rheinbad, Knöllchen-Rekord oder Blechschmied-Umsatz.
+- **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 10-8-6-5-4-3-2-1 für alle acht Fahrer,
+  Cup-Tabelle im Ergebnis, Siegerehrung von dä Lange.
+
 ## Musik
 
 Beim Rennen läuft ein Song in Schleife. Drei Wege:
