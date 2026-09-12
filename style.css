@@ -281,3 +281,20 @@ body.mobile .record { font-size: 7px; padding: 5px 8px; margin-bottom: 6px; }
 body.mobile .resBtns { flex-wrap: wrap; gap: 6px; margin-top: 8px; } body.mobile .resBtns button { padding: 9px 6px; font-size: 8px; min-width: 40%; }
 body.mobile .resRight { gap: 6px; } body.mobile #resFace { width: 48px; height: 60px; } body.mobile .resRight .quote { font-size: 8px; margin: 0; }
 body.mobile .cupBox { font-size: 7px; padding: 4px 8px; }
+/* iPhone: keep everything out of the notch and the home bar, two-column menu in landscape, readable sizes */
+body.mobile .hudTitle, body.mobile .hudMini { left: max(12px, env(safe-area-inset-left)); }
+body.mobile .hudStats, body.mobile .hudDash, body.mobile .hudBtns { right: max(12px, env(safe-area-inset-right)); }
+body.mobile .hudStats { top: max(8px, env(safe-area-inset-top)); }
+body.mobile .hudTitle { top: max(8px, env(safe-area-inset-top)); }
+body.mobile .menuGrid { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+body.mobile #logo { left: max(8px, env(safe-area-inset-left)); }
+body.mobile .menuFooter { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+body.mobile .resInner { margin-left: max(2vw, env(safe-area-inset-left)); margin-right: max(2vw, env(safe-area-inset-right)); width: auto; }
+body.mobile .panel h2 { font-size: 11px; }
+body.mobile .card b { font-size: 7px; } body.mobile .card .diff { font-size: 7px; }
+body.mobile .trackRow .info b { font-size: 9px; } body.mobile .trackRow .info span { font-size: 7px; }
+@media (orientation: landscape) {
+  body.mobile .menuGrid { grid-template-columns: 1fr 1.15fr; grid-template-areas: "drivers tracks" "cars tracks" "start start"; align-items: start; }
+  body.mobile .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  body.mobile .banner { height: 64px; } body.mobile #logo { width: 210px; height: 52px; top: 4px; } body.mobile #langerFace { width: 40px; height: 50px; }
+}
