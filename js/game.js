@@ -19,7 +19,7 @@
 
   // ---------------- state ----------------
   const sel = { track: 0, car: 0, driver: 0 };
-  let renderer, scene, camera, track, trackDef, theme, road, scenery, confetti, sunLight, hemi, carLight, post, pixelScale = 3;
+  let renderer, scene, camera, track, trackDef, theme, road, scenery, confetti, sunLight, hemi, carLight, post, pixelScale = 3, pmrem = null, envTex = null;
   let racers = [], player = null, raceTime = 0, countdown = 0, phase = 'menu'; // menu | countdown | race | finished | editor
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
@@ -293,6 +293,7 @@
     _m.makeBasis(right, up, fwd); _q.setFromRotationMatrix(_m);
     r.mesh.position.copy(pos);
     r.mesh.quaternion.slerp(_q, Math.min(1, dt * 14));
+    if (window.Cars) window.Cars.animate(r.mesh, r.v, dt, r.steerVis);
     if (r.crashed > 0) { r.mesh.rotation.z += dt * 6; r.mesh.position.y += Math.sin(r.crashed * 9) * 0.5 + 0.5; }
     r.frame = { pos, T, N, B, fwd, up };
   }
@@ -398,6 +399,8 @@
     if (renderer.shadowMap.enabled) { sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048); const sc = sunLight.shadow.camera; sc.left = -170; sc.right = 170; sc.top = 170; sc.bottom = -170; sc.near = 10; sc.far = 700; sunLight.shadow.bias = -0.0008; sunLight.shadow.normalBias = 0.6; scene.add(sunLight.target); }
     scene.add(new THREE.AmbientLight(theme.night ? 0x223055 : 0x404050, theme.night ? 0.5 : 0.25));
     if (theme.night) { carLight = new THREE.PointLight(0xfff2cc, 2.0, 90); scene.add(carLight); } else carLight = null;
+    // sky reflections for paint, chrome and glass
+    if (window.Cars) { try { if (!pmrem) pmrem = new THREE.PMREMGenerator(renderer); if (envTex) envTex.dispose(); envTex = pmrem.fromEquirectangular(window.Pixel.T.sky(theme)).texture; window.Cars.setEnv(envTex); } catch (e) { console.warn('env map', e); } }
     road = W.buildRoad(track, theme); scene.add(road);
     scenery = W.buildScenery(track, theme); scene.add(scenery.group);
     confetti = theme.confetti ? W.buildConfetti() : null; if (confetti) scene.add(confetti);
@@ -928,6 +931,7 @@
   window.STUNTS_DEBUG = () => ({ phase, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_SCENE = () => scene;
+  window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length }; };
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {

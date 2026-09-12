@@ -99,6 +99,7 @@
       const wg = x.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, shade(wall, 1.04)); wg.addColorStop(1, shade(wall, 0.92)); x.fillStyle = wg; x.fillRect(0, 0, W, H);
       // plaster / stone texture
       for (let i = 0; i < 2600; i++) { x.fillStyle = r() < 0.5 ? shade(wall, 1.06) : shade(wall, 0.94); x.fillRect(Math.floor(r() * W), Math.floor(r() * H), 1, 1); }
+      if (style === 'brick') { for (let y = 0; y < H; y += 6) { const ox = (y / 6) % 2 ? 8 : 0; for (let px = -16; px < W; px += 16) { x.fillStyle = shade(wall, 0.82 + r() * 0.34); x.fillRect(px + ox + 1, y + 1, 14, 4); } } x.fillStyle = shade(wall, 0.55); x.globalAlpha = 0.35; for (let y = 0; y < H; y += 6) x.fillRect(0, y, W, 1); x.globalAlpha = 1; }
       if (style === 'industrial') { for (let y = 0; y < H; y += 8) { x.fillStyle = shade(wall, 0.72); x.fillRect(0, y + 7, W, 1); const ox = (y / 8) % 2 ? 12 : 0; for (let px = -24; px < W; px += 24) { x.fillStyle = shade(wall, 0.8 + r() * 0.3); x.globalAlpha = 0.5; x.fillRect(px + ox, y, 22, 7); } x.globalAlpha = 1; } }
       const bays = 4, floors = 4, bw = W / bays, fh = H / floors;
       for (let f = 0; f < floors; f++) {
@@ -120,6 +121,28 @@
             x.fillStyle = gg(wx, wy, ww, wh); x.fillRect(wx, wy, ww, wh);
             x.fillStyle = shade(wall, 0.6); for (let k = 1; k < 3; k++) { x.fillRect(wx + k * ww / 3, wy, 2, wh); x.fillRect(wx, wy + k * wh / 3, ww, 2); }
             x.fillStyle = shade(wall, 0.7); x.fillRect(wx - 2, wy - 8, ww + 4, 4); x.beginPath(); x.arc(wx + ww / 2, wy - 6, ww / 2 + 2, Math.PI, 0); x.fill(); x.fillStyle = gg(wx, wy - 12, ww, 12); x.beginPath(); x.arc(wx + ww / 2, wy - 6, ww / 2 - 2, Math.PI, 0); x.fill();
+          } else if (style === 'wiederaufbau') {
+            // 1950s Wiederaufbau: plain plaster, wide low windows, rolling-shutter boxes, a light band under every sill
+            const ww = bw - 18, wh = fh - 30, wx = x0 + 9, wy = y0 + 14;
+            x.fillStyle = shade(wall, 1.12); x.fillRect(0, y0 + fh - 5, W, 3);
+            x.fillStyle = shade(wall, 0.9); x.fillRect(wx - 2, wy - 8, ww + 4, 6);
+            x.fillStyle = 'rgba(0,0,0,0.22)'; x.fillRect(wx - 2, wy + wh + 1, ww + 4, 2);
+            x.fillStyle = '#f2efe6'; x.fillRect(wx - 3, wy - 3, ww + 6, wh + 6);
+            x.fillStyle = gg(wx, wy, ww, wh); x.fillRect(wx, wy, ww, wh);
+            x.fillStyle = '#f2efe6'; x.fillRect(wx + ww * 0.62, wy, 2, wh);
+            x.fillStyle = 'rgba(255,255,255,0.25)'; x.fillRect(wx + 2, wy + 2, ww * 0.4, wh / 3);
+            x.fillStyle = shade(wall, 1.2); x.fillRect(wx - 6, wy + wh + 3, ww + 12, 3);
+            if (lit) { x.fillStyle = 'rgba(255,220,140,0.6)'; x.fillRect(wx, wy, ww, wh); }
+            if (r() < 0.25) { x.fillStyle = '#c9c0a8'; x.fillRect(wx, wy, ww, wh * (0.3 + r() * 0.4)); x.fillStyle = 'rgba(0,0,0,0.12)'; for (let k = 2; k < wh * 0.6; k += 3) x.fillRect(wx, wy + k, ww, 1); }
+          } else if (style === 'brick') {
+            // Ehrenfeld / Nippes brick: arched window heads, stone sills
+            const ww = bw - 30, wh = fh - 24, wx = x0 + 15, wy = y0 + 14;
+            x.fillStyle = shade(wall, 0.62); x.fillRect(wx - 3, wy - 3, ww + 6, wh + 6); x.beginPath(); x.arc(wx + ww / 2, wy - 3, ww / 2 + 3, Math.PI, 0); x.fill();
+            x.fillStyle = gg(wx, wy, ww, wh); x.fillRect(wx, wy, ww, wh); x.beginPath(); x.arc(wx + ww / 2, wy, ww / 2, Math.PI, 0); x.fill();
+            x.fillStyle = '#ece6d6'; x.fillRect(wx + ww / 2 - 1, wy - ww / 2, 2, wh + ww / 2); x.fillRect(wx, wy + wh / 2 - 1, ww, 2);
+            x.fillStyle = '#d8d0c0'; x.fillRect(wx - 6, wy + wh + 1, ww + 12, 4);
+            x.fillStyle = 'rgba(255,255,255,0.25)'; x.fillRect(wx + 3, wy + 3, ww / 2 - 6, wh / 3);
+            if (lit) { x.fillStyle = 'rgba(255,220,140,0.6)'; x.fillRect(wx, wy, ww, wh); }
           } else {
             const ww = bw - 28, wh = fh - 22, wx = x0 + 14, wy = y0 + 10;
             // frame, sill, glass, cross bar, shadow
@@ -137,6 +160,8 @@
         }
       }
       if (style === 'gruenderzeit' || style === 'concrete') { x.fillStyle = shade(wall, 0.7); x.fillRect(0, H - fh - 6, W, 6); }
+      if (style === 'wiederaufbau') { x.fillStyle = shade(wall, 0.62); x.fillRect(0, H - fh, W, fh); for (let b = 0; b < bays; b++) { const wx = b * bw + 8; x.fillStyle = night ? '#ffe2a0' : '#7fa8d0'; x.fillRect(wx, H - fh + 10, bw - 16, fh - 14); x.fillStyle = 'rgba(255,255,255,0.2)'; x.fillRect(wx + 2, H - fh + 12, (bw - 16) * 0.4, (fh - 14) * 0.3); } x.fillStyle = shade(wall, 1.15); x.fillRect(0, H - fh - 3, W, 3); }
+      if (style === 'gruenderzeit') { x.fillStyle = shade(wall, 0.8); for (let y = H - fh; y < H; y += 12) { x.fillRect(0, y, W, 2); } x.fillStyle = shade(wall, 0.72); for (let px = 0; px < W; px += 32) x.fillRect(px, H - fh, 2, fh); }
       if (style === 'altstadt') { x.fillStyle = shade(wall, 0.8); x.fillRect(0, 0, W, 4); }
       return toTex(c);
     });
@@ -156,18 +181,18 @@
   T.tracery = () => cached('tracery', () => {
     // gothic stonework for the Dom: grey stone with ribs, pointed windows and pinnacles
     const c = canvas(256, 384), x = c.getContext('2d'), r = mulberry(13);
-    const g = x.createLinearGradient(0, 0, 0, 384); g.addColorStop(0, '#78767e'); g.addColorStop(1, '#5e5c64'); x.fillStyle = g; x.fillRect(0, 0, 256, 384);
-    for (let i = 0; i < 9000; i++) { x.fillStyle = r() < 0.5 ? '#83818a' : '#55535b'; x.fillRect(Math.floor(r() * 256), Math.floor(r() * 384), 1, 1); }
+    const g = x.createLinearGradient(0, 0, 0, 384); g.addColorStop(0, '#5c5a62'); g.addColorStop(1, '#3e3c44'); x.fillStyle = g; x.fillRect(0, 0, 256, 384);
+    for (let i = 0; i < 9000; i++) { x.fillStyle = r() < 0.5 ? '#6a6871' : '#33313a'; x.fillRect(Math.floor(r() * 256), Math.floor(r() * 384), 1, 1); }
     for (let y = 0; y < 384; y += 24) { x.fillStyle = 'rgba(0,0,0,0.18)'; x.fillRect(0, y, 256, 2); }
     for (let b = 0; b < 4; b++) {
       const x0 = b * 64;
-      x.fillStyle = '#928f9a'; x.fillRect(x0, 0, 8, 384); x.fillStyle = '#3f3d45'; x.fillRect(x0 + 8, 0, 4, 384);
+      x.fillStyle = '#7d7b86'; x.fillRect(x0, 0, 8, 384); x.fillStyle = '#26252c'; x.fillRect(x0 + 8, 0, 4, 384);
       const wx = x0 + 20, ww = 26, wy = 120, wh = 240;
       x.fillStyle = '#1c1b22'; x.fillRect(wx, wy, ww, wh); x.beginPath(); x.moveTo(wx, wy); x.quadraticCurveTo(wx + ww / 2, wy - 40, wx + ww, wy); x.lineTo(wx + ww / 2, wy - 2); x.fill();
       x.beginPath(); x.moveTo(wx, wy + 4); x.lineTo(wx + ww / 2, wy - 30); x.lineTo(wx + ww, wy + 4); x.closePath(); x.fill();
-      x.fillStyle = '#a7a5b0'; x.fillRect(wx - 3, wy - 4, 3, wh + 6); x.fillRect(wx + ww, wy - 4, 3, wh + 6); x.fillRect(wx + ww / 2 - 1, wy - 10, 3, wh + 10);
+      x.fillStyle = '#8e8c98'; x.fillRect(wx - 3, wy - 4, 3, wh + 6); x.fillRect(wx + ww, wy - 4, 3, wh + 6); x.fillRect(wx + ww / 2 - 1, wy - 10, 3, wh + 10);
       x.fillStyle = '#8a8892'; for (let k = 1; k < 6; k++) x.fillRect(wx, wy + k * wh / 6, ww, 2);
-      x.fillStyle = '#b4b2bc'; x.fillRect(x0 + 14, 60, 36, 6); x.fillRect(x0 + 20, 40, 24, 6); x.fillRect(x0 + 27, 14, 10, 26); x.fillStyle = '#3f3d45'; x.fillRect(x0 + 14, 66, 36, 3);
+      x.fillStyle = '#9a98a4'; x.fillRect(x0 + 14, 60, 36, 6); x.fillRect(x0 + 20, 40, 24, 6); x.fillRect(x0 + 27, 14, 10, 26); x.fillStyle = '#3f3d45'; x.fillRect(x0 + 14, 66, 36, 3);
     }
     return toTex(c);
   });

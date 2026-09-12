@@ -104,8 +104,8 @@ Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen: **Tünnes** (le
 (mittel), **Heinzel** (schwer) und **Langer T.** (Experte). Gegen dich fahren sieben weitere:
 Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 
-Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Kölnie GTI, Ehrenfeld Turbo,
-Rheinland Rocket, Langer T. Special.
+Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
+Rheinland Rocket, Milieu-Benz 280 SE — echte Karosserien mit Klarlack, Chrom und Himmelsspiegelung.
 
 Im Rennen: **TURBO** lädt beim Fahren und Driften auf, Shift/N zündet ihn. **SCHADEN** steigt
 bei Crashs und Rempeleien und kostet Topspeed; bei 100 % ist der Wagen kurz hin. Vier Kameras
@@ -150,16 +150,29 @@ zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus) und der Tipp des
   (z.B. 427×240), dann mit Farbreduktion und Bayer-Dithering hochskaliert. Außerdem alle
   prozedural gezeichneten Texturen (Fassaden, Kopfsteinpflaster, Ziegel, Maßwerk für den Dom,
   Wasser, Himmel mit Pixelwolken bzw. Sternen).
+- `js/cars.js` — die Karren: jede Karosserie wird aus abgerundeten Querschnitten (Superellipsen)
+  entlang einer Seitenlinie „geloftet“ — Taunus-Steilheck, Capri-Fließheck, Manta-Coupé, flacher
+  Sportwagen, der lange W108-Benz. Klarlack-Lack (`MeshPhysicalMaterial`) mit Himmelsspiegelung
+  über eine PMREM-Environment-Map, Chrom, getöntes Glas mit A/B/C-Säulen, Scheinwerfer je nach
+  Typ (Doppelrund, Rechteck, Benz-Vertikal, Klappscheinwerfer), drehende Räder mit Lenkeinschlag,
+  Kölner Kennzeichen. Geparkte Autos, Taxis (hellelfenbein mit Dachschild) und der grün-weiße
+  Peterwagen der 70er nutzen eine leichte Variante derselben Bauweise.
 - `js/world.js` — Straßenmesh (Kopfsteinpflaster in der Altstadt, Kerbs, Bürgersteige, Geländer,
-  Tunnelringe, Looping-Stützen) und das Pixel-Köln: Wahrzeichen, Altstadt-Giebelhäuser,
-  Gründerzeit-Zeilen, Industrie in Kalk, Straßenlaternen, Fahnen, Rhein mit Schiffen, Skyline-Ring
-  im Hintergrund. Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
+  Tunnelringe, Looping-Stützen) und das Köln: Wahrzeichen, Altstadt-Giebelhäuser, geschlossene
+  Blockrandbebauung entlang jeder Straße (Gründerzeit-Stuck, 50er-Jahre-Wiederaufbau, Ehrenfelder
+  Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVB-Bahnen in Weiß-Rot mit
+  Oberleitung auf den Ringen, Straßenschilder, Hinterhof-Blöcke und Kirchtürme hinter der ersten
+  Reihe, Skyline-Ring im Hintergrund. Die Figuren (Tünn, Schäl, Tünnes, Heinzelmännchen, Köbes,
+  Anna, Zocker, Polizist, Passanten) haben Gelenke, Hände, Mäntel mit Revers und Krawatte und ein
+  gezeichnetes Gesicht (Augen, Brauen, Mund, Schnauzer, Bart) als Textur auf dem Kopf.
+  Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
 - `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft
   vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, KI-Rivale,
   Kollisionen, Kameras, HUD, Minimap, WebAudio-Motor, Bestzeiten im `localStorage`.
 - `js/data.js` — Strecken, Karren, Archetypen, Straßennamen, Ladenschilder und alle kölschen Sprüche.
-- Alle statischen Requisiten werden pro Material zu einem Mesh zusammengefasst (ein paar Dutzend
-  Draw Calls statt tausenden), damit es auch auf dem Handy flüssig läuft.
+- Alle statischen Requisiten werden pro Material zu einem Mesh zusammengefasst, alle einfarbigen
+  Teile sogar zu einem einzigen vertex-gefärbten Mesh; Schilder mit gleichem Text teilen sich eine
+  Textur, jede Karre besteht aus einer Handvoll Meshes. So bleibt es auch auf dem Handy flüssig.
 - `manifest.json` + `sw.js` machen das Spiel installierbar und offline-fähig; `og.png` ist das
   Vorschaubild für WhatsApp & Co.
 
