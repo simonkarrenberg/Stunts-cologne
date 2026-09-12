@@ -24,6 +24,8 @@ Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Tele
 durch Kippen des Handys wie mit einem Lenkrad (iPhone fragt einmal nach Erlaubnis); die Haltung beim
 Start gilt als geradeaus, ein weiterer Tipp dreht die Richtung um. Falls beim ersten Start kein
 Ton kommt: einmal auf den Bildschirm tippen (Autoplay-Regel von iOS/Android).
+Läuft das Handy zu langsam (unter 24 Bildern pro Sekunde), regelt Heinzel die Grafik selbst herunter:
+erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jederzeit zurück.
 
 ### Steuerung
 

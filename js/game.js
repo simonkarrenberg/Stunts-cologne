@@ -465,7 +465,7 @@
   function startRace(def) {
     audioInit();
     buildScene(def);
-    raceTime = 0; countdown = 4.2; phase = 'countdown';
+    raceTime = 0; countdown = 4.2; phase = 'countdown'; perf.frames = 0; perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
@@ -524,8 +524,20 @@
   }
 
   // ---------------- main loop ----------------
+  const perf = { frames: 0, since: 0, stage: 0, wait: 0 }; let lastDtReal = 0.016;
+  function adaptQuality(dtReal) {
+    if ((phase !== 'race' && phase !== 'countdown') || perf.stage >= 2 || window.STUNTS_SIMSTEPS || window.STUNTS_FREECAM) return;
+    perf.frames++; perf.since += dtReal; if (perf.wait > 0) { perf.wait -= dtReal; }
+    if (perf.since < 4) return;
+    const fps = perf.frames / perf.since; perf.frames = 0; perf.since = 0;
+    if (fps >= 24 || perf.wait > 0) return;
+    perf.stage++; perf.wait = 8;
+    if (perf.stage === 1) { renderer.setPixelRatio(1); if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; if (sunLight) sunLight.castShadow = false; scene.traverse((o) => { if (o.isMesh && o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((m) => { m.needsUpdate = true; }); } }); } say({ name: 'Heinzel', emoji: '🔧' }, 'Dat Handy schwitzt. Ich hab de Schatten avjeschraubt. Läuft.', 2600); }
+    else if (pixelScale === 1) { pixelScale = 2; applyPixelMode(); post.setScale(2); say({ name: 'Heinzel', emoji: '🔧' }, 'Un jetz Pixel. Wie 1990. Dafür flüssig.', 2600); }
+  }
   function frame(t) {
     requestAnimationFrame(frame);
+    const dtReal = Math.min(0.5, (t - lastT) / 1000 || 0.016); adaptQuality(dtReal); lastDtReal = dtReal;
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
     renderer.info.reset();
     if (!scene) return;
@@ -542,7 +554,7 @@
   // one simulation step (physics, AI, commentary); the frame loop may run several per render for headless testing
   function tick(dt) {
     if (phase === 'countdown') {
-      countdown -= dt;
+      countdown -= window.STUNTS_SIMSTEPS ? dt : Math.min(0.25, lastDtReal); // real time, so a slow phone does not stretch the countdown
       const idx = 3 - Math.ceil(countdown - 0.2); const cd = $('#countdown');
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
