@@ -230,3 +230,54 @@ body.mobile #p2Btn { display: none; }
 .resInner .deckel { color: var(--yellow); }
 .cupBox { border: 3px solid var(--line); background: rgba(5,6,14,.7); padding: 6px 10px; margin: 6px 0 8px; font-size: 9px; }
 .cupBox b { color: var(--yellow); } .cupBox table { width: 100%; margin-top: 4px; border-collapse: collapse; } .cupBox td { padding: 2px 6px; } .cupBox tr.me td { color: var(--yellow); }
+
+/* ---- phone layout: compact menu, no sideways overflow, HUD that does not overlap ---- */
+body.mobile #menu { overflow-x: hidden; }
+body.mobile .menuGrid { padding: 6px 8px; gap: 6px; max-width: 100vw; }
+body.mobile .panel { padding: 6px 8px; }
+body.mobile .panel h2 { font-size: 10px; margin: 0 0 6px; }
+body.mobile .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+body.mobile .card { padding: 4px 3px 4px; gap: 2px; min-width: 0; }
+body.mobile .card canvas { width: 40px; height: 50px; } body.mobile .card.car canvas { width: 72px; height: 25px; }
+body.mobile .card b { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+body.mobile .card .diff { font-size: 6px; }
+body.mobile .stat { grid-template-columns: 34px 1fr; font-size: 5px; gap: 2px; } body.mobile .stat i b { width: 6px; height: 5px; }
+body.mobile .trackRow { grid-template-columns: 72px minmax(0, 1fr) 50px; gap: 6px; padding: 4px 6px 4px 20px; min-height: 48px; }
+body.mobile .trackRow .thumb { width: 72px; height: 27px; } body.mobile .trackRow .outline { width: 50px; height: 30px; }
+body.mobile .trackRow .info b { font-size: 8px; } body.mobile .trackRow .info { min-width: 0; overflow: hidden; }
+body.mobile .trackRow .p1 { font-size: 7px; }
+body.mobile #trackDesc, body.mobile .trackDesc { font-size: 7px; }
+body.mobile #startBtn { font-size: 12px; padding: 10px 18px; }
+body.mobile .subBtns button { font-size: 7px; padding: 6px 8px; }
+body.mobile .menuFooter { padding: 4px 8px 10px; font-size: 7px; }
+body.mobile .menuFooter .slogan { font-size: 7px; }
+@media (orientation: portrait) {
+  body.mobile .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.mobile .card canvas { width: 56px; height: 70px; } body.mobile .card.car canvas { width: 96px; height: 33px; }
+  body.mobile .card b { font-size: 8px; }
+  body.mobile .trackRow { grid-template-columns: 64px minmax(0, 1fr); }
+  body.mobile .trackRow .outline { display: none; }
+}
+/* HUD: stats box has nine rows now – keep the speed dash below it, buttons smaller on short screens */
+body.mobile .hudStats { min-width: 140px; gap: 1px; } body.mobile .hudStats div { font-size: 7px; }
+body.mobile .hudDash { top: 138px; min-width: 140px; padding: 4px 8px; }
+body.mobile .speedBox b { font-size: 20px; }
+body.mobile .hudMini { top: 40px; }
+body.mobile #msg { bottom: 132px; max-width: 46vw; }
+@media (max-height: 420px) {
+  body.mobile #touch button { width: 62px; height: 62px; font-size: 22px; }
+  body.mobile #touch { bottom: max(52px, env(safe-area-inset-bottom)); }
+  body.mobile .hudBtns { bottom: 8px; } body.mobile .hudBtns button { width: 30px; height: 30px; font-size: 11px; }
+  body.mobile #msg { bottom: 122px; }
+}
+/* results on phones: one column, scrollable, buttons always reachable */
+body.mobile #results { align-items: flex-start; overflow: auto; -webkit-overflow-scrolling: touch; padding: 6px 0 max(10px, env(safe-area-inset-bottom)); box-sizing: border-box; }
+body.mobile .resInner { grid-template-columns: 1fr; gap: 8px; padding: 10px 12px; width: 96vw; box-shadow: 4px 4px 0 #000; margin: auto; }
+body.mobile .resInner h2 { font-size: 10px; margin-bottom: 4px; } body.mobile .resTitle { font-size: 9px; }
+body.mobile .resInner td { padding: 3px 3px; font-size: 8px; }
+body.mobile .resInner .small { font-size: 7px; margin-top: 5px; line-height: 1.6; }
+body.mobile .express { font-size: 7px; padding: 4px 8px; margin-bottom: 6px; }
+body.mobile .record { font-size: 7px; padding: 5px 8px; margin-bottom: 6px; }
+body.mobile .resBtns { flex-wrap: wrap; gap: 6px; margin-top: 8px; } body.mobile .resBtns button { padding: 9px 6px; font-size: 8px; min-width: 40%; }
+body.mobile .resRight { gap: 6px; } body.mobile #resFace { width: 48px; height: 60px; } body.mobile .resRight .quote { font-size: 8px; margin: 0; }
+body.mobile .cupBox { font-size: 7px; padding: 4px 8px; }
