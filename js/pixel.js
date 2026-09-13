@@ -214,14 +214,20 @@
   T.stripes = (a, b) => cached('stripes' + a + b, () => { const c = canvas(8, 8), x = c.getContext('2d'); x.fillStyle = hex(a); x.fillRect(0, 0, 8, 8); x.fillStyle = hex(b); x.fillRect(0, 0, 8, 4); return toTex(c); });
 
   // ---------- sky ----------
-  T.sky = (theme) => cached('sky' + theme.sky + theme.night, () => {
+  T.sky = (theme) => cached('sky' + theme.sky + theme.fog + theme.night + (theme.dusk ? 'k' : '') + (theme.dawn ? 'd' : ''), () => {
     const W = 2048, H = 1024, c = canvas(W, H), x = c.getContext('2d'), r = mulberry(21);
     const top = new THREE.Color(theme.sky), hor = new THREE.Color(theme.fog);
     const grad = x.createLinearGradient(0, 0, 0, H / 2); grad.addColorStop(0, '#' + top.getHexString()); grad.addColorStop(0.55, '#' + top.clone().lerp(hor, 0.45).getHexString()); grad.addColorStop(1, '#' + hor.getHexString());
     x.fillStyle = grad; x.fillRect(0, 0, W, H / 2);
     x.fillStyle = '#' + hor.getHexString(); x.fillRect(0, H / 2, W, H / 2);
-    if (theme.miami || theme.sunset) { const pg = x.createLinearGradient(0, H * 0.25, 0, H * 0.5); pg.addColorStop(0, 'rgba(255,120,180,0)'); pg.addColorStop(1, 'rgba(255,160,90,0.55)'); x.fillStyle = pg; x.fillRect(0, H * 0.25, W, H * 0.25); }
-    if (theme.night) {
+    if (theme.miami || theme.sunset || theme.dusk || theme.dawn) { const pg = x.createLinearGradient(0, H * 0.25, 0, H * 0.5); pg.addColorStop(0, 'rgba(255,120,180,0)'); pg.addColorStop(1, 'rgba(255,160,90,0.55)'); x.fillStyle = pg; x.fillRect(0, H * 0.25, W, H * 0.25); }
+    if (theme.dawn) { // low sun just over the horizon on the left, pale disc
+      const sg = x.createRadialGradient(300, 470, 6, 300, 470, 220); sg.addColorStop(0, 'rgba(255,240,210,1)'); sg.addColorStop(0.12, 'rgba(255,215,160,0.9)'); sg.addColorStop(0.4, 'rgba(255,170,120,0.3)'); sg.addColorStop(1, 'rgba(255,170,120,0)'); x.fillStyle = sg; x.fillRect(0, 200, 700, 400);
+      for (let i = 0; i < 18; i++) { const cx = r() * W, cy = 90 + r() * 260, cw = 160 + r() * 320, ch = 24 + r() * 40; for (let k = 0; k < 8; k++) { const bx = cx + (r() - 0.5) * cw, by = cy + (r() - 0.5) * ch * 0.6, br = 25 + r() * ch; const cg = x.createRadialGradient(bx, by, 0, bx, by, br); cg.addColorStop(0, 'rgba(255,200,190,0.8)'); cg.addColorStop(0.7, 'rgba(255,190,170,0.3)'); cg.addColorStop(1, 'rgba(255,190,170,0)'); x.fillStyle = cg; x.fillRect(bx - br, by - br, br * 2, br * 2); } }
+    } else if (theme.night && theme.dusk) { // blue hour: a few stars, afterglow on the left, no moon yet
+      for (let i = 0; i < 220; i++) { x.fillStyle = '#e0e6ff'; x.globalAlpha = 0.15 + r() * 0.4; x.fillRect(r() * W, r() * H * 0.3, 1, 1); } x.globalAlpha = 1;
+      const ag = x.createRadialGradient(380, 520, 10, 380, 520, 520); ag.addColorStop(0, 'rgba(255,150,90,0.75)'); ag.addColorStop(0.5, 'rgba(255,120,110,0.25)'); ag.addColorStop(1, 'rgba(255,120,110,0)'); x.fillStyle = ag; x.fillRect(0, 100, 1000, 420);
+    } else if (theme.night) {
       for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.2 ? '#ffffff' : '#c8d0ff'; x.globalAlpha = 0.25 + r() * 0.5; const sz = r() < 0.08 ? 2 : 1; x.fillRect(r() * W, r() * H * 0.45, sz, sz); } x.globalAlpha = 1;
       const mg = x.createRadialGradient(1600, 150, 10, 1600, 150, 160); mg.addColorStop(0, 'rgba(255,250,220,0.9)'); mg.addColorStop(0.15, 'rgba(255,250,220,0.5)'); mg.addColorStop(1, 'rgba(255,250,220,0)'); x.fillStyle = mg; x.fillRect(1400, 0, 400, 400);
       x.fillStyle = '#f4f1d0'; x.beginPath(); x.arc(1600, 150, 34, 0, Math.PI * 2); x.fill(); x.fillStyle = '#d8d4b0'; x.beginPath(); x.arc(1612, 140, 8, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(1590, 162, 5, 0, Math.PI * 2); x.fill();

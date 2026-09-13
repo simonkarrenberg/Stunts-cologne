@@ -106,22 +106,29 @@ M schaltet Motor und Musik stumm.
 
 ## Strecken
 
-| # | Strecke | Route | Besonderheiten |
-|---|---|---|---|
-| 1 | Chicago am Rhein | Friesenplatz – Rudolfplatz – Hansaring – Eigelsteintor | Nacht, Neon, nasse Straßen, Hansahochhaus, Hahnentor, zwei Loopings, Sprung über die Gleise. |
-| 2 | Domblitz 4D | Dom – Heumarkt – Hohenzollernbrücke – Rheinsprung | Dom, Rathaus, Altstadt, über die Brücke nach Deutz, mit Rheinsprung zurück. |
-| 3 | Schäl Sick Schraube | Deutzer Freiheit – Messe – Rheinpark – Mülheimer Hafen | Looping (die Schraube), Zoobrücke, Seilbahn, Hafenkräne, Mülheimer Brücke. |
-| 4 | Ehrenfeld Tape Run | Venloer – Odonien – Bahnbögen – Subbelrath – Köln West | Enge Haken, Tunnel, Colonius, Moschee, Kassettenladen, Graffiti. |
-| 5 | Karneval Krawall | Heumarkt – Alter Markt – Rathaus – Schmitzengasse | Tribünen, Zochwagen, Konfetti, Severinstor, Hügel und Sprung. |
-| 6 | Rheinauhafen 4D | Agrippinawerft – Holzmarkt – Kranhäuser – Rheinsprung | Sonnenuntergang, zwei Sprünge übers Hafenbecken, Kranhäuser, Severinsbrücke, Looping. |
-| 7 | Poller Wiesen Stunt-Park | Poller Wiesen – Lanxess Arena – Deutzer Werft – Rheinpark | Drei Loopings, zwei Sprünge, Tunnel, Hügel, Steilkurven; Tribünen, Kölsch-Stände, Riesenrad, Rhing. |
+| # | Strecke | Tageszeit | Route | Besonderheiten |
+|---|---|---|---|---|
+| 1 | Chicago am Rhein | Nacht | Residenz-Kino – Rudolfplatz (Hahnentor) – Friesenstraße (Klein Köln, Sartory) – Hansaring (Hansahochhaus) – Ebertplatz (Eigelsteintor) – Mediapark (Kölnturm) – St. Gereon | Neon, nasse Straßen, Zocker, Kripo, zwei Loopings, Sprung über die Gleise. |
+| 2 | Domblitz 4D | Morgengrauen | Dom – Heinzelmännchenbrunnen (Früh am Dom) – Alter Markt (Rathaus, Groß St. Martin, Tünnes un Schäl) – Hohenzollernbrücke – Deutz (Hyatt, LVR-Turm, Tanzbrunnen, Messe) – Rheinsprung | Tiefe Sonne, lange Schatten, Hauptbahnhof, Museum Ludwig, 4711-Haus. |
+| 3 | Schäl Sick Schraube | Tag | Zoo & Flora – Zoobrücke (unter der Seilbahn) – Rheinpark – Messe – Lanxess Arena – Mülheimer Hafen – Mülheimer Brücke | Der Rhein wird zweimal gequert, Looping (die Schraube), Hafenkräne. |
+| 4 | Ehrenfeld Tape Run | Blaue Stunde | Venloer Straße – Moschee – St. Joseph – Odonien – Bahnbögen (Bahnhof Ehrenfeld) – Helios-Turm – Vulkan | Enge Haken, Tunnel, Colonius, Kassettenladen, Neptunbad, Graffiti, beleuchtete Fenster. |
+| 5 | Karneval Krawall | Rosenmontag | Chlodwigplatz – Severinstor – Heumarkt (Reiterdenkmal) – Alter Markt (Rathaus, Groß St. Martin) – Rudolfplatz (Hahnentor) | Tribünen, Zochwagen, Konfetti, Hügel, Sprung, eine Unterführung. |
+| 6 | Rheinauhafen 4D | Sonnenuntergang | Kranhäuser – Lagerhaus Siebengebirge – Schokoladenmuseum (Malakoffturm) – Severinsbrücke – Chlodwigplatz (Severinstor, St. Severin) – Bayenturm – Rheinsprung | Zwei Sprünge übers Hafenbecken, Rheinstrand, Riesenrad, Looping. |
+| 7 | Poller Wiesen Stunt-Park | Nacht | Poller Wiesen – Lanxess Arena – Deutzer Werft – Südbrücke – Rheinpark | Kölner Lichter über dem Rhein, drei Loopings, zwei Sprünge, Tunnel unter der Deutzer Brücke, Tribünen, Kölsch-Stände. |
+
+Die Reihenfolge der Wahrzeichen folgt der echten Stadt: auf den Ringen von Süd nach Nord, am Dom
+über die Hohenzollernbrücke nach Deutz, auf der Schäl Sick über die Zoobrücke hin und die
+Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loopings und Sprünge
+sind natürlich Stunts, keine Kölner Verkehrsplanung. Vier der sieben Strecken spielen abends,
+nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
 Alle Stadtstrecken haben jetzt mindestens einen Looping oder Sprung im Stunts-Stil.
 
 ## Fahrer, Wagen, Rennen
 
-Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen (auf LEICHT nimmt das Feld vorne
-den Fuß vom Gas, wenn du hinten hängst; auf EXPERTE kaum noch): **Tünnes** (leicht), **Schäl**
+Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen (die Gegner fahren auf LEICHT mit
+rund drei Vierteln ihres Könnens und nehmen vorne den Fuß vom Gas, wenn du hinten hängst; auf
+EXPERTE fahren sie fast voll und lassen dich kaum ran): **Tünnes** (leicht), **Schäl**
 (mittel), **Heinzel** (schwer) und **der Türsteher** (Experte). Gegen dich fahren sieben weitere:
 Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 

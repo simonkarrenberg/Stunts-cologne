@@ -424,6 +424,22 @@
     return g;
   };
   P.hahnentor = P.severinstor;
+  P.bayenturm = (o) => { // Bayenturm: the medieval corner tower at the south end of the Rheinauhafen
+    const g = new THREE.Group(); const tex = T.romanesque(0x8a7458); const h = (o && o.h) || 30;
+    g.add(tbox(12, h, 12, tex, 0, h / 2, 0, 0xffffff, [16, 16]));
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; for (let t = -4; t <= 4; t += 2.7) g.add(box(k % 2 ? 1.6 : 1.6, 1.8, k % 2 ? 1.6 : 1.6, 0x7a6448, Math.cos(a) * 6.2 + (k % 2 ? 0 : t), h + 0.9, Math.sin(a) * 6.2 + (k % 2 ? t : 0))); }
+    g.add(cone(7.5, 9, 0x4a3a34, 0, h + 4.5, 0, 4));
+    for (let y = 8; y < h - 4; y += 7) for (const sx of [-1, 1]) g.add(box(0.9, 2, 0.3, 0x2a2420, sx * 2.6, y, 6.05));
+    return g;
+  };
+  P.malakoff = () => { // Malakoffturm at the harbour mouth by the Schokoladenmuseum, with the swing bridge
+    const g = new THREE.Group(); const tex = T.romanesque(0x8a7458);
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(5, 5.4, 18, 10), tmat(tex, 0xffffff)); t.position.y = 9; g.add(t);
+    for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2; g.add(box(1.6, 1.6, 1.6, 0x7a6448, Math.cos(a) * 5, 18.8, Math.sin(a) * 5)); }
+    g.add(cone(5.6, 6, 0x4a3a34, 0, 22.5, 0, 10));
+    g.add(box(22, 0.8, 4, 0x3a5a3a, 16, 3.5, 0)); for (const x of [6, 26]) g.add(box(0.5, 4, 0.5, 0x3a5a3a, x, 5.5, 0)); // swing bridge
+    return g;
+  };
   P.colonius = () => {
     const g = new THREE.Group();
     const shaft = tcyl(3, 5, 250, T.steel(0xbfc4c9), 4, 40, 0xffffff, 10); shaft.position.y = 125; g.add(shaft);

@@ -259,7 +259,7 @@
     const i = Math.floor(((r.s % track.length) + track.length) % track.length / track.ds) % track.samples.length;
     let band = 1;
     if (r.isAI && player && !player.finished && phase === 'race') { const L = track.length; const gap = (r.s + r.lap * L) - (player.s + player.lap * L); const k = [0.22, 0.14, 0.07, 0.025][PLAYABLE[sel.driver].diffN || 0]; band = clamp(1 - gap / 300 * k, 1 - k * 0.9, 1 + k * 0.5); }
-    const target = Math.min(r.car.top * r.skill * 1.05, track.safe[i] * (0.9 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * (razzia > 0 && r !== player2 ? 0.62 : 1) * band;
+    const target = Math.min(r.car.top * r.skill * (r.isCop ? 1.05 : 0.95), track.safe[i] * (0.86 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * (razzia > 0 && r !== player2 ? 0.62 : 1) * band;
     let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     let wantLat = Math.sin(raceTime * 0.7 + r.wobblePhase) * r.wobble * 2 + r.laneBias * 0.5;
     // avoid the car ahead
@@ -413,11 +413,12 @@
     if (scene) scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     scene = new THREE.Scene();
     scene.background = new THREE.Color(theme.sky);
-    scene.fog = new THREE.Fog(theme.fog, theme.night ? 90 : 220, theme.night ? 520 : 1300);
-    hemi = new THREE.HemisphereLight(theme.night ? 0x8090c0 : theme.sky, theme.ground, theme.night ? 0.7 : 0.5); scene.add(hemi);
-    sunLight = new THREE.DirectionalLight(theme.sun, theme.night ? 0.45 : 0.8); sunLight.position.set(120, 200, 80); scene.add(sunLight);
+    // time of day: night (stars, lamps), dusk (blue hour: lit windows, orange horizon), dawn (low warm sun, long shadows), day
+    scene.fog = new THREE.Fog(theme.fog, theme.dusk ? 150 : theme.night ? 90 : theme.dawn ? 180 : 220, theme.dusk ? 900 : theme.night ? 520 : theme.dawn ? 1100 : 1300);
+    hemi = new THREE.HemisphereLight(theme.dusk ? 0x5a6aa0 : theme.night ? 0x8090c0 : theme.dawn ? 0xb0a0c0 : theme.sky, theme.ground, theme.dusk ? 0.55 : theme.night ? 0.7 : 0.5); scene.add(hemi);
+    sunLight = new THREE.DirectionalLight(theme.sun, theme.dusk ? 0.35 : theme.night ? 0.45 : theme.dawn ? 0.75 : 0.8); sunLight.position.set(theme.dawn ? 320 : theme.dusk ? -260 : 120, theme.dawn ? 70 : theme.dusk ? 55 : 200, theme.dawn ? -40 : 80); scene.add(sunLight);
     if (renderer.shadowMap.enabled) { sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048); const sc = sunLight.shadow.camera; sc.left = -170; sc.right = 170; sc.top = 170; sc.bottom = -170; sc.near = 10; sc.far = 700; sunLight.shadow.bias = -0.0008; sunLight.shadow.normalBias = 0.6; scene.add(sunLight.target); }
-    scene.add(new THREE.AmbientLight(theme.night ? 0x223055 : 0x404050, theme.night ? 0.5 : 0.25));
+    scene.add(new THREE.AmbientLight(theme.dusk ? 0x2a3060 : theme.night ? 0x223055 : theme.dawn ? 0x504050 : 0x404050, theme.dusk ? 0.55 : theme.night ? 0.5 : theme.dawn ? 0.3 : 0.25));
     if (theme.night) { carLight = new THREE.PointLight(0xfff2cc, 2.0, 90); scene.add(carLight); } else carLight = null;
     // sky reflections for paint, chrome and glass
     if (window.Cars) { try { if (!pmrem) pmrem = new THREE.PMREMGenerator(renderer); if (envTex) envTex.dispose(); envTex = pmrem.fromEquirectangular(window.Pixel.T.sky(theme)).texture; window.Cars.setEnv(envTex); } catch (e) { console.warn('env map', e); } }
@@ -483,6 +484,8 @@
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
     const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
+    const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
+    if (sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
     sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = 'K = ANRUFEN';
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
