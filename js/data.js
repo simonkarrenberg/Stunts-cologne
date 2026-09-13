@@ -924,6 +924,27 @@
       evening: ['{h} Uhr. Jetz jeht de Nacht los. Un ming Schicht.', 'Feierabend för de andere. För uns fängt et an.']
     },
     // Razzia on the Ringe: everybody ducks, you keep driving
+    // Klüngel-Auftrag: dä Lange needs something carried from A to B, fast and without a dent
+    auftrag: {
+      what: ['dä Umschlag', 'de Kölsch-Kiste', 'dä Aktenkoffer', 'dä Bierdeckel-Stapel', 'dä Ersatzschlüssel vum Sartory', 'dä Brief an de Kripo (unjeöffnet)', 'de Zockerkasse', 'dä Hut vum Kommissar', 'e Kilo Kamelle', 'de Pokalspende för dä FC'],
+      where: ['SARTORY', 'KLEIN KÖLN', 'RESIDENZ-KINO', 'LOVERS CLUB', 'SPIELCLUB', 'ZOCKERTISCH', 'BOXRING', 'BRAUHAUS', 'BÜDCHEN AN DER ECKE', 'HAUPTBAHNHOF, SCHLIESSFACH 68', 'NACHTPORTIER'],
+      start: ['Auftrag, Jung: {what} liegt op der Streck. Bring en zum {where}. Frag nit, fahr.', 'Man kennt sich, man hilft sich: {what} zum {where}. Un kein Kratzer, verstanden?', 'Der Klüngel ruft. {what} abhole, zum {where} bringe. Die Uhr läuft, dat Kölsch och.', 'Kleiner Jefallen: {what} zum {where}. Wenn de Kripo fragt: du kennst mich nit.'],
+      pick: ['Do häs et. Jetz nur noch heil zum {where}. Un nit im Rhing bade.', 'Jot. Un jetz Gas, dat Ding hät en Termin.', 'Im Kofferraum. Wenn de jetz crashst, weiß dat janze Veedel Bescheid.'],
+      done: ['Abjeliefert! Dat jibt fünf Striche op dä Deckel un e Kölsch vum Haus.', 'Sauber. Der {where} lässt jrüße. Un de Kripo hät nix jemerkt.', 'Dat nenn ich Klüngel. Fünf Striche, un ich vergess dat mit dem Turnschuh.', 'Pünktlich wie de Bahn – also nit. Aber heil. Fünf Striche!'],
+      late: ['Zu spät, Jung. Der {where} hät zujemacht. Zwei Striche weniger.', 'Die Uhr wor schneller. Dat kost dich zwei Striche un ming Laune.', 'Zu langsam. Der Umschlag jeht jetz mit der Post. Mit Briefmarke, Jung.'],
+      lost: ['Un fott is et. Bei dem Crash liegt {what} jetz op der Straße. Zwei Striche, un ich sach nix mehr.', 'Verlore. Dat Veedel redet morjen über dich. Nit jut.', 'Kratzer im Lack, Umschlag im Rinnstein. Klüngel kann jeder, du nit.']
+    },
+    // the Vorspann: what the arcade cabinet tells while nobody plays
+    vorspann: [
+      'KÖLN, 1968.',
+      'Die Ringe glühen. Im Klein Köln wird gezockt, im Sartory getanzt, in der Friesenstraße geflüstert.',
+      'Die Zeitungen nennen es CHICAGO AM RHEIN.',
+      'An der Tür steht einer, den keiner überredet. Zwei Meter zehn, Hut, Handschuhe. Dä Lange.',
+      'Er entscheidet, wer reinkommt. Und heute Nacht entscheidet er, wer am schnellsten durch Kölle kommt.',
+      'Zehn Strecken. Fünf Karren. Loopings über dem Rhein, Sprünge über die Büdchen. Die Kripo hat den Motor schon an.',
+      'Du kütts hee nit rein? Doch. Ausnahmsweise.',
+      'FOTT DOMET.'
+    ],
     razzia: ['RAZZIA! Kripo im Klein Köln. Alle unter de Tisch. Du nit, du fährs.', 'Blaulicht op de Ringe. Die Zocker verstecke sich. De Rivale och. Jas!', 'Razzia im Spielclub. Der Kommissar sucht mich. Ich bin hee. Fahr weiter.'],
     razziaEnd: ['Razzia vorbei. Die Zocker kumme wieder us de Löcher.', 'Kripo is weg. Ich hann jesaht, ich kenn keine.'],
     // five Kölsch in one lap: the Kölsch-Kurve

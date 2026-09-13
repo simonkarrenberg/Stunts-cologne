@@ -62,6 +62,7 @@
       <div class="subBtns">
         <button id="editorBtn" data-icon="brick">KLÜNGEL-BAUKASTEN</button>
         <button id="recordsBtn" data-icon="trophy">REKORDE</button>
+        <button id="demoBtn" data-icon="coin">VORSPANN</button>
         <button id="cupBtn" data-icon="beer">KÖLSCH-CUP (7 STRECKEN)</button>
         <button id="p2Btn" data-icon="people">2 SPIELER: AUS</button>
         <button id="voiceBtn" data-icon="speaker">STIMME: AN</button>
@@ -121,6 +122,7 @@
     <div><span>DECKEL</span><b id="hudDeckel">–</b></div>
     <div><span>WETTE</span><b id="hudWette">–</b></div>
     <div><span>KRIPO</span><b id="hudKripo">–</b></div>
+    <div><span>AUFTRAG</span><b id="hudAuftrag">–</b></div>
   </div>
   <div id="flash"></div>
   <div class="hudMini"><canvas id="minimap" width="200" height="200"></canvas></div>
@@ -129,6 +131,10 @@
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
   <div id="msg"><div id="msgWho"></div><div id="msgText"></div></div>
   <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
+  <div id="demo" hidden>
+    <div class="demoTop"><span>DEMO</span><span class="blink">INSERT COIN · DRÜCK EINE TASTE</span><span>CREDIT 00</span></div>
+    <div class="demoCrawlBox"><div id="demoCrawl"></div></div>
+  </div>
   <div id="replayUI" hidden>
     <div class="replayTop"><span id="replayState">▶ REPLAY</span><span id="replayTime"></span></div>
     <div class="replayTrack"><div id="replayBar"></div></div>
@@ -173,6 +179,8 @@
       <canvas id="resFace"></canvas>
       <p class="quote">„<span id="resTuenn"></span>“<br><span class="sig">– Dä Lange</span></p>
       <p class="quote small" id="resRival"></p>
+      <canvas id="resPaper" width="560" height="400"></canvas>
+      <button id="paperBtn">📰 TITELSEITE TEILEN</button>
     </div>
   </div>
 </div>

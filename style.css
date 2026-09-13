@@ -312,7 +312,7 @@ body.mobile .menuFooter .slogan { font-size: 7px; }
 }
 /* HUD: stats box has nine rows now – keep the speed dash below it, buttons smaller on short screens */
 body.mobile .hudStats { min-width: 140px; gap: 1px; } body.mobile .hudStats div { font-size: 7px; }
-body.mobile .hudDash { top: 138px; min-width: 140px; padding: 4px 8px; }
+body.mobile .hudDash { top: 150px; min-width: 140px; padding: 4px 8px; }
 body.mobile .speedBox b { font-size: 20px; }
 body.mobile .hudMini { top: 40px; }
 body.mobile #msg { bottom: 132px; max-width: 46vw; }
@@ -383,3 +383,18 @@ body.mobile .hudBtns { top: auto; bottom: max(10px, env(safe-area-inset-bottom))
 body.mobile .hudBtns button { width: 32px; height: 32px; font-size: 11px; opacity: .8; }
 body.mobile #touch .tGroup { gap: 12px; }
 body.mobile.racing #cockpit { display: block; }
+
+/* ---------- Klüngel-Presse: the EXPRESS front page on the results screen ---------- */
+#resPaper { width: 100%; max-width: 380px; height: auto; border: 3px solid #000; box-shadow: 4px 4px 0 #000; image-rendering: auto; background: #f3ecd8; }
+#paperBtn { background: #f4efe0; color: #111; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 8px 12px; font-size: 9px; }
+body.mobile #resPaper { max-width: 260px; } body.mobile #paperBtn { font-size: 7px; padding: 6px 8px; }
+/* ---------- attract mode ---------- */
+#demo { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden; }
+.demoTop { position: absolute; top: 14px; left: 0; right: 0; display: flex; justify-content: space-around; font-size: 14px; color: var(--yellow); text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255,210,63,.6); letter-spacing: .1em; }
+.demoTop .blink { animation: coin 0.8s steps(2) infinite; color: #fff; }
+.demoCrawlBox { position: absolute; left: 0; right: 0; bottom: 0; height: 62%; overflow: hidden; -webkit-mask-image: linear-gradient(transparent, #000 25%, #000 85%, transparent); mask-image: linear-gradient(transparent, #000 25%, #000 85%, transparent); }
+#demoCrawl { position: absolute; left: 50%; transform: translateX(-50%); width: min(720px, 90vw); text-align: center; color: var(--yellow); font-size: 14px; line-height: 2.1; text-shadow: 2px 2px 0 #000, 0 0 8px rgba(0,0,0,.8); animation: crawl 62s linear forwards; }
+#demoCrawl p { margin: 0 0 22px; } #demoCrawl p.big { font-size: 22px; color: #fff; text-shadow: 3px 3px 0 var(--red2), 0 0 14px var(--pink); }
+@keyframes crawl { from { top: 100%; } to { top: -160%; } }
+body.demo .hudStats, body.demo .hudDash, body.demo .hudBtns, body.demo .hudMini, body.demo #touch, body.demo .hudTitle, body.demo #msg { display: none !important; }
+body.mobile .demoTop { font-size: 9px; top: 8px; } body.mobile #demoCrawl { font-size: 9px; line-height: 1.9; } body.mobile #demoCrawl p.big { font-size: 14px; }

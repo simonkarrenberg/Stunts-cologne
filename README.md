@@ -90,6 +90,20 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 - **EXPRESS-Schlagzeile:** Das Rennergebnis bekommt eine Schlagzeile über dich – Rekord, Kripo,
   Rheinbad, Knöllchen-Rekord oder Blechschmied-Umsatz.
 - **Kölsch-Kurve:** Fünf Kölsch in einer Runde und das Auto fährt sieben Sekunden Schlangenlinie.
+- **Klüngel-Auftrag:** Zwei-, dreimal pro Rennen braucht der Türsteher einen Kurier: „Dä Umschlag
+  zum SARTORY“, „de Zockerkasse zum KLEIN KÖLN“, „dä Hut vum Kommissar zum BOXRING“. Der Umschlag
+  liegt mit gelbem Lichtkegel auf der Straße, das Ziel ist ein pinker Ring mit Schild ein paar hundert
+  Meter weiter, die Uhr läuft in der HUD-Zeile AUFTRAG. Heil und pünktlich abgeliefert: fünf Striche
+  und voller Turbo. Zu spät oder mit Crash: zwei Striche weg und ein Spruch, den man nicht vergisst.
+  Auf dem Domschatz-Raub gibt es keine Aufträge – da hat man schon genug im Kofferraum.
+- **EXPRESS-Titelseite:** Im Ergebnis liegt die Zeitung von morgen: Schlagzeile, Foto vom Zieleinlauf,
+  Polizeibericht (Platz, Zeit, Knöllchen, Kölsch, Klüngel-Aufträge, Kripo), Wetter und ein Zitat des
+  Türstehers („Ich hab nix jesehe.“). „TITELSEITE TEILEN“ schickt sie als Bild – per Teilen-Dialog auf
+  dem Handy, sonst als Download.
+- **Vorspann / Attract Mode:** Wer im Menü eine Minute nichts tut, sieht die Arcade-Kiste selbst
+  spielen: ein Demo-Rennen aus der Fernsehkamera, dazu rollt die Geschichte von Chicago am Rhein über
+  das Bild („KÖLN, 1968. Die Ringe glühen…“), oben blinkt „INSERT COIN“. Jede Taste oder ein Tipp
+  holt zurück ins Menü; der Knopf „VORSPANN“ startet ihn sofort.
 - **Razzia:** Ab und zu kommt die Kripo ins Klein Köln – Blaulicht, Sirene, alle Rivalen ducken sich
   und fahren langsam. Du nicht.
 - **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.
