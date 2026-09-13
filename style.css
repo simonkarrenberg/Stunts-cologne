@@ -32,7 +32,7 @@ body.hd #gl { image-rendering: auto; }
 #menu .card, #menu .trackRow { background: linear-gradient(180deg, #16123a, #0b0d22); border-color: #3b2f6e; box-shadow: inset 0 0 0 1px #000; }
 #menu .card:hover, #menu .trackRow:hover { border-color: var(--cyan); box-shadow: 0 0 10px rgba(79,214,255,.35); }
 #menu .card.active, #menu .trackRow.active { border-color: var(--yellow); box-shadow: 0 0 0 1px var(--yellow), 0 0 18px rgba(255,210,63,.45), inset 0 0 18px rgba(255,210,63,.12); }
-#menu .card.active b, #menu .trackRow.active .info b { text-shadow: 0 0 8px var(--yellow); }
+#menu .card.active > b, #menu .trackRow.active .info b { text-shadow: 0 0 8px var(--yellow); }
 .coinLine span { animation: coin 1s steps(2) infinite; }
 @keyframes coin { 50% { opacity: .25; } }
 #startBtn { background: radial-gradient(ellipse at 50% 30%, #ff5c5c, #c1121f 60%, #7a0a12); color: #fff; border: 4px solid #ffd23f; border-radius: 14px; box-shadow: 0 0 0 3px #000, 0 6px 0 #5a0810, 0 6px 0 3px #000, 0 0 24px rgba(255,42,42,.55); text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255,255,255,.6); font-size: 18px; padding: 14px 34px; animation: press 1.4s steps(2) infinite; }
@@ -46,7 +46,16 @@ body.hd #gl { image-rendering: auto; }
 .menuFooter .keys kbd { background: #1c1642; border-color: #6a3fa0; }
 #menu .desc { border-left-color: var(--pink); box-shadow: -4px 0 12px -6px var(--pink); }
 #langerQuote { text-shadow: 0 0 6px rgba(255,255,255,.35); }
-@media (prefers-reduced-motion: reduce) { .banner::before, .coinLine span, #startBtn { animation: none; } }
+.hiScore { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); display: flex; gap: 28px; z-index: 4; font-size: 10px; color: #fff; text-shadow: 2px 2px 0 #000, 0 0 8px rgba(255,255,255,.4); letter-spacing: .06em; white-space: nowrap; }
+.hiScore b { color: var(--yellow); font-weight: normal; } .hiScore .hsTop { color: var(--red); } .hiScore .hsTop b { color: var(--yellow); }
+.hiScore span:first-child { animation: coin 1s steps(2) infinite; }
+@media (max-width: 1100px) { .hiScore { display: none; } }
+.pressStart { width: 100%; text-align: center; color: var(--yellow); font-size: 12px; letter-spacing: .12em; text-shadow: 2px 2px 0 #000, 0 0 10px var(--yellow); animation: coin 0.9s steps(2) infinite; }
+body.mobile .pressStart { font-size: 8px; }
+.menuFooter .copy { width: 100%; text-align: center; color: #8d86b5; font-size: 7px; letter-spacing: .08em; }
+.card.active::after { content: ""; position: absolute; left: -3px; right: -3px; top: -3px; bottom: -3px; border: 2px dashed rgba(255,210,63,.8); animation: chase .6s steps(2) infinite; pointer-events: none; }
+@keyframes chase { 50% { border-color: rgba(255,255,255,.9); } }
+@media (prefers-reduced-motion: reduce) { .banner::before, .coinLine span, #startBtn, .pressStart, .hiScore span, .card.active::after { animation: none; } }
 .banner { position: relative; height: 150px; border-bottom: 3px solid var(--line); overflow: hidden; }
 #skyline { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 #logo { position: absolute; left: 16px; top: 4px; width: 560px; height: 140px; max-width: 60vw; image-rendering: pixelated; }
@@ -54,20 +63,22 @@ body.hd #gl { image-rendering: auto; }
 .bannerQuote .q { color: var(--pink); font-size: 11px; text-align: right; text-shadow: 2px 2px 0 #000; line-height: 1.8; }
 .bannerQuote .q span { display: block; color: var(--yellow); font-size: 9px; }
 #langerFace { width: 80px; height: 100px; image-rendering: pixelated; border: 3px solid var(--line2); background: #000; }
-.menuGrid { display: grid; grid-template-columns: 1fr 1.25fr; grid-template-areas: "drivers tracks" "cars tracks" "cars langer" "start start"; gap: 12px; padding: 12px 16px 6px; max-width: 1500px; margin: 0 auto; }
+.menuGrid { display: grid; grid-template-columns: 1.15fr 1fr; grid-template-areas: "drivers tracks" "cars tracks" "cars langer" "start start"; gap: 12px; padding: 12px 16px 6px; max-width: 1500px; margin: 0 auto; }
 .drivers { grid-area: drivers; } .tracks { grid-area: tracks; } .cars { grid-area: cars; } .langer { grid-area: langer; } .startRow { grid-area: start; }
 @media (max-width: 1000px) { .menuGrid { grid-template-columns: 1fr; grid-template-areas: "drivers" "cars" "tracks" "langer" "start"; } }
 .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 #driverCards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
 #carCards { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; } #carCards .card canvas { width: 104px; height: 36px; }
 #driverCards .card { padding: 6px 3px 5px; } #driverCards .card small { font-size: 7px; min-height: 30px; }
+#driverCards .card > b { min-height: 25px; } #carCards .card > b { min-height: 40px; }
 .card { position: relative; background: #0d1024; border: 3px solid var(--line); padding: 8px 6px 6px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .card:hover { border-color: var(--line2); }
 .card.active { border-color: var(--yellow); box-shadow: 0 0 0 1px var(--yellow), 0 0 14px rgba(255,210,63,.35); }
 .card canvas { image-rendering: pixelated; width: 80px; height: 100px; border: 2px solid #000; }
 .card.car canvas { width: 128px; height: 44px; }
-.card b { font-size: 10px; color: #fff; margin-top: 2px; }
-.card.active b { color: var(--yellow); }
+.card > b { display: block; width: 100%; font-size: 11px; line-height: 1.35; color: #fff; margin-top: 4px; padding: 5px 3px; background: #000; border: 2px solid #3b2f6e; white-space: normal; overflow-wrap: break-word; hyphens: manual; text-shadow: 2px 2px 0 #1a1a2a; }
+.card.active > b { border-color: var(--yellow); background: #1a1200; }
+.card.active > b { color: var(--yellow); }
 .card small { font-size: 8px; color: var(--cyan); line-height: 1.5; min-height: 36px; }
 .card .diff { font-style: normal; font-size: 9px; margin-top: 4px; }
 .diff.d0 { color: var(--green); } .diff.d1 { color: var(--yellow); } .diff.d2 { color: var(--red); } .diff.d3 { color: var(--pink); }
@@ -82,7 +93,7 @@ body.hd #gl { image-rendering: auto; }
 .trackRow .p1 { top: 6px; left: 6px; }
 .trackRow .thumb { width: 192px; height: 72px; image-rendering: pixelated; border: 2px solid #000; }
 .trackRow .info { display: flex; flex-direction: column; gap: 3px; }
-.trackRow .info b { color: var(--yellow); font-size: 12px; }
+.trackRow .info b { color: var(--yellow); font-size: 14px; line-height: 1.3; }
 .trackRow.active .info b { color: #fff; }
 .trackRow .info .sub { color: #fff; font-size: 9px; }
 .trackRow .info .wp { color: var(--cyan); font-size: 8px; line-height: 1.5; }
@@ -216,7 +227,7 @@ body.mobile #langerFace { width: 56px; height: 70px; }
 body.mobile .menuGrid { grid-template-columns: 1fr; grid-template-areas: "drivers" "cars" "tracks" "langer" "start"; padding: 8px 10px; gap: 8px; }
 body.mobile .cards { grid-template-columns: repeat(4, 1fr); gap: 5px; }
 body.mobile .card canvas { width: 48px; height: 60px; } body.mobile .card.car canvas { width: 96px; height: 33px; }
-body.mobile .card small { display: none; } body.mobile .card b { font-size: 7px; }
+body.mobile .card small { display: none; } body.mobile .card > b { font-size: 8px; }
 body.mobile .stat { grid-template-columns: 44px 1fr; font-size: 6px; } body.mobile .stat i b { width: 7px; height: 6px; }
 body.mobile .trackRow { grid-template-columns: 96px 1fr 70px; padding-left: 22px; min-height: 60px; }
 body.mobile .trackRow .thumb { width: 96px; height: 36px; } body.mobile .trackRow .outline { width: 70px; height: 40px; }
@@ -280,12 +291,12 @@ body.mobile .panel h2 { font-size: 10px; margin: 0 0 6px; }
 body.mobile .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; } body.mobile #carCards { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; } body.mobile #carCards .card canvas { width: 60px; height: 21px; } body.mobile #driverCards { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; }
 body.mobile .card { padding: 4px 3px 4px; gap: 2px; min-width: 0; }
 body.mobile .card canvas { width: 40px; height: 50px; } body.mobile .card.car canvas { width: 72px; height: 25px; }
-body.mobile .card b { font-size: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+body.mobile .card > b { font-size: 8px; white-space: normal; padding: 3px 2px; min-height: 0; line-height: 1.3; max-width: 100%; }
 body.mobile .card .diff { font-size: 6px; }
 body.mobile .stat { grid-template-columns: 34px 1fr; font-size: 5px; gap: 2px; } body.mobile .stat i b { width: 6px; height: 5px; }
 body.mobile .trackRow { grid-template-columns: 72px minmax(0, 1fr) 50px; gap: 6px; padding: 4px 6px 4px 20px; min-height: 48px; }
 body.mobile .trackRow .thumb { width: 72px; height: 27px; } body.mobile .trackRow .outline { width: 50px; height: 30px; }
-body.mobile .trackRow .info b { font-size: 8px; } body.mobile .trackRow .info { min-width: 0; overflow: hidden; }
+body.mobile .trackRow .info b { font-size: 9px; line-height: 1.3; } body.mobile .trackRow .info { min-width: 0; }
 body.mobile .trackRow .p1 { font-size: 7px; }
 body.mobile #trackDesc, body.mobile .trackDesc { font-size: 7px; }
 body.mobile #startBtn { font-size: 12px; padding: 10px 18px; }
@@ -295,7 +306,7 @@ body.mobile .menuFooter .slogan { font-size: 7px; }
 @media (orientation: portrait) {
   body.mobile .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   body.mobile .card canvas { width: 56px; height: 70px; } body.mobile .card.car canvas { width: 96px; height: 33px; }
-  body.mobile .card b { font-size: 8px; }
+  body.mobile .card > b { font-size: 9px; }
   body.mobile .trackRow { grid-template-columns: 64px minmax(0, 1fr); }
   body.mobile .trackRow .outline { display: none; }
 }
@@ -332,11 +343,13 @@ body.mobile #logo { left: max(8px, env(safe-area-inset-left)); }
 body.mobile .menuFooter { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
 body.mobile .resInner { margin-left: max(2vw, env(safe-area-inset-left)); margin-right: max(2vw, env(safe-area-inset-right)); width: auto; }
 body.mobile .panel h2 { font-size: 11px; }
-body.mobile .card b { font-size: 7px; } body.mobile .card .diff { font-size: 7px; }
-body.mobile .trackRow .info b { font-size: 9px; } body.mobile .trackRow .info span { font-size: 7px; }
+body.mobile .card .diff { font-size: 7px; }
+body.mobile .trackRow .info span { font-size: 7px; }
 @media (orientation: landscape) {
-  body.mobile .menuGrid { grid-template-columns: 1fr 1.15fr; grid-template-areas: "drivers tracks" "cars tracks" "start start"; align-items: start; }
-  body.mobile .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  body.mobile .menuGrid { grid-template-columns: 1fr 1.15fr; grid-template-rows: auto 1fr auto; grid-template-areas: "drivers tracks" "cars tracks" "start start"; align-items: start; }
+  body.mobile .cards, body.mobile #driverCards, body.mobile #carCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  body.mobile .card canvas { width: 48px; height: 60px; } body.mobile #carCards .card canvas { width: 88px; height: 30px; }
+  body.mobile .card > b { font-size: 9px; }
   body.mobile .banner { height: 64px; } body.mobile #logo { width: 210px; height: 52px; top: 4px; } body.mobile #langerFace { width: 40px; height: 50px; }
 }
 

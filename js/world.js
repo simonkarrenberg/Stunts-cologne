@@ -960,6 +960,9 @@
     if (THEME.night) g.add(glow(8, 6, 0xffd400, 0, 2));
     return g; };
   P.marktstand = () => { const g = new THREE.Group(); g.add(box(3.5, 0.9, 1.6, 0x8a5a2a, 0, 0.7, 0)); for (const x of [-1.6, 1.6]) g.add(cyl(0.06, 0.06, 2.6, 0x555555, x, 1.3, -0.7, 6)); const aw = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 2.2), tmat(T.stripes([0xc1121f, 0x2d6a4f, 0x1c3f95][Math.floor(Math.random() * 3)], 0xffffff), 0xffffff, { side: THREE.DoubleSide })); aw.rotation.x = -Math.PI / 2 + 0.25; aw.position.set(0, 2.6, 0); g.add(aw); for (let i = 0; i < 6; i++) g.add(box(0.45, 0.35, 0.45, [0xff2020, 0x7fff00, 0xffd400, 0xff8800, 0x2f9a48, 0xf0e0c0][i], -1.3 + i * 0.5, 1.3, 0.3)); return g; };
+  P.awb = () => { // orange AWB litter bin (Abfallwirtschaftsbetriebe Köln) on a grey post
+    const g = new THREE.Group(); g.add(cyl(0.04, 0.05, 1.0, 0x777777, 0, 0.5, 0, 6)); g.add(cyl(0.26, 0.24, 0.62, 0xff6a00, 0, 1.05, 0, 8)); g.add(cyl(0.27, 0.27, 0.06, 0x222222, 0, 1.38, 0, 8));
+    const s = textPlane('AWB', '#ffffff', '#ff6a00', 0.42, 0.18, false, { sizeK: 0.9 }); s.position.set(0, 1.08, 0.27); g.add(s); return g; };
   P.bank = () => { const g = new THREE.Group(); g.add(box(2.2, 0.12, 0.5, 0x6a4a2a, 0, 0.5, 0)); g.add(box(2.2, 0.5, 0.1, 0x6a4a2a, 0, 0.85, -0.25)); g.add(box(0.15, 0.5, 0.5, 0x333333, -1, 0.25, 0)); g.add(box(0.15, 0.5, 0.5, 0x333333, 1, 0.25, 0)); return g; };
   P.fahrradstaender = () => { const g = new THREE.Group(); for (let i = 0; i < 4; i++) { const b = P.fahrrad(); b.position.set(i * 0.7 - 1, 0, 0); b.rotation.y = Math.PI / 2; g.add(b); } return g; };
   P.bus = () => { const g = new THREE.Group(); g.add(box(2.5, 2.6, 12, 0xe30613, 0, 1.6, 0)); g.add(box(2.52, 1.0, 11.4, 0x9fd3ff, 0, 2.2, 0)); g.add(box(2.5, 0.2, 12.2, 0xf4f4f4, 0, 2.95, 0)); const s = textPlane('KVB 132 · ZOOBRÜCKE', '#ffb000', '#222', 2.2, 0.45, THEME.night); s.position.set(0, 2.5, 6.05); g.add(s); for (const z of [3.8, -3.8]) { for (const x of [-1.1, 1.1]) addm(g, cyl(0.45, 0.45, 0.4, 0x111111, x, 0.45, z, 8)).rotation.z = Math.PI / 2; } return g; };
@@ -1131,11 +1134,29 @@
     return g; };
 
   // ------------------------------------------------ road ----
+  // Zebrastreifen: on city tracks, one crossing every ~170 m on flat straights well away from stunts and the start.
+  // Returns the start sample of every crossing (each spans four samples) and caches it on the track.
+  function zebraSamples(track, theme) {
+    if (track.zebra) return track.zebra;
+    const S = track.samples, n = S.length, out = [];
+    if (!(theme.street && theme.street !== 'park')) return (track.zebra = out);
+    const gap = Math.round(170 / track.ds); let last = -gap;
+    for (let i = Math.round(120 / track.ds); i < n - 60; i++) {
+      if (i - last < gap) continue;
+      let ok = true;
+      for (let j = i - 14; j <= i + 18 && ok; j++) { const q = S[j]; if (q.kind !== 'straight' || Math.abs(q.p.y) > 0.05 || Math.abs(q.curv || 0) > 0.002) ok = false; }
+      if (!ok) continue;
+      out.push(i); last = i;
+    }
+    return (track.zebra = out);
+  }
+
   function buildRoad(track, theme) {
     const S = track.samples, n = S.length;
     const pos = [], col = [], uv = [], idx = [];
+    const ppos = [], pcol = [], pidx = []; let pvi = 0; // "paint": curbs and centre line, untextured so white stays white on cobbles
     const c1 = new THREE.Color(theme.road[0]), c2 = new THREE.Color(theme.road[1]);
-    const cRed = new THREE.Color(theme.night ? 0x9a1e1e : 0xd22a2a), cWhite = new THREE.Color(theme.night ? 0x9a9aa4 : 0xf2f2f2), cLine = new THREE.Color(theme.night ? 0xb8a85a : 0xf5e27a);
+    const cRed = new THREE.Color(theme.night ? 0x9a1e1e : 0xd22a2a), cWhite = new THREE.Color(theme.night ? 0x9a9aa4 : 0xf2f2f2), cLine = new THREE.Color(theme.night ? 0xa8a8b0 : 0xf6f6f2);
     const cStart = new THREE.Color(0xffffff), cStartB = new THREE.Color(0x111111), cWalk = new THREE.Color(theme.night ? 0x2e2e38 : 0x8f8a82), cUnder = new THREE.Color(0x62626a);
     let vi = 0;
     const underRanges = [];
@@ -1145,8 +1166,14 @@
       idx.push(vi, vi + 2, vi + 1, vi + 1, vi + 2, vi + 3);
       vi += 4;
     }
+    function paint(a, b, c, d, color) {
+      for (const p of [a, b, c, d]) { ppos.push(p.x, p.y, p.z); pcol.push(color.r, color.g, color.b); }
+      pidx.push(pvi, pvi + 2, pvi + 1, pvi + 1, pvi + 2, pvi + 3);
+      pvi += 4;
+    }
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
     const city = theme.street && theme.street !== 'park';
+    const zebra = new Set(); for (const z of zebraSamples(track, theme)) for (let k = 0; k < 4; k++) zebra.add(z + k);
     for (let i = 0; i < n; i++) {
       const a = S[i], b = S[(i + 1) % n];
       if (a.kind === 'gap') continue;
@@ -1157,9 +1184,15 @@
       const h = 0.1, v0 = i / 2.5, v1 = (i + 1) / 2.5;
       quad(off(a, -ROAD_W, h), off(a, ROAD_W, h), off(b, -ROAD_W, h), off(b, ROAD_W, h), color, 0, 5, v0, v1);
       const curb = Math.floor(i / 4) % 2 === 0 ? cRed : cWhite;
-      quad(off(a, -ROAD_W - 1.1, h + 0.05), off(a, -ROAD_W, h + 0.05), off(b, -ROAD_W - 1.1, h + 0.05), off(b, -ROAD_W, h + 0.05), curb, 0, 0.1, v0, v1);
-      quad(off(a, ROAD_W, h + 0.05), off(a, ROAD_W + 1.1, h + 0.05), off(b, ROAD_W, h + 0.05), off(b, ROAD_W + 1.1, h + 0.05), curb, 0, 0.1, v0, v1);
-      if (Math.floor(i / 4) % 2 === 0 && !nearStart) quad(off(a, -0.18, h + 0.04), off(a, 0.18, h + 0.04), off(b, -0.18, h + 0.04), off(b, 0.18, h + 0.04), cLine, 0, 0.05, v0, v1);
+      const ch = h + 0.06;
+      paint(off(a, -ROAD_W - 1.1, ch), off(a, -ROAD_W, ch), off(b, -ROAD_W - 1.1, ch), off(b, -ROAD_W, ch), curb);
+      paint(off(a, ROAD_W, ch), off(a, ROAD_W + 1.1, ch), off(b, ROAD_W, ch), off(b, ROAD_W + 1.1, ch), curb);
+      // the curb stone's vertical face towards the road, so the edge reads as a step, not as paint
+      paint(off(a, -ROAD_W, h), off(a, -ROAD_W, ch), off(b, -ROAD_W, h), off(b, -ROAD_W, ch), curb);
+      paint(off(a, ROAD_W, ch), off(a, ROAD_W, h), off(b, ROAD_W, ch), off(b, ROAD_W, h), curb);
+      if (zebra.has(i)) { // Zebrastreifen: white bars across the road at the crossings of city straights
+        for (let k = -5; k <= 5; k++) paint(off(a, k * 1.05 - 0.28, h + 0.04), off(a, k * 1.05 + 0.28, h + 0.04), off(b, k * 1.05 - 0.28, h + 0.04), off(b, k * 1.05 + 0.28, h + 0.04), cWhite);
+      } else if (Math.floor(i / 4) % 2 === 0 && !nearStart) paint(off(a, -0.18, h + 0.04), off(a, 0.18, h + 0.04), off(b, -0.18, h + 0.04), off(b, 0.18, h + 0.04), cLine);
       // sidewalks in the city
       const flat = (a.kind === 'straight' || a.kind === 'curve' || a.kind === 'hill' || a.kind === 'dip' || a.kind === 'tunnel') && a.p.y > -0.02 && b.p.y > -0.02;
       if (city && flat) {
@@ -1185,6 +1218,11 @@
     const group = new THREE.Group();
     const roadMesh = new THREE.Mesh(g, m); roadMesh.receiveShadow = true;
     group.add(roadMesh);
+    { const pg = new THREE.BufferGeometry();
+      pg.setAttribute('position', new THREE.Float32BufferAttribute(ppos, 3)); pg.setAttribute('color', new THREE.Float32BufferAttribute(pcol, 3)); pg.setIndex(pidx);
+      pg.computeVertexNormals(); { const nrm = pg.attributes.normal; const s0 = nrm.getY(0) < 0 ? -1 : 1; for (let k = 0; k < nrm.count; k++) nrm.setXYZ(k, 0, s0, 0); nrm.needsUpdate = true; }
+      const pm = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -3, roughness: theme.wet ? 0.4 : 0.8, metalness: theme.wet ? 0.2 : 0.02 });
+      const paintMesh = new THREE.Mesh(pg, pm); paintMesh.receiveShadow = true; paintMesh.userData.kind = 'paint'; group.add(paintMesh); }
     group.add(buildRoadDetails(track, theme));
     return group;
   }
@@ -1320,7 +1358,7 @@
     }
     const SPANS = /^prop:(jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
     function clearTheStreets(group) {
-      const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.0; const lats = [-m, -m / 2, 0, m / 2, m];
+      const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.6; const lats = [-m, -m / 2, 0, m / 2, m];
       const footprint = (obj) => {
         obj.updateMatrixWorld(true); lb.makeEmpty(); inv.copy(obj.matrixWorld).invert();
         obj.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox); tm.multiplyMatrices(inv, o.matrixWorld); tb.applyMatrix4(tm); lb.union(tb); });
@@ -1454,6 +1492,24 @@
         }
       }
     }
+    if (street !== 'park') { let sPos = 30, k = 0; while (sPos < L - 20) { const i = Math.floor(sPos / track.ds) % n; const s = S[i]; const side = k % 2 ? 1 : -1; k++; sPos += 42 + rnd() * 12;
+      if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || s.kind === 'tunnel' || Math.abs(s.p.y) > 0.5) continue;
+      const bl = Math.hypot(s.B.x, s.B.z) || 1; const x = s.p.x + s.B.x / bl * side * (ROAD_W + 2.3), z = s.p.z + s.B.z / bl * side * (ROAD_W + 2.3);
+      if (!trackFree(x, z, 3, i)) continue; const b = P.awb(); b.position.set(x, GROUND_Y, z); b.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(b); } }
+    // traffic lights, a waiting Kölner and the blue crossing sign at every Zebrastreifen (they also mark the keep-out for houses)
+    for (const zi of zebraSamples(track, theme)) {
+      for (const side of [-1, 1]) {
+        const s = S[zi - 3]; const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
+        const lat = ROAD_W + 2.0; const x = s.p.x + bx / bl * side * lat, z = s.p.z + bz / bl * side * lat;
+        if (!trackFree(x, z, 4, zi)) continue;
+        const a = P.ampel(); a.position.set(x, GROUND_Y, z); a.lookAt(s.p.x - s.T.x * 9, GROUND_Y, s.p.z - s.T.z * 9); a.userData.kind = 'ampel'; g.add(a);
+        const sg = S[zi + 5]; const sx = sg.p.x + sg.B.x / bl * side * (ROAD_W + 2.4), sz = sg.p.z + sg.B.z / bl * side * (ROAD_W + 2.4);
+        const sign = new THREE.Group(); sign.add(cyl(0.05, 0.06, 2.6, 0x777777, 0, 1.3, 0, 6)); const face = textPlane('ZEBRA', '#ffffff', '#1c3f95', 0.7, 0.7, false, { border: '#ffffff', sizeK: 0.45 }); face.position.set(0, 2.5, 0); sign.add(face);
+        sign.position.set(sx, GROUND_Y, sz); sign.lookAt(sg.p.x - sg.T.x * 9, GROUND_Y, sg.p.z - sg.T.z * 9); sign.userData.kind = 'zebrasign'; g.add(sign);
+        if (rnd() < 0.7) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const ps = S[zi + 1]; f.position.set(ps.p.x + ps.B.x / bl * side * (ROAD_W + 2.2), GROUND_Y, ps.p.z + ps.B.z / bl * side * (ROAD_W + 2.2)); f.lookAt(ps.p.x, GROUND_Y, ps.p.z); g.add(f); }
+        keepOut.push({ x, z, r: 3 });
+      }
+    }
     if (street !== 'park') {
       for (const side of [-1, 1]) {
         let sPos = rnd() * 8, houses = 0, sinceGap = 0;
@@ -1498,8 +1554,8 @@
         const s = S[i]; const flat = (s.kind === 'straight' || s.kind === 'curve') && Math.abs(s.p.y) < 0.5;
         if (!flat) { last = null; continue; }
         const side = (i / 30) % 2 ? 1 : -1; const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
-        const px = s.p.x + bx / bl * side * (ROAD_W + 1.2), pz = s.p.z + bz / bl * side * (ROAD_W + 1.2);
-        const pole = new THREE.Group(); pole.add(cyl(0.09, 0.12, 7.2, 0x4a4a50, 0, 3.6, 0, 8)); pole.add(box(0.06, 0.06, ROAD_W + 1.4, 0x4a4a50, 0, 6.9, -(ROAD_W + 1.4) / 2)); pole.position.set(px, GROUND_Y, pz); pole.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(pole);
+        const px = s.p.x + bx / bl * side * (ROAD_W + 1.9), pz = s.p.z + bz / bl * side * (ROAD_W + 1.9);
+        const pole = new THREE.Group(); pole.add(cyl(0.09, 0.12, 7.2, 0x4a4a50, 0, 3.6, 0, 8)); pole.add(box(0.06, 0.06, ROAD_W + 2.1, 0x4a4a50, 0, 6.9, -(ROAD_W + 2.1) / 2)); pole.position.set(px, GROUND_Y, pz); pole.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(pole);
         const wireX = s.p.x + bx / bl * side * 1.8, wireZ = s.p.z + bz / bl * side * 1.8;
         if (last && Math.hypot(wireX - last.x, wireZ - last.z) < 40) { const wire = box(0.04, 0.04, Math.hypot(wireX - last.x, wireZ - last.z), 0x2a2a2e, 0, 0, 0); wire.position.set((wireX + last.x) / 2, GROUND_Y + 6.6, (wireZ + last.z) / 2); wire.lookAt(last.x, GROUND_Y + 6.6, last.z); g.add(wire); }
         last = { x: wireX, z: wireZ };

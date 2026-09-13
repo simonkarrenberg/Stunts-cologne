@@ -515,6 +515,7 @@
     if (kripo) endKripo('finish');
     if (wette && !wette.done) { wette.done = true; wette.won = order.indexOf(wette.rival.r) > order.indexOf(player); if (wette.won) addDeckel(wette.n * 2); else deckel = Math.max(0, deckel - wette.n); }
     const total = deckelTotal(deckel); const rank = deckelRank(total);
+    try { const hs = parseInt(localStorage.getItem('stuntskoelle.hiscore') || '0') || 0; if (deckel > hs) localStorage.setItem('stuntskoelle.hiscore', String(deckel)); } catch (e) { /* ignore */ }
     const headline = expressHeadline(place, won, record, order); lastHeadline = headline; lastPlace = place;
     if (cup.on) { order.forEach((r, i) => { cup.pts[r.name] = (cup.pts[r.name] || 0) + (CUP_PTS[i] || 0); }); cup.i++; try { localStorage.setItem('stuntskoelle.cup', JSON.stringify(cup)); } catch (e) { /* ignore */ } }
     setTimeout(() => {
@@ -762,6 +763,7 @@
     $('#trackDesc').textContent = t.desc || 'Eigene Streck aus dem Klüngel-Baukasten.';
     $('#langerQuote').textContent = '„' + pick(tuenn.intro) + '“';
     $('#slogan').textContent = tuenn.slogans[Math.floor(Date.now() / 86400000) % tuenn.slogans.length];
+    try { const pad = (v) => String(Math.max(0, v | 0)).padStart(6, '0'); const tot0 = parseInt(localStorage.getItem('stuntskoelle.deckel') || '0') || 0; const hs = parseInt(localStorage.getItem('stuntskoelle.hiscore') || '0') || 0; if ($('#hs1')) { $('#hs1').textContent = pad(tot0 * 100); $('#hsTop').textContent = pad(Math.max(hs * 100, 471100)); $('#hsCredit').textContent = String(1 + Math.min(98, Math.floor(tot0 / 11))).padStart(2, '0'); } } catch (e) { /* ignore */ }
     try { const tot = parseInt(localStorage.getItem('stuntskoelle.deckel') || '0') || 0; const wins = parseInt(localStorage.getItem('stuntskoelle.cupwins') || '0') || 0; const q = document.querySelector('.bannerQuote .q'); if (q && tot > 0) q.innerHTML = `DING DECKEL: ${tot} STRICHE<br>${deckelRank(tot)}${wins ? ' · ' + wins + '× CUP' : ''}<span>– der Köbes</span>`; } catch (e) { /* ignore */ }
     $('#tipp').textContent = pick(tuenn.tips);
     try { localStorage.setItem('stuntskoelle.sel', JSON.stringify(sel)); } catch (e) { /* ignore */ }

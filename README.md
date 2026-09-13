@@ -14,7 +14,11 @@ Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
 Das Startmenü ist eine Arcade-Kiste der 80er: Marquee mit Lauflicht, Neonüberschriften, genietete
 Pixel-Rahmen, Pixel-Icons auf allen Knöpfen, zwei Pixel-Joysticks um den roten Start-Knopf und eine
-blinkende Münze für „Insert Coin“. Alle Knöpfe und Tasten sind dieselben wie vorher.
+blinkende Münze für „Insert Coin“. Wie am Automaten gibt es oben die Zeile „1UP · HI-SCORE · CREDIT“
+(gefüttert aus dem Bierdeckel), ein blinkendes „PRESS START“ und unten das Kleingedruckte von
+Klüngel Amusements. Fahrer, Wagen und Strecken haben schwarze Namensschilder, auf denen jeder Name
+vollständig steht (lange Namen brechen um, nichts wird abgeschnitten) – auch auf dem Handy, wo die
+Karten in drei Spalten größer sind. Alle Knöpfe und Tasten sind dieselben wie vorher.
 
 ## Spielen (auch auf dem Handy)
 
@@ -129,6 +133,14 @@ Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loo
 sind natürlich Stunts, keine Kölner Verkehrsplanung. Fünf der zehn Strecken spielen abends,
 nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
+Straßen sehen aus wie in Köln: rot-weiße Bordsteine auf voller Länge (als eigenes, ungetextes
+Mesh, damit das Weiß auf Kopfsteinpflaster nicht im Pflaster verschwindet), weiße gestrichelte
+Mittellinie statt der amerikanischen gelben, alle 170 m ein Zebrastreifen mit Ampeln, blauem
+Schild und wartendem Kölner, orange AWB-Abfalleimer auf den Bürgersteigen, KVB-Oberleitungsmasten
+hinter dem Bordstein, echte Ladenschilder (Früh, Gaffel, Päffgen, Merzenich, 4711, KVB, Sparkasse
+KölnBonn). Nichts steht mehr auf dem Bordstein: die Freiräum-Prüfung schiebt jede Kulisse bis
+hinter den Bordstein.
+
 Tunnel sind echte Röhren mit Backsteingewölbe, Lampen und Portalen. Alle Stadtstrecken haben
 mindestens einen Looping oder Sprung im Stunts-Stil. Dazu kommen wie in
 Stunts 4D **Korkenzieher** (die Straße dreht sich einmal um die eigene Achse; Chicago am Rhein an
@@ -206,7 +218,7 @@ und der Tipp des Tages vom Türsteher.
   Typ (Doppelrund, Rechteck, Benz-Vertikal, Klappscheinwerfer), drehende Räder mit Lenkeinschlag,
   Kölner Kennzeichen. Geparkte Autos, Taxis (hellelfenbein mit Dachschild) und der grün-weiße
   Peterwagen der 70er nutzen eine leichte Variante derselben Bauweise.
-- `js/world.js` — Straßenmesh (Kopfsteinpflaster in der Altstadt, Kerbs, Bürgersteige, Geländer,
+- `js/world.js` — Straßenmesh (Kopfsteinpflaster in der Altstadt, rot-weiße Bordsteine, Zebrastreifen, Bürgersteige, Geländer,
   Tunnelringe, Looping-Stützen) und das Köln: Wahrzeichen, Altstadt-Giebelhäuser, geschlossene
   Blockrandbebauung entlang jeder Straße (Gründerzeit-Stuck, 50er-Jahre-Wiederaufbau, Ehrenfelder
   Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVB-Bahnen in Weiß-Rot mit

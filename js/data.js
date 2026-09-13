@@ -65,7 +65,7 @@
       desc: 'Im Morgengrauen vom Dom zum Rhein und wieder zurück. Über die Hohenzollernbrücke nach Deutz, mit Rheinsprung und dickem Po. Tauben inklusive.',
       theme: { sky: 0x5a78b8, fog: 0xffc4a0, ground: 0xa99b86, sun: 0xffd4a8, road: [0x6a6a70, 0x5c5c62], night: false, dawn: true, water: 0x5a7fb0, street: 'altstadt',
         streets: ['HOHE STRASSE', 'DOMKLOSTER', 'GLOCKENGASSE', 'OTTOPLATZ', 'AM HOF', 'TRANKGASSE', 'UNTER FETTENHENNEN', 'FRANKENWERFT', 'DEUTZER FREIHEIT', 'ALTER MARKT', 'HEUMARKT'],
-        shops: ['BRAUHAUS', 'HALVE HAHN', 'RIEVKOOCHE', 'EAU DE COLOGNE', 'KÖLSCH', 'FC FANSHOP', 'DOM-SOUVENIRS'],
+        shops: ['BRAUHAUS', 'HALVE HAHN', 'RIEVKOOCHE', 'EAU DE COLOGNE', 'KÖLSCH', 'FC FANSHOP', 'DOM-SOUVENIRS', 'BÄCKEREI MERZENICH', '4711', 'KVB KUNDENCENTER'],
         far: [{ type: 'colonius', angle: 200, dist: 260 }, { type: 'triangle', angle: 20, dist: 80 }, { type: 'archbridge', angle: 300, dist: 60 }, { type: 'flatbridge', angle: 330, dist: 80 }] },
       // seg: 0 start straight, 1 L, 2 str, 3 hill, 4 str, 5 L, 6 str, 7 R, 8 str, 9 L, 10 bridge, 11 L, 12 str, 13 L, 14 str
       segments: [
@@ -297,7 +297,7 @@
       desc: 'Zwischen Bahnbögen, Kiosk und Kassettenladen. Enge Haken durch die Venloer Straße, Odonien, Colonius. Rau, schnell, ehrlich.',
       theme: { sky: 0x1c2a5a, fog: 0xd88a68, ground: 0x4a4a52, sun: 0xffb080, road: [0x3e3e46, 0x35353c], night: true, dusk: true, water: 0x243a60, street: 'gruenderzeit', catenary: true,
         streets: ['VENLOER STRASSE', 'LICHTSTRASSE', 'HORNSTRASSE', 'NEPTUNPLATZ', 'KÖRNERSTRASSE', 'SUBBELRATHER STR.', 'VOGELSANGER STR.', 'EHRENFELDGÜRTEL', 'HELIOSSTRASSE', 'LEYENDECKERSTR.'],
-        shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE'],
+        shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE', 'BÄCKEREI MERZENICH', 'REWE'],
         far: [{ type: 'dom', angle: 30, dist: 200 }, { type: 'triangle', angle: 15, dist: 300 }] },
       // 0 str,1 R,2 str,3 L,4 str,5 L,6 str,7 R,8 hill,9 R,10 str,11 R,12 str,13 L,14 str,15 R,16 tunnel,17 R,18 str,19 R,20 str
       segments: [
@@ -366,7 +366,7 @@
       desc: 'Die Nachttour vum Türsteher als Rennen, mit Korkenzieher an St. Gereon und Sprung über die Büdchen: vom Residenz-Kino über die Friesenstraße am Klein Köln vorbei, Sartory, Lovers Club, Hansaring. Nacht, Neon, nasse Straßen, Zocker, Türsteher, Kripo. 1968. Nix für Sonntagsfahrer.',
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true,
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'MEDIAPARK'],
-        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO'],
+        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO', 'SPARKASSE KÖLNBONN', 'KVB'],
         posters: ['BOXKELLER', 'DÄ LANGE LIVE', 'KÖLSCH-NACHT', 'VICE KÖLLE', 'FC HEIMSPIEL'],
         far: [{ type: 'dom', angle: 20, dist: 160 }, { type: 'colonius', angle: 200, dist: 120 }, { type: 'triangle', angle: 40, dist: 200 }] },
       // 0 str,1 L,2 str,3 loop,4 str,5 L,6 str,7 jump,8 str,9 R,10 str,11 L,12 loop,13 str,14 L,15 tunnel,16 L,17 str,18 R,19 str,20 L,21 str
@@ -663,7 +663,7 @@
       desc: 'Elfter im Elften, 11 Uhr 11, Zülpicher Straße. Studenten, Kostüme, Kölsch an jeder Ecke. Sprung über die Kneipen im Kwartier Latäng, Looping an der Mensa, Unterführung, Aachener Weiher. Wer fünf Kölsch in einer Runde nimmt, fährt Schlangenlinie. Wie alle anderen auch.',
       theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xa9a49c, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
-        shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP'],
+        shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP', 'BÄCKEREI MERZENICH', 'KIOSK · KÖLSCH 1,50'],
         far: [{ type: 'dom', angle: 40, dist: 180 }, { type: 'colonius', angle: 320, dist: 160 }],
         intro: ['Elfter im Elften, elf Uhr elf. Die Studente han seit sechs Uhr Kölsch im Blut un noch keine Abschluss.', 'Zülpicher Stroß. Hee bruchs de kein Ausweis, nur e Kostüm. Un e Auto, dat jeradeaus fährt.', 'Kwartier Latäng. Latein kann hee keiner, ävver alle kenne dat Wort Kölsch.'] },
       // 0 str,1 L,2 str,3 jump (Kneipen),4 str,5 L,6 hill,7 loop (Mensa),8 str,9 L,10 str (Aachener Weiher),11 R,12 str,13 L,14 dip,15 str,16 L,17 str
