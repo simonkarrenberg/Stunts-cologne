@@ -65,7 +65,7 @@ Im Spiel: Die Strecke **Chicago am Rhein** führt als Nachttour über die Ringe 
 Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** der Türsteher
 eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Du kütts hee nit rein!“,
 kommentiert das Rennen, und mit dem **Klüngel-Telefon** (K) ruft man einmal pro Runde seine
-Türsteher, die das Feld sechs Sekunden aufhalten. Dazu EXPRESS-Schlagzeilen, das Kölsche
+Türsteher, die das Feld sechs Sekunden aufhalten. Dazu „Dä Schnelle“-Schlagzeilen, das Kölsche
 Grundgesetz, Boxnacht am Ring, Spiel-Club, Kripo Köln im 60er-Jahre-Streifenwagen.
 
 Die Charaktere sind gerundete Figuren mit Hüten, Bärten, Schals und Kölschgläsern, die
@@ -87,7 +87,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Kripo dreht ab. Sonst gibt sie nach einer Weile auf. Oder sie kriegt dich.
 - **Zocker-Wette:** Kurz nach dem Start wettet der Türsteher ein paar Kölsch, dass du vor einem bestimmten
   Rivalen ins Ziel kommst. Gewonnen: doppelte Striche. Verloren: du schuldest ihm Kölsch.
-- **EXPRESS-Schlagzeile:** Das Rennergebnis bekommt eine Schlagzeile über dich – Rekord, Kripo,
+- **„Dä Schnelle“-Schlagzeile:** Kölns schnellstes Blatt (frei erfunden, wie alles hier) druckt eine Schlagzeile über dich – Rekord, Kripo,
   Rheinbad, Knöllchen-Rekord oder Blechschmied-Umsatz.
 - **Kölsch-Kurve:** Fünf Kölsch in einer Runde und das Auto fährt sieben Sekunden Schlangenlinie.
 - **Klüngel-Auftrag:** Zwei-, dreimal pro Rennen braucht der Türsteher einen Kurier: „Dä Umschlag
@@ -96,7 +96,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Meter weiter, die Uhr läuft in der HUD-Zeile AUFTRAG. Heil und pünktlich abgeliefert: fünf Striche
   und voller Turbo. Zu spät oder mit Crash: zwei Striche weg und ein Spruch, den man nicht vergisst.
   Auf dem Domschatz-Raub gibt es keine Aufträge – da hat man schon genug im Kofferraum.
-- **EXPRESS-Titelseite:** Im Ergebnis liegt die Zeitung von morgen: Schlagzeile, Foto vom Zieleinlauf,
+- **„Dä Schnelle“-Titelseite:** Im Ergebnis liegt die Zeitung von morgen: Schlagzeile, Foto vom Zieleinlauf,
   Polizeibericht (Platz, Zeit, Knöllchen, Kölsch, Klüngel-Aufträge, Kripo), Wetter und ein Zitat des
   Türstehers („Ich hab nix jesehe.“). „TITELSEITE TEILEN“ schickt sie als Bild – per Teilen-Dialog auf
   dem Handy, sonst als Download.
@@ -109,7 +109,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 - **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.
 - **Sprüche:** Rivalen lästern, wenn du crashst; der Türsteher begrüßt dich je nach Uhrzeit; im Menü steht
   dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
-- **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und EXPRESS-Schlagzeile samt Link
+- **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und „Dä Schnelle“-Schlagzeile samt Link
   per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
 - **Kölsch-Cup:** Alle zehn Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
@@ -205,13 +205,19 @@ bleibt bei acht Wagen.
 Strecke sofort in seiner Liste.
 
 **Stimme:** Der Türsteher und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
-des Browsers (deutsche Stimme, tief für den Türsteher, hoch für Heinzel). 🗣 STIMME im Menü
-schaltet sie aus.
+des Browsers (tief für den Türsteher, hoch für Heinzel). Browser haben keine kölsche Stimme, also
+wird nachgeholfen: von den deutschen Stimmen des Geräts nimmt das Spiel zuerst eine tiefe
+männliche, und jeder Text geht vor dem Sprechen durch eine kölsche Lautschrift („isch“ statt
+„ich“, „-isch“ statt „-ig“, dat/wat/et, „je-“ statt „ge-“, eine kleine Pause nach „Jung“) und wird
+etwas langsamer gesprochen, weil Kölsch gesungen wird, nicht gelesen. STIMME im Menü schaltet sie
+aus, SPRECHER wechselt durch alle deutschen Stimmen des Geräts (mit Hörprobe); die Wahl bleibt
+gespeichert. Welche Stimme am kölschesten klingt, hängt vom Gerät ab – auf dem iPhone lohnt es sich,
+unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte eine zusätzliche deutsche Stimme zu laden.
 
 **Chicago am Rhein mit Miami-Vice-Touch:** Neonkanten an den Dächern, Palmen und der
 Rheinstrand km 689 am Rheinauhafen, Speedboote, Riesenrad, Kölner Lichter über dem Rhein,
 der Kölsch-Zeppelin, Polizei Köln mit Blaulicht. Dazu **Blitzer** (ab 120 km/h gibt es ein
-Knöllchen, Klüngel Tom regelt dat), ab und zu eine EXPRESS-Schlagzeile oder ein Paragraph
+Knöllchen, Klüngel Tom regelt dat), ab und zu eine „Dä Schnelle“-Schlagzeile oder ein Paragraph
 aus dem Kölschen Grundgesetz, zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus)
 und der Tipp des Tages vom Türsteher.
 

@@ -215,7 +215,7 @@
   const INDUSTRIAL = [0x8a4a3a, 0x9a5a48, 0x7a4636, 0xa06a50];
 
   /** generic building: style + wall color + roof type ('flat' | 'gable' | 'stepped' | 'hip') */
-  const SHOPS = ['APOTHEKE', 'CAFÉ', 'DÖNER', 'BÄCKEREI', 'FRISEUR', 'BLUMEN', 'PIZZERIA', 'OPTIK', 'RIEVKOOCHE', 'HALVE HAHN', 'KAMELLE', 'EAU DE COLOGNE', 'FC FANSHOP', 'METZGEREI', 'BUCHLADEN', 'EISDIELE', 'REISEBÜRO', 'SCHNEIDEREI', 'WEINHANDLUNG', 'FLÖNZ & CO', 'TRINKHALLE', 'IMBISS', 'EXPRESS', 'STADT-ANZEIGER', 'LOTTO · TOTO', 'SPIELHALLE', 'REWE', 'DROGERIE', 'SCHUHE', 'TABAK', 'BLAU-GOLD', 'ROTE FUNKEN', 'KÖLSCHE KLÜNGEL GMBH', 'KIOSK', 'BÜDCHEN'];
+  const SHOPS = ['APOTHEKE', 'CAFÉ', 'DÖNER', 'BÄCKEREI', 'FRISEUR', 'BLUMEN', 'PIZZERIA', 'OPTIK', 'RIEVKOOCHE', 'HALVE HAHN', 'KAMELLE', 'EAU DE COLOGNE', 'FC FANSHOP', 'METZGEREI', 'BUCHLADEN', 'EISDIELE', 'REISEBÜRO', 'SCHNEIDEREI', 'WEINHANDLUNG', 'FLÖNZ & CO', 'TRINKHALLE', 'IMBISS', 'ZEITUNGE', 'STADT-ANZEIGER', 'LOTTO · TOTO', 'SPIELHALLE', 'REWE', 'DROGERIE', 'SCHUHE', 'TABAK', 'BLAU-GOLD', 'ROTE FUNKEN', 'KÖLSCHE KLÜNGEL GMBH', 'KIOSK', 'BÜDCHEN'];
   function building(w, h, d, style, wall, roof, seed, opts) {
     opts = opts || {};
     const g = new THREE.Group();
@@ -1038,9 +1038,9 @@
     for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.4; const z = human(Object.assign({ h: 1.7, suit: true, lite: true, smile: -0.5 }, looks[k])); z.position.set(Math.cos(a) * 1.9, 0, Math.sin(a) * 1.9); z.lookAt(0, 0, 0); g.add(z); }
     g.add(box(5.5, 0.08, 5.5, 0x4a3a30, 0, 0.04, 0));
     return g; };
-  P.expresskiosk = (o) => { // EXPRESS newspaper stand with today's Chicago-am-Rhein headline
+  P.expresskiosk = (o) => { // DÄ SCHNELLE newspaper stand (the Boulevardblatt of Chicago am Rhein) with today's Chicago-am-Rhein headline
     const g = new THREE.Group(); g.add(box(3.2, 2.6, 2.2, 0xc1121f, 0, 1.3, 0)); g.add(box(3.4, 0.2, 2.4, 0xffffff, 0, 2.7, 0));
-    const s = textPlane('EXPRESS', '#ffffff', '#c1121f', 3, 0.7, THEME.night, { border: '#fff' }); s.position.set(0, 2.2, 1.12); g.add(s);
+    const s = textPlane('DÄ SCHNELLE', '#ffffff', '#c1121f', 3, 0.7, THEME.night, { border: '#fff', sizeK: 0.7 }); s.position.set(0, 2.2, 1.12); g.add(s);
     const h = textPlane((o && o.text) || 'CHICAGO AM RHEIN: 50.000 STRAFTATEN!', '#111', '#f4f0e0', 2.8, 1.0, false, { sizeK: 0.3 }); h.position.set(0, 1.2, 1.12); g.add(h);
     addm(g, human({ shirt: 0x8a5a2a, hat: 'cap', hatColor: 0x555555 })).position.set(1.9, 0, 1.4);
     return g; };

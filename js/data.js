@@ -398,7 +398,7 @@
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'residenz', seg: 0, u: 0.12, side: -1, dist: 24, keep: 40, story: 'Hee fängt ming Tour an: Residenz-Kino, Christophstraße. 1961 stond ich zum erste Mol an ner Tür. Un ich stonn immer noch.' },
         { type: 'neon', seg: 0, u: 0.1, side: 1, dist: 14, text: 'CHICAGO AM RHEIN', color: '#ff2d95' },
-        { type: 'expresskiosk', seg: 0, u: 0.22, side: 1, dist: 11, text: 'EXPRESS: KÖLN – CHICAGO AM RHEIN!' },
+        { type: 'expresskiosk', seg: 0, u: 0.22, side: 1, dist: 11, text: 'DÄ SCHNELLE: KÖLN – CHICAGO AM RHEIN!' },
         { type: 'kleinkoeln', seg: 4, u: 0.2, side: -1, dist: 24, keep: 40, story: 'Links: Klein Köln, Friesenstraße. Seit 1926 Nachtlizenz. Hee han sich de Boxer jewoge. Un ich mich och, nach dem dritten Kölsch.' },
         { type: 'boxring', seg: 6, u: 0.5, side: -1, dist: 16, keep: 20 },
         { type: 'platz', seg: 4, u: 0.8, side: -1, dist: 21, seed: 7, keep: 16 },
@@ -432,7 +432,7 @@
         { type: 'neon', seg: 13, u: 0.7, side: 1, dist: 13, text: 'FLAMINGO BAR', color: '#ff2d95', small: true },
         { type: 'koelsch', seg: 13, u: 0.5, side: 1, dist: 20 },
         { type: 'eigelsteintor', seg: 14, u: 0.5, side: -1, dist: 28, keep: 40, story: 'Eigelsteintor. Hee hört de Ring op un de Eigelstein fängt an. Da wor et noch e bessje ehrlicher. Also weniger.' },
-        { type: 'expresskiosk', seg: 17, u: 0.2, side: -1, dist: 11, text: 'EXPRESS: DOMSCHATZ JEKLAUT – WER WOR ET?' },
+        { type: 'expresskiosk', seg: 17, u: 0.2, side: -1, dist: 11, text: 'DÄ SCHNELLE: DOMSCHATZ JEKLAUT – WER WOR ET?' },
         { type: 'neon', seg: 17, u: 0.3, side: 1, dist: 14, text: 'MAN KENNT SICH · MAN HILFT SICH', color: '#ff2d95' },
         { type: 'neon', seg: 17, u: 0.7, side: -1, dist: 13, text: 'DISCO', color: '#c04dff', light: false },
         { type: 'buedchen', seg: 17, u: 0.85, side: 1, dist: 11 },
@@ -625,7 +625,7 @@
         { type: 'dom', seg: 0, u: 0.1, side: -1, dist: 80, keep: 120, story: 'Domschatzkammer. 1975 sin se durch et Fenster rin un met dem Schatz rus. Ich hann de Leiter jehalde. Also fast.' },
         { type: 'kripo', seg: 0, u: 0.25, side: 1, dist: 10, story: 'Kripo Köln. Die han schon jewartet. Die wisse alles. Nur nit, wo de hinfährs.' },
         { type: 'polizei', seg: 0, u: 0.45, side: -1, dist: 10 },
-        { type: 'expresskiosk', seg: 0, u: 0.6, side: 1, dist: 11, text: 'EXPRESS: DOMSCHATZ JEKLAUT – 1975' },
+        { type: 'expresskiosk', seg: 0, u: 0.6, side: 1, dist: 11, text: 'DÄ SCHNELLE: DOMSCHATZ JEKLAUT – 1975' },
         { type: 'hbf', seg: 0, u: 0.85, side: 1, dist: 70, keep: 90, story: 'Hauptbahnhof. Über de Gleise, unter dem Bahnhof durch. Der Schaffner pfeift. Nit för dich.' },
         { type: 'rails', seg: 1, u: 0.55, side: 0, dist: 0 },
         { type: 'neon', seg: 2, u: 0.5, side: -1, dist: 14, text: 'PFANDLEIHE · OFFEN', color: '#ffd400' },
@@ -835,14 +835,14 @@
     door: ['Du kütts hee nit rein! ... Ausnahmsweise doch.', 'Krawatte? Nä. Kölsch? Jo. Dann kütts de rein.', 'Ich hab 40 Johr an der Tür jestande. Ich kenn dich. Rein.', 'Turnschuh, Jung? Ejal. Heut Nacht is Rennen.'],
     tuennsTelefon: ['Man kennt sich, man hilft sich. Ming Türsteher stonn jetz op der Streck. Die andere kumme hee nit durch.', 'Ich hab telefoniert. Sechs Sekunde Ruhe vor dä Jecke. Kost dich e Kölsch.', 'Klüngel, Jung. De Ampeln sin jrün, nur för dich.'],
     express: [
-      'EXPRESS: KÖLN – CHICAGO AM RHEIN! 50.000 Straftaten, e Drittel jeklärt.',
-      'EXPRESS: Domschatz jeklaut! Dä Lange hät e Alibi: Kölsch.',
-      'EXPRESS: Banküberfall am Dom! Geiseln, Kripo, Kamelle.',
-      'EXPRESS: Zocker verliert Villa in Marienburg. Jewinnt se an der Tür zurück.',
-      'EXPRESS: Boxnacht im Sartory – Sieger: dä Köbes met dem Kranz.',
-      'EXPRESS: Türsteher-Legende schreibt Kolumne. Redaktion hät Angst.',
-      'EXPRESS: FC Johnny – de Zuhälter han eijene Fußballclub. Abstieg wie der FC.',
-      'EXPRESS: Kölner Klüngel: Ampeln op der Ringe seit 1968 jrün för Bekannte.'
+      'DÄ SCHNELLE: KÖLN – CHICAGO AM RHEIN! 50.000 Straftaten, e Drittel jeklärt.',
+      'DÄ SCHNELLE: Domschatz jeklaut! Dä Lange hät e Alibi: Kölsch.',
+      'DÄ SCHNELLE: Banküberfall am Dom! Geiseln, Kripo, Kamelle.',
+      'DÄ SCHNELLE: Zocker verliert Villa in Marienburg. Jewinnt se an der Tür zurück.',
+      'DÄ SCHNELLE: Boxnacht im Sartory – Sieger: dä Köbes met dem Kranz.',
+      'DÄ SCHNELLE: Türsteher-Legende schreibt Kolumne. Redaktion hät Angst.',
+      'DÄ SCHNELLE: FC Johnny – de Zuhälter han eijene Fußballclub. Abstieg wie der FC.',
+      'DÄ SCHNELLE: Kölner Klüngel: Ampeln op der Ringe seit 1968 jrün för Bekannte.'
     ],
     grundgesetz: [
       'Artikel 1: Et es wie et es. Also fahr.',
@@ -975,19 +975,19 @@
       podium: ['Podium im Kölsch-Cup. Fast ne Legende. Dat Kölsch jeht op mich.'],
       loser: ['Cup vorbei. Nit jewonne, ävver jefahre. Dat is mieh als de meiste.', 'Der Cup is rum. Nächstes Johr, Jung. Ich stonn dann immer noch an der Tür.']
     },
-    // EXPRESS headlines about your own race
+    // DÄ SCHNELLE headlines about your own race
     express2: {
-      record: 'EXPRESS: NEUER STRECKENREKORD {track}! DÄ LANGE: „MING SCHULD.“',
-      win: 'EXPRESS: UNBEKANNTER RASER JEWINNT – KLÜNGEL TOM FORDERT UNTERSUCHUNGSAUSSCHUSS',
-      kripoCaught: 'EXPRESS: KRIPO STOPPT {car} OP DE RINGE – „ET WOR NOTWEHR“',
-      kripo: 'EXPRESS: VERFOLGUNGSJAGD OP DE RINGE – PETERWAGEN VERLIERT {car} IM VEEDEL',
-      knoellchen: 'EXPRESS: {n} KNÖLLCHEN IN DREI RUNDE – STADTKASSE SANIERT, OPER BEZAHLT',
-      water: 'EXPRESS: {car} BADET IM RHING – TAUCHER SUCHE NOCH DE DECKEL',
-      crashes: 'EXPRESS: BLECHSCHMIED MELDET REKORDUMSATZ – „MING SCHWAGER“, SAGT DÄ LANGE',
-      last: 'EXPRESS: LETZTER PLATZ – „ICH HANN MIR DE KÖLSCH-STÄND ANJEKUCK“',
-      koelsch: 'EXPRESS: {n} KÖLSCH IM VORBEIFAHRE – KÖBES: „DER HÄT NIT MOL JEBREMST“',
-      podium: 'EXPRESS: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
-      default: 'EXPRESS: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
+      record: 'DÄ SCHNELLE: NEUER STRECKENREKORD {track}! DÄ LANGE: „MING SCHULD.“',
+      win: 'DÄ SCHNELLE: UNBEKANNTER RASER JEWINNT – KLÜNGEL TOM FORDERT UNTERSUCHUNGSAUSSCHUSS',
+      kripoCaught: 'DÄ SCHNELLE: KRIPO STOPPT {car} OP DE RINGE – „ET WOR NOTWEHR“',
+      kripo: 'DÄ SCHNELLE: VERFOLGUNGSJAGD OP DE RINGE – PETERWAGEN VERLIERT {car} IM VEEDEL',
+      knoellchen: 'DÄ SCHNELLE: {n} KNÖLLCHEN IN DREI RUNDE – STADTKASSE SANIERT, OPER BEZAHLT',
+      water: 'DÄ SCHNELLE: {car} BADET IM RHING – TAUCHER SUCHE NOCH DE DECKEL',
+      crashes: 'DÄ SCHNELLE: BLECHSCHMIED MELDET REKORDUMSATZ – „MING SCHWAGER“, SAGT DÄ LANGE',
+      last: 'DÄ SCHNELLE: LETZTER PLATZ – „ICH HANN MIR DE KÖLSCH-STÄND ANJEKUCK“',
+      koelsch: 'DÄ SCHNELLE: {n} KÖLSCH IM VORBEIFAHRE – KÖBES: „DER HÄT NIT MOL JEBREMST“',
+      podium: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
+      default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
     },
     slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.']
   };

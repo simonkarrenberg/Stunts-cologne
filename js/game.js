@@ -31,7 +31,7 @@
   const cup = { on: false, i: 0, pts: {} }; const CUP_PTS = [12, 10, 8, 6, 5, 4, 3, 2, 1, 1];
   const KRIPO = { name: 'Kripo Kölle', emoji: '🚓' };
   let razzia = 0, razziaBlink = 0, promille = 0, koelschLap = 0, lastHeadline = '', lastPlace = 0;
-  // Klüngel-Auftrag (courier job for dä Lange), the EXPRESS front page photo and the arcade attract mode
+  // Klüngel-Auftrag (courier job for dä Lange), the DÄ SCHNELLE front page photo and the arcade attract mode
   let demoPrevCam = 0;
   let auftrag = null, auftragT = 40, auftragDone = 0, auftragFail = 0, shotWanted = false, lastShot = null, demo = false, demoT = 0, idleT = 0;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
@@ -39,7 +39,7 @@
   const rec = { frames: [], t: [], acc: 0, on: false };          // replay recorder
   const replay = { on: false, time: 0, speed: 1, paused: false, camIdx: -1, cams: [], mode: 0 };
   let ghost = null, ghostData = null;                              // best-lap ghost
-  const voice = { on: true, ready: false, de: null };
+  const voice = { on: true, ready: false, de: null, list: [] };
   const input = { gas: 0, brake: 0, steer: 0, turbo: 0 };
   const keys = {};
   let customTracks = [];
@@ -128,22 +128,47 @@
   // ---------------- voice: dä Lange & co. speak (Web Speech API) ----------------
   function voiceInit() {
     if (!('speechSynthesis' in window)) { voice.on = false; return; }
-    const pickVoice = () => { const vs = speechSynthesis.getVoices(); voice.de = vs.find((v) => /de[-_]DE/i.test(v.lang) && /Google|Anna|Markus|Petra|Helena|Yannick/i.test(v.name)) || vs.find((v) => /^de/i.test(v.lang)) || null; voice.ready = true; };
+    // every German voice the device has; a deep male one first (the doorman), the chosen one is remembered
+    const rank = (v) => (/de[-_]DE/i.test(v.lang) ? 0 : 5) + (/Markus|Yannick|Martin|Conrad|Stefan|Klaus|Hans|Michael|Viktor|Kevin|Reed|Male|Mann/i.test(v.name) ? 0 : 2) + (/Google|Microsoft|Siri|Premium|Enhanced|Natural/i.test(v.name) ? 0 : 1);
+    const pickVoice = () => {
+      voice.list = speechSynthesis.getVoices().filter((v) => /^de/i.test(v.lang)).sort((a, b) => rank(a) - rank(b));
+      let want = null; try { want = localStorage.getItem('stuntskoelle.voiceName'); } catch (e) { /* ignore */ }
+      voice.de = (want && voice.list.find((v) => v.name === want)) || voice.list[0] || null; voice.ready = true; updateVoiceUI();
+    };
     pickVoice(); speechSynthesis.addEventListener('voiceschanged', pickVoice);
     try { voice.on = localStorage.getItem('stuntskoelle.voice') !== 'off'; } catch (e) { /* ignore */ }
     updateVoiceUI();
   }
+  function nextVoice() { // cycle through the device's German voices; the sample line tells you how Kölsch it sounds
+    if (!voice.list || voice.list.length < 2) return;
+    const i = voice.list.indexOf(voice.de); voice.de = voice.list[(i + 1) % voice.list.length];
+    try { localStorage.setItem('stuntskoelle.voiceName', voice.de.name); } catch (e) { /* ignore */ }
+    updateVoiceUI(); if (!voice.on) toggleVoice(); else speak(pick(['Ich bin dä Lange. Kölle, Jung, dat is e Jeföhl.', 'Et hätt noch immer jot jejange. Sagt der Türsteher.', 'Drink doch ene met, un dann fahr.']), 0.55, 0.92, true);
+  }
+  // the browser's German voices speak Hochdeutsch; a phonetic pass pushes them towards the Veedel:
+  // isch statt ich, -isch statt -ig, dat/wat/et, a softer g, no clipped endings
+  function koelschify(t) {
+    const w = (from, to) => { t = t.replace(new RegExp('\\b' + from + '\\b', 'g'), to); t = t.replace(new RegExp('\\b' + from[0].toUpperCase() + from.slice(1) + '\\b', 'g'), to[0].toUpperCase() + to.slice(1)); };
+    w('ich', 'isch'); w('dich', 'disch'); w('mich', 'misch'); w('sich', 'sisch'); w('nicht', 'nit'); w('nichts', 'nix'); w('das', 'dat'); w('was', 'wat'); w('es', 'et'); w('ist', 'is'); w('auch', 'och'); w('gut', 'jot'); w('gibt', 'jibt'); w('geht', 'jeht'); w('gegen', 'jäjen'); w('ganz', 'janz'); w('jetzt', 'jetz'); w('etwas', 'jet'); w('kein', 'kei'); w('einen', 'ene'); w('einem', 'enem'); w('Straße', 'Strooß'); w('groß', 'jroß'); w('gerade', 'jrad');
+    t = t.replace(/lich\b/g, 'lisch').replace(/ig\b/g, 'isch').replace(/ige\b/g, 'ije').replace(/\bge([a-zäöü])/g, 'je$1').replace(/\bGe([a-zäöü])/g, 'Je$1');
+    t = t.replace(/Jung\b(?![,.!?])/g, 'Jung,'); // the tiny pause after "Jung" is how a doorman talks
+    return t.replace(/,,/g, ',');
+  }
   // menu buttons carry a pixel icon (canvas) in front of their text; the icon survives label changes
   function labelBtn(btn, text) { if (!btn) return; const name = btn.dataset.icon; btn.textContent = ''; if (name && SP.icon) { const c = document.createElement('canvas'); c.className = 'pxi'; SP.icon(name, c, 1); btn.appendChild(c); } btn.appendChild(document.createTextNode(text)); }
-  function updateVoiceUI() { labelBtn($('#voiceBtn'), ('speechSynthesis' in window) ? (voice.on ? 'STIMME: AN' : 'STIMME: AUS') : 'STIMME: –'); }
+  function updateVoiceUI() {
+    labelBtn($('#voiceBtn'), ('speechSynthesis' in window) ? (voice.on ? 'STIMME: AN' : 'STIMME: AUS') : 'STIMME: –');
+    const b = $('#voicePickBtn'); if (!b) return; const many = voice.list && voice.list.length > 1; b.hidden = !many;
+    if (many) labelBtn(b, 'SPRECHER: ' + voice.de.name.replace(/^(Microsoft|Google)\s*/i, '').replace(/\s*\(.*$/, '').slice(0, 14).toUpperCase());
+  }
   function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin dä Lange. Jetz hörs du mich och.', 0.55, 0.95, true); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
   function speak(text, pitch, rate, force) {
     if (!voice.on || !voice.ready || audio.muted) return;
     try {
       if (speechSynthesis.speaking && !force) return;
       if (force) speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text.replace(/[„“…]/g, '').replace(/–/g, ','));
-      u.lang = 'de-DE'; if (voice.de) u.voice = voice.de; u.pitch = pitch == null ? 0.6 : pitch; u.rate = rate == null ? 0.95 : rate; u.volume = 0.9;
+      const u = new SpeechSynthesisUtterance(koelschify(text.replace(/[„“…]/g, '').replace(/–/g, ',')));
+      u.lang = voice.de ? voice.de.lang : 'de-DE'; if (voice.de) u.voice = voice.de; u.pitch = pitch == null ? 0.6 : pitch; u.rate = (rate == null ? 0.95 : rate) * 0.94; u.volume = 0.9; // a shade slower: Kölsch is sung, not read
       speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
@@ -533,7 +558,7 @@
       $('#resBest').textContent = fmtTime(player.bestLap);
       $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 60} €, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} Kölsch) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: uff Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
-      $('#resExpress').textContent = headline.replace(/^EXPRESS:\s*/, ''); drawFrontPage(headline, place, order);
+      $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, place, order);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes(deckel)}</b> (${deckel} Striche) · GESAMT: <b>${total}</b> – <b>${rank}</b>` + (wette ? ` · WETTE: <b>${wette.won ? 'JEWONNE' : 'VERLORE'}</b> (${wette.n} Kölsch ${wette.won ? 'für dich' : 'für dä Lange'})` : '') + (kripoSeen ? ` · KRIPO: <b>${kripoCaught ? 'HÄT DICH JEKRIEGT' : 'ABJEHÄNGT'}</b>` : '');
       if (wette) { const wl = pick(wette.won ? tuenn.wette.won : tuenn.wette.lost).replace('{r}', wette.rival.name).replace('{n}', String(wette.n)); $('#resTuenn').textContent = wl; }
       renderCup(order);
@@ -611,7 +636,7 @@
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
         if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pick(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 80 + Math.random() * 40; const roll = Math.random(); if (roll < 0.5) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 80 + Math.random() * 40; const roll = Math.random(); if (roll < 0.5) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pick(tuenn.express).replace('DÄ SCHNELLE: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
         for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; if (storyCool > 0 || msgTimer > 0) continue; storyCool = 25; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 30); } }
         if (telefon.active > 0) telefon.active -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pick(tuenn.razziaEnd), 2500); } }
@@ -921,16 +946,16 @@
     }
   }
 
-  // ---------------- EXPRESS front page: the finish photo as tomorrow's paper ----------------
+  // ---------------- DÄ SCHNELLE front page: the finish photo as tomorrow's paper ----------------
   function drawFrontPage(headline, place, order) {
     const c = $('#resPaper'); if (!c) return; const W2 = 560, H2 = 400; c.width = W2; c.height = H2; const x = c.getContext('2d');
     x.fillStyle = '#f3ecd8'; x.fillRect(0, 0, W2, H2);
     x.fillStyle = '#e6dcc2'; for (let i = 0; i < 40; i++) x.fillRect(Math.random() * W2, Math.random() * H2, 2, 1);
     x.fillStyle = '#c1121f'; x.fillRect(14, 14, W2 - 28, 54);
-    x.fillStyle = '#fff'; x.font = 'bold 44px Impact, "Arial Narrow", sans-serif'; x.textBaseline = 'middle'; x.fillText('EXPRESS', 26, 42);
-    x.font = '11px "Courier New", monospace'; x.textAlign = 'right'; x.fillText('KÖLN · CHICAGO AM RHEIN · 1 DM', W2 - 24, 32); x.fillText(new Date().toLocaleDateString('de-DE'), W2 - 24, 52); x.textAlign = 'left';
+    x.fillStyle = '#fff'; x.font = 'bold 40px Impact, "Arial Narrow", sans-serif'; x.textBaseline = 'middle'; x.fillText('DÄ SCHNELLE', 26, 42);
+    x.font = '11px "Courier New", monospace'; x.textAlign = 'right'; x.fillText('KÖLNS SCHNELLSTES BLATT · 1 DM', W2 - 24, 32); x.fillText(new Date().toLocaleDateString('de-DE'), W2 - 24, 52); x.textAlign = 'left';
     x.fillStyle = '#111'; x.fillRect(14, 74, W2 - 28, 2);
-    const words = headline.replace(/^EXPRESS:\s*/, '').toUpperCase().split(' '); const lines = []; let cur = ''; x.font = 'bold 26px Impact, "Arial Narrow", sans-serif';
+    const words = headline.replace(/^DÄ SCHNELLE:\s*/, '').toUpperCase().split(' '); const lines = []; let cur = ''; x.font = 'bold 26px Impact, "Arial Narrow", sans-serif';
     for (const w of words) { const t = cur ? cur + ' ' + w : w; if (x.measureText(t).width > W2 - 40 && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur);
     let y = 100; for (const ln of lines.slice(0, 3)) { x.fillText(ln, 20, y); y += 30; }
     const py = y + 4, ph = H2 - py - 66, pw = 330;
@@ -943,14 +968,14 @@
     line(`Knöllchen: ${knoellchen}`); line(`Kölsch: ${koelsch}`); line(`Deckel: ${deckel} Striche`); if (auftragDone || auftragFail) line(`Klüngel: ${auftragDone} erledigt`); if (kripoSeen) line(`Kripo: ${kripoCaught ? 'erwischt' : 'abjehängt'}`); sy += 6;
     line('WETTER', true); line(theme.night ? 'Nacht, Neon, 11°' : theme.wet ? 'Regen, nasse Ringe' : theme.dawn ? 'Morgengrauen, 8°' : theme.dusk || theme.sunset ? 'Blaue Stunde, 17°' : 'Sonne, Kölsch kalt');
     x.fillStyle = '#c1121f'; x.font = 'bold 13px "Courier New", monospace'; x.fillText('DÄ LANGE: „' + pick(['Ich hab nix jesehe.', 'Kein Kommentar. Kölsch?', 'Dat wor Klüngel, kein Verbreche.', 'Man kennt sich.', 'Ich wor an der Tür. Die janze Zeit.']) + '“', 20, py + ph + 34);
-    x.fillStyle = '#111'; x.font = '9px "Courier New", monospace'; x.textAlign = 'center'; x.fillText('EXPRESS · Klüngel-Presse Köln-Ehrenfeld · Alle Angaben ohne Jewähr, alle Namen erfunden', W2 / 2, H2 - 14); x.textAlign = 'left';
+    x.fillStyle = '#111'; x.font = '9px "Courier New", monospace'; x.textAlign = 'center'; x.fillText('DÄ SCHNELLE · Klüngel-Presse Köln-Ehrenfeld · Alle Angaben ohne Jewähr, alle Namen un Blätter erfunden', W2 / 2, H2 - 14); x.textAlign = 'left';
   }
   function shareFrontPage() {
     const c = $('#resPaper'); if (!c) return; const btn = $('#paperBtn'); const done = (m) => { btn.textContent = m; setTimeout(() => { btn.textContent = '📰 TITELSEITE TEILEN'; }, 2500); };
     c.toBlob((blob) => {
-      if (!blob) return; const file = new File([blob], 'express-koelle4d.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'EXPRESS – KÖLLE 4D', text: lastHeadline }).then(() => done('JETEILT')).catch(() => {}); return; }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'express-koelle4d.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); done('JESPEICHERT');
+      if (!blob) return; const file = new File([blob], 'dae-schnelle-koelle4d.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file], title: 'DÄ SCHNELLE – KÖLLE 4D', text: lastHeadline }).then(() => done('JETEILT')).catch(() => {}); return; }
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dae-schnelle-koelle4d.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); done('JESPEICHERT');
     }, 'image/png');
   }
 
@@ -1242,7 +1267,7 @@
     $('#cupBtn').onclick = () => { cup.on = true; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
     $('#menuBtn').onclick = toMenu;
     $('#shareBtn').onclick = () => {
-      const url = location.href.split('#')[0]; const text = `KÖLLE 4D – ${trackDef.name}: Platz ${lastPlace}, ${fmtTime(player.finishTime)}. ${lastHeadline.replace('EXPRESS: ', '')} · Bierdeckel: ${deckel} Striche. Fahr selbst: `;
+      const url = location.href.split('#')[0]; const text = `KÖLLE 4D – ${trackDef.name}: Platz ${lastPlace}, ${fmtTime(player.finishTime)}. ${lastHeadline.replace('DÄ SCHNELLE: ', '')} · Bierdeckel: ${deckel} Striche. Fahr selbst: `;
       const done = (m) => { $('#shareBtn').textContent = m; setTimeout(() => { $('#shareBtn').textContent = '📲 TEILEN'; }, 2500); };
       if (navigator.share) navigator.share({ title: 'KÖLLE 4D – CHICAGO AM RHEIN', text, url }).then(() => done('JETEILT')).catch(() => {});
       else if (navigator.clipboard) navigator.clipboard.writeText(text + url).then(() => done('KOPIERT')).catch(() => { prompt('Zum Kopieren:', text + url); });
@@ -1267,7 +1292,7 @@
     $('#replayCam').onclick = () => { replay.mode = (replay.mode + 1) % 4; };
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
-    $('#voiceBtn').onclick = toggleVoice;
+    $('#voiceBtn').onclick = toggleVoice; $('#voicePickBtn').onclick = nextVoice;
     $('#tiltBtn').onclick = toggleTilt; updateTiltUI(); if (!isMobile) $('#tiltBtn').hidden = true;
     voiceInit();
     for (const id of ['turboBar2']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
@@ -1297,6 +1322,7 @@
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
+  window.STUNTS_KOELSCH = koelschify;
   window.STUNTS_FINISH = () => { if (player && phase === 'race') { player.finished = true; player.finishTime = raceTime; } };
   window.STUNTS_DEBUG = () => ({ phase, auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
@@ -1307,6 +1333,7 @@
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
   window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage }));
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
+  window.STUNTS_KOELSCH = koelschify;
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {
     document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Dä Lange sagt: Internet anmachen, Jung.</div>';
