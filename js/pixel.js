@@ -295,7 +295,7 @@
       r.render(scene, camera);
     }
     r.setRenderTarget(null);
-    r.setViewport(0, 0, r.domElement.width, r.domElement.height);
+    const sz = r.getSize(new THREE.Vector2()); r.setViewport(0, 0, sz.x, sz.y); // CSS pixels: three applies the pixel ratio itself
     r.render(this.scene, this.cam);
   };
   PixelPost.prototype.size = function () { return { w: this.rt.width, h: this.rt.height }; };

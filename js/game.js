@@ -605,13 +605,16 @@
 
   function renderDirect(cams) {
     const r = renderer;
+    // viewport and scissor take CSS pixels (three multiplies by the pixel ratio itself); using the canvas'
+    // device-pixel size doubled the viewport on phones with pixel ratio 2 and showed only a zoomed quarter
+    const sz = r.getSize(new THREE.Vector2()); const w = sz.x, h = sz.y;
     if (Array.isArray(cams)) {
-      const w = r.domElement.width, h = r.domElement.height, hh = Math.floor(h / 2);
+      const hh = Math.floor(h / 2);
       r.setScissorTest(true);
       r.setViewport(0, hh, w, h - hh); r.setScissor(0, hh, w, h - hh); r.render(scene, cams[0]);
       r.setViewport(0, 0, w, hh); r.setScissor(0, 0, w, hh); r.render(scene, cams[1]);
       r.setScissorTest(false); r.setViewport(0, 0, w, h);
-    } else { r.setViewport(0, 0, r.domElement.width, r.domElement.height); r.render(scene, cams); }
+    } else { r.setViewport(0, 0, w, h); r.render(scene, cams); }
   }
   // ---------------- input ----------------
   const isTouch = ('ontouchstart' in window) && matchMedia('(pointer: coarse)').matches;
