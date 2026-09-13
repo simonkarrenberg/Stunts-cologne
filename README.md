@@ -120,6 +120,25 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Platz und meckert; sonst kommentiert der Türsteher.
 - **Regen:** Auf nassen Strecken (Domschatz-Raub) fällt Regen.
 - **Siegerehrung:** Nach der letzten Cup-Strecke stehen die ersten drei auf dem Podest, mit Portrait und Punkten.
+- **Karriere „Nachtschicht“:** Zwölf Kapitel, die der Türsteher aneinanderreiht – vom Neuen auf den
+  Ringen („unter die ersten fünf“) über Kölsch am Dom, Podium in Ehrenfeld, einen Auftrag im Zoch,
+  Siege im Hafen und auf der Zülpicher bis zur letzten Nacht auf den Poller Wiesen. Drei Kapitel sind
+  Botengänge. Jedes Kapitel hat ein Ziel (Platz, Sieg, Kölsch, Auftrag), das im Streckentitel und in
+  der Vorstellung steht; geschafft heißt weiter, sonst nochmal. Der Fortschritt wird gespeichert. Der
+  weiße LamboGina Countach ist bis zum Ende der Nachtschicht gesperrt (🔒 im Menü) und wird mit dem
+  letzten Kapitel freigeschaltet, zusammen mit dem Orden LEGENDE VUM RING.
+- **Botengang (vielleicht kriminell, vielleicht nicht):** Auf jeder Strecke startbar, ohne Rivalen.
+  Dä Lange sagt, wo etwas liegt („e Paket. Frag nit, wat drin is.“, „ne Koffer. Schwer. Vielleicht
+  Kamelle.“) und wo es hin soll. Fahr zum Abhol-Ring, halt an, steig aus (E oder der gelbe Knopf) und
+  lauf zu Fuß über den Bürgersteig zur markierten Tür – Pfeile/WASD bzw. die Touch-Knöpfe lenken den
+  Fahrer, die Kamera hängt hinter ihm, zu weit vom Auto geht es nicht. Paket holen, zurück zum Wagen,
+  einsteigen. Ab da: Blaulicht. Die Kripo hängt dran und gibt auf einem Botengang nicht auf, die Uhr
+  läuft. Pünktlich im Ablieferungs-Ring anhalten ohne erwischt zu werden: acht Striche, Schlagzeile
+  „Kurier liefert Paket – Inhalt unbekannt“. Zu spät oder erwischt: drei Striche weg. Drei abgelieferte
+  Botengänge geben den Orden BOTE VUM RING.
+- **Fußgänger am Zebrastreifen:** An jedem Übergang gehen ein bis zwei Kölner tatsächlich über die
+  Straße. Kommt ein Auto näher, hüpfen sie zurück an den Bordstein, warten, bis es vorbei ist, und
+  gehen dann weiter. Das Klüngel-Telefon macht die Ampeln grün, die Fußgänger nicht.
 - **Dat Hinterzimmer (zweiter Eingang):** Der grüne Knopf unter dem Start führt durch den Vorhang mit
   dem PRIVAT-Schild in den Raum, in dem Chicago am Rhein um Bierdeckel-Striche spielt: grüner Filz,
   Lampe, Kölsch-Kiste, „KEIN KREDIT“ an der Wand. Vier Spiele, alle um deine Striche vom Deckel

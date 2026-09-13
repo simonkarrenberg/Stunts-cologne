@@ -58,6 +58,7 @@
       <div class="coinLine"><canvas id="coinArt" width="16" height="16"></canvas><span>INSERT COIN · 1 KÖLSCH = 1 CREDIT</span><canvas id="coinArt2" width="16" height="16"></canvas></div>
       <div class="pressStart">PRESS START · DRÜCK OP DÄ KNOPP</div>
       <div class="startCab"><canvas id="joyArt" width="60" height="60"></canvas><button id="startBtn">RENNEN STARTEN</button><canvas id="joyArt2" width="60" height="60"></canvas></div>
+      <div class="modeRow"><button id="careerBtn" data-icon="flag">KARRIERE</button><button id="missionBtn" data-icon="phone">BOTENGANG AUF DIESER STRECK</button></div>
       <button id="clubBtn" class="clubEntry">🚪 HINTERZIMMER · SKAT, ROMMÉ, SIEBZEHN UN VIER, KNOBELN</button>
       <div id="p2Info" class="p2Info" hidden></div>
       <div class="subBtns">
@@ -79,7 +80,7 @@
     <span class="keys"><kbd>↑</kbd><kbd>↓</kbd> STRECK <kbd>←</kbd><kbd>→</kbd> WAGEN <kbd>1-6</kbd> FAHRER <kbd>ENTER</kbd> OK <kbd>ESC</kbd> ZURÜCK</span>
     <span id="slogan" class="slogan"></span>
     <span id="tipp" class="tipp"></span>
-    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE</span>
+    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE <kbd>E</kbd> AUS-/EINSTEIJEN</span>
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY</span>
   </footer>
 </div>
@@ -147,6 +148,7 @@
   <canvas id="cockpit" width="1280" height="480" hidden></canvas>
   <div id="countdown" hidden></div>
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
+  <button id="hudPrompt" hidden>E · AUSSTEIJEN</button>
   <div id="msg"><div id="msgWho"></div><div id="msgText"></div></div>
   <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
   <div id="introCard" hidden><b id="introName"></b><span id="introSub"></span></div>

@@ -951,13 +951,48 @@
       { id: 'nacht', name: 'NACHTSCHWÄRMER', desc: '3 Nachtrennen jewonne', stat: 'nightWins', need: 3, color: 'b' },
       { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', stat: 'roofs', need: 1, color: 'r' },
       { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' },
-      { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' }
+      { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' },
+      { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', stat: 'boten', need: 3, color: 'o' },
+      { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' }
     ],
     ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
     // the daily track: a random Veedel and a name for it
     veedel: ['NIPPES', 'SÜLZ', 'LINDENTHAL', 'KALK', 'MÜLHEIM', 'EHRENFELD', 'DEUTZ', 'SÜDSTADT', 'NEUSTADT-NORD', 'BAYENTHAL', 'RIEHL', 'ZOLLSTOCK', 'BICKENDORF', 'PORZ', 'CHORWEILER', 'RADERBERG', 'BRAUNSFELD', 'NEUEHRENFELD'],
     dailyNames: ['{v}-RUNDE', 'DURCH {v}', '{v} BEI NACHT', 'EINMAL {v} UN ZURÜCK', '{v}-KLÜNGEL', 'STRECK DURCH {v}'],
     dailyDesc: 'Die Streck des Tages: jeden Tag würfelt der Klüngel eine neue Runde durch ein anderes Veedel. Bestzeiten gelten nur heute – morjen is et wieder wat anderes.',
+    // Botengang: fetch something on foot, bring it somewhere by car, with the Kripo in the mirror. What it is stays open.
+    botengang: {
+      what: ['e Paket. Frag nit, wat drin is.', 'ne Koffer. Schwer. Vielleicht Kamelle.', 'e Kiste Kölsch. Angeblich.', 'en Umschlag vum Notar. Oder vum Zocker.', 'e Tüt vum Bäcker. Rievkooche, sacht er.', 'ne Hutschachtel. Vum Kommissar. Sacht Tom.', 'e Paket mit Löcher. Et bewegt sich nit. Meistens.'],
+      whatShort: ['PAKET', 'KOFFER', 'KISTE', 'UMSCHLAG', 'TÜT', 'HUTSCHACHTEL', 'PAKET'],
+      where: ['PFANDLEIHE', 'HEHLER & SÖHNE', 'NACHTPORTIER', 'SARTORY-HINTEREINGANG', 'BÜDCHEN AM RING', 'TRESORBAU', 'KIOSK HAUPTBAHNHOF', 'FRISEUR ZUM LANGEN'],
+      brief: ['Botengang, Jung. Fahr zum {pick}, steig us, hol {what} Dann zum {drop}. Un wenn Blaulicht kütt: du kennst mich nit.', 'Kleiner Jefallen. {pick}: aussteijen, {what} Dann {drop}, pünktlich. Wat de Kripo will, weiß ich och nit.', 'Vielleicht kriminell, vielleicht nit. Am {pick} liegt {what} Bring et zum {drop}. Fahr wie ne Kölsche Jung: schnell un unschuldig.'],
+      out: ['Aussteijen. Zu Fuß, Jung, dat Auto bleibt hee. Un lauf, nit schlendern.', 'Motor us. Der Rest is Fußarbeit.'],
+      got: ['Do häs et. Nit schüttele. Zurück zum Auto, jetz.', 'Jut. Nit reinkucke. Auto, sofort.', 'Dat is et. Wat et is, jeht dich nix an. Lauf!'],
+      back: ['Blaulicht! Die han dich jesinn. Zum {drop}, un kein Kratzer.', 'Kripo im Rückspiegel. Zufall, jo. Fahr!', 'Der Kommissar hät et jerochen. Jib Jas, die Uhr läuft.'],
+      done: ['Abjeliefert. Pünktlich, heil, unerwischt. Wat drin wor? Kamelle. Sach ich.', 'Anjekumme. Der Klüngel is stolz op dich. Der Kommissar nit.', 'Dat wor et. Vielleicht kriminell, vielleicht nit. Auf jeden Fall bezahlt.'],
+      late: ['Zu spät. Der {drop} hät zujemacht. Un dat Paket riecht langsam.', 'Die Uhr wor schneller. Der Klüngel is enttäuscht. Ich och.'],
+      caught: ['Erwischt. Dat Paket is jetz bei der Kripo. Un du och. Klüngel Tom regelt dat. Irjendwann.', 'Die Kripo hät dich. Ich hab nix jesinn, ich wor an der Tür.'],
+      far: ['Nit so weit, Jung. Dat Auto steht do hinge.', 'Wo willste hin? Der Wagen wartet.'],
+      headlineDone: 'DÄ SCHNELLE: KURIER LIEFERT PAKET – INHALT UNBEKANNT, KRIPO SPRACHLOS',
+      headlineCaught: 'DÄ SCHNELLE: KRIPO STOPPT KURIER OP DE RINGE – PAKET WOR „KAMELLE“',
+      headlineLate: 'DÄ SCHNELLE: KURIER ZU SPÄT – PAKET JETZ BEIM FUNDBÜRO'
+    },
+    // Karriere: the Nachtschicht, twelve chapters from the new kid at the door to the white wedge
+    career: [
+      { track: 'chicago', type: 'race', goal: { place: 5 }, title: 'DER NEUE', intro: 'Du bes neu. Fahr die Ringe, komm unter die ersten fünf, dann rede mer weiter.', outro: 'Nit schlecht för ne Neue. Morje jeht et weiter.' },
+      { track: 'dom', type: 'race', goal: { koelsch: 5 }, title: 'MORJENS AM DOM', intro: 'Am Dom stehe Kölsch op der Straße. Fünf davon nimmst du mit. Zum Frühstück.', outro: 'Fünf Kölsch vor acht. Du passt hee rein.' },
+      { track: 'chicago', type: 'mission', goal: {}, title: 'DER ERSTE UMSCHLAG', intro: 'Dinge erste Botengang. Hol wat, bring et wohin, lass dich nit erwische. Mehr musste nit wisse.', outro: 'Sauber abjeliefert. Der Klüngel hät dich jesinn.' },
+      { track: 'ehrenfeld', type: 'race', goal: { place: 3 }, title: 'TAPE RUN', intro: 'Ehrenfeld, blaue Stunde. Podium, Jung. Sonst lacht Schäl.', outro: 'Podium in Ehrenfeld. Schäl lacht nit mehr.' },
+      { track: 'zoch', type: 'race', goal: { auftrag: 1 }, title: 'KAMELLE FÖR TOM', intro: 'Rosenmontag. Ich jeb dir unterwegs en Auftrag. Erledige en. Dat is alles.', outro: 'Auftrag erledigt, mitten im Zoch. Respekt.' },
+      { track: 'zoch', type: 'mission', goal: {}, title: 'DAT PAKET VUM ROSENMONTAG', intro: 'E Paket im Zoch. Vielleicht Kamelle, vielleicht nit. Hol et, bring et, un de Kripo hät heut och frei. Denkste.', outro: 'Kamelle, sach ich. Un du sachs och Kamelle.' },
+      { track: 'rheinauhafen', type: 'race', goal: { win: true }, title: 'HAFENRUNDE', intro: 'Hafen, Sonnenuntergang. Ich will en Sieg. Ming Wette steht.', outro: 'Jewonne im Hafen. Die Wette is bezahlt.' },
+      { track: 'zoo', type: 'race', goal: { place: 3 }, title: 'SCHÄL SICK', intro: 'Op de Schäl Sick jilt: nit unter die ersten drei, dann kütts de nit mehr über die Brück.', outro: 'Über die Brück un zurück. Podium.' },
+      { track: 'rheinauhafen', type: 'mission', goal: {}, title: 'DER KOFFER VUM HAFEN', intro: 'Ne Koffer im Hafen. Schwer. Frag nit. Sprung übers Hafenbecken inklusive.', outro: 'Der Koffer is anjekumme. Trocken sojar.' },
+      { track: 'heist', type: 'race', goal: { place: 3 }, title: 'DOMSCHATZ', intro: '1975. De Kripo hängt dir vum Start an im Nacken. Podium, un kein Wort.', outro: 'Podium mit der Kripo im Nacken. Du bes jetz einer von uns.' },
+      { track: 'zuelpicher', type: 'race', goal: { win: true }, title: 'ELFTER IM ELFTEN', intro: 'Zülpicher, Elfter im Elften. Doppelt so viel Kölsch, un du jewinnst trotzdem.', outro: 'Sieg im Kwartier Latäng. Die Tür jeht auf.' },
+      { track: 'poller', type: 'race', goal: { win: true }, title: 'DIE TÜR STEHT OFFE', intro: 'Letzte Nacht. Poller Wiesen, drei Loopings. Jewinn, un der weiße Keil is dinge.', outro: 'Die Tür steht offe. Für immer. Der weiße Keil is dinge – LamboGina Countach, K-LG 88.' }
+    ],
+    careerLines: { fail: ['Nit jeschafft. Morje nochmal, die Tür läuft nit weg.', 'Dat wor nix. Kapitel nochmal, Jung.'], locked: ['Der weiße Keil steht hinger der Tür. Karriere beenden, dann kütts de dran.', 'Countach? Erst die Nachtschicht, dann der Keil.'] },
     // dat Hinterzimmer: the back room where the underworld plays cards for Deckel strokes
     club: {
       welcome: ['Hinterzimmer. Hee wird jespielt, nit jeredet. Wat darf et sin?', 'Setz dich. Der Köbes bringt Kölsch, Tom bringt Karten, ich bring de Ruhe.', 'Kein Kredit, Jung. Striche op dä Deckel, sonst nix. Also, wat spiele mer?', 'Die Tür is zu. Wat hee passiert, bleibt hee. Außer du verlierst, dat erzähl ich.'],

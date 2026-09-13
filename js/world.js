@@ -1507,6 +1507,11 @@
         const sign = new THREE.Group(); sign.add(cyl(0.05, 0.06, 2.6, 0x777777, 0, 1.3, 0, 6)); const face = textPlane('ZEBRA', '#ffffff', '#1c3f95', 0.7, 0.7, false, { border: '#ffffff', sizeK: 0.45 }); face.position.set(0, 2.5, 0); sign.add(face);
         sign.position.set(sx, GROUND_Y, sz); sign.lookAt(sg.p.x - sg.T.x * 9, GROUND_Y, sg.p.z - sg.T.z * 9); sign.userData.kind = 'zebrasign'; g.add(sign);
         if (rnd() < 0.7) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const ps = S[zi + 1]; f.position.set(ps.p.x + ps.B.x / bl * side * (ROAD_W + 2.2), GROUND_Y, ps.p.z + ps.B.z / bl * side * (ROAD_W + 2.2)); f.lookAt(ps.p.x, GROUND_Y, ps.p.z); g.add(f); }
+        if (side === -1) { // one or two Kölner actually crossing: they walk over the zebra and hop back to the curb when a car comes too fast
+          const nW = 1 + Math.floor(rnd() * 2);
+          for (let w = 0; w < nW; w++) { const ps = S[zi + 1 + w]; const f = P.passant({ k: Math.floor(rnd() * 20) }); const a = new THREE.Vector3(ps.p.x - ps.B.x / bl * (ROAD_W + 2.4), GROUND_Y, ps.p.z - ps.B.z / bl * (ROAD_W + 2.4)), b = new THREE.Vector3(ps.p.x + ps.B.x / bl * (ROAD_W + 2.4), GROUND_Y, ps.p.z + ps.B.z / bl * (ROAD_W + 2.4));
+            f.userData.walker = { a, b, t: rnd(), dir: rnd() < 0.5 ? 1 : -1, wait: rnd() * 3, speed: 0.9 + rnd() * 0.5, hop: 0 }; f.position.copy(a).lerp(b, f.userData.walker.t); f.userData.kind = 'walker'; g.add(f); animated.push(f); }
+        }
         keepOut.push({ x, z, r: 3 });
       }
     }
@@ -1702,6 +1707,16 @@
       if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
       else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
       else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
+      else if (u.walker) {
+        const w = u.walker; const near = center ? Math.hypot(center.x - a.position.x, center.z - a.position.z) : 999;
+        const onRoad = w.t > 0.16 && w.t < 0.84;
+        if (near < 60 && onRoad) { // a car is coming: hop back to the nearer curb, fast
+          const goal = w.t < 0.5 ? 0.05 : 0.95; const step = dt * 7 / w.a.distanceTo(w.b); w.t += Math.sign(goal - w.t) * Math.min(step, Math.abs(goal - w.t)); w.hop = Math.min(1, w.hop + dt * 6); w.wait = 2.5 + Math.random() * 2; w.fled = true;
+        } else if (w.wait > 0) { w.wait -= dt; w.hop = Math.max(0, w.hop - dt * 3); if (w.fled && near < 70) w.wait = 1; }
+        else { w.fled = false; const step = dt * w.speed / w.a.distanceTo(w.b); w.t += w.dir * step; if (w.t >= 1 || w.t <= 0) { w.t = w.t >= 1 ? 1 : 0; w.dir *= -1; w.wait = 2 + Math.random() * 5; } w.hop = Math.max(0, w.hop - dt * 3); }
+        const prev = a.position.clone(); a.position.copy(w.a).lerp(w.b, w.t); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.012 * (w.hop ? 2 : 1))) * (w.hop ? 0.35 : 0.05) * (w.wait > 0 && !w.hop ? 0 : 1);
+        if (prev.distanceToSquared(a.position) > 1e-6) { const d = a.position.clone().sub(prev); d.y = 0; if (d.lengthSq() > 1e-8) a.rotation.y = Math.atan2(d.x, d.z); }
+      }
       else if (u.boat) a.position.x += Math.sin(t * 0.0002) * 0.02;
       else if (u.gondola != null) { a.position.x += dt * 4; if (a.position.x > 110) a.position.x = -110; }
       else if (u.water) a.userData.water.offset.x = (t * 0.00004) % 1;

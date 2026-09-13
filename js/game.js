@@ -33,6 +33,8 @@
   let razzia = 0, razziaBlink = 0, promille = 0, koelschLap = 0, lastHeadline = '', lastPlace = 0;
   // Klüngel-Auftrag (courier job for dä Lange), the DÄ SCHNELLE front page photo and the arcade attract mode
   let demoPrevCam = 0, daily = null, introT = 0, hornCool = 0, newOrden = [];
+  // Botengang missions (on foot and back in the car with the Kripo behind) and the Karriere (Nachtschicht)
+  let mission = null, missionMode = false, missionDef = null, careerChapter = null, walkT = 0;
   let auftrag = null, auftragT = 40, auftragDone = 0, auftragFail = 0, shotWanted = false, lastShot = null, demo = false, demoT = 0, idleT = 0;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
   const input2 = { gas: 0, brake: 0, steer: 0, turbo: 0 };
@@ -394,6 +396,7 @@
   function updateCamera(dt) {
     if (window.STUNTS_FREECAM) { const fc = window.STUNTS_FREECAM; camera.position.set(fc.pos[0], fc.pos[1], fc.pos[2]); camera.up.set(0, 1, 0); camera.lookAt(fc.look[0], fc.look[1], fc.look[2]); return; }
     if (!player || !player.frame) return;
+    if (mission && mission.onFoot && mission.walker) { const w = mission.walker; const fwd = new THREE.Vector3(Math.sin(w.rotation.y), 0, Math.cos(w.rotation.y)); views[0].pos.lerp(w.position.clone().addScaledVector(fwd, -6.5).add(new THREE.Vector3(0, 3.2, 0)), Math.min(1, dt * 6)); views[0].look.lerp(w.position.clone().addScaledVector(fwd, 3).add(new THREE.Vector3(0, 1.3, 0)), Math.min(1, dt * 10)); views[0].up.set(0, 1, 0); camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look); if (player.mesh) player.mesh.visible = true; return; }
     if (phase === 'intro') { // flyover: from high above the first bend down into the chase position behind the grid
       const k = Math.min(1, introT / 3.8), e = k * k * (3 - 2 * k); const fr = player.frame;
       const f = TB.frameAt(track, 170); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
@@ -448,11 +451,11 @@
     $('#hudKn').textContent = knoellchen ? `${knoellchen} × 60 €` : '–';
     $('#hudDeckel').textContent = deckel ? strokes(deckel) : '–';
     $('#hudWette').textContent = wette ? (wette.done ? (wette.won ? 'JEWONNE' : 'VERLORE') : `${wette.n}🍺 › ${wette.rival.name.toUpperCase().split(' ').pop()}`) : '–';
-    $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
+    if (mission) $('#hudAuftrag').textContent = missionHud(); else $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
     if (kripo) $('#hudKripo').textContent = 'HINTER DIR!'; else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZ…' : '–';
     if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${trackDef.laps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
-      const byTuenn = Math.random() < 0.5; const other = pick(racers.filter((r) => r.isAI)).driver;
+      const ais = racers.filter((r) => r.isAI && !r.isCop); if (!ais.length) return; const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
       if (pos < lastPos) { say(byTuenn ? tuenn : other, byTuenn ? pick(tuenn.overtake) : pick(other.lines.overtaken), 2200); addDeckel(1); }
       else say(byTuenn ? tuenn : other, byTuenn ? pick(tuenn.overtaken) : pick(other.lines.overtake), 2200);
     }
@@ -499,7 +502,7 @@
       if (!camera2) camera2 = new THREE.PerspectiveCamera(70, 1, 1.0, 4000);
       document.body.classList.add('split');
     } else { document.body.classList.remove('split'); player.name = 'DU'; }
-    const others = D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 8 : 9); // a field of ten
+    const others = missionMode ? [] : D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 8 : 9); // a field of ten (none on a Botengang)
     others.forEach((d, i) => {
       const base = D.CARS.find((c) => c.id === d.car) || D.CARS[1];
       const cdef = Object.assign({}, base, { color: d.color, plate: 'K-' + d.name.slice(0, 2).toUpperCase() + ' ' + (i + 1) });
@@ -520,7 +523,7 @@
     telefon = { ready: true, active: 0, used: 0 };
     knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
-    $('#hudTrack').textContent = `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
+    $('#hudTrack').textContent = careerChapter != null ? `KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ${missionMode ? 'BOTENGANG' : 'ZIEL: ' + goalText(tuenn.career[careerChapter].goal)}` : missionMode ? `BOTENGANG · ${trackDef.name.toUpperCase()}` : `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
     deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
     endAuftrag(); auftragT = window.STUNTS_AUFTRAG ? 6 : 30 + Math.random() * 25; auftragDone = 0; auftragFail = 0; lastShot = null;
   }
@@ -543,7 +546,7 @@
     audioInit();
     buildScene(def);
     raceTime = 0; countdown = 4.2; phase = 'intro'; introT = 0; hornCool = 0; newOrden = []; perf.frames = 0;
-    { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM`; } perf.since = 0; perf.wait = 3;
+    { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
@@ -555,7 +558,7 @@
     $('#hudTel').textContent = 'K = ANRUFEN';
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     if (isMobile) { camMode = 0; tvCam = null; }
-    setTimeout(() => { if (phase !== 'menu') { const d = pick(racers.filter((r) => r.isAI)).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
+    setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
   }
@@ -593,13 +596,14 @@
       renderCup(order);
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
       if (!wette) $('#resTuenn').textContent = newOrden.length ? pick(tuenn.ordenLine).replace('{name}', newOrden[0].name) : record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
+      if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true); }
       const rd = order[won ? 1 : 0].driver;
       $('#resRival').textContent = `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“`;
       $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1200);
   }
   function toMenu() {
-    if (window.Club) window.Club.close();
+    if (window.Club) window.Club.close(); clearMission(); missionMode = false; careerChapter = null; $('#hudPrompt').hidden = true;
     phase = 'menu'; if (demo) { camMode = demoPrevCam; tvCam = null; } demo = false; idleT = 0; $('#demo').hidden = true; document.body.classList.remove('demo');
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = true; $('#records').hidden = true; $('#replayUI').hidden = true;
     replay.on = false; if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -658,14 +662,14 @@
       if (phase === 'race') raceTime += dt;
       if (tilt.mode > 0 && tilt.listening) readKeys();
       const ctl = player.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : (window.STUNTS_AUTOPILOT || demo) ? aiControl(player, dt) : input;
-      updateRacer(player, dt, ctl);
+      if (mission && mission.onFoot) { player.v = 0; walkStep(dt); } else updateRacer(player, dt, ctl);
       if (player2) updateRacer(player2, dt, player2.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : window.STUNTS_AUTOPILOT ? aiControl(player2, dt) : input2);
       if (phase === 'race') recordFrame(dt);
       if (ghost) updateGhost();
       for (const r of racers) if (r.isAI) updateRacer(r, dt, r.finished ? { gas: 0, brake: 0.3, steer: 0, turbo: 0 } : aiControl(r, dt));
       for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) collide(racers[i], racers[j]);
       for (const r of racers) placeRacer(r, dt);
-      if (phase === 'race') { updatePickups(dt); updateKripo(dt); updateAuftrag(dt); }
+      if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else updateAuftrag(dt); }
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
@@ -774,6 +778,7 @@
     if (player2) { readKeys2(); if (e.code === 'KeyV') views[1].mode = (views[1].mode + 1) % 3; }
     if (phase === 'intro' && (e.code === 'Enter' || e.code === 'Space')) introT = 99;
     if (e.code === 'KeyH' && phase === 'race') horn();
+    if (e.code === 'KeyE' && phase === 'race' && mission) missionAction();
     if (e.code === 'KeyC') { camMode = (camMode + 1) % 4; tvCam = null; }
     if (e.code === 'KeyP') cyclePixel();
     if (e.code === 'KeyM') toggleMute();
@@ -811,12 +816,13 @@
     });
     // cars
     const cl = $('#carCards'); cl.innerHTML = '';
+    if (carLocked(sel.car)) sel.car = 0;
     D.CARS.forEach((c, i) => {
       const card = document.createElement('div'); card.className = 'card car' + (sel.car === i ? ' active' : '');
       const stat = (label, v) => `<div class="stat"><span>${label}</span><i>${[1, 2, 3, 4, 5].map((k) => `<b class="${k <= v ? (k >= 5 ? 'hi' : 'on') : ''}"></b>`).join('')}</i></div>`;
       card.innerHTML = `<span class="p1">${sel.car === i ? 'P1' : ''}</span><canvas></canvas><b>${c.name.toUpperCase()}</b>${stat('TEMPO', c.stats[0])}${stat('BESCHL.', c.stats[1])}${stat('HANDLING', c.stats[2])}${stat('NITRO', c.stats[3])}`;
       SP.carSide(c, card.querySelector('canvas'), 4);
-      card.onclick = () => { sel.car = i; renderMenu(); };
+      if (carLocked(i)) { card.classList.add('locked'); card.querySelector('b').textContent = '🔒 ' + c.name.toUpperCase(); card.onclick = () => { $('#tipp').textContent = pick(tuenn.careerLines.locked); }; } else card.onclick = () => { sel.car = i; renderMenu(); };
       cl.appendChild(card);
     });
     // tracks
@@ -967,6 +973,104 @@
     let ahead = null, best = 99; for (const o of racers) { if (o === player || o.isCop) continue; let ds = o.s - player.s; const L = track.length; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (ds > 0 && ds < 22 && ds < best) { best = ds; ahead = o; } }
     if (ahead) { ahead.yieldT = 2.5; if (msgTimer <= 0 && Math.random() < 0.6) say(ahead.driver, pick(tuenn.hupeRival), 2200); }
     else if (msgTimer <= 0 && Math.random() < 0.5) say(tuenn, pick(tuenn.hupe), 2200);
+  }
+
+  // ---------------- Botengang: fetch something on foot, deliver it by car, the Kripo behind you ----------------
+  function goalText(g) { return g.place ? `TOP ${g.place}` : g.win ? 'SIEG' : g.koelsch ? `${g.koelsch} KÖLSCH` : g.auftrag ? `${g.auftrag} AUFTRAG` : 'ANKOMMEN'; }
+  function startMission(def) {
+    missionMode = true; missionDef = def; clearMission();
+    startRace(Object.assign({}, def, { laps: 99 }));
+    const B = tuenn.botengang; const k = Math.floor(Math.random() * B.what.length);
+    const a = roadFrameAhead(player.s, 230 + Math.random() * 150);
+    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: B.what[k], short: B.whatShort[k], pickName: pick(B.where), dropName: pick(B.where), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
+    if (mission.dropName === mission.pickName) mission.dropName = B.where[(B.where.indexOf(mission.pickName) + 1) % B.where.length];
+    const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(a.f.T.x, a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring;
+    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName), 5200); }, 7600);
+  }
+  function clearMission() { if (mission) { for (const m of mission.meshes) scene && scene.remove(m); if (mission.walker && scene) scene.remove(mission.walker); } mission = null; $('#hudPrompt').hidden = true; }
+  function missionHud() {
+    const L = track.length; const dist = (sTarget) => { let d = sTarget - player.s; if (d < 0) d += L; return Math.round(d); };
+    if (mission.stage === 'drive1') return `→ ${mission.pickName} ${dist(mission.pickS)} M`;
+    if (mission.stage === 'walk') return `ZU FUSS → ${mission.short} ${Math.round(mission.walker.position.distanceTo(mission.doorPos))} M`;
+    if (mission.stage === 'walkback') return `ZU FUSS → AUTO ${Math.round(mission.walker.position.distanceTo(player.mesh.position))} M`;
+    return `→ ${mission.dropName} ${dist(mission.dropS)} M · ${Math.max(0, Math.round(mission.timer))} S`;
+  }
+  function prompt(text) { const p = $('#hudPrompt'); if (text) { p.hidden = false; p.textContent = text; } else p.hidden = true; }
+  function updateMission(dt) {
+    const L = track.length; const near = (sT) => { let d = player.s - sT; if (d > L / 2) d -= L; if (d < -L / 2) d += L; return Math.abs(d) < 7 && Math.abs(player.v) < 3 && !player.air; };
+    if (mission.stage === 'drive1') prompt(near(mission.pickS) ? 'E · AUSSTEIJEN' : null);
+    else if (mission.stage === 'walkback') prompt(mission.walker.position.distanceTo(player.mesh.position) < 3.4 ? 'E · EINSTEIJEN' : null);
+    else if (mission.stage === 'drive2') {
+      mission.timer -= dt; if (mission.ring2) { const k = 1 + Math.sin(raceTime * 5) * 0.08; mission.ring2.scale.set(k, 1, k); }
+      if (near(mission.dropS)) { missionEnd(true); return; }
+      if (mission.timer <= 0) { missionEnd(false, 'late'); return; }
+    }
+  }
+  function missionAction() {
+    if (!mission || phase !== 'race') return; const B = tuenn.botengang;
+    if (mission.stage === 'drive1' && !$('#hudPrompt').hidden) { // get out: a walker beside the car, the door marker up the sidewalk
+      mission.onFoot = true; mission.stage = 'walk'; player.v = 0; prompt(null); const f = TB.frameAt(track, player.s); const Bv = new THREE.Vector3(f.B.x, 0, f.B.z).normalize();
+      const w = W.human({ h: 1.78, shirt: PLAYABLE[sel.driver].color || 0x14141a, pants: 0x2a2a34, hat: PLAYABLE[sel.driver].id === 'langer' ? 'fedora' : 'none', hatColor: 0x0a0a0a }); w.position.copy(player.mesh.position).addScaledVector(Bv, mission.side * 3.4); w.position.y = W.GROUND_Y; w.rotation.y = Math.atan2(f.T.x, f.T.z); scene.add(w); mission.walker = w;
+      const d = TB.frameAt(track, mission.pickS + 22 + Math.random() * 14); const Bd = new THREE.Vector3(d.B.x, 0, d.B.z).normalize(); mission.doorPos = new THREE.Vector3(d.p.x, W.GROUND_Y, d.p.z).addScaledVector(Bd, mission.side * (ROAD_W + 4.3));
+      const door = dropMesh(mission.pickName); door.position.copy(mission.doorPos); door.scale.set(0.55, 1, 0.55); scene.add(door); mission.meshes.push(door); mission.door = door;
+      const pk = umschlagMesh(); pk.position.copy(mission.doorPos); pk.position.y += 0.4; scene.add(pk); mission.meshes.push(pk); mission.pkg = pk;
+      scene.remove(mission.ring); sayMust(tuenn, pick(B.out), 3000); return;
+    }
+    if (mission.stage === 'walkback' && !$('#hudPrompt').hidden) { // back in: the drop-off appears, the Kripo too
+      mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
+      const b = roadFrameAhead(player.s, 420 + Math.random() * 260); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
+      const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
+      if (!kripo) startKripo(); sayMust(tuenn, pick(B.back).replace('{drop}', mission.dropName), 3600);
+    }
+  }
+  function walkStep(dt) {
+    const w = mission.walker; if (!w) return; const B = tuenn.botengang; walkT += dt;
+    const turn = -input.steer * 2.6 * dt; w.rotation.y += turn; const speed = (input.gas ? 5.2 : 0) - (input.brake ? 2.4 : 0);
+    if (speed) { w.position.x += Math.sin(w.rotation.y) * speed * dt; w.position.z += Math.cos(w.rotation.y) * speed * dt; w.position.y = W.GROUND_Y + Math.abs(Math.sin(walkT * 11)) * 0.06; w.rotation.z = Math.sin(walkT * 11) * 0.04; } else { w.position.y = W.GROUND_Y; w.rotation.z = 0; }
+    const car = player.mesh.position; const dc = w.position.distanceTo(car); mission.farCool -= dt;
+    if (dc > 80) { const back = car.clone().sub(w.position).normalize(); w.position.addScaledVector(back, dc - 80); if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pick(B.far), 2500); } }
+    if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pick(B.got), 3000); } }
+  }
+  function missionEnd(ok, why) {
+    if (!mission || phase !== 'race') return; phase = 'finished'; prompt(null); const B = tuenn.botengang; player.finished = true; player.finishTime = raceTime;
+    if (kripo) endKripo('finish'); const m = mission; clearMission(); mission = null;
+    const strokes = ok ? 8 : -3; addDeckel(strokes); const total = deckelTotal(deckel); if (ok) bumpStat('boten'); newOrden = checkOrden();
+    const headline = ok ? B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate; lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
+    setTimeout(() => {
+      if (phase === 'menu') return;
+      $('#resTitle').textContent = ok ? `BOTENGANG ERLEDIGT: ${m.short} BEIM ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
+      $('#resTable').innerHTML = `<tr class="me"><td>${ok ? '✓' : '✗'}</td><td>DU</td><td>${D.CARS[sel.car].name}</td><td>${fmtTime(raceTime)}</td></tr>`;
+      $('#resBest').textContent = ok ? 'pünktlich' : '–'; $('#resRecord').hidden = true;
+      $('#resStats').innerHTML = `PAKET: <b>${m.short}</b> (${m.what}) · VON: <b>${m.pickName}</b> · NACH: <b>${m.dropName}</b> · KRIPO: <b>${why === 'caught' ? 'HÄT DICH JEKRIEGT' : ok ? 'ABJEHÄNGT' : 'NOCH DRAN'}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b>`;
+      $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, ok ? 1 : 10, [player]);
+      $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes > 0 ? '+' : ''}${strokes}</b> Striche · GESAMT: <b>${total}</b> – <b>${deckelRank(total)}</b>`;
+      $('#resCup').hidden = true; $('#againBtn').textContent = careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL (ENTER)' : 'KAPITEL NOCHMAL (ENTER)') : 'NOCHMAL (ENTER)';
+      { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
+      $('#resTuenn').textContent = pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName); $('#resRival').textContent = '';
+      if (careerChapter != null) applyCareerResult(ok);
+      $('#results').hidden = false; document.body.classList.add('resultsOpen');
+    }, 1400);
+  }
+
+  // ---------------- Karriere: die Nachtschicht ----------------
+  function careerState() { try { return JSON.parse(localStorage.getItem('stuntskoelle.career') || '{"chapter":0}'); } catch (e) { return { chapter: 0 }; } }
+  function carLocked(i) { if (D.CARS[i].id !== 'countach') return false; try { return localStorage.getItem('stuntskoelle.countach') !== '1' && careerState().chapter < tuenn.career.length; } catch (e) { return true; } }
+  function startCareer() {
+    const st = careerState(); let ch = st.chapter; if (ch >= tuenn.career.length) { ch = 0; try { localStorage.setItem('stuntskoelle.career', JSON.stringify({ chapter: 0, done: true })); } catch (e) { /* ignore */ } }
+    careerChapter = ch; const c = tuenn.career[ch]; const def = TRACKS.find((t) => t.id === c.track) || TRACKS[0];
+    if (c.type === 'mission') startMission(def); else { missionMode = false; startRace(def); }
+    setTimeout(() => { if (careerChapter === ch && phase !== 'menu') sayMust(tuenn, `Kapitel ${ch + 1}, ${c.title}. ${c.intro}`, 5200); }, c.type === 'mission' ? 13500 : 7600);
+  }
+  function applyCareerResult(ok) {
+    const ch = careerChapter, c = tuenn.career[ch]; const st = careerState();
+    if (ok) {
+      if (st.chapter === ch) { st.chapter = ch + 1; try { localStorage.setItem('stuntskoelle.career', JSON.stringify(st)); } catch (e) { /* ignore */ } }
+      const finale = ch + 1 >= tuenn.career.length;
+      if (finale) { try { localStorage.setItem('stuntskoelle.countach', '1'); } catch (e) { /* ignore */ } bumpStat('career'); const no = checkOrden(); if (no.length) { newOrden = newOrden.concat(no); const ob = $('#resOrden'); ob.hidden = false; ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((cv, i) => medalIcon(cv, newOrden[i].color, 2)); } }
+      $('#resTitle').textContent = (finale ? 'NACHTSCHICHT BEENDET! ' : `KAPITEL ${ch + 1} JESCHAFFT: ${c.title}. `) + $('#resTitle').textContent;
+      $('#resTuenn').textContent = c.outro + (finale ? ' Der Countach steht im Menü, Jung.' : '');
+      $('#againBtn').textContent = finale ? 'NOCHMAL VON VORNE (ENTER)' : 'NÄCHSTES KAPITEL (ENTER)';
+    } else { $('#resTitle').textContent = `KAPITEL ${ch + 1} NIT JESCHAFFT (ZIEL: ${goalText(c.goal)}). ` + $('#resTitle').textContent; $('#resTuenn').textContent = pick(tuenn.careerLines.fail); $('#againBtn').textContent = 'KAPITEL NOCHMAL (ENTER)'; }
   }
 
   // ---------------- dat Hinterzimmer: the second door, cards and dice for Deckel strokes ----------------
@@ -1170,10 +1274,11 @@
     const pk = TB.frameAt(track, player.s).kind;
     if (kripoHitCool <= 0 && Math.abs(ds) < 4.8 && Math.abs(player.lat - kripo.lat) < 2.4 && !player.air && !kripo.air && player.crashed <= 0 && kripo.crashed <= 0 && pk !== 'loop' && pk !== 'ramp') {
       kripoHitCool = 2.4; player.damage = Math.min(1, player.damage + 0.14); player.v *= 0.82; player.lat += (player.lat >= kripo.lat ? 1 : -1) * 1.3; kripo.v *= 0.9; crashSound(); shake = 0.6;
-      if (player.damage >= 1) { kripoCaught = true; crash(player, 'kripo'); sayMust(KRIPO, pick(tuenn.kripo.caught), 3000); endKripo('caught'); return; }
+      if (player.damage >= 1) { kripoCaught = true; crash(player, 'kripo'); sayMust(KRIPO, pick(tuenn.kripo.caught), 3000); endKripo('caught'); if (mission) missionEnd(false, 'caught'); return; }
       say(KRIPO, pick(tuenn.kripo.hit), 2200);
     }
-    if (kripoT > 55 || ds < -140) endKripo('giveup');
+    if (mission) { if (ds < -170 || ds > 170) { kripo.s = ((player.s - 100) % L + L) % L; kripo.lat = 0; kripo.v = Math.max(15, player.v * 0.9); kripo.safeS = kripo.s; } }
+    else if (kripoT > 55 || ds < -140) endKripo('giveup');
   }
   let kripoEndT = -99;
   function endKripo(why) {
@@ -1364,9 +1469,10 @@
     // turbo/damage bar segments
     for (const id of ['turboBar', 'dmgBar']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
     renderMenu();
-    $('#startBtn').onclick = () => { cup.on = false; lockLandscape(); startRace(); };
-    $('#againBtn').onclick = () => { if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
-    $('#cupBtn').onclick = () => { cup.on = true; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
+    $('#startBtn').onclick = () => { cup.on = false; careerChapter = null; missionMode = false; lockLandscape(); startRace(); };
+    $('#againBtn').onclick = () => { if (careerChapter != null) { startCareer(); return; } if (missionMode) { startMission(missionDef); return; } if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
+    $('#missionBtn').onclick = () => { careerChapter = null; cup.on = false; lockLandscape(); startMission(activeTrackDef()); }; $('#careerBtn').onclick = () => { cup.on = false; lockLandscape(); startCareer(); }; $('#hudPrompt').onclick = () => missionAction();
+    $('#cupBtn').onclick = () => { cup.on = true; careerChapter = null; missionMode = false; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
     $('#menuBtn').onclick = toMenu;
     $('#shareBtn').onclick = () => {
       const url = location.href.split('#')[0]; const text = `KÖLLE 4D – ${trackDef.name}: Platz ${lastPlace}, ${fmtTime(player.finishTime)}. ${lastHeadline.replace('DÄ SCHNELLE: ', '')} · Bierdeckel: ${deckel} Striche. Fahr selbst: `;
@@ -1417,7 +1523,7 @@
     SP.portrait('langer', $('#resFace'), 5);
     if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
     // arcade cabinet pixel art: button icons, joystick and buttons, blinking coin, chunky frames
-    $('#cupBtn').textContent = `KÖLSCH-CUP (${TRACKS.length} STRECKEN)`;
+    $('#cupBtn').textContent = `KÖLSCH-CUP (${TRACKS.length} STRECKEN)`; { const st = careerState(); $('#careerBtn').textContent = st.chapter >= tuenn.career.length ? 'KARRIERE: NACHTSCHICHT BEENDET · NOCHMAL' : `KARRIERE · KAPITEL ${st.chapter + 1}/${tuenn.career.length}: ${tuenn.career[st.chapter].title}`; }
     for (const b of document.querySelectorAll('#menu button[data-icon]')) labelBtn(b, b.textContent.trim());
     if ($('#joyArt')) { SP.joystick($('#joyArt'), 2); SP.joystick($('#joyArt2'), 2); }
     if ($('#coinArt')) { SP.icon('coin', $('#coinArt'), 1); SP.icon('coin', $('#coinArt2'), 1); let on = true; setInterval(() => { on = !on; for (const id of ['#coinArt', '#coinArt2']) { const c = $(id); if (c) c.style.visibility = on ? 'visible' : 'hidden'; } }, 500); }
@@ -1425,6 +1531,7 @@
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
+  window.STUNTS_MISSION = (t) => startMission(t != null ? allTracks()[t] : activeTrackDef()); window.STUNTS_CAREER = startCareer; window.STUNTS_ACT = missionAction; window.STUNTS_TELEPORT = (s, v) => { if (player) { player.s = s; player.v = v || 0; player.safeS = s; } }; window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
   window.STUNTS_FINISH = () => { if (player && phase === 'race') { player.finished = true; player.finishTime = raceTime; } };
