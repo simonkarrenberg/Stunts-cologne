@@ -490,7 +490,8 @@
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
     const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
     const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
-    if (sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
+    if (theme.intro) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(theme.intro), 4200); }, 7000);
+    else if (sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
     sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = 'K = ANRUFEN';
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
@@ -581,7 +582,7 @@
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; setTimeout(() => { cd.hidden = true; }, 700); }
+      if (countdown <= 0) { phase = 'race'; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pick(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -598,6 +599,7 @@
       if (phase === 'race') { updatePickups(dt); updateKripo(dt); }
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
+        if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pick(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
         if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 80 + Math.random() * 40; const roll = Math.random(); if (roll < 0.5) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
         for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; if (storyCool > 0 || msgTimer > 0) continue; storyCool = 25; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 30); } }
         if (telefon.active > 0) telefon.active -= dt;
@@ -862,7 +864,7 @@
   }
   function buildPickups() {
     for (const p of pickups) scene.remove(p.mesh); pickups = [];
-    const L = track.length, S = track.samples, n = Math.max(4, Math.floor(L / 230));
+    const L = track.length, S = track.samples, n = Math.max(4, Math.floor(L / (theme.koelschRich ? 110 : 230)));
     let sPos = 60;
     for (let k = 0; k < n; k++) {
       sPos += (L - 120) / n * (0.75 + Math.random() * 0.3); let i = Math.floor((sPos % L) / track.ds), tries = 0;
@@ -929,7 +931,9 @@
     }
     if (kripoT > 55 || ds < -140) endKripo('giveup');
   }
+  let kripoEndT = -99;
   function endKripo(why) {
+    kripoEndT = raceTime;
     if (!kripo) return; scene.remove(kripo.mesh); kripo = null;
     if (why === 'giveup') sayMust(KRIPO, pick(tuenn.kripo.giveup), 3000);
   }
@@ -1160,6 +1164,7 @@
     SP.portrait('langer', $('#resFace'), 5);
     if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
     // arcade cabinet pixel art: button icons, joystick and buttons, blinking coin, chunky frames
+    $('#cupBtn').textContent = `KÖLSCH-CUP (${TRACKS.length} STRECKEN)`;
     for (const b of document.querySelectorAll('#menu button[data-icon]')) labelBtn(b, b.textContent.trim());
     if ($('#joyArt')) { SP.joystick($('#joyArt'), 2); SP.joystick($('#joyArt2'), 2); }
     if ($('#coinArt')) { SP.icon('coin', $('#coinArt'), 1); SP.icon('coin', $('#coinArt2'), 1); let on = true; setInterval(() => { on = !on; for (const id of ['#coinArt', '#coinArt2']) { const c = $(id); if (c) c.style.visibility = on ? 'visible' : 'hidden'; } }, 500); }

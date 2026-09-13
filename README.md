@@ -93,7 +93,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
 - **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und EXPRESS-Schlagzeile samt Link
   per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
-- **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
+- **Kölsch-Cup:** Alle zehn Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
 
 ## Musik
@@ -119,11 +119,14 @@ M schaltet Motor und Musik stumm.
 | 5 | Karneval Krawall | Rosenmontag | Chlodwigplatz – Severinstor – Heumarkt (Reiterdenkmal) – Alter Markt (Rathaus, Groß St. Martin) – Rudolfplatz (Hahnentor) | Tribünen, Zochwagen, Konfetti, Hügel, Sprung, eine Unterführung. |
 | 6 | Rheinauhafen 4D | Sonnenuntergang | Kranhäuser – Lagerhaus Siebengebirge – Schokoladenmuseum (Malakoffturm) – Severinsbrücke – Chlodwigplatz (Severinstor, St. Severin) – Bayenturm – Rheinsprung | Zwei Sprünge übers Hafenbecken, Rheinstrand, Riesenrad, Looping. |
 | 7 | Poller Wiesen Stunt-Park | Nacht | Poller Wiesen – Lanxess Arena – Deutzer Werft – Südbrücke – Rheinpark | Kölner Lichter über dem Rhein, drei Loopings, zwei Sprünge, Tunnel unter der Deutzer Brücke, Tribünen, Kölsch-Stände. |
+| 8 | Domschatz-Raub 1975 | Nacht, Regen | Domschatzkammer – Hauptbahnhof (Sprung über die Gleise) – Eigelstein – Ebertplatz (Looping) – Zoobrücke – Rheinpark (Korkenzieher) – Hohenzollernbrücke | Die Kripo hängt ab der ersten Sekunde im Rückspiegel; Fluchtfahrt durch Chicago am Rhein mit Pfandleihe, Hehler und Zockern. |
+| 9 | Zülpicher 11.11. | Tag, Konfetti | Zülpicher Platz – Barbarossaplatz – Luxemburger Straße (Sprung über die Kneipen) – Uni (Mensa-Looping) – Aachener Weiher – Unterführung – Hohenstaufenring | Elfter im Elften im Kwartier Latäng: doppelt so viele Kölsch auf der Strecke, also Schlangenlinie für alle. |
+| 10 | Rodenkirchen Rheinbad | Sommertag | Rheinuferweg – Rheinarm (Sprung) – Rheinstrand (Looping) – Rodenkirchener Brücke – Weiß (Sprung) – Sürther Bootshaus (Korkenzieher) | Drei Sprünge übers Wasser, Strandbar, Fähre, Villen in Weiß. Wer zu kurz springt, badet. |
 
 Die Reihenfolge der Wahrzeichen folgt der echten Stadt: auf den Ringen von Süd nach Nord, am Dom
 über die Hohenzollernbrücke nach Deutz, auf der Schäl Sick über die Zoobrücke hin und die
 Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loopings und Sprünge
-sind natürlich Stunts, keine Kölner Verkehrsplanung. Vier der sieben Strecken spielen abends,
+sind natürlich Stunts, keine Kölner Verkehrsplanung. Fünf der zehn Strecken spielen abends,
 nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
 Tunnel sind echte Röhren mit Backsteingewölbe, Lampen und Portalen. Alle Stadtstrecken haben
