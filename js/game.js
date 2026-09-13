@@ -143,7 +143,7 @@
     if (!voice.list || voice.list.length < 2) return;
     const i = voice.list.indexOf(voice.de); voice.de = voice.list[(i + 1) % voice.list.length];
     try { localStorage.setItem('stuntskoelle.voiceName', voice.de.name); } catch (e) { /* ignore */ }
-    updateVoiceUI(); if (!voice.on) toggleVoice(); else speak(pick(['Ich bin dä Lange. Kölle, Jung, dat is e Jeföhl.', 'Et hätt noch immer jot jejange. Sagt der Türsteher.', 'Drink doch ene met, un dann fahr.']), 0.55, 0.92, true);
+    updateVoiceUI(); if (!voice.on) toggleVoice(); else speak(pick(['Ich bin dä Lange. Kölle, Jung, dat is e Jeföhl.', 'Et hätt noch immer jot jejange. Sagt der Türsteher.', 'Drink doch ene met, un dann fahr.']), 0.55, 0.92, true, 'Dä Lange');
   }
   // the browser's German voices speak Hochdeutsch; a phonetic pass pushes them towards the Veedel:
   // isch statt ich, -isch statt -ig, dat/wat/et, a softer g, no clipped endings
@@ -161,18 +161,37 @@
     const b = $('#voicePickBtn'); if (!b) return; const many = voice.list && voice.list.length > 1; b.hidden = !many;
     if (many) labelBtn(b, 'SPRECHER: ' + voice.de.name.replace(/^(Microsoft|Google)\s*/i, '').replace(/\s*\(.*$/, '').slice(0, 14).toUpperCase());
   }
-  function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin dä Lange. Jetz hörs du mich och.', 0.55, 0.95, true); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
-  function speak(text, pitch, rate, force) {
+  function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin dä Lange. Jetz hörs du mich och. Dat vierte Kölsch wor jut.', 0.55, 0.95, true, 'Dä Lange'); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+  // dä Lange is a man in his fifties with a few Kölsch in him: the s slurs to sch, vowels get long, there is
+  // the odd "ähh" and "ne?", and every sentence comes out with its own wobble in pitch and speed
+  const DRUNK = { 'Dä Lange': 1, 'Köbes Hermann': 0.6, 'Klüngel Tom': 0.4 };
+  function drunkify(t, k) {
+    const r = () => Math.random();
+    t = t.replace(/(^|[^csS])s(?=[aeiouäöü])/g, '$1sch').replace(/(^|[^csS])S(?=[aeiouäöü])/g, '$1Sch'); // isch schach dir wat
+    t = t.replace(/\b([A-Za-zÄÖÜäöüß]{4,})\b/g, (w) => (r() < 0.22 * k ? w.replace(/([aouäöüe])/i, '$1$1$1') : w)); // lang gezogen
+    t = t.replace(/([.!?])(\s+)(?=[A-ZÄÖÜ])/g, (m, p, sp) => p + sp + (r() < 0.3 * k ? pick(['Ähh, ', 'Also, ', 'Wat wollt isch, ähh, ', 'Hicks. ']) : ''));
+    t = t.replace(/([^.!?]{12,})\.(?=\s|$)/g, (m, a) => (r() < 0.25 * k ? a + ', ne?' : m));
+    if (r() < 0.35 * k) t = pick(['Ähh, ', 'Also, ', 'Höhö. ', 'Pass op, ']) + t;
+    return t;
+  }
+  function speak(text, pitch, rate, force, who) {
     if (!voice.on || !voice.ready || audio.muted) return;
     try {
       if (speechSynthesis.speaking && !force) return;
       if (force) speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(koelschify(text.replace(/[„“…]/g, '').replace(/–/g, ',')));
-      u.lang = voice.de ? voice.de.lang : 'de-DE'; if (voice.de) u.voice = voice.de; u.pitch = pitch == null ? 0.6 : pitch; u.rate = (rate == null ? 0.95 : rate) * 0.94; u.volume = 0.9; // a shade slower: Kölsch is sung, not read
-      speechSynthesis.speak(u);
+      const k = DRUNK[who] || 0; let clean = koelschify(text.replace(/[„“…]/g, '').replace(/–/g, ','));
+      if (k) clean = drunkify(clean, k);
+      const parts = k ? clean.split(/(?<=[.!?])\s+/).filter((x) => x.trim()) : [clean];
+      for (const part of parts) {
+        const u = new SpeechSynthesisUtterance(part);
+        u.lang = voice.de ? voice.de.lang : 'de-DE'; if (voice.de) u.voice = voice.de;
+        const p0 = pitch == null ? 0.6 : pitch, r0 = (rate == null ? 0.95 : rate) * 0.94; // a shade slower: Kölsch is sung, not read
+        u.pitch = Math.max(0.1, p0 - 0.08 * k + (Math.random() - 0.5) * 0.14 * k); u.rate = Math.max(0.5, r0 - 0.12 * k + (Math.random() - 0.5) * 0.16 * k); u.volume = 0.9;
+        speechSynthesis.speak(u);
+      }
     } catch (e) { /* ignore */ }
   }
-  const VOICES = { 'Dä Lange': [0.55, 0.92], 'Kripo Kölle': [0.7, 0.98], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95], 'Tango': [1.05, 1.0], 'Täsch': [0.55, 0.9] };
+  const VOICES = { 'Dä Lange': [0.5, 0.88], 'Kripo Kölle': [0.7, 0.98], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95], 'Tango': [1.05, 1.0], 'Täsch': [0.55, 0.9] };
 
   // ---------------- messages ----------------
   // flavour messages are throttled while driving: never over a message that is still showing, and at least
@@ -182,7 +201,7 @@
   function say(who, text, ms, must) {
     if (phase === 'race' && !must && (msgTimer > 0 || quiet > 0)) return false;
     if (phase === 'race') quiet = 12;
-    if (phase === 'race' || phase === 'countdown' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn); }
+    if (phase === 'race' || phase === 'countdown' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
     $('#msgWho').textContent = `${who.emoji || '🏁'} ${who.name}`;
     $('#msgText').textContent = text;
     $('#msg').classList.add('show');
@@ -1322,7 +1341,7 @@
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
-  window.STUNTS_KOELSCH = koelschify;
+  window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
   window.STUNTS_FINISH = () => { if (player && phase === 'race') { player.finished = true; player.finishTime = raceTime; } };
   window.STUNTS_DEBUG = () => ({ phase, auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
@@ -1333,7 +1352,7 @@
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
   window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage }));
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
-  window.STUNTS_KOELSCH = koelschify;
+  window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {
     document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Dä Lange sagt: Internet anmachen, Jung.</div>';

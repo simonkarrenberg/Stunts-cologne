@@ -209,7 +209,11 @@ des Browsers (tief für den Türsteher, hoch für Heinzel). Browser haben keine 
 wird nachgeholfen: von den deutschen Stimmen des Geräts nimmt das Spiel zuerst eine tiefe
 männliche, und jeder Text geht vor dem Sprechen durch eine kölsche Lautschrift („isch“ statt
 „ich“, „-isch“ statt „-ig“, dat/wat/et, „je-“ statt „ge-“, eine kleine Pause nach „Jung“) und wird
-etwas langsamer gesprochen, weil Kölsch gesungen wird, nicht gelesen. STIMME im Menü schaltet sie
+etwas langsamer gesprochen, weil Kölsch gesungen wird, nicht gelesen. Der Türsteher selbst ist ein
+Mann Mitte fünfzig nach dem vierten Kölsch: tiefe Stimme, das „s“ wird zum „sch“, Vokale ziehen sich
+(„Juuung“), dazwischen ein „Ähh“, ein „Hicks“ oder ein „ne?“, und jeder Satz kommt mit eigenem
+Schwanken in Tonhöhe und Tempo. Der Köbes und Klüngel Tom haben auch einen sitzen, nur weniger.
+STIMME im Menü schaltet sie
 aus, SPRECHER wechselt durch alle deutschen Stimmen des Geräts (mit Hörprobe); die Wahl bleibt
 gespeichert. Welche Stimme am kölschesten klingt, hängt vom Gerät ab – auf dem iPhone lohnt es sich,
 unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte eine zusätzliche deutsche Stimme zu laden.
