@@ -473,6 +473,7 @@
     say(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = 'K = ANRUFEN';
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
+    if (isMobile) { camMode = 0; tvCam = null; }
     setTimeout(() => { if (phase !== 'menu') { const d = pick(racers.filter((r) => r.isAI)).driver; say(d, pick(d.lines.start), 2500); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;

@@ -326,3 +326,8 @@ body.mobile #msg { top: max(8px, env(safe-area-inset-top)); bottom: auto; left: 
 body.mobile #msg.show { transform: translate(-50%, 0); }
 body.mobile #msgWho { font-size: 7px; margin-bottom: 2px; } body.mobile #msgText { font-size: 8px; line-height: 1.5; }
 body.mobile #countdown { top: 36%; }
+/* phones: camera/sound/pixel/menu buttons at the bottom centre, far from gas and brake, and a bit of spacing between the driving buttons */
+body.mobile .hudBtns { top: auto; bottom: max(10px, env(safe-area-inset-bottom)); right: auto; left: 50%; transform: translateX(-50%); flex-direction: row; gap: 8px; }
+body.mobile .hudBtns button { width: 32px; height: 32px; font-size: 11px; opacity: .8; }
+body.mobile #touch .tGroup { gap: 12px; }
+body.mobile.racing #cockpit { display: block; }
