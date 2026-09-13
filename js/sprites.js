@@ -183,74 +183,172 @@
       '.bbbbbbbbbbbbbb.',
       '................']
   };
-  function portrait(id, canvas, scale) {
-    scale = scale || 5; const rows = PORTRAITS[id] || PORTRAITS.tuennes;
-    canvas.width = 16 * scale; canvas.height = 20 * scale;
-    const x = canvas.getContext('2d'); x.imageSmoothingEnabled = false;
-    // backdrop: night city gradient with a tiny skyline
-    const g = x.createLinearGradient(0, 0, 0, canvas.height); g.addColorStop(0, '#1a1040'); g.addColorStop(1, '#4a2060');
-    x.fillStyle = g; x.fillRect(0, 0, canvas.width, canvas.height);
-    x.fillStyle = '#0d0a1e'; for (let i = 0; i < 16; i += 2) x.fillRect(i * scale, canvas.height - (3 + ((i * 7) % 5)) * scale, 2 * scale, 6 * scale);
-    x.fillStyle = '#ffe08a'; for (let i = 0; i < 16; i += 3) x.fillRect((i + 0.5) * scale, canvas.height - (2 + ((i * 3) % 4)) * scale, scale * 0.5, scale * 0.5);
-    draw(x, rows, scale, 0, 0);
-    return canvas;
-  }
+  // ================= procedural pixel art: shaded portraits and car side views =================
+  function Raster(w, h) { this.w = w; this.h = h; this.d = new Uint8ClampedArray(w * h * 4); }
+  Raster.prototype.set = function (x, y, c) { x |= 0; y |= 0; if (x < 0 || y < 0 || x >= this.w || y >= this.h || !c) return; const i = (y * this.w + x) * 4; this.d[i] = c[0]; this.d[i + 1] = c[1]; this.d[i + 2] = c[2]; this.d[i + 3] = c.length > 3 ? c[3] : 255; };
+  Raster.prototype.get = function (x, y) { if (x < 0 || y < 0 || x >= this.w || y >= this.h) return [0, 0, 0, 0]; const i = ((y | 0) * this.w + (x | 0)) * 4; return [this.d[i], this.d[i + 1], this.d[i + 2], this.d[i + 3]]; };
+  Raster.prototype.rect = function (x, y, w, h, c) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) this.set(x + i, y + j, c); };
+  Raster.prototype.ellipse = function (cx, cy, rx, ry, c, fn) { for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) { const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry; if (dx * dx + dy * dy <= 1) this.set(x, y, fn ? fn(x, y, dx, dy) : c); } };
+  Raster.prototype.line = function (x0, y0, x1, y1, c, t) { const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1); for (let i = 0; i <= n; i++) { const x = x0 + (x1 - x0) * i / n, y = y0 + (y1 - y0) * i / n; if (t > 1) this.rect(Math.round(x - t / 2), Math.round(y - t / 2), t, t, c); else this.set(Math.round(x), Math.round(y), c); } };
+  Raster.prototype.outline = function (c) { const src = new Uint8ClampedArray(this.d); const a = (x, y) => (x < 0 || y < 0 || x >= this.w || y >= this.h) ? 0 : src[(y * this.w + x) * 4 + 3]; for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) { if (a(x, y)) continue; if (a(x - 1, y) || a(x + 1, y) || a(x, y - 1) || a(x, y + 1)) this.set(x, y, c); } };
+  Raster.prototype.blit = function (src) { for (let i = 0; i < src.d.length; i += 4) { const a = src.d[i + 3]; if (!a) continue; if (a === 255) { this.d[i] = src.d[i]; this.d[i + 1] = src.d[i + 1]; this.d[i + 2] = src.d[i + 2]; this.d[i + 3] = 255; } else { const k = a / 255; this.d[i] = this.d[i] * (1 - k) + src.d[i] * k; this.d[i + 1] = this.d[i + 1] * (1 - k) + src.d[i + 1] * k; this.d[i + 2] = this.d[i + 2] * (1 - k) + src.d[i + 2] * k; this.d[i + 3] = 255; } } };
+  Raster.prototype.toCanvas = function (canvas) { canvas.width = this.w; canvas.height = this.h; const x = canvas.getContext('2d'); x.putImageData(new ImageData(this.d, this.w, this.h), 0, 0); return canvas; };
+  const rgb = (hex) => [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
+  const shade = (c, k) => [Math.min(255, c[0] * k), Math.min(255, c[1] * k), Math.min(255, c[2] * k)];
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const dither = (x, y) => (x + y) % 2 === 0;
+  /** three-tone sphere shading with a dithered edge, light from the upper left */
+  function sphereShader(base, cx, cy) { const L = shade(base, 1.18), D = shade(base, 0.72), M = base; return (x, y, dx, dy) => { const lx = dx + 0.35, ly = dy + 0.4; const r = Math.sqrt(lx * lx + ly * ly); if (r < 0.55) return L; if (r < 0.7) return dither(x, y) ? L : M; if (r < 1.15) return M; if (r < 1.3) return dither(x, y) ? M : D; return D; }; }
 
-  // ---------------- car side views (32 x 11) ----------------
-  const CAR_SHAPES = {
-    hatch: [
-      '................................',
-      '...........bbbbbbbbbb...........',
-      '.........bbwwwwbwwwwwbbb........',
-      '.......bbbwwwwwbwwwwwbbbb.......',
-      '.....bbbbbbbbbbbbbbbbbbbbbb.....',
-      '...lbbbbbbbbbbbbbbbbbbbbbbbbr...',
-      '...bbbbbbbbbbbbbbbbbbbbbbbbbb...',
-      '...bbbkkkkkbbbbbbbbbbkkkkkbbb...',
-      '.....kkkkkkk........kkkkkkk.....',
-      '......kkkkk..........kkkkk......',
-      '................................'],
-    coupe: [
-      '................................',
-      '.............bbbbbbbbbbb........',
-      '..........bbbwwwwwbwwwwwbb......',
-      '........bbbbwwwwwwbwwwwwwbbb....',
-      '......bbbbbbbbbbbbbbbbbbbbbbbb..',
-      '..lbbbbbbbbbbbbbbbbbbbbbbbbbbbr.',
-      '..bsssssssssssssssssssssssssssb.',
-      '..bbbkkkkkbbbbbbbbbbbbbkkkkkbbb.',
-      '.....kkkkkkk..........kkkkkkk...',
-      '......kkkkk............kkkkk....',
-      '................................'],
-    sport: [
-      '................................',
-      '................................',
-      '...........bbbbbbbbbbbbb........',
-      '........bbbbwwwwwwbwwwwwbbb.....',
-      '......bbbbbbbbbbbbbbbbbbbbbbb...',
-      '..lbbbbbbbbbbbbbbbbbbbbbbbbbbbr.',
-      '..bbbbsssssssssssssssssssssbbbb.',
-      '..bbbkkkkkbbbbbbbbbbbbbkkkkkbbb.',
-      '.....kkkkkkk..........kkkkkkk...',
-      '......kkkkk............kkkkk....',
-      '................................']
+  const LOOKS = {
+    tuennes: { skin: 0xf1c27d, hair: 0x6a5a4a, hat: 'cap', hatC: 0x777777, jacket: 0x2a4a8a, shirt: 0xffffff, scarf: 0xc1121f, blush: true, mouth: 'grin', brow: 'up', moustache: 0x5a3a20, heavy: true, koelsch: true },
+    schael: { skin: 0xf1c27d, hair: 0x1a1a1a, hairStyle: 'part', jacket: 0x5a3a2a, shirt: 0xf4f4f4, tie: 0xc1121f, mouth: 'smirk', brow: 'skew', squint: true },
+    heinzel: { skin: 0xffdbac, hair: 0xf4f4f4, hat: 'gnome', hatC: 0xc1121f, jacket: 0x2d6a4f, shirt: 0xf4e8c8, beard: 0xf4f4f4, mouth: 'smile', brow: 'up', wrench: true, small: true },
+    langer: { skin: 0xe0ac69, hair: 0x2a2a2a, hat: 'fedora', hatC: 0x0a0a0a, jacket: 0x14141a, shirt: 0xf4f4f4, tie: 0x8a1a1a, shades: true, cigar: true, mouth: 'flat', brow: 'flat', tall: true, moustache: 0x2a2a2a },
+    anna: { skin: 0xffdbac, hair: 0xd9a24a, hairStyle: 'long', hat: 'tricorn', hatC: 0xc1121f, jacket: 0xc1121f, shirt: 0xffffff, lips: true, blush: true, mouth: 'smile', brow: 'up', lashes: true },
+    tom: { skin: 0xe8c8a0, hair: 0x9a9a9a, hairStyle: 'slick', jacket: 0x444444, shirt: 0xf4f4f4, tie: 0x1c3f95, glasses: true, mouth: 'flat', brow: 'flat', lapelPin: true },
+    willi: { skin: 0xe0ac69, hair: 0x3a2a1a, hat: 'cap', hatC: 0x2a2a30, jacket: 0xf2e6b1, shirt: 0x8a5a2a, mouth: 'smile', brow: 'up', moustache: 0x3a2a1a, stubble: true },
+    koebes: { skin: 0xe0ac69, hair: 0x4a4a4a, hairStyle: 'bald', jacket: 0x1c3f95, shirt: 0xf4f4f4, apron: 0x1c3f95, mouth: 'frown', brow: 'down', moustache: 0x4a4a4a, koelsch: true, kranz: true }
   };
-  function carSide(car, canvas, scale) {
-    scale = scale || 5; const rows = CAR_SHAPES[car.shape === 'coupe2' ? 'coupe' : car.shape] || CAR_SHAPES.coupe;
-    canvas.width = 32 * scale; canvas.height = 11 * scale;
-    const x = canvas.getContext('2d'); x.imageSmoothingEnabled = false;
-    const bc = new THREE.Color(car.color); if (bc.r + bc.g + bc.b < 0.35) bc.setHex(0x2e2e38); // keep black cars visible
-    const body = '#' + bc.getHexString();
-    const dark = '#' + bc.clone().multiplyScalar(0.7).getHexString();
-    const pal = Object.assign({}, PAL, { b: body, s: '#' + new THREE.Color(car.stripe || 0xffffff).getHexString(), w: '#7fb8e8', l: '#fff6c8', r: '#ff2020', k: '#14121c' });
-    draw(x, rows, scale, 0, 0, pal);
-    // shading line under the windows, ground shadow
-    x.fillStyle = dark; x.fillRect(4 * scale, 6.6 * scale, 24 * scale, scale * 0.5);
-    x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(3 * scale, 10 * scale, 26 * scale, scale);
-    return canvas;
+  const INK = [20, 18, 28];
+  function portrait(id, canvas) {
+    const o = LOOKS[id] || LOOKS.tuennes; const W = 80, H = 100;
+    const bg = new Raster(W, H); const fig = new Raster(W, H);
+    // backdrop: night over the Ringe, neon strip, distant windows
+    const top = rgb(0x1a1040), bot = rgb(0x4a2060), neon = rgb(id === 'langer' ? 0xff2d95 : id === 'anna' ? 0xff5fa2 : 0x00e5ff);
+    for (let y = 0; y < H; y++) { const c = mix(top, bot, y / H); for (let x = 0; x < W; x++) bg.set(x, y, c); }
+    for (let i = 0; i < 40; i++) { const sx = (i * 37 + 11) % W, sy = (i * 53 + 7) % 50; bg.set(sx, sy, [220, 220, 255]); }
+    const sky = rgb(0x0d0a1e); for (let x = 0; x < W; x += 6) { const h = 14 + ((x * 7) % 19); bg.rect(x, H - h - 22, 6, h + 22, sky); for (let y = H - h - 18; y < H - 22; y += 5) for (let wx = x + 1; wx < x + 6; wx += 3) if ((wx * 7 + y) % 5 < 3) bg.rect(wx, y, 1, 2, [255, 224, 138]); }
+    bg.rect(0, H - 22, W, 2, neon); bg.rect(0, H - 20, W, 20, rgb(0x2a1a3a));
+    // figure geometry
+    const cy = o.tall ? 40 : o.small ? 50 : 44, ry = o.tall ? 21 : 19, rx = o.heavy ? 18 : 16, cx = 40;
+    const skin = rgb(o.skin), jacket = rgb(o.jacket), shirt = rgb(o.shirt);
+    // shoulders / coat
+    const shTop = cy + ry + 6, shW = o.heavy ? 36 : o.small ? 26 : o.tall ? 38 : 32;
+    for (let y = shTop; y < H; y++) { const t = Math.min(1, (y - shTop) / 10); const half = Math.round(shW * (0.45 + 0.55 * t)); for (let x = cx - half; x <= cx + half; x++) { let c = jacket; if (x < cx - half + 4) c = shade(jacket, 0.72); else if (x < cx - half + 10 && dither(x, y)) c = shade(jacket, 0.85); else if (x > cx + half - 5) c = shade(jacket, 1.15); fig.set(x, y, c); } }
+    // shirt V, tie or scarf, apron
+    for (let y = shTop; y < shTop + 16; y++) { const half = Math.max(1, Math.round(7 - (y - shTop) * 0.45)); fig.rect(cx - half, y, half * 2, 1, shirt); }
+    if (o.tie) { const tie = rgb(o.tie); fig.rect(cx - 1, shTop + 4, 3, 22, tie); fig.rect(cx - 2, shTop + 10, 5, 12, tie); fig.rect(cx - 1, shTop + 4, 1, 22, shade(tie, 1.3)); }
+    if (o.scarf) { const sc = rgb(o.scarf); for (let y = shTop - 4; y < shTop + 8; y++) fig.rect(cx - 14, y, 28, 1, ((y - shTop) & 2) ? sc : [244, 244, 244]); fig.rect(cx + 6, shTop + 8, 7, 14, sc); fig.rect(cx + 6, shTop + 12, 7, 2, [244, 244, 244]); }
+    if (o.apron) { const ap = rgb(o.apron); fig.rect(cx - 12, shTop + 14, 24, 30, shade(ap, 0.8)); fig.rect(cx - 12, shTop + 14, 24, 1, shade(ap, 1.2)); }
+    if (o.lapelPin) fig.rect(cx - 12, shTop + 8, 2, 2, rgb(0xffd400));
+    // lapels
+    fig.line(cx - 8, shTop, cx - 13, shTop + 18, shade(jacket, 1.2), 1); fig.line(cx + 8, shTop, cx + 13, shTop + 18, shade(jacket, 1.2), 1);
+    // neck
+    fig.rect(cx - 6, cy + ry - 4, 12, 12, shade(skin, 0.8));
+    // ears, head
+    fig.ellipse(cx - rx, cy + 2, 3, 4, shade(skin, 0.85)); fig.ellipse(cx + rx, cy + 2, 3, 4, shade(skin, 1.05));
+    fig.ellipse(cx, cy, rx, ry, null, sphereShader(skin, cx, cy));
+    if (o.heavy) fig.ellipse(cx, cy + ry - 6, rx - 2, 6, null, (x, y, dx, dy) => dither(x, y) ? shade(skin, 0.9) : shade(skin, 0.78)); // double chin
+    // stubble / beard
+    if (o.stubble) for (let y = cy + 4; y < cy + ry - 2; y++) for (let x = cx - rx + 4; x < cx + rx - 4; x++) if ((x * 3 + y * 5) % 7 === 0) fig.set(x, y, shade(skin, 0.7));
+    if (o.beard) { const b = rgb(o.beard); fig.ellipse(cx, cy + ry + 2, rx - 1, 14, null, (x, y, dx, dy) => (dy < -0.5 && Math.abs(dx) < 0.6) ? null : (dither(x, y) || dy > 0.2 ? b : shade(b, 0.82))); }
+    // eyes
+    const ey = cy - 2; const eyeW = [248, 248, 244], iris = rgb(id === 'anna' ? 0x4a8a5a : 0x3a5a8a);
+    for (const sx of [-1, 1]) {
+      const ex = cx + sx * 7;
+      if (o.shades) { fig.rect(ex - 5, ey - 3, 10, 6, [18, 18, 24]); fig.rect(ex - 4, ey - 2, 2, 1, [90, 90, 110]); continue; }
+      if (o.squint && sx === 1) { fig.rect(ex - 4, ey, 8, 1, INK); fig.rect(ex - 3, ey - 1, 6, 1, shade(skin, 0.75)); continue; }
+      fig.ellipse(ex, ey, 4, 2.6, eyeW); fig.rect(ex - 1 + (o.squint ? 2 : 0), ey - 1, 3, 3, iris); fig.rect(ex + (o.squint ? 2 : 0), ey, 1, 1, INK); fig.rect(ex - 1 + (o.squint ? 2 : 0), ey - 1, 1, 1, [255, 255, 255]);
+      fig.line(ex - 4, ey - 1, ex + 4, ey - 1, shade(skin, 0.7), 1); // lid
+      if (o.lashes) { fig.set(ex + sx * 5, ey - 3, INK); fig.set(ex + sx * 4, ey - 4, INK); }
+    }
+    if (o.shades) fig.rect(cx - 2, ey - 1, 4, 1, [18, 18, 24]);
+    // brows
+    const hairC = rgb(o.hair); for (const sx of [-1, 1]) { const ex = cx + sx * 7; const lift = o.brow === 'up' ? -2 : o.brow === 'down' ? 1 : 0; const skew = o.brow === 'skew' ? sx : 0; fig.line(ex - 4, ey - 6 + lift * 0.3 + skew, ex + 4, ey - 6 + lift - skew, hairC, 2); }
+    // nose, mouth, blush
+    fig.line(cx + 1, ey + 2, cx + 1, ey + 8, shade(skin, 0.7), 1); fig.rect(cx - 1, ey + 8, 4, 1, shade(skin, 0.7)); fig.set(cx + 3, ey + 7, shade(skin, 1.2));
+    const my = ey + 14; const lip = o.lips ? rgb(0xc1121f) : [120, 50, 50];
+    if (o.mouth === 'grin') { fig.rect(cx - 7, my - 1, 14, 4, [70, 30, 30]); fig.rect(cx - 6, my, 12, 2, [250, 250, 250]); fig.set(cx - 7, my - 2, lip); fig.set(cx + 6, my - 2, lip); }
+    else if (o.mouth === 'smile') { fig.line(cx - 6, my - 1, cx - 3, my + 1, lip, o.lips ? 2 : 1); fig.line(cx - 3, my + 1, cx + 3, my + 1, lip, o.lips ? 2 : 1); fig.line(cx + 3, my + 1, cx + 6, my - 1, lip, o.lips ? 2 : 1); }
+    else if (o.mouth === 'smirk') { fig.line(cx - 5, my + 1, cx + 5, my - 1, lip, 1); fig.set(cx + 6, my - 2, lip); }
+    else if (o.mouth === 'frown') { fig.line(cx - 5, my + 1, cx, my - 1, lip, 1); fig.line(cx, my - 1, cx + 5, my + 1, lip, 1); }
+    else fig.rect(cx - 5, my, 10, 1, lip);
+    if (o.moustache) { const m = rgb(o.moustache); fig.rect(cx - 8, my - 4, 16, 3, m); fig.rect(cx - 9, my - 3, 2, 2, m); fig.rect(cx + 7, my - 3, 2, 2, m); }
+    if (o.blush) for (const sx of [-1, 1]) for (let k = 0; k < 6; k++) fig.set(cx + sx * 12 + (k % 3) - 1, ey + 6 + Math.floor(k / 3), dither(k, k) ? [240, 140, 140] : [230, 120, 120]);
+    if (o.cigar) { fig.rect(cx + 4, my, 14, 3, rgb(0x6a3a1a)); fig.rect(cx + 15, my, 3, 3, rgb(0xff6a00)); fig.rect(cx + 18, my - 3, 1, 3, [200, 200, 210, 140]); fig.rect(cx + 19, my - 6, 1, 3, [200, 200, 210, 90]); }
+    if (o.glasses) for (const sx of [-1, 1]) { const ex = cx + sx * 7; fig.line(ex - 5, ey - 3, ex + 5, ey - 3, INK, 1); fig.line(ex - 5, ey + 3, ex + 5, ey + 3, INK, 1); fig.line(ex - 5, ey - 3, ex - 5, ey + 3, INK, 1); fig.line(ex + 5, ey - 3, ex + 5, ey + 3, INK, 1); }
+    // hair
+    const hs = o.hairStyle || 'short';
+    if (hs !== 'bald' && o.hat !== 'gnome') {
+      fig.ellipse(cx, cy - 6, rx + 1, ry - 4, null, (x, y, dx, dy) => (dy > (hs === 'slick' ? -0.35 : -0.15) && !(hs === 'long' && Math.abs(dx) > 0.78)) ? null : (dither(x, y) && dx > 0.2 ? shade(hairC, 1.25) : hairC));
+      if (hs === 'part') { fig.line(cx - 9, cy - ry + 2, cx + 3, cy - ry - 1, shade(hairC, 1.6), 1); fig.ellipse(cx + 8, cy - ry + 3, 8, 5, hairC); }
+      if (hs === 'long') { fig.rect(cx - rx - 3, cy - 6, 6, 30, hairC); fig.rect(cx + rx - 3, cy - 6, 6, 30, hairC); fig.rect(cx - rx - 2, cy - 4, 2, 26, shade(hairC, 1.25)); }
+    } else if (hs === 'bald') { fig.ellipse(cx, cy - 4, rx + 1, ry - 2, null, (x, y, dx, dy) => (Math.abs(dx) > 0.86 && dy > -0.45 && dy < 0.35) ? (dither(x, y) ? shade(hairC, 1.2) : hairC) : null); }
+    // hats
+    const hatC = rgb(o.hatC || 0x333333);
+    if (o.hat === 'cap') { fig.ellipse(cx, cy - ry + 6, rx + 2, 10, null, (x, y, dx, dy) => dy > 0.1 ? null : (dx < -0.3 ? shade(hatC, 0.8) : dx > 0.4 ? shade(hatC, 1.15) : hatC)); fig.rect(cx - rx - 3, cy - ry + 5, rx * 2 + 8, 3, shade(hatC, 0.6)); fig.rect(cx - 2, cy - ry - 3, 4, 2, shade(hatC, 0.8)); }
+    if (o.hat === 'fedora') { const b = cy - ry + 4; fig.rect(cx - rx - 6, b, rx * 2 + 12, 3, shade(hatC, 1.1)); fig.rect(cx - rx - 6, b + 2, rx * 2 + 12, 2, shade(hatC, 0.6)); fig.rect(cx - rx + 2, b - 16, rx * 2 - 4, 17, hatC); fig.rect(cx - rx + 2, b - 16, 3, 17, shade(hatC, 1.35)); fig.rect(cx - rx + 2, b - 4, rx * 2 - 4, 3, rgb(0x8a1a1a)); fig.rect(cx - 4, b - 17, 10, 2, shade(hatC, 0.8)); }
+    if (o.hat === 'gnome') { const b = cy - ry + 5; for (let y = b - 30; y <= b; y++) { const t = (y - (b - 30)) / 30; const half = Math.round(2 + (rx + 2) * t); fig.rect(cx - half + Math.round((1 - t) * 4), y, half * 2, 1, t > 0.85 ? shade(hatC, 0.7) : dither(0, y) && t < 0.4 ? shade(hatC, 1.2) : hatC); } fig.rect(cx - rx - 2, b - 2, rx * 2 + 4, 3, shade(hatC, 0.6)); }
+    if (o.hat === 'tricorn') { const b = cy - ry + 5; fig.rect(cx - rx - 4, b - 6, rx * 2 + 8, 8, hatC); fig.rect(cx - rx - 4, b - 7, 4, 3, shade(hatC, 1.2)); fig.rect(cx + rx, b - 7, 4, 3, shade(hatC, 1.2)); fig.rect(cx - rx + 3, b - 12, rx * 2 - 6, 7, shade(hatC, 0.9)); fig.rect(cx - rx - 4, b, rx * 2 + 8, 2, rgb(0xffd400)); fig.ellipse(cx, b - 14, 3, 3, [250, 250, 250]); }
+    // props at the shoulder
+    if (o.koelsch) { fig.rect(cx + 22, H - 22, 7, 16, rgb(0xffc300)); fig.rect(cx + 22, H - 24, 7, 3, [250, 250, 250]); fig.rect(cx + 22, H - 22, 1, 16, [255, 240, 160]); fig.rect(cx + 21, H - 6, 9, 1, INK); }
+    if (o.wrench) { fig.rect(cx + 20, H - 26, 3, 22, [170, 170, 180]); fig.rect(cx + 18, H - 30, 7, 5, [170, 170, 180]); fig.rect(cx + 20, H - 29, 3, 2, [60, 60, 70]); }
+    if (o.kranz) { fig.rect(cx - 34, H - 12, 16, 2, rgb(0x8a5a2a)); for (let k = 0; k < 4; k++) { fig.rect(cx - 33 + k * 4, H - 22, 3, 10, rgb(0xffc300)); fig.rect(cx - 33 + k * 4, H - 23, 3, 2, [250, 250, 250]); } }
+    fig.outline(INK);
+    bg.blit(fig);
+    // drop shadow of the head onto the shoulders
+    for (let x = cx - rx + 2; x < cx + rx - 2; x++) if (dither(x, shTop)) { const c = bg.get(x, shTop + 1); bg.set(x, shTop + 1, shade(c, 0.7)); }
+    return bg.toCanvas(canvas);
   }
 
-  // ---------------- logo ----------------
+  function carSide(car, canvas) {
+    const S = (root.Cars && root.Cars.SPECS && root.Cars.SPECS[car.shape]) || null;
+    const W = 128, H = 44; const r = new Raster(W, H); const fig = new Raster(W, H);
+    const spec = S || { L: 4.4, W: 1.72, wr: 0.32, floor: 0.27, body: [[-2.2, 0.8, 0.85], [-1.95, 0.86, 0.96], [-0.5, 0.87, 1], [0.9, 0.83, 1], [1.8, 0.74, 0.97], [2.2, 0.69, 0.84]], cabin: [[0.45, 0.82, 0.9], [-0.05, 1.28, 0.9], [-0.95, 1.31, 0.9], [-1.65, 1.06, 0.88], [-2.1, 0.84, 0.85]], ax: [1.4, -1.45], lights: 'round4' };
+    const ppm = 23, gy = 37; const tail = spec.body[0][0], nose = spec.body[spec.body.length - 1][0]; const x0 = Math.round(W / 2 - (nose + tail) / 2 * ppm);
+    const X = (z) => Math.round(x0 + z * ppm), Y = (m) => Math.round(gy - m * ppm);
+    const interp = (st, z, k) => { if (z <= st[0][0]) return st[0][k]; if (z >= st[st.length - 1][0]) return st[st.length - 1][k]; for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1]; if (z >= a[0] && z <= b[0]) { const t = (z - a[0]) / (b[0] - a[0] || 1); return a[k] + (b[k] - a[k]) * t; } } return st[0][k]; };
+    const cab = spec.cabin.slice().reverse(); // ascending z
+    const floorAt = (z) => spec.floor + Math.max(0, Math.abs(z) - (spec.L / 2 - 0.55)) * 0.5;
+    const bc = new THREE.Color(car.color); if (bc.r + bc.g + bc.b < 0.3) bc.setHex(0x2a2a34);
+    const base = [bc.r * 255, bc.g * 255, bc.b * 255]; const glassC = rgb(0x6fa8d8), glassD = rgb(0x2a4a70), chrome = [225, 228, 235], dark = [22, 22, 28];
+    // body columns
+    for (let x = X(tail); x <= X(nose); x++) {
+      const z = (x - x0) / ppm; const top = interp(spec.body, z, 1), fl = floorAt(z); const yT = Y(top), yB = Y(fl);
+      for (let y = yT; y <= yB; y++) { const t = (y - yT) / Math.max(1, yB - yT); let c = base; if (y === yT) c = shade(base, 1.45); else if (t < 0.18) c = shade(base, 1.2); else if (t < 0.3) c = dither(x, y) ? shade(base, 1.2) : base; else if (t > 0.86) c = shade(base, 0.62); else if (t > 0.7) c = dither(x, y) ? base : shade(base, 0.8); fig.set(x, y, c); }
+      // greenhouse
+      if (z >= cab[0][0] && z <= cab[cab.length - 1][0]) { const ct = interp(cab, z, 1); const yC = Y(ct); for (let y = yC; y < yT; y++) { const t = (y - yC) / Math.max(1, yT - yC); const diag = ((x - yC) + y * 2) % 23 < 5; fig.set(x, y, y === yC ? shade(base, 1.1) : y === yC + 1 ? base : diag ? shade(glassC, 1.25) : t < 0.5 ? glassC : mix(glassC, glassD, (t - 0.5) * 2)); } }
+    }
+    // pillars: A (cowl -> roof front), B (mid), C (roof rear -> rear window base)
+    const P = (i) => [X(cab[i][0]), Y(cab[i][1])];
+    const cowl = P(cab.length - 1), rf = P(cab.length - 2), rr = P(1), rwb = P(0);
+    fig.line(cowl[0] - 1, cowl[1], rf[0], rf[1] + 1, base, 2); fig.line(rr[0], rr[1] + 1, rwb[0] + 1, rwb[1], base, 2);
+    const bx = Math.round((rf[0] + rr[0]) / 2) - 3; fig.line(bx, rf[1] + 1, bx, cowl[1], shade(base, 0.7), 2);
+    // belt line, sill, door seams, handle, mirror, stripe
+    const beltY = Y(interp(spec.body, 0, 1));
+    fig.rect(X(tail) + 2, beltY + 1, X(nose) - X(tail) - 4, 1, chrome);
+    const doorZ = cab[cab.length - 1][0] - 0.05, door2 = doorZ - (spec.L > 4.6 ? 1.05 : 1.35);
+    for (const dz of [doorZ, door2]) fig.rect(X(dz), beltY + 2, 1, Y(spec.floor) - beltY - 3, shade(base, 0.55));
+    fig.rect(X(doorZ) - 6, beltY + 4, 4, 1, chrome);
+    fig.rect(cowl[0] + 1, beltY - 4, 3, 3, base); fig.rect(cowl[0] + 1, beltY - 1, 1, 2, dark);
+    if (car.stripe != null && car.stripe !== 0xffffff) { const st = rgb(car.stripe); fig.rect(X(tail) + 3, beltY + 7, X(nose) - X(tail) - 6, 2, st); }
+    // wheel wells and wheels
+    const wr = spec.wr * ppm; const wy = gy - wr;
+    for (const az of spec.ax) { const wx = X(az); fig.ellipse(wx, wy, wr + 2, wr + 2, [0, 0, 0, 0], (x, y) => { if (y > wy + wr) return null; fig.set(x, y, [0, 0, 0, 0]); return null; }); }
+    // re-fill wells transparent: clear pixels
+    for (const az of spec.ax) { const wx = X(az); for (let y = Math.floor(wy - wr - 2); y <= wy + 1; y++) for (let x = Math.floor(wx - wr - 2); x <= wx + wr + 2; x++) { const dx = x - wx, dy = y - wy; if (dx * dx + dy * dy <= (wr + 2) * (wr + 2)) { const i = (y * W + x) * 4; if (x >= 0 && x < W && y >= 0 && y < H) fig.d[i + 3] = 0; } } }
+    fig.outline(dark);
+    for (const az of spec.ax) { const wx = X(az); fig.ellipse(wx, wy, wr, wr, null, (x, y, dx, dy) => { const rr2 = dx * dx + dy * dy; if (rr2 > 0.62) return (dx - dy) < -0.4 ? [50, 50, 58] : [24, 24, 30]; if (rr2 > 0.5) return [110, 110, 120]; if (rr2 > 0.1) { const a = Math.atan2(dy, dx); return Math.abs(Math.sin(a * 2.5)) > 0.85 ? [150, 150, 160] : [200, 202, 210]; } return [120, 120, 130]; }); fig.set(wx - 2, wy - 2, [245, 245, 250]); }
+    // front: bumper, grille, lights; rear: bumper, tail light, plate, exhaust
+    const nx = X(nose), tx = X(tail), by = Y(floorAt(nose) + 0.18);
+    fig.rect(nx - 3, by, 5, 2, chrome); fig.rect(tx - 1, by, 5, 2, chrome); fig.rect(nx - 4, by + 2, 5, 1, shade(chrome, 0.6)); fig.rect(tx - 2, by + 2, 5, 1, shade(chrome, 0.6));
+    const ly = Y(interp(spec.body, nose, 1) - 0.14);
+    if (spec.lights === 'round4') { fig.rect(nx - 1, ly - 1, 3, 3, [255, 246, 200]); fig.rect(nx - 5, ly, 3, 2, [255, 246, 200]); }
+    else if (spec.lights === 'vertical') { fig.rect(nx - 2, ly - 2, 3, 6, [255, 246, 200]); fig.rect(nx - 2, ly + 4, 3, 2, rgb(0xd88a10)); }
+    else if (spec.lights === 'popup') { fig.rect(nx - 6, ly - 2, 6, 2, shade(base, 0.8)); fig.rect(nx - 5, ly - 1, 4, 1, [255, 246, 200]); }
+    else fig.rect(nx - 3, ly - 1, 4, 3, [255, 246, 200]);
+    fig.rect(nx - 1, ly + 1, 2, 1, [255, 255, 240]); fig.rect(nx - 4, by - 2, 3, 1, rgb(0xd88a10));
+    fig.rect(tx - 1, ly, 3, 3, rgb(0xd01818)); fig.rect(tx, ly, 1, 1, [255, 90, 80]); fig.rect(tx + 2, by - 3, 5, 3, [244, 244, 244]); fig.rect(tx + 3, by - 2, 3, 1, [40, 40, 50]);
+    fig.rect(tx + 2, gy - 3, 4, 2, [140, 140, 150]);
+    // antenna
+    fig.line(cowl[0] + 4, beltY - 2, cowl[0] + 6, beltY - 12, [90, 90, 100], 1);
+    // ground shadow, then composite
+    r.ellipse(W / 2, gy + 3, (nose - tail) / 2 * ppm + 6, 3, [0, 0, 0, 120]);
+    r.blit(fig);
+    return r.toCanvas(canvas);
+  }
+
   function logo(canvas, w, h) {
     canvas.width = w; canvas.height = h;
     const x = canvas.getContext('2d');
