@@ -1199,7 +1199,16 @@
     let loop0 = -1, loopEnd = -1, loopShift = 0;
     for (let i = 0; i < n; i++) {
       const s = S[i];
-      if (s.kind === 'loop') {
+      if (s.cork) { // cork screw: a steel spine along the axis, spokes to the road, A-legs to the ground every half turn
+        const R = 9; const ax = s.p.x + s.N.x * R, ay = s.p.y + s.N.y * R, az = s.p.z + s.N.z * R;
+        if (i % 6 === 0) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, R - 0.4), steel); sp.position.set((ax + s.p.x) / 2 - s.N.x * 0.2, (ay + s.p.y) / 2 - s.N.y * 0.2, (az + s.p.z) / 2 - s.N.z * 0.2); sp.lookAt(s.p.x, s.p.y, s.p.z); g.add(sp); }
+        if (i % 6 === 0 && S[i + 6] && S[i + 6].cork) { const q = S[i + 6]; const bx = q.p.x + q.N.x * R, by = q.p.y + q.N.y * R, bz = q.p.z + q.N.z * R; const L = Math.hypot(bx - ax, by - ay, bz - az); const sb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, L + 0.2), steel); sb.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2); sb.lookAt(bx, by, bz); g.add(sb); }
+        const first = !S[i - 1] || !S[i - 1].cork, last = !S[i + 1] || !S[i + 1].cork; const u = s.loopU || 0;
+        if (first || last || Math.abs(u - 0.5) < 0.006) { // portal frame: two columns beside the street, crossbeam at axis height (9 m over the road)
+          const T0 = S[first ? i : i - 1].T; const Bx = T0.z, Bz = -T0.x; const bl = Math.hypot(Bx, Bz) || 1; const W2 = ROAD_W + 4.8;
+          for (const side of [-1, 1]) { const gx = ax + Bx / bl * side * W2, gz = az + Bz / bl * side * W2; const h = ay + 0.6 - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(gx, GROUND_Y + h / 2, gz); g.add(c); }
+          const cb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, W2 * 2 + 0.6), steel); cb.position.set(ax, ay + 0.4, az); cb.lookAt(ax + Bx, ay + 0.4, az + Bz); g.add(cb); }
+      } else if (s.kind === 'loop') {
         if (loop0 < 0 || i > loopEnd + 1) { loop0 = i; loopEnd = i; while (loopEnd + 1 < n && S[loopEnd + 1].kind === 'loop') loopEnd++; const e = S[loopEnd], b0 = S[loop0].B; loopShift = (e.p.x - S[loop0].p.x) * b0.x + (e.p.z - S[loop0].p.z) * b0.z; }
         if (i % 8 === 0 && s.p.y > 4) {
           const s0 = S[loop0], B0 = s0.B, T0 = s0.T; const along = (s.p.x - s0.p.x) * T0.x + (s.p.z - s0.p.z) * T0.z; const lat = (s.p.x - s0.p.x) * B0.x + (s.p.z - s0.p.z) * B0.z;
@@ -1276,7 +1285,7 @@
       if (i0 < 0) return 0;
       return ((i0 + (u == null ? 0.5 : u) * (i1 - i0)) * track.ds) / L;
     }
-    const SPANS = /^prop:(hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
+    const SPANS = /^prop:(jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
     function clearTheStreets(group) {
       const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.0; const lats = [-m, -m / 2, 0, m / 2, m];
       const footprint = (obj) => {
@@ -1389,8 +1398,8 @@
       storyAt.push(sPos); const holder = prop || new THREE.Object3D(); holder.userData.story = text; holder.userData.at = (sPos % L) / L; holder.userData.type = holder.userData.type || kind; propList.push(holder);
     }
     for (const ps of pendingStories) story(ps[0], ps[1]);
-    { let seenLoop = false, seenJump = false, seenTunnel = false;
-      for (let i = 0; i < n; i++) { const k = S[i].kind; if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
+    { let seenLoop = false, seenJump = false, seenTunnel = false, seenCork = false;
+      for (let i = 0; i < n; i++) { const k = S[i].kind; if (S[i].cork && !seenCork) { seenCork = true; story('cork', i * track.ds - 40); } else if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
     // closed street walls (Blockrandbebauung): houses shoulder to shoulder along both sides, a side street now and then
     if (street !== 'park') {
       for (const side of [-1, 1]) {
@@ -1555,6 +1564,17 @@
       prop.position.set(cx + Math.cos(a) * (ringR + (fl.dist || 120)), GROUND_Y, cz + Math.sin(a) * (ringR + (fl.dist || 120)));
       prop.lookAt(cx, GROUND_Y, cz); g.add(prop);
     }
+    // Stunts-style jumps over buildings: the thing you fly over sits in the middle of the gap
+    (track.def.segments || []).forEach((sg, k) => {
+      if (sg.t !== 'jump' || !sg.over) return;
+      const gaps = []; for (let i = 0; i < n; i++) if (S[i].seg === k && S[i].kind === 'gap') gaps.push(i);
+      if (!gaps.length) return; const m = S[gaps[Math.floor(gaps.length / 2)]];
+      let b;
+      if (sg.over === 'buedchen') { b = new THREE.Group(); for (const sx of [-1, 1]) { const k2 = P.buedchen(); k2.position.set(sx * 4.2, 0, 0); k2.rotation.y = Math.PI / 2; b.add(k2); } }
+      else if (sg.over === 'brauhaus') { b = building(12, 2.6, 9, 'gruenderzeit', GRUENDER[k % GRUENDER.length], 'hip', 40 + k, { night: theme.night, shop: 'BRAUHAUS' }); }
+      else { b = building(11, 2.8, 9, 'gruenderzeit', PASTEL[(k * 3) % PASTEL.length], 'hip', 70 + k, { night: theme.night, shop: ['KIOSK', 'BÜDCHEN', 'HALVE HAHN'][k % 3] }); }
+      b.position.set(m.p.x, GROUND_Y, m.p.z); b.rotation.y = Math.atan2(m.T.x, m.T.z) + Math.PI / 2; b.userData.kind = 'prop:jumphouse'; g.add(b);
+    });
     // final pass: nothing static may stand on the road. Every placed object gets its footprint (oriented
     // box of all its meshes) tested against the road corridor of the whole circuit; offenders are pushed
     // sideways off the road, and removed if 24 m of pushing does not free them. Structures that span the

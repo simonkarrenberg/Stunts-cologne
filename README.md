@@ -12,6 +12,9 @@ Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVB-Haltestellen und jede Men
 
 Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
+Das Startmenü ist eine Arcade-Kiste der 80er: Marquee mit Lauflicht, Neonüberschriften, roter
+Start-Knopf, „Insert Coin“. Alle Knöpfe und Tasten sind dieselben wie vorher.
+
 ## Spielen (auch auf dem Handy)
 
 **Auf dem Handy:** Das Spiel liegt als GitHub-Pages-Seite unter
@@ -122,7 +125,13 @@ Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loo
 sind natürlich Stunts, keine Kölner Verkehrsplanung. Vier der sieben Strecken spielen abends,
 nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
-Alle Stadtstrecken haben jetzt mindestens einen Looping oder Sprung im Stunts-Stil.
+Alle Stadtstrecken haben mindestens einen Looping oder Sprung im Stunts-Stil. Dazu kommen wie in
+Stunts 4D **Korkenzieher** (die Straße dreht sich einmal um die eigene Achse; Chicago am Rhein an
+St. Gereon, Schäl Sick an der Flora, Rheinauhafen, Poller Wiesen) und **Sprünge über Gebäude**:
+in Chicago über zwei Büdchen, im Karneval und in Ehrenfeld über ein Haus, auf den Poller Wiesen
+über ein Brauhaus. Wer zu langsam springt, landet auf dem Dach (unter 70 km/h an der Rampe wird
+es knapp). Die Verfolgerkamera folgt im Looping und Korkenzieher dem Band, statt durch die
+Außenhaut zu schauen.
 
 ## Fahrer, Wagen, Rennen
 
@@ -140,7 +149,8 @@ bei Crashs und Rempeleien und kostet Topspeed; bei 100 % ist der Wagen kurz hin.
 (C), darunter das Cockpit mit Lenkrad und Armaturen.
 
 **Klüngel-Baukasten:** eigener Streckeneditor im Menü. Teile aneinanderreihen (Gerade, Kurven,
-Steilkurven, Hügel, Senke, Looping, Sprung, Brücke, Tunnel), Kulisse wählen, speichern, fahren.
+Steilkurven, Hügel, Senke, Looping, Korkenzieher, Sprung, Sprung übers Haus, Brücke, Tunnel),
+Kulisse wählen, speichern, fahren.
 Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel automatisch an.
 
 **Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert.

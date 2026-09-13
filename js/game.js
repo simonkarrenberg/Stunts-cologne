@@ -172,12 +172,12 @@
   function respawn(r) { r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
   function crash(r, kind) {
     if (r.crashed > 0) return;
-    if (r === player) { crashes++; if (kind === 'water') waterCrashes++; }
+    r.lastCrash = kind; if (r === player) { crashes++; if (kind === 'water') waterCrashes++; }
     r.crashed = 2.2; r.v = 0; r.air = false; r.turboOn = false;
     r.damage = Math.min(1, r.damage + 0.25);
     if (!r.isAI) {
       crashSound(); shake = 1;
-      const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : tuenn.crash;
+      const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : kind === 'roof' ? tuenn.roof : tuenn.crash;
       if (r.damage >= 1) { say(tuenn, pick(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
       else say(tuenn, pick(quotes), 3000);
       if (Math.random() < 0.6) setTimeout(() => { if (phase === 'race') { const d = pick(racers.filter((x) => x.isAI)).driver; if (d.lines.taunt) say(d, pick(d.lines.taunt), 2400); } }, 3200);
@@ -217,7 +217,7 @@
       r.s += r.v * dt;
       const f2 = TB.frameAt(track, r.s);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
-        const a0 = f.rampAngle; r.air = true; r.y = f.p.y + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; r.v = Math.max(r.v * Math.cos(a0), 4); r.jumpStartS = r.s;
+        const a0 = f.rampAngle; r.air = true; r.y = Math.max(f.p.y, track.samples[f.index].p.y) + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; // launch from the ramp lip, not from the lerp down into the gap r.v = Math.max(r.v * Math.cos(a0), 4); r.jumpStartS = r.s;
       } else if (f2.kind === 'gap') { r.air = true; r.y = roadY; r.vy = 0; }
       else {
         const roadVy = r.v * f2.T.y;
@@ -232,7 +232,7 @@
       const landing = f2.kind !== 'gap' && f2.kind !== 'ramp';
       r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt;
       const ry = f2.p.y;
-      if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } }
+      if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over) { crash(r, 'roof'); return; } }
       else if (r.y <= ry + 0.12) {
         r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y;
         if (Math.abs(r.lat) > ROAD_W + 1.6) { if (r.isAI) r.lat = clamp(r.lat, -ROAD_W, ROAD_W); else { crash(r, 'off'); return; } }
@@ -266,7 +266,7 @@
     for (const o of racers) {
       if (o === r || o.crashed > 0) continue;
       let ds = o.s - r.s; const L = track.length; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
-      if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v) gas = 0.3; }
+      if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v && track.samples[i].kind !== 'ramp') gas = 0.3; } // never lift on a ramp: too slow means the roof
     }
     wantLat = clamp(wantLat, -ROAD_W + 1.5, ROAD_W - 1.5);
     let steer = clamp((wantLat - r.lat) * 0.35, -1, 1);
@@ -321,7 +321,10 @@
     let target, look, up; const N = fr.N, T = fr.T;
     if (mode === 0 || mode === 2) {
       const dist = mode === 0 ? 11 : 20, h = mode === 0 ? 4.2 : 8;
-      target = fr.pos.clone().addScaledVector(T, -dist).addScaledVector(N, h);
+      const here = TB.frameAt(track, r.s), back = TB.frameAt(track, r.s - dist);
+      if (here.kind === 'loop' || back.kind === 'loop') { // inside a loop or cork screw: follow the ribbon, a straight tangent would put the camera through the loop's skin
+        target = new THREE.Vector3(back.p.x, back.p.y, back.p.z).addScaledVector(new THREE.Vector3(back.N.x, back.N.y, back.N.z), h * 0.8);
+      } else target = fr.pos.clone().addScaledVector(T, -dist).addScaledVector(N, h);
       look = fr.pos.clone().addScaledVector(T, 6).addScaledVector(N, 1); up = N;
     } else if (mode === 1) {
       target = fr.pos.clone().addScaledVector(T, -0.2).addScaledVector(N, 1.45);
@@ -785,6 +788,8 @@
     { id: 'dip', label: 'SENKE', seg: { t: 'dip', len: 40, pitch: 12 } },
     { id: 'loop', label: 'LOOPING', seg: { t: 'loop', r: 14, shift: 14 } },
     { id: 'jump', label: 'SPRUNG', seg: { t: 'jump', ramp: 28, angle: 15, gap: 28 } },
+    { id: 'jumphouse', label: 'SPRUNG ÜBERS HAUS', seg: { t: 'jump', ramp: 28, angle: 16, gap: 30, over: 'house' } },
+    { id: 'cork', label: 'KORKENZIEHER', seg: { t: 'corkscrew', len: 64, r: 9, turns: 1 } },
     { id: 'bridge', label: 'BRÜCKE', seg: { t: 'bridge', len: 120 } },
     { id: 'tunnel', label: 'TUNNEL', seg: { t: 'tunnel', len: 60 } }
   ];
@@ -1038,8 +1043,8 @@
   }
 
   // ---------------- share links for Baukasten tracks ----------------
-  const PIECE_CODE = { straight: 'g', lcurve: 'l', rcurve: 'r', lbank: 'L', rbank: 'R', hill: 'h', dip: 'd', loop: 'o', jump: 'j', bridge: 'b', tunnel: 't' };
-  function encodeTrack(def) { const code = def.segments.map((sg) => { const p = PIECES.find((q) => q.seg.t === sg.t && (q.seg.angle == null || Math.sign(q.seg.angle) === Math.sign(sg.angle)) && (!!q.seg.bank === !!sg.bank)) || PIECES[0]; return PIECE_CODE[p.id]; }).join(''); const base = TRACKS.findIndex((t) => t.theme === def.theme); return `#s=${code}&k=${Math.max(0, base)}&n=${encodeURIComponent(def.name)}`; }
+  const PIECE_CODE = { straight: 'g', lcurve: 'l', rcurve: 'r', lbank: 'L', rbank: 'R', hill: 'h', dip: 'd', loop: 'o', jump: 'j', jumphouse: 'J', cork: 'c', bridge: 'b', tunnel: 't' };
+  function encodeTrack(def) { const code = def.segments.map((sg) => { const p = PIECES.find((q) => q.seg.t === sg.t && (q.seg.angle == null || Math.sign(q.seg.angle) === Math.sign(sg.angle)) && (!!q.seg.bank === !!sg.bank) && (!!q.seg.over === !!sg.over)) || PIECES[0]; return PIECE_CODE[p.id]; }).join(''); const base = TRACKS.findIndex((t) => t.theme === def.theme); return `#s=${code}&k=${Math.max(0, base)}&n=${encodeURIComponent(def.name)}`; }
   function decodeTrackHash(hash) {
     const m = /[#&]s=([gLlRrhdojbt]+)/.exec(hash); if (!m) return null;
     const k = parseInt((/[#&]k=(\d+)/.exec(hash) || [])[1] || '4'); const n = decodeURIComponent((/[#&]n=([^&]+)/.exec(hash) || [])[1] || 'Link-Streck');
@@ -1155,7 +1160,7 @@
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
-  window.STUNTS_DEBUG = () => ({ phase, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_SCENE = () => scene;
   window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); };

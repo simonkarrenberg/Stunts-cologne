@@ -34,8 +34,9 @@
    *  { t:'hill', len, pitch(deg) }              symmetric bump
    *  { t:'dip',  len, pitch(deg) }              symmetric dip
    *  { t:'loop', r, shift }                     vertical loop (corkscrew shift sideways)
-   *  { t:'jump', ramp, angle(deg), gap }        ramp -> gap -> lower landing
+   *  { t:'jump', ramp, angle(deg), gap, over } ramp -> gap -> lower landing (over: a building sits in the gap)
    *  { t:'tunnel', len }                        straight inside a tunnel
+   *  { t:'corkscrew', len, r, turns, dir }      the road rolls around a horizontal axis while going straight (Stunts cork screw)
    */
   function buildCenterline(segments) {
     let p = v3(0, 0, 0);
@@ -106,6 +107,19 @@
           flatten();
           break;
         }
+        case 'corkscrew': {
+          const R = seg.r || 9, L = seg.len || 90, turns = seg.turns || 1, dir = seg.dir || 1, n = Math.round(L / DS);
+          const T0 = { ...T }, N0 = { ...N }, B0 = { ...B }, A = add(p, mul(N0, R)); // axis R above the road, along T
+          for (let i = 0; i < n; i++) {
+            const u = i / n, phi = turns * 2 * Math.PI * smooth(u); // eased so the ribbon does not kink at the ends
+            const d = add(mul(N0, -Math.cos(phi)), mul(B0, -dir * Math.sin(phi))); // axis -> road centre (starts pointing down)
+            p = add(add(A, mul(T0, i * DS)), mul(d, R)); N = mul(d, -1); B = cross(T0, N);
+            push('loop', 0, { loopU: u, cork: true });
+            s += DS;
+          }
+          p = add(add(A, mul(T0, n * DS)), mul(N0, -R)); T = T0; N = N0; B = B0;
+          break;
+        }
         case 'jump': {
           const startY = p.y;
           const n = Math.round(seg.ramp / DS), a = seg.angle * DEG;
@@ -118,7 +132,8 @@
           flatten();
           p = v3(p.x, startY, p.z);
           const g = Math.round(seg.gap / DS);
-          for (let i = 0; i < g; i++) { push('gap', 0, { rampAngle: a }); stepForward(DS); }
+          const overH = seg.over ? (seg.overH || 4.2) : 0; // the ramp launches from ~4 m, so what you fly over stays a single storey // a building under the flight path: the middle 40% of the gap is its roof
+          for (let i = 0; i < g; i++) { push('gap', 0, { rampAngle: a, over: overH && Math.abs(i / g - 0.5) < 0.2 ? overH : 0 }); stepForward(DS); }
           break;
         }
         default:
@@ -145,7 +160,8 @@
     for (let i = from; i < n; i++) {
       const nx = samples[(i + 1) % n].p, cur = samples[i].p;
       const t = norm(sub(nx, cur));
-      if (len(sub(nx, cur)) > 0.01) {
+      const lip = samples[i].kind === 'ramp' && samples[(i + 1) % n].kind === 'gap'; // ramp lip: keep the launch tangent, never point it down into the gap
+      if (len(sub(nx, cur)) > 0.01 && !lip) {
         samples[i].T = t;
         samples[i].B = norm(cross(t, samples[i].N));
       }
@@ -194,6 +210,7 @@
     return segments.map((s) => {
       const o = Object.assign({}, s);
       if (o.len != null && (o.t === 'straight' || o.t === 'bridge' || o.t === 'tunnel')) o.len *= k;
+      if (o.t === 'corkscrew' && o.len != null) o.len *= Math.sqrt(k);
       if (o.t === 'curve') o.r *= Math.sqrt(k);
       return o;
     });
@@ -226,12 +243,13 @@
     const n = track.samples.length;
     const L = track.length;
     let u = ((s % L) + L) % L;
-    const i = Math.floor(u / DS) % n, f = u / DS - Math.floor(u / DS);
+    const i = Math.floor(u / DS) % n; let f = u / DS - Math.floor(u / DS);
     const a = track.samples[i], b = track.samples[(i + 1) % n];
+    if (a.kind === 'ramp' && b.kind === 'gap') f = 0; // never interpolate down from the ramp lip into the gap
     const lerp = (x, y) => v3(x.x + (y.x - x.x) * f, x.y + (y.y - x.y) * f, x.z + (y.z - x.z) * f);
     return {
       p: lerp(a.p, b.p), T: norm(lerp(a.T, b.T)), N: norm(lerp(a.N, b.N)), B: norm(lerp(a.B, b.B)),
-      kind: a.kind, curv: a.curv || 0, rampAngle: a.rampAngle || 0, roll: a.roll, index: i, loopU: a.loopU
+      kind: a.kind, curv: a.curv || 0, rampAngle: a.rampAngle || 0, roll: a.roll, index: i, loopU: a.loopU, cork: !!a.cork, over: a.over || 0
     };
   }
 
