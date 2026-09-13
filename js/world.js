@@ -736,7 +736,7 @@
     const py = 78;
     for (const z of [-8, 8]) { const leg = box(3, py, 3, steelC, 0, py / 2, z); leg.rotation.x = z > 0 ? -0.1 : 0.1; g.add(leg); }
     for (let i = 1; i <= 7; i++) { for (const s of [-1, 1]) { const x = s * i * 20; const len = Math.sqrt(x * x + (py - 14) * (py - 14)); const c = box(0.3, len, 0.3, 0xdddddd, x / 2, 14 + (py - 14) / 2, 0); c.rotation.z = Math.atan2(x, py - 14) * -1; g.add(c); } }
-    for (let x = -150; x <= 150; x += 60) g.add(box(6, 12, 20, 0x5a5a5e, x, 5, 0));
+    for (let x = -120; x <= 120; x += 60) g.add(box(6, 12, 20, 0x5a5a5e, x, 5, 0)); // piers start 30 m in, so none lands on the street the deck crosses
     return g;
   };
   P.suspension = () => {
@@ -1120,8 +1120,9 @@
     const pos = [], col = [], uv = [], idx = [];
     const c1 = new THREE.Color(theme.road[0]), c2 = new THREE.Color(theme.road[1]);
     const cRed = new THREE.Color(theme.night ? 0x9a1e1e : 0xd22a2a), cWhite = new THREE.Color(theme.night ? 0x9a9aa4 : 0xf2f2f2), cLine = new THREE.Color(theme.night ? 0xb8a85a : 0xf5e27a);
-    const cStart = new THREE.Color(0xffffff), cStartB = new THREE.Color(0x111111), cWalk = new THREE.Color(theme.night ? 0x2e2e38 : 0x8f8a82), cUnder = new THREE.Color(0x2a2a2a);
+    const cStart = new THREE.Color(0xffffff), cStartB = new THREE.Color(0x111111), cWalk = new THREE.Color(theme.night ? 0x2e2e38 : 0x8f8a82), cUnder = new THREE.Color(0x62626a);
     let vi = 0;
+    const underRanges = [];
     function quad(a, b, c, d, color, u0, u1, v0, v1) {
       for (const p of [a, b, c, d]) { pos.push(p.x, p.y, p.z); col.push(color.r, color.g, color.b); }
       uv.push(u0, v0, u1, v0, u0, v1, u1, v1);
@@ -1144,12 +1145,12 @@
       quad(off(a, ROAD_W, h + 0.05), off(a, ROAD_W + 1.1, h + 0.05), off(b, ROAD_W, h + 0.05), off(b, ROAD_W + 1.1, h + 0.05), curb, 0, 0.1, v0, v1);
       if (Math.floor(i / 4) % 2 === 0 && !nearStart) quad(off(a, -0.18, h + 0.04), off(a, 0.18, h + 0.04), off(b, -0.18, h + 0.04), off(b, 0.18, h + 0.04), cLine, 0, 0.05, v0, v1);
       // sidewalks in the city
-      const flat = a.kind === 'straight' || a.kind === 'curve' || a.kind === 'hill' || a.kind === 'dip' || a.kind === 'tunnel';
+      const flat = (a.kind === 'straight' || a.kind === 'curve' || a.kind === 'hill' || a.kind === 'dip' || a.kind === 'tunnel') && a.p.y > -0.02 && b.p.y > -0.02;
       if (city && flat) {
         quad(off(a, -ROAD_W - 4.5, h + 0.12), off(a, -ROAD_W - 1.1, h + 0.12), off(b, -ROAD_W - 4.5, h + 0.12), off(b, -ROAD_W - 1.1, h + 0.12), cWalk, 0, 1.4, v0, v1);
         quad(off(a, ROAD_W + 1.1, h + 0.12), off(a, ROAD_W + 4.5, h + 0.12), off(b, ROAD_W + 1.1, h + 0.12), off(b, ROAD_W + 4.5, h + 0.12), cWalk, 0, 1.4, v0, v1);
       }
-      if (a.kind === 'loop' || a.kind === 'ramp' || a.p.y > 1.5) quad(off(a, ROAD_W, -0.3), off(a, -ROAD_W, -0.3), off(b, ROAD_W, -0.3), off(b, -ROAD_W, -0.3), cUnder, 0, 2, v0, v1);
+      if (a.kind === 'loop' || a.kind === 'ramp' || a.p.y > 1.5) { underRanges.push([vi, a.N]); quad(off(a, ROAD_W, -0.3), off(a, -ROAD_W, -0.3), off(b, ROAD_W, -0.3), off(b, -ROAD_W, -0.3), cUnder, 0, 2, v0, v1); }
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -1157,6 +1158,11 @@
     g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
     g.setIndex(idx);
     g.computeVertexNormals();
+    // light the whole ribbon like a flat street (normals straight up): inside a loop the road faces down or
+    // sideways and would otherwise render black under the sun
+    { const nrm = g.attributes.normal; const s0 = nrm.getY(0) < 0 ? -1 : 1; for (let k = 0; k < nrm.count; k++) nrm.setXYZ(k, 0, s0, 0);
+      for (const [k0, N] of underRanges) for (let k = k0; k < k0 + 4; k++) nrm.setXYZ(k, -N.x * s0, -N.y * s0, -N.z * s0); // the outer skin of a loop faces outward
+      nrm.needsUpdate = true; }
     const tex = theme.wet ? T.wet() : theme.street === 'altstadt' ? T.cobble(0xe8e2dc, 3) : T.asphalt(0xffffff, 2);
     const m = new THREE.MeshStandardMaterial({ vertexColors: true, map: tex, side: THREE.DoubleSide, roughness: theme.wet ? 0.35 : 0.85, metalness: theme.wet ? 0.25 : 0.05 });
     const group = new THREE.Group();
@@ -1172,10 +1178,29 @@
     const steel = tmat(T.steel(0x2f6b4f), 0xffffff), post = mat(0x555555), tunnelM = tmat(T.brick(theme.night ? 0x3a3a55 : 0x8a7a6a), 0xffffff, { side: THREE.DoubleSide });
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
     const railGeo = new THREE.BoxGeometry(0.25, 1.1, 1.05);
+    // loop scaffolding: columns stand OUTSIDE the loop's footprint (the road runs underneath the loop at
+    // ground level, shifted sideways by `shift`), each with a horizontal beam to the loop road edge
+    let loop0 = -1, loopEnd = -1, loopShift = 0;
     for (let i = 0; i < n; i++) {
       const s = S[i];
-      if (s.kind === 'loop' && i % 8 === 0 && s.p.y > 2.5) {
-        for (const side of [-1, 1]) { const top = off(s, side * (ROAD_W + 0.6), -0.3); const h = top.y - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, h, 6), post); c.position.set(top.x, GROUND_Y + h / 2, top.z); g.add(c); }
+      if (s.kind === 'loop') {
+        if (loop0 < 0 || i > loopEnd + 1) { loop0 = i; loopEnd = i; while (loopEnd + 1 < n && S[loopEnd + 1].kind === 'loop') loopEnd++; const e = S[loopEnd], b0 = S[loop0].B; loopShift = (e.p.x - S[loop0].p.x) * b0.x + (e.p.z - S[loop0].p.z) * b0.z; }
+        if (i % 8 === 0 && s.p.y > 4) {
+          const s0 = S[loop0], B0 = s0.B, T0 = s0.T; const along = (s.p.x - s0.p.x) * T0.x + (s.p.z - s0.p.z) * T0.z; const lat = (s.p.x - s0.p.x) * B0.x + (s.p.z - s0.p.z) * B0.z;
+          const onStreet = (l) => Math.abs(l) < ROAD_W + 2 || Math.abs(l - loopShift) < ROAD_W + 2; // entry road at 0, exit road at loopShift
+          const y = s.p.y - 0.35; const h = y - GROUND_Y; const at = (l) => [s0.p.x + T0.x * along + B0.x * l, s0.p.z + T0.z * along + B0.z * l];
+          for (const side of [-1, 1]) {
+            const edge = lat + side * (ROAD_W + 0.4);
+            if (!onStreet(edge)) { // free ground under the road edge: a plain column straight down
+              const [cx, cz] = at(edge); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
+            } else if (y > 12) { // over the street: column outside the footprint, beam high above the cars
+              const Lc = side < 0 ? Math.min(0, loopShift) - ROAD_W - 4.5 : Math.max(0, loopShift) + ROAD_W + 4.5;
+              const [cx, cz] = at(Lc); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
+              const len = Math.abs(Lc - edge); const beam = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, len), steel); const [mx, mz] = at((Lc + edge) / 2);
+              beam.position.set(mx, y, mz); beam.lookAt(mx + B0.x, y, mz + B0.z); g.add(beam);
+            }
+          }
+        }
       }
       if (s.kind === 'bridge') {
         for (const side of [-1, 1]) { const r = new THREE.Mesh(railGeo, steel); const p = off(s, side * (ROAD_W + 1.3), 0.6); r.position.copy(p); r.lookAt(p.clone().add(V(s.T))); g.add(r); }
@@ -1203,8 +1228,27 @@
     // ground
     const gtex = (theme.street === 'altstadt' ? T.cobble(theme.ground, 1) : theme.street && theme.street !== 'park' ? T.asphalt(theme.ground, 1) : T.grass(theme.ground, 1)).clone();
     gtex.needsUpdate = true; gtex.repeat.set(1500, 1500);
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), tmat(gtex, 0xffffff));
+    // roads that dip below ground level (dips) get a trench cut out of the ground plane, with retaining walls
+    const trenchRuns = []; { let run = null; for (let i = 0; i < n; i++) { const below = S[i].kind !== 'loop' && S[i].p.y < -0.02; if (below) { if (!run) { run = [i, i]; trenchRuns.push(run); } run[1] = i; } else run = null; } }
+    let groundGeo;
+    if (trenchRuns.length) {
+      const shape = new THREE.Shape([new THREE.Vector2(-3000, -3000), new THREE.Vector2(3000, -3000), new THREE.Vector2(3000, 3000), new THREE.Vector2(-3000, 3000)]);
+      const TW = ROAD_W + 1.6; const e = (s, lat) => { const bl = Math.hypot(s.B.x, s.B.z) || 1; return new THREE.Vector2(s.p.x + s.B.x / bl * lat, -(s.p.z + s.B.z / bl * lat)); }; // plane local y = -world z
+      for (const [i0, i1] of trenchRuns) { const a0 = Math.max(0, i0 - 2), a1 = Math.min(n - 1, i1 + 2); const pts = []; for (let i = a0; i <= a1; i += 2) pts.push(e(S[i], -TW)); for (let i = a1; i >= a0; i -= 2) pts.push(e(S[i], TW)); shape.holes.push(new THREE.Path(pts)); }
+      groundGeo = new THREE.ShapeGeometry(shape); gtex.repeat.set(0.25, 0.25); // shape uvs are metres, plane uvs were 0..1 over 6000 m
+    } else groundGeo = new THREE.PlaneGeometry(6000, 6000);
+    const ground = new THREE.Mesh(groundGeo, tmat(gtex, 0xffffff));
     ground.rotation.x = -Math.PI / 2; ground.position.y = GROUND_Y; ground.receiveShadow = true; ground.userData.keep = true; g.add(ground);
+    if (trenchRuns.length) { // retaining walls from the ground edge down to the curb
+      const wallM = tmat(T.brick(theme.night ? 0x4a4a5a : 0x8a8478), 0xffffff, { side: THREE.DoubleSide }); const pos = [], uv = [], idx = [];
+      const TW = ROAD_W + 1.6; const wp = (s, lat, y) => { const bl = Math.hypot(s.B.x, s.B.z) || 1; return [s.p.x + s.B.x / bl * lat, y, s.p.z + s.B.z / bl * lat]; };
+      for (const [i0, i1] of trenchRuns) for (let i = Math.max(0, i0 - 2); i < Math.min(n - 1, i1 + 2); i++) for (const side of [-1, 1]) {
+        const a = S[i], b = S[i + 1]; const q = [wp(a, side * TW, GROUND_Y), wp(b, side * TW, GROUND_Y), wp(b, side * (ROAD_W + 1.1), b.p.y + 0.12), wp(a, side * (ROAD_W + 1.1), a.p.y + 0.12)];
+        const k = pos.length / 3; for (const v of q) pos.push(...v); uv.push(i * 0.3, 0, (i + 1) * 0.3, 0, (i + 1) * 0.3, 1, i * 0.3, 1); idx.push(k, k + 1, k + 2, k, k + 2, k + 3);
+      }
+      const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); wg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); wg.setIndex(idx); wg.computeVertexNormals();
+      const wall = new THREE.Mesh(wg, wallM); wall.userData.keep = true; g.add(wall);
+    }
     // sky dome
     const sky = new THREE.Mesh(new THREE.SphereGeometry(2200, 24, 12), new THREE.MeshBasicMaterial({ map: T.sky(theme), side: THREE.BackSide, fog: false }));
     sky.userData.sky = true; g.add(sky); animated.push(sky);
@@ -1215,6 +1259,56 @@
       for (let i = 0; i < n; i++) if (S[i].seg === segIdx) { if (i0 < 0) i0 = i; i1 = i; }
       if (i0 < 0) return 0;
       return ((i0 + (u == null ? 0.5 : u) * (i1 - i0)) * track.ds) / L;
+    }
+    const SPANS = /^prop:(hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
+    function clearTheStreets(group) {
+      const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.0; const lats = [-m, -m / 2, 0, m / 2, m];
+      const footprint = (obj) => {
+        obj.updateMatrixWorld(true); lb.makeEmpty(); inv.copy(obj.matrixWorld).invert();
+        obj.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox); tm.multiplyMatrices(inv, o.matrixWorld); tb.applyMatrix4(tm); lb.union(tb); });
+        if (!isFinite(lb.min.x)) return null;
+        const c = [[lb.min.x, lb.min.z], [lb.max.x, lb.min.z], [lb.max.x, lb.max.z], [lb.min.x, lb.max.z]].map(([x, z]) => new THREE.Vector3(x, 0, z).applyMatrix4(obj.matrixWorld));
+        let minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9; for (const v of c) { minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x); minZ = Math.min(minZ, v.z); maxZ = Math.max(maxZ, v.z); }
+        return { c, minX, maxX, minZ, maxZ, minY: obj.position.y + lb.min.y, maxY: obj.position.y + lb.max.y };
+      };
+      const inside = (c, px, pz) => { let sgn = 0; for (let k = 0; k < 4; k++) { const a = c[k], b = c[(k + 1) % 4]; const cr = (b.x - a.x) * (pz - a.z) - (b.z - a.z) * (px - a.x); if (Math.abs(cr) < 1e-6) continue; const s2 = cr > 0 ? 1 : -1; if (sgn === 0) sgn = s2; else if (s2 !== sgn) return false; } return true; };
+      const hit = (fp) => { for (let i = 0; i < n; i++) { const q = S[i]; if (q.p.x < fp.minX - m || q.p.x > fp.maxX + m || q.p.z < fp.minZ - m || q.p.z > fp.maxZ + m) continue; if (!(fp.maxY > q.p.y - 0.2 && fp.minY < q.p.y + 3.5)) continue; const bl = Math.hypot(q.B.x, q.B.z) || 1; for (const lat of lats) if (inside(fp.c, q.p.x + q.B.x / bl * lat, q.p.z + q.B.z / bl * lat)) return i; } return -1; };
+      let moved = 0, removed = 0;
+      for (const ch of group.children.slice()) {
+        if (ch.userData.keep || ch.userData.sky || ch.userData.water) continue;
+        const kind = ch.userData.kind || ''; if (SPANS.test(kind)) continue;
+        let fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700) continue;
+        let i = hit(fp); if (i < 0) continue;
+        const q = S[i]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const sgn = ((ch.position.x - q.p.x) * q.B.x + (ch.position.z - q.p.z) * q.B.z) >= 0 ? 1 : -1; const dx = q.B.x / bl * sgn, dz = q.B.z / bl * sgn;
+        let pushed = 0;
+        while (i >= 0 && pushed < 24) { ch.position.x += dx * 2; ch.position.z += dz * 2; pushed += 2; fp = footprint(ch); i = hit(fp); }
+        if (i >= 0) { group.remove(ch); removed++; } else moved++;
+      }
+      if (root.STUNTS_AUDIT) console.log('clearTheStreets: moved', moved, 'removed', removed);
+    }
+    // water never lies on a street: the plane is rebuilt from tiles, dropping every tile close to a
+    // ground-level road sample (bridges, ramps and gaps keep their water underneath)
+    function clipWater(prop) {
+      prop.updateMatrixWorld(true);
+      const R2 = (ROAD_W + 10) * (ROAD_W + 10); const wp = new THREE.Vector3();
+      prop.traverse((m) => {
+        if (!m.userData.water || !m.geometry.parameters) return;
+        const w = m.geometry.parameters.width, l = m.geometry.parameters.height; const tile = 6;
+        const nx = Math.ceil(w / tile), nz = Math.ceil(l / tile); const pos = [], uv = [], idx = []; let dropped = 0;
+        for (let ix = 0; ix < nx; ix++) for (let iz = 0; iz < nz; iz++) {
+          const x0 = -w / 2 + ix * tile, x1 = Math.min(w / 2, x0 + tile), y0 = -l / 2 + iz * tile, y1 = Math.min(l / 2, y0 + tile);
+          wp.set((x0 + x1) / 2, (y0 + y1) / 2, 0).applyMatrix4(m.matrixWorld);
+          let near = false;
+          for (let i = 0; i < n; i += 2) { const q = S[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
+          if (near) { dropped++; continue; }
+          const b = pos.length / 3; pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
+          uv.push((x0 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y1 + l / 2) / l, (x0 + w / 2) / w, (y1 + l / 2) / l);
+          idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+        }
+        if (!dropped) return;
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
+        m.geometry.dispose(); m.geometry = geo;
+      });
     }
     function place(prop, at, side, dist, faceTrack) {
       const f = TB.frameAt(track, at * L);
@@ -1253,7 +1347,8 @@
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
       prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) prop.userData.story = pd.story; propList.push(prop);
       if (!pd.story && (pd.type === 'polizei' || pd.type === 'blitzer' || pd.type === 'kirche' || pd.type === 'tramline')) pendingStories.push([pd.type === 'tramline' ? 'tram' : pd.type, at * L, prop]);
-      g.add(prop);
+      prop.userData.kind = 'prop:' + pd.type; g.add(prop);
+      if (pd.type === 'rhine' || pd.type === 'rhineSide') clipWater(prop);
       const BIG = /altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney|kranhaus|musicaldome|schoko|museum|triangle|lvr|colonius|helios|flora|moschee|vulkanhalle|halle|zootor|tanzbrunnen|tribuene|rathaus|rgm|hyatt|stadion|hansahochhaus|koelnturm|odonien|hafenkran|kleinkoeln|loversclub|sartory|residenz|spielclub|kripo|boxring|eigelsteintor|hahnentor|severinstor|riesenrad|beach|rheinsprung|severinsbruecke|suspension|zoobruecke|seilbahn/;
       const MID = /zockertisch|buedchen|haltestelle|cafe|bude|marktstand|expresskiosk|denkmal|heinzelbrunnen|eaudecologne|reiter|crowd|tramline|koelsch|elephant|giraffe|palm|zochwagen|bus|polizei|tram|kirche|house/;
       keepOut.push({ x: prop.position.x, z: prop.position.z, r: pd.keep || (pd.type === 'dom' ? 110 : BIG.test(pd.type) ? 50 : MID.test(pd.type) ? 18 : 8) });
@@ -1292,12 +1387,12 @@
           const curv = s.curv || 0; const inner = curv * side < 0 && Math.abs(curv) > 0.012;
           const dist = ROAD_W + (street === 'altstadt' ? 3.6 : 4.8) + d / 2 + (inner ? 3 : 0);
           const x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
-          if (!freeAt(x, z, 13, i)) {
+          if (!freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { // the whole footprint must clear every other part of the circuit
             const gx = s.p.x + bx / bl * side * (ROAD_W + 9), gz = s.p.z + bz / bl * side * (ROAD_W + 9);
             if (trackFree(gx, gz, 7, i) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
             continue;
           }
-          house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(house); count++; houses++; sinceGap++;
+          house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); house.userData.kind = 'house'; g.add(house); count++; houses++; sinceGap++;
           if (house.userData.pub) { // Kölsch drinkers in front of every Brauhaus
             for (let k = 0; k < 2; k++) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const lat = ROAD_W + 2.6 + rnd() * 1.6; const off = (rnd() - 0.5) * w * 0.6; f.position.set(x + bx / bl * side * (lat - dist) + s.T.x * off, GROUND_Y, z + bz / bl * side * (lat - dist) + s.T.z * off); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
             story('brauhaus', sPos + w / 2, house);
@@ -1417,7 +1512,7 @@
           const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : st === 'industrial' ? INDUSTRIAL : CONCRETE;
           const w = 18 + rnd() * 26, d = 14 + rnd() * 18, h = st === 'altstadt' ? 12 + rnd() * 5 : 13 + rnd() * 12;
           b = building(w, h, d, st, cols[Math.floor(rnd() * cols.length)], st === 'gruenderzeit' || st === 'wiederaufbau' ? 'hip' : st === 'altstadt' ? 'gable' : 'flat', Math.floor(rnd() * 1000), { night: theme.night }); }
-        b.position.set(x, GROUND_Y, z); b.rotation.y = Math.round(rnd() * 4) * Math.PI / 2 + (rnd() - 0.5) * 0.3; g.add(b); placed++;
+        b.position.set(x, GROUND_Y, z); b.rotation.y = Math.round(rnd() * 4) * Math.PI / 2 + (rnd() - 0.5) * 0.3; b.userData.kind = 'backdrop'; g.add(b); placed++;
       }
     }
     // background skyline ring: far blocks all around so the city never ends
@@ -1444,6 +1539,12 @@
       prop.position.set(cx + Math.cos(a) * (ringR + (fl.dist || 120)), GROUND_Y, cz + Math.sin(a) * (ringR + (fl.dist || 120)));
       prop.lookAt(cx, GROUND_Y, cz); g.add(prop);
     }
+    // final pass: nothing static may stand on the road. Every placed object gets its footprint (oriented
+    // box of all its meshes) tested against the road corridor of the whole circuit; offenders are pushed
+    // sideways off the road, and removed if 24 m of pushing does not free them. Structures that span the
+    // road on purpose (gates, bridges, gantries, rails, the Dom with its Domplatte) are left alone.
+    clearTheStreets(g);
+    if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
     mergeStatic(g, new Set(animated));
     return { group: g, animated, props: propList };
