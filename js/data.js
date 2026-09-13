@@ -519,7 +519,7 @@
         far: [{ type: 'dom', angle: 200, dist: 150 }, { type: 'stmartin', angle: 215, dist: 120 }, { type: 'colonius', angle: 240, dist: 260 }, { type: 'archbridge', angle: 180, dist: 60 }, { type: 'kranhaus', angle: 160, dist: 100 }, { type: 'triangle', angle: 190, dist: 90 }] },
       // 0 str,1 L,2 str,3 loop,4 str,5 jump,6 str,7 L,8 hill,9 R,10 str,11 loop,12 str,13 L,14 tunnel,15 L,16 str,17 jump,18 str,19 L,20 str,21 loop,22 str,23 L,24 str
       segments: [
-        { t: 'straight', len: 160 },
+        { t: 'straight', len: 100 },
         { t: 'curve', angle: 90, r: 45, bank: 15 },
         { t: 'straight', len: 40 },
         { t: 'loop', r: 14, shift: 14 },
@@ -540,10 +540,10 @@
         { t: 'straight', len: 40 },
         { t: 'curve', angle: 90, r: 45, bank: 15 },
         { t: 'straight', len: 30 },
-        { t: 'loop', r: 14, shift: 14 },
         { t: 'corkscrew', len: 64, r: 9, turns: 1, dir: -1 },
-        { t: 'straight', len: 40 },
-        { t: 'straight', len: 40 }
+        { t: 'loop', r: 14, shift: 14 },
+        { t: 'straight', len: 70 },
+        { t: 'straight', len: 70 }
       ],
       props: [
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
