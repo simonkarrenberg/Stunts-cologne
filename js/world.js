@@ -1194,33 +1194,50 @@
     const steel = tmat(T.steel(0x2f6b4f), 0xffffff), post = mat(0x555555), tunnelM = tmat(T.brick(theme.night ? 0x3a3a55 : 0x8a7a6a), 0xffffff, { side: THREE.DoubleSide });
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
     const railGeo = new THREE.BoxGeometry(0.25, 1.1, 1.05);
+    // is this ground point clear of every ground-level road (with curb)? Used for every support column.
+    const groundFree = (x, z) => { const r2 = (ROAD_W + 1.8) * (ROAD_W + 1.8); for (let k = 0; k < n; k += 2) { const q = S[k]; if (q.p.y > 1.5) continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < r2) return false; } return true; };
     // loop scaffolding: columns stand OUTSIDE the loop's footprint (the road runs underneath the loop at
     // ground level, shifted sideways by `shift`), each with a horizontal beam to the loop road edge
     let loop0 = -1, loopEnd = -1, loopShift = 0;
     for (let i = 0; i < n; i++) {
       const s = S[i];
-      if (s.cork) { // cork screw: a steel spine along the axis, spokes to the road, A-legs to the ground every half turn
-        const R = 9; const ax = s.p.x + s.N.x * R, ay = s.p.y + s.N.y * R, az = s.p.z + s.N.z * R;
-        if (i % 6 === 0) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, R - 0.4), steel); sp.position.set((ax + s.p.x) / 2 - s.N.x * 0.2, (ay + s.p.y) / 2 - s.N.y * 0.2, (az + s.p.z) / 2 - s.N.z * 0.2); sp.lookAt(s.p.x, s.p.y, s.p.z); g.add(sp); }
-        if (i % 6 === 0 && S[i + 6] && S[i + 6].cork) { const q = S[i + 6]; const bx = q.p.x + q.N.x * R, by = q.p.y + q.N.y * R, bz = q.p.z + q.N.z * R; const L = Math.hypot(bx - ax, by - ay, bz - az); const sb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, L + 0.2), steel); sb.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2); sb.lookAt(bx, by, bz); g.add(sb); }
-        const first = !S[i - 1] || !S[i - 1].cork, last = !S[i + 1] || !S[i + 1].cork; const u = s.loopU || 0;
-        if (first || last || Math.abs(u - 0.5) < 0.006) { // portal frame: two columns beside the street, crossbeam at axis height (9 m over the road)
-          const T0 = S[first ? i : i - 1].T; const Bx = T0.z, Bz = -T0.x; const bl = Math.hypot(Bx, Bz) || 1; const W2 = ROAD_W + 4.8;
-          for (const side of [-1, 1]) { const gx = ax + Bx / bl * side * W2, gz = az + Bz / bl * side * W2; const h = ay + 0.6 - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(gx, GROUND_Y + h / 2, gz); g.add(c); }
-          const cb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, W2 * 2 + 0.6), steel); cb.position.set(ax, ay + 0.4, az); cb.lookAt(ax + Bx, ay + 0.4, az + Bz); g.add(cb); }
+      if (s.cork) { // cork screw: the car drives on the inside of the helix, so nothing may sit inside it. Supports stand outside:
+        // a column straight down from the outer skin where the road faces up, otherwise a column beside the helix with a beam to the skin.
+        const R = 9; const u = s.loopU || 0; const first = !S[i - 1] || !S[i - 1].cork, last = !S[i + 1] || !S[i + 1].cork;
+        const T0 = S[first ? i : i - 1].T; const Bx = T0.z, Bz = -T0.x; const bl = Math.hypot(Bx, Bz) || 1; // ground-plane right vector
+        const ax = s.p.x + s.N.x * R, ay = s.p.y + s.N.y * R, az = s.p.z + s.N.z * R; // axis point at this sample
+        if (i % 6 === 0 && s.p.y > 1.5) {
+          const ox = s.p.x - s.N.x * 0.4, oy = s.p.y - s.N.y * 0.4, oz = s.p.z - s.N.z * 0.4; // outer skin, road centre
+          if (s.N.y > 0.35 && groundFree(ox, oz)) { const h = oy - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, h, 6), post); c.position.set(ox, GROUND_Y + h / 2, oz); g.add(c); }
+          else {
+            const lat = (s.p.x - ax) * Bx / bl + (s.p.z - az) * Bz / bl; // where the road is, left or right of the axis
+            for (const side of (Math.abs(lat) < 2 ? [-1, 1] : [Math.sign(lat)])) {
+              const cx = ax + Bx / bl * side * (R + ROAD_W + 2.5), cz = az + Bz / bl * side * (R + ROAD_W + 2.5); if (!groundFree(cx, cz)) continue;
+              const ex = Math.abs(lat) < 2 ? s.p.x + s.B.x * side * (ROAD_W + 0.4) - s.N.x * 0.4 : ox, ez = Math.abs(lat) < 2 ? s.p.z + s.B.z * side * (ROAD_W + 0.4) - s.N.z * 0.4 : oz, ey = Math.abs(lat) < 2 ? oy : oy;
+              const h = ey - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.42, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
+              const L = Math.hypot(ex - cx, ez - cz); const beam = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, L), steel); beam.position.set((cx + ex) / 2, ey, (cz + ez) / 2); beam.lookAt(ex, ey, ez); g.add(beam);
+            }
+          }
+        }
+        if (first || last) { // portal gantry at entry and exit: two columns beside the street, crossbeam 9 m over the road
+          const W2 = ROAD_W + 4.8; const gx = [ax + Bx / bl * -W2, ax + Bx / bl * W2], gz = [az + Bz / bl * -W2, az + Bz / bl * W2];
+          if (groundFree(gx[0], gz[0]) && groundFree(gx[1], gz[1])) {
+            for (let k = 0; k < 2; k++) { const h = ay + 0.6 - GROUND_Y; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(gx[k], GROUND_Y + h / 2, gz[k]); g.add(c); }
+            const cb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, W2 * 2 + 0.6), steel); cb.position.set(ax, ay + 0.4, az); cb.lookAt(ax + Bx, ay + 0.4, az + Bz); g.add(cb);
+          }
+        }
       } else if (s.kind === 'loop') {
         if (loop0 < 0 || i > loopEnd + 1) { loop0 = i; loopEnd = i; while (loopEnd + 1 < n && S[loopEnd + 1].kind === 'loop') loopEnd++; const e = S[loopEnd], b0 = S[loop0].B; loopShift = (e.p.x - S[loop0].p.x) * b0.x + (e.p.z - S[loop0].p.z) * b0.z; }
         if (i % 8 === 0 && s.p.y > 4) {
           const s0 = S[loop0], B0 = s0.B, T0 = s0.T; const along = (s.p.x - s0.p.x) * T0.x + (s.p.z - s0.p.z) * T0.z; const lat = (s.p.x - s0.p.x) * B0.x + (s.p.z - s0.p.z) * B0.z;
-          const onStreet = (l) => Math.abs(l) < ROAD_W + 2 || Math.abs(l - loopShift) < ROAD_W + 2; // entry road at 0, exit road at loopShift
           const y = s.p.y - 0.35; const h = y - GROUND_Y; const at = (l) => [s0.p.x + T0.x * along + B0.x * l, s0.p.z + T0.z * along + B0.z * l];
           for (const side of [-1, 1]) {
-            const edge = lat + side * (ROAD_W + 0.4);
-            if (!onStreet(edge)) { // free ground under the road edge: a plain column straight down
-              const [cx, cz] = at(edge); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
+            const edge = lat + side * (ROAD_W + 0.4); const [ex0, ez0] = at(edge);
+            if (groundFree(ex0, ez0)) { // free ground under the road edge: a plain column straight down
+              const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(ex0, GROUND_Y + h / 2, ez0); g.add(c);
             } else if (y > 12) { // over the street: column outside the footprint, beam high above the cars
               const Lc = side < 0 ? Math.min(0, loopShift) - ROAD_W - 4.5 : Math.max(0, loopShift) + ROAD_W + 4.5;
-              const [cx, cz] = at(Lc); const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
+              const [cx, cz] = at(Lc); if (!groundFree(cx, cz)) continue; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.45, h, 6), post); c.position.set(cx, GROUND_Y + h / 2, cz); g.add(c);
               const len = Math.abs(Lc - edge); const beam = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, len), steel); const [mx, mz] = at((Lc + edge) / 2);
               beam.position.set(mx, y, mz); beam.lookAt(mx + B0.x, y, mz + B0.z); g.add(beam);
             }
@@ -1240,6 +1257,7 @@
     const banner = textPlane('KÖLLE 4D  •  START / ZIEL', '#ffffff', '#c1121f', 20, 2.2, theme.night, { border: '#ffd400' });
     const bp = off(s0, 0, 6.5); banner.position.copy(bp); banner.lookAt(bp.clone().sub(V(s0.T))); g.add(banner);
     for (const side of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7.5, 6), post); pole.position.copy(off(s0, side * 10, 3.5)); g.add(pole); }
+    if (root.STUNTS_AUDIT_DETAILS) root.STUNTS_AUDIT_DETAILS(g, track, { ROAD_W, GROUND_Y });
     mergeStatic(g, new Set());
     return g;
   }
@@ -1401,6 +1419,26 @@
     { let seenLoop = false, seenJump = false, seenTunnel = false, seenCork = false;
       for (let i = 0; i < n; i++) { const k = S[i].kind; if (S[i].cork && !seenCork) { seenCork = true; story('cork', i * track.ds - 40); } else if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
     // closed street walls (Blockrandbebauung): houses shoulder to shoulder along both sides, a side street now and then
+    if (street === 'park') { // Rheinpark / Poller Wiesen: plane-tree alleys, lamps, benches and the odd Kölsch stand along the road
+      for (const side of [-1, 1]) {
+        let sPos = 6 + (side > 0 ? 7 : 0), k = 0;
+        while (sPos < L - 8) {
+          const i = Math.floor(sPos / track.ds) % n; const s = S[i];
+          if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 14; continue; }
+          const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1; const lat = ROAD_W + 4.2 + (k % 3 === 1 ? 1.5 : 0);
+          const x = s.p.x + bx / bl * side * lat, z = s.p.z + bz / bl * side * lat;
+          if (freeAt(x, z, 5, i)) {
+            let prop; const r = k % 8;
+            if (r === 3) { prop = P.lamp(); prop.lookAt(s.p.x, GROUND_Y, s.p.z); }
+            else if (r === 6) { prop = P.bank(); prop.lookAt(s.p.x, GROUND_Y, s.p.z); }
+            else { prop = P.tree(k + side + 2); prop.rotation.y = rnd() * 6.28; }
+            prop.position.set(x, GROUND_Y, z); g.add(prop);
+            if (r === 6 && rnd() < 0.5) { const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x + s.T.x * 2.2, GROUND_Y, z + s.T.z * 2.2); f.rotation.y = rnd() * 6.28; g.add(f); }
+          }
+          sPos += 13 + rnd() * 4; k++;
+        }
+      }
+    }
     if (street !== 'park') {
       for (const side of [-1, 1]) {
         let sPos = rnd() * 8, houses = 0, sinceGap = 0;

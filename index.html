@@ -54,16 +54,17 @@
       <div class="langerBox"><canvas id="langerFace2"></canvas><p id="langerQuote"></p></div>
     </section>
     <div class="startRow">
-      <button id="startBtn">🏁 RENNEN STARTEN 🏁</button>
+      <div class="coinLine"><canvas id="coinArt" width="16" height="16"></canvas><span>INSERT COIN · 1 KÖLSCH = 1 CREDIT</span><canvas id="coinArt2" width="16" height="16"></canvas></div>
+      <div class="startCab"><canvas id="joyArt" width="60" height="60"></canvas><button id="startBtn">RENNEN STARTEN</button><canvas id="joyArt2" width="60" height="60"></canvas></div>
       <div id="p2Info" class="p2Info" hidden></div>
       <div class="subBtns">
-        <button id="editorBtn">🧱 KLÜNGEL-BAUKASTEN</button>
-        <button id="recordsBtn">🏆 REKORDE</button>
-        <button id="cupBtn">🍺 KÖLSCH-CUP (7 STRECKEN)</button>
-        <button id="p2Btn">👥 2 SPIELER: AUS</button>
-        <button id="voiceBtn">🗣 STIMME: AN</button>
-        <button id="tiltBtn">📱 NEIGEN: AUS</button>
-        <button id="musicBtn">🎵 MUSIK LADEN</button>
+        <button id="editorBtn" data-icon="brick">KLÜNGEL-BAUKASTEN</button>
+        <button id="recordsBtn" data-icon="trophy">REKORDE</button>
+        <button id="cupBtn" data-icon="beer">KÖLSCH-CUP (7 STRECKEN)</button>
+        <button id="p2Btn" data-icon="people">2 SPIELER: AUS</button>
+        <button id="voiceBtn" data-icon="speaker">STIMME: AN</button>
+        <button id="tiltBtn" data-icon="phone">NEIGEN: AUS</button>
+        <button id="musicBtn" data-icon="note">MUSIK LADEN</button>
         <span id="musicTitle"></span>
         <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
       </div>

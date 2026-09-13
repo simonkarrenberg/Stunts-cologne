@@ -225,7 +225,7 @@
         { t: 'curve', angle: 90, r: 50, bank: 15 },
         { t: 'straight', len: 50 },
         { t: 'loop', r: 14, shift: 14 },
-        { t: 'corkscrew', len: 64, r: 9, turns: 1, dir: -1 },
+        { t: 'corkscrew', len: 64, r: 9, turns: 1, dir: 1 },
         { t: 'curve', angle: 90, r: 40 },
         { t: 'bridge', len: 130 },
         { t: 'curve', angle: -90, r: 35 },

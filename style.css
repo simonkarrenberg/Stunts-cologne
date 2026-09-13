@@ -33,7 +33,7 @@ body.hd #gl { image-rendering: auto; }
 #menu .card:hover, #menu .trackRow:hover { border-color: var(--cyan); box-shadow: 0 0 10px rgba(79,214,255,.35); }
 #menu .card.active, #menu .trackRow.active { border-color: var(--yellow); box-shadow: 0 0 0 1px var(--yellow), 0 0 18px rgba(255,210,63,.45), inset 0 0 18px rgba(255,210,63,.12); }
 #menu .card.active b, #menu .trackRow.active .info b { text-shadow: 0 0 8px var(--yellow); }
-.startRow::before { content: "INSERT COIN · 1 KÖLSCH = 1 CREDIT"; width: 100%; text-align: center; color: var(--cyan); font-size: 9px; letter-spacing: .15em; text-shadow: 0 0 8px var(--cyan); animation: coin 1s steps(2) infinite; }
+.coinLine span { animation: coin 1s steps(2) infinite; }
 @keyframes coin { 50% { opacity: .25; } }
 #startBtn { background: radial-gradient(ellipse at 50% 30%, #ff5c5c, #c1121f 60%, #7a0a12); color: #fff; border: 4px solid #ffd23f; border-radius: 14px; box-shadow: 0 0 0 3px #000, 0 6px 0 #5a0810, 0 6px 0 3px #000, 0 0 24px rgba(255,42,42,.55); text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255,255,255,.6); font-size: 18px; padding: 14px 34px; animation: press 1.4s steps(2) infinite; }
 #startBtn:hover, #startBtn:active { background: radial-gradient(ellipse at 50% 30%, #ff8a8a, #e0202e 60%, #8a0a14); color: #fff; transform: translateY(3px); box-shadow: 0 0 0 3px #000, 0 3px 0 #5a0810, 0 3px 0 3px #000, 0 0 30px rgba(255,42,42,.8); animation: none; }
@@ -46,7 +46,7 @@ body.hd #gl { image-rendering: auto; }
 .menuFooter .keys kbd { background: #1c1642; border-color: #6a3fa0; }
 #menu .desc { border-left-color: var(--pink); box-shadow: -4px 0 12px -6px var(--pink); }
 #langerQuote { text-shadow: 0 0 6px rgba(255,255,255,.35); }
-@media (prefers-reduced-motion: reduce) { .banner::before, .startRow::before, #startBtn { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .banner::before, .coinLine span, #startBtn { animation: none; } }
 .banner { position: relative; height: 150px; border-bottom: 3px solid var(--line); overflow: hidden; }
 #skyline { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 #logo { position: absolute; left: 16px; top: 4px; width: 560px; height: 140px; max-width: 60vw; image-rendering: pixelated; }
@@ -96,6 +96,13 @@ body.hd #gl { image-rendering: auto; }
 #langerQuote { margin: 0; color: #fff; font-size: 10px; line-height: 1.9; }
 .startRow { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 4px; }
 #startBtn { letter-spacing: .04em; }
+.pxi { width: 16px; height: 16px; image-rendering: pixelated; vertical-align: -4px; margin-right: 7px; }
+.coinLine { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--cyan); font-size: 9px; letter-spacing: .15em; text-shadow: 0 0 8px var(--cyan); }
+.coinLine canvas { width: 16px; height: 16px; image-rendering: pixelated; }
+.startCab { display: flex; align-items: center; gap: 16px; }
+.startCab canvas { width: 60px; height: 60px; image-rendering: pixelated; filter: drop-shadow(0 0 6px rgba(255,63,160,.5)); }
+#startBtn::before { content: "▶ "; color: #ffd23f; } #startBtn::after { content: " ◀"; color: #ffd23f; }
+body.mobile .startCab canvas { width: 40px; height: 40px; } body.mobile .coinLine { font-size: 7px; }
 @keyframes blink { 50% { border-color: #fff; } }
 .subBtns { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .subBtns button { background: #0d1024; color: var(--cyan); border: 3px solid var(--line2); box-shadow: 3px 3px 0 #000; font-size: 9px; padding: 8px 10px; }

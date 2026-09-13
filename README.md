@@ -12,8 +12,9 @@ Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVB-Haltestellen und jede Men
 
 Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
-Das Startmenü ist eine Arcade-Kiste der 80er: Marquee mit Lauflicht, Neonüberschriften, roter
-Start-Knopf, „Insert Coin“. Alle Knöpfe und Tasten sind dieselben wie vorher.
+Das Startmenü ist eine Arcade-Kiste der 80er: Marquee mit Lauflicht, Neonüberschriften, genietete
+Pixel-Rahmen, Pixel-Icons auf allen Knöpfen, zwei Pixel-Joysticks um den roten Start-Knopf und eine
+blinkende Münze für „Insert Coin“. Alle Knöpfe und Tasten sind dieselben wie vorher.
 
 ## Spielen (auch auf dem Handy)
 

@@ -490,5 +490,46 @@
     return canvas;
   }
 
-  root.Sprites = { portrait, carSide, logo, skyline, thumb, outline, dashboard, PORTRAITS };
+  // ---------------- pixel icons for the arcade menu ----------------
+  // 16x16 char maps: . transparent, letters from ICON_PAL
+  const ICON_PAL = { k: [20, 18, 28], w: [250, 250, 250], r: [214, 40, 40], R: [140, 20, 20], y: [255, 210, 63], Y: [200, 150, 20], o: [255, 122, 0], g: [58, 223, 58], G: [40, 140, 40], b: [79, 214, 255], B: [30, 100, 200], p: [255, 63, 160], s: [150, 150, 165], S: [90, 90, 105], t: [224, 172, 105], T: [160, 110, 60], n: [120, 80, 40], c: [255, 220, 120] };
+  const ICONS = {
+    flag: ['................', '.kk.............', '.kwkwkwkwkk.....', '.kkwkwkwkwk.....', '.kwkwkwkwkk.....', '.kkwkwkwkwk.....', '.kwkwkwkwkk.....', '.kkwkwkwkwk.....', '.kwkwkwkwkk.....', '.kk.............', '.kk.............', '.kk.............', '.kk.............', '.kk.............', '.kk.............', '................'],
+    brick: ['................', 'kkkkkkkkkkkkkkkk', 'krrrkrrrrrkrrrrk', 'krrrkrrrrrkrrrrk', 'kkkkkkkkkkkkkkkk', 'krrrrrkrrrrrkrrk', 'krrrrrkrrrrrkrrk', 'kkkkkkkkkkkkkkkk', 'krrrkrrrrrkrrrrk', 'krrrkrrrrrkrrrrk', 'kkkkkkkkkkkkkkkk', 'krrrrrkrrrrrkrrk', 'krrrrrkrrrrrkrrk', 'kkkkkkkkkkkkkkkk', '................', '................'],
+    trophy: ['................', '..kkkkkkkkkkkk..', '.kyyyyyyyyyyyyk.', 'kykyyyyyyyyyykyk', 'kykyyyyyyyyyykyk', '.kkyyyyyyyyyykk.', '...kyyyyyyyyk...', '...kyyyyyyyyk...', '....kyyyyyyk....', '.....kyyyyk.....', '......kyyk......', '......kyyk......', '....kkkYYkkk....', '...kYYYYYYYYk...', '...kkkkkkkkkk...', '................'],
+    beer: ['................', '....kkkkkkk.....', '...kwwwwwwwk....', '..kwwwwwwwwwk...', '..kwwccwwwwwk...', '..kyyyyyyyykkk..', '..kyyyyyyyykwwk.', '..kyyyyyyyykwwk.', '..kyyyyyyyykwwk.', '..kyyyyyyyykwwk.', '..kyyyyyyyykkk..', '..kyyyyyyyyk....', '..kYYYYYYYYk....', '..kkkkkkkkkk....', '................', '................'],
+    people: ['................', '...kkk....kkk...', '..kttk...kttk...', '..kttk...kttk...', '...kk.....kk....', '..kbbk...kppk...', '.kbbbbk.kppppk..', '.kbbbbk.kppppk..', '.kbbbbk.kppppk..', '..kbbk...kppk...', '..kSSk...kSSk...', '..kSSk...kSSk...', '..kkkk...kkkk...', '................', '................', '................'],
+    speaker: ['................', '.......kk.......', '......kwk...k...', '.kkkkkwwk..k.k..', '.kssswwwk.k..k..', '.kssswwwk.k.k.k.', '.kssswwwk.k.k.k.', '.kssswwwk.k.k.k.', '.kssswwwk.k..k..', '.kkkkkwwk..k.k..', '......kwk...k...', '.......kk.......', '................', '................', '................', '................'],
+    phone: ['................', '.....kkkkkk.....', '....kSSSSSSk....', '....kSkkkkSk....', '....kSkbbkSk....', '....kSkbbkSk....', '....kSkbbkSk....', '....kSkbbkSk....', '....kSkbbkSk....', '....kSkkkkSk....', '....kSSSSSSk....', '....kSSkkSSk....', '....kSSSSSSk....', '.....kkkkkk.....', '................', '................'],
+    note: ['................', '.......kkkkkk...', '.......kyyyyyk..', '.......kykkkkk..', '.......kyk......', '.......kyk......', '.......kyk......', '.......kyk......', '.......kyk......', '....kkkkyk......', '...kppppyk......', '..kpppppyk......', '..kpppppk.......', '...kpppk........', '....kkk.........', '................'],
+    coin: ['................', '.....kkkkkk.....', '...kkyyyyyykk...', '..kyyyyyyyyyyk..', '.kyyyYYkkYYyyyk.', '.kyyyYkyykYyyyk.', 'kyyyYYkyyykYyyyk', 'kyyyYkyyyykYyyyk', 'kyyyYkyyyykYyyyk', 'kyyyYYkyyykYyyyk', '.kyyyYkyykYyyyk.', '.kyyyYYkkYYyyyk.', '..kyyyyyyyyyyk..', '...kkyyyyyykk...', '.....kkkkkk.....', '................'],
+    share: ['................', '..........kkk...', '.........kbbbk..', '.........kbbbk..', '........kkbbbk..', '.......k..kkk...', '......k.........', '..kkkk..........', '.kbbbbk.........', '.kbbbbk.........', '.kbbbbk.........', '..kkkk..k.......', '.........k......', '..........kkk...', '.........kbbbk..', '..........kkk...'],
+    replay: ['................', '................', '..kkkkkkkkkkkk..', '.kssssssssssssk.', '.kskkkkkkkkkksk.', '.kskwwkkkkkwksk.', '.kskwwwkkkwwksk.', '.kskwwwwkwwwksk.', '.kskwwwkkkwwksk.', '.kskwwkkkkkwksk.', '.kskkkkkkkkkksk.', '.kssssssssssssk.', '..kkkkkkkkkkkk..', '................', '................', '................']
+  };
+  const JOYSTICK = [
+    '..............................', '..............................', '..............kkkk............', '.............krrrrk...........', '............krrrrrrk..........', '............krRrrrrk..........', '............krrrrrrk..........', '.............krrrrk...........', '..............kkkk............', '...............ss.............', '...............ss.............', '...............ss.............', '...............ss.............', '...............ss.............', '...............ss.............', '...............ss.............',
+    '............kkkkkkkk..........', '..........kkSSSSSSSSkk........', '........kkSSSSSSSSSSSSkk......', '.......kSSSSSSSSSSSSSSSSk.....', '.kkkk..kSSSSSSSSSSSSSSSSk.kkkk', 'kyyyyk.kSSSSSSSSSSSSSSSSkkbbbbk', 'kyyyykkkkkkkkkkkkkkkkkkkkkbbbbk', 'kYYYYkkkkkkkkkkkkkkkkkkkkkBBBBk', '.kkkkkkkkkkkkkkkkkkkkkkkkkkkkk', '..............................', '..............................', '..............................', '..............................', '..............................'
+  ];
+  function drawMap(map, canvas, scale) {
+    const h = map.length, w = map[0].length; scale = scale || 1; canvas.width = w * scale; canvas.height = h * scale;
+    const x = canvas.getContext('2d'); x.clearRect(0, 0, canvas.width, canvas.height);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const ch = map[j][i]; if (ch === '.' || !ICON_PAL[ch]) continue; const c = ICON_PAL[ch]; x.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`; x.fillRect(i * scale, j * scale, scale, scale); }
+    return canvas;
+  }
+  function icon(name, canvas, scale) { return drawMap(ICONS[name] || ICONS.flag, canvas, scale || 1); }
+  function joystick(canvas, scale) { return drawMap(JOYSTICK, canvas, scale || 2); }
+  // a 24x24 chunky bevelled frame tile for CSS border-image (8px slices)
+  function frameTile(color) {
+    const c = document.createElement('canvas'); c.width = 24; c.height = 24; const x = c.getContext('2d');
+    const col = color || [106, 63, 160]; const lite = col.map((v) => Math.min(255, v + 70)), dark = col.map((v) => Math.max(0, v - 50));
+    const f = (rgb) => `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    x.fillStyle = '#000'; x.fillRect(0, 0, 24, 24);
+    x.fillStyle = f(col); x.fillRect(2, 2, 20, 20);
+    x.fillStyle = f(lite); x.fillRect(2, 2, 20, 2); x.fillRect(2, 2, 2, 20);
+    x.fillStyle = f(dark); x.fillRect(2, 20, 20, 2); x.fillRect(20, 2, 2, 20);
+    x.fillStyle = '#000'; x.fillRect(8, 8, 8, 8); // the middle is not used, keep it neutral
+    x.fillStyle = '#ffd23f'; x.fillRect(4, 4, 2, 2); x.fillRect(18, 4, 2, 2); x.fillRect(4, 18, 2, 2); x.fillRect(18, 18, 2, 2); // rivets
+    return c.toDataURL();
+  }
+  root.Sprites = { portrait, carSide, logo, skyline, thumb, outline, dashboard, PORTRAITS, icon, joystick, frameTile, ICONS };
 })(window);

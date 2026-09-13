@@ -130,7 +130,9 @@
     try { voice.on = localStorage.getItem('stuntskoelle.voice') !== 'off'; } catch (e) { /* ignore */ }
     updateVoiceUI();
   }
-  function updateVoiceUI() { const b = $('#voiceBtn'); if (b) b.textContent = ('speechSynthesis' in window) ? (voice.on ? '🗣 STIMME: AN' : '🗣 STIMME: AUS') : '🗣 STIMME: –'; }
+  // menu buttons carry a pixel icon (canvas) in front of their text; the icon survives label changes
+  function labelBtn(btn, text) { if (!btn) return; const name = btn.dataset.icon; btn.textContent = ''; if (name && SP.icon) { const c = document.createElement('canvas'); c.className = 'pxi'; SP.icon(name, c, 1); btn.appendChild(c); } btn.appendChild(document.createTextNode(text)); }
+  function updateVoiceUI() { labelBtn($('#voiceBtn'), ('speechSynthesis' in window) ? (voice.on ? 'STIMME: AN' : 'STIMME: AUS') : 'STIMME: –'); }
   function toggleVoice() { voice.on = !voice.on; try { localStorage.setItem('stuntskoelle.voice', voice.on ? 'on' : 'off'); } catch (e) { /* ignore */ } updateVoiceUI(); if (voice.on) speak('Ich bin dä Lange. Jetz hörs du mich och.', 0.55, 0.95, true); else if ('speechSynthesis' in window) speechSynthesis.cancel(); }
   function speak(text, pitch, rate, force) {
     if (!voice.on || !voice.ready || audio.muted) return;
@@ -648,7 +650,7 @@
     window.addEventListener('devicemotion', onMotion);
   }
   function tiltCalibrate() { tilt.zero = tilt.raw; tilt.lastCal = Date.now(); }
-  function updateTiltUI() { const b = $('#tiltBtn'); if (b) b.textContent = tilt.mode === 0 ? '📱 NEIGEN: AUS' : tilt.mode === 1 ? '📱 NEIGEN: AN' : '📱 NEIGEN: AN (UMGEKEHRT)'; document.body.classList.toggle('tilt', tilt.mode > 0); }
+  function updateTiltUI() { labelBtn($('#tiltBtn'), tilt.mode === 0 ? 'NEIGEN: AUS' : tilt.mode === 1 ? 'NEIGEN: AN' : 'NEIGEN: AN (UMGEKEHRT)'); document.body.classList.toggle('tilt', tilt.mode > 0); }
   function setTiltMode(m) { tilt.mode = m; try { localStorage.setItem('stuntskoelle.tilt', String(m)); } catch (e) { /* ignore */ } updateTiltUI(); if (m > 0) { tiltListen(); setTimeout(tiltCalibrate, 600); say(tuenn, m === 1 ? 'Handy neigen wie e Lenkrad, Jung. Links, rechts, un nit zo wild. Nochmal drücke dreht de Richtung um.' : 'Umjekehrt jelenkt. Wie de Schäl. Passt.', 3500); } }
   function toggleTilt() {
     const next = (tilt.mode + 1) % 3;
@@ -1065,7 +1067,7 @@
   // ---------------- two players on one keyboard ----------------
   function toggleTwoPlayer() {
     twoPlayer = !twoPlayer;
-    $('#p2Btn').textContent = twoPlayer ? '👥 2 SPIELER: AN' : '👥 2 SPIELER: AUS';
+    labelBtn($('#p2Btn'), twoPlayer ? '2 SPIELER: AN' : '2 SPIELER: AUS');
     $('#p2Info').hidden = !twoPlayer;
     if (twoPlayer) { const d2 = PLAYABLE[(sel.driver + 1) % PLAYABLE.length], c2 = D.CARS[(sel.car + 1) % D.CARS.length]; $('#p2Info').textContent = `P2: ${d2.name} im ${c2.name} · W/A/S/D + Q Nitro · P1: Pfeile + Shift`; }
   }
@@ -1157,6 +1159,11 @@
     SP.portrait('langer', $('#langerFace2'), 4);
     SP.portrait('langer', $('#resFace'), 5);
     if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
+    // arcade cabinet pixel art: button icons, joystick and buttons, blinking coin, chunky frames
+    for (const b of document.querySelectorAll('#menu button[data-icon]')) labelBtn(b, b.textContent.trim());
+    if ($('#joyArt')) { SP.joystick($('#joyArt'), 2); SP.joystick($('#joyArt2'), 2); }
+    if ($('#coinArt')) { SP.icon('coin', $('#coinArt'), 1); SP.icon('coin', $('#coinArt2'), 1); let on = true; setInterval(() => { on = !on; for (const id of ['#coinArt', '#coinArt2']) { const c = $(id); if (c) c.style.visibility = on ? 'visible' : 'hidden'; } }, 500); }
+    if (SP.frameTile) { const tile = SP.frameTile([106, 63, 160]); for (const pnl of document.querySelectorAll('#menu .panel')) { pnl.style.borderImage = `url(${tile}) 8 repeat`; pnl.style.borderWidth = '8px'; pnl.style.borderStyle = 'solid'; } }
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
