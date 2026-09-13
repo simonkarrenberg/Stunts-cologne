@@ -248,7 +248,7 @@
   // ---------- post process: low-res + posterize + bayer dither ----------
   function PixelPost(renderer, scale) {
     this.renderer = renderer; this.scale = scale || 3;
-    this.rt = new THREE.WebGLRenderTarget(320, 200, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: true });
+    this.rt = new THREE.WebGLRenderTarget(320, 200, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: true, stencilBuffer: true }); // stencil forces a 24-bit depth buffer: no water/ground bleeding through the road at distance
     this.scene = new THREE.Scene();
     this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     this.mat = new THREE.ShaderMaterial({

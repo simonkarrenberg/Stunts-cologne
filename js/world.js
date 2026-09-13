@@ -9,7 +9,7 @@
   const pickR = (arr, r) => arr[Math.floor((r ? r() : Math.random()) * arr.length)];
   const ROAD_W = 6;        // half width
   const GROUND_Y = -0.3;
-  const WATER_Y = -0.08;
+  const WATER_Y = -0.14;
   const mulberry = PX.mulberry;
 
   // Materials are cached so that the static-geometry merger can batch by material.
@@ -711,7 +711,7 @@
   P.barge = () => { const g = new THREE.Group(); g.add(box(60, 2, 9, 0x4a4a52, 0, 0.8, 0)); g.add(box(50, 1.2, 8, 0x2f2f36, 0, 2.2, 0)); g.add(box(6, 4, 6, 0xf0f0f0, -25, 3.8, 0)); g.userData.boat = true; animated.push(g); return g; };
   function water(w, l) {
     const tex = T.water(THEME.water).clone(); tex.needsUpdate = true; tex.repeat.set(w / 16, l / 8);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), tmat(tex, 0xffffff, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, nocache: true }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, l), tmat(tex, 0xffffff, { nocache: true }));
     m.rotation.x = -Math.PI / 2; m.position.y = WATER_Y - GROUND_Y; m.userData.water = tex; animated.push(m);
     return m;
   }
@@ -1180,7 +1180,8 @@
       for (const [k0, N] of underRanges) for (let k = k0; k < k0 + 4; k++) nrm.setXYZ(k, -N.x * s0, -N.y * s0, -N.z * s0); // the outer skin of a loop faces outward
       nrm.needsUpdate = true; }
     const tex = theme.wet ? T.wet() : theme.street === 'altstadt' ? T.cobble(0xe8e2dc, 3) : T.asphalt(0xffffff, 2);
-    const m = new THREE.MeshStandardMaterial({ vertexColors: true, map: tex, side: THREE.DoubleSide, roughness: theme.wet ? 0.35 : 0.85, metalness: theme.wet ? 0.25 : 0.05 });
+    const m = new THREE.MeshStandardMaterial({ vertexColors: true, map: tex, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, // the road always wins against water and ground at grazing angles
+      roughness: theme.wet ? 0.35 : 0.85, metalness: theme.wet ? 0.25 : 0.05 });
     const group = new THREE.Group();
     const roadMesh = new THREE.Mesh(g, m); roadMesh.receiveShadow = true;
     group.add(roadMesh);
@@ -1193,7 +1194,7 @@
     const g = new THREE.Group();
     const steel = tmat(T.steel(0x2f6b4f), 0xffffff), post = mat(0x555555), tunnelM = tmat(T.brick(theme.night ? 0x3a3a55 : 0x8a7a6a), 0xffffff, { side: THREE.DoubleSide });
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
-    const railGeo = new THREE.BoxGeometry(0.25, 1.1, 1.05);
+    const railGeo = new THREE.BoxGeometry(0.25, 1.1, 1.05); const tpos = [], tuv = [], tidx = []; // tunnel tube geometry
     // is this ground point clear of every ground-level road (with curb)? Used for every support column.
     const groundFree = (x, z) => { const r2 = (ROAD_W + 1.8) * (ROAD_W + 1.8); for (let k = 0; k < n; k += 2) { const q = S[k]; if (q.p.y > 1.5) continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < r2) return false; } return true; };
     // loop scaffolding: columns stand OUTSIDE the loop's footprint (the road runs underneath the loop at
@@ -1249,9 +1250,23 @@
         if (i % 12 === 0) { const p = off(s, 0, -0.5); const pyl = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W * 2 + 3, 1.4, 1.5), steel); pyl.position.set(p.x, p.y - 0.9, p.z); g.add(pyl); }
         if (i % 24 === 0) { const l = P.lamp(); const p = off(s, ROAD_W + 1.6, 0); l.position.copy(p); l.rotation.y = Math.atan2(s.T.x, s.T.z) + Math.PI; g.add(l); }
       }
-      if (s.kind === 'tunnel' && i % 2 === 0) { const ring = new THREE.Mesh(new THREE.TorusGeometry(ROAD_W + 1.8, 0.9, 6, 12, Math.PI), tunnelM); const p = off(s, 0, 0.6); ring.position.copy(p); ring.lookAt(p.clone().add(V(s.T))); g.add(ring); if (i % 10 === 0) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 1.5), bmat(0xfff0b0)); l.position.copy(off(s, 0, 7.0)); g.add(l); } }
+      if (s.kind === 'tunnel') { // real tunnel: continuous vaulted tube over the road, lights every 10 m, portal face at both ends
+        const q = S[(i + 1) % n]; if (q.kind === 'tunnel') {
+          const R = ROAD_W + 2.0, segs = 10; for (let k = 0; k < segs; k++) { const a0 = Math.PI * k / segs, a1 = Math.PI * (k + 1) / segs; const c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+            const v = (sm, c, sn) => [sm.p.x + sm.B.x * R * c + sm.N.x * (R * sn * 0.85 + 0.6), sm.p.y + sm.B.y * R * c + sm.N.y * (R * sn * 0.85 + 0.6), sm.p.z + sm.B.z * R * c + sm.N.z * (R * sn * 0.85 + 0.6)];
+            const b = tpos.length / 3; tpos.push(...v(s, c0, s0), ...v(q, c0, s0), ...v(q, c1, s1), ...v(s, c1, s1)); tuv.push(i * 0.25, k * 0.5, (i + 1) * 0.25, k * 0.5, (i + 1) * 0.25, (k + 1) * 0.5, i * 0.25, (k + 1) * 0.5); tidx.push(b, b + 2, b + 1, b, b + 3, b + 2); }
+          if (i % 10 === 0) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 1.5), bmat(0xfff0b0)); l.position.copy(off(s, 0, ROAD_W + 1.9)); g.add(l); }
+        }
+        const prev = S[(i - 1 + n) % n]; if (prev.kind !== 'tunnel' || q.kind !== 'tunnel') { // portal: brick face with the arch cut out
+          const R = ROAD_W + 2.0, face = prev.kind !== 'tunnel' ? s : s; const dir = prev.kind !== 'tunnel' ? -1 : 1;
+          for (let k = 0; k < 10; k++) { const a0 = Math.PI * k / 10, a1 = Math.PI * (k + 1) / 10; const b = tpos.length / 3;
+            const P = (c, sn, rr) => [face.p.x + face.B.x * rr * c + face.N.x * (rr * sn * 0.85 + 0.6) + face.T.x * dir * 0.3, face.p.y + face.B.y * rr * c + face.N.y * (rr * sn * 0.85 + 0.6) + face.T.y * dir * 0.3, face.p.z + face.B.z * rr * c + face.N.z * (rr * sn * 0.85 + 0.6) + face.T.z * dir * 0.3];
+            tpos.push(...P(Math.cos(a0), Math.sin(a0), R), ...P(Math.cos(a1), Math.sin(a1), R), ...P(Math.cos(a1), Math.sin(a1), R + 3.2), ...P(Math.cos(a0), Math.sin(a0), R + 3.2)); tuv.push(k, 0, k + 1, 0, k + 1, 1, k, 1); tidx.push(b, b + 1, b + 2, b, b + 2, b + 3); }
+        }
+      }
       if (s.kind === 'ramp' && i % 4 === 0) { const p = off(s, 0, -0.3); const h = Math.max(0.2, p.y - GROUND_Y); const b = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W * 2 + 1.5, h, 2.2), tmat(T.stripes(0xffd400, 0x222222), 0xffffff)); b.position.set(p.x, GROUND_Y + h / 2, p.z); g.add(b); }
     }
+    if (tpos.length) { const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(tpos, 3)); tg.setAttribute('uv', new THREE.Float32BufferAttribute(tuv, 2)); tg.setIndex(tidx); tg.computeVertexNormals(); g.add(new THREE.Mesh(tg, tunnelM)); }
     // start gantry
     const s0 = S[2];
     const banner = textPlane('KÖLLE 4D  •  START / ZIEL', '#ffffff', '#c1121f', 20, 2.2, theme.night, { border: '#ffd400' });
@@ -1280,7 +1295,7 @@
       for (const [i0, i1] of trenchRuns) { const a0 = Math.max(0, i0 - 2), a1 = Math.min(n - 1, i1 + 2); const pts = []; for (let i = a0; i <= a1; i += 2) pts.push(e(S[i], -TW)); for (let i = a1; i >= a0; i -= 2) pts.push(e(S[i], TW)); shape.holes.push(new THREE.Path(pts)); }
       groundGeo = new THREE.ShapeGeometry(shape); gtex.repeat.set(0.25, 0.25); // shape uvs are metres, plane uvs were 0..1 over 6000 m
     } else groundGeo = new THREE.PlaneGeometry(6000, 6000);
-    const ground = new THREE.Mesh(groundGeo, tmat(gtex, 0xffffff));
+    const ground = new THREE.Mesh(groundGeo, tmat(gtex, 0xffffff, { polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 })); // pushed back: never wins against road or water near the camera
     ground.rotation.x = -Math.PI / 2; ground.position.y = GROUND_Y; ground.receiveShadow = true; ground.userData.keep = true; g.add(ground);
     if (trenchRuns.length) { // retaining walls from the ground edge down to the curb
       const wallM = tmat(T.brick(theme.night ? 0x4a4a5a : 0x8a8478), 0xffffff, { side: THREE.DoubleSide }); const pos = [], uv = [], idx = [];

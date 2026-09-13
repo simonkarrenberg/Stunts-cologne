@@ -344,6 +344,7 @@
     for (const az of spec.ax) { const wx = X(az); for (let y = Math.floor(wy - wr - 2); y <= wy + 1; y++) for (let x = Math.floor(wx - wr - 2); x <= wx + wr + 2; x++) { const dx = x - wx, dy = y - wy; if (dx * dx + dy * dy <= (wr + 2) * (wr + 2)) { const i = (y * W + x) * 4; if (x >= 0 && x < W && y >= 0 && y < H) fig.d[i + 3] = 0; } } }
     fig.outline(dark);
     for (const az of spec.ax) { const wx = X(az); fig.ellipse(wx, wy, wr, wr, null, (x, y, dx, dy) => { const rr2 = dx * dx + dy * dy; if (rr2 > 0.62) return (dx - dy) < -0.4 ? [50, 50, 58] : [24, 24, 30]; if (rr2 > 0.5) return [110, 110, 120]; if (rr2 > 0.1) { const a = Math.atan2(dy, dx); return Math.abs(Math.sin(a * 2.5)) > 0.85 ? [150, 150, 160] : [200, 202, 210]; } return [120, 120, 130]; }); fig.set(wx - 2, wy - 2, [245, 245, 250]); }
+    const bodyMask = new Uint8ClampedArray(fig.d); // silhouette so far (body, outline, wheels): nose details may not stick out of a low wedge
     // front: bumper, grille, lights; rear: bumper, tail light, plate, exhaust
     const nx = X(nose), tx = X(tail), by = Y(floorAt(nose) + 0.18);
     fig.rect(nx - 3, by, 5, 2, chrome); fig.rect(tx - 1, by, 5, 2, chrome); fig.rect(nx - 4, by + 2, 5, 1, shade(chrome, 0.6)); fig.rect(tx - 2, by + 2, 5, 1, shade(chrome, 0.6));
@@ -355,6 +356,7 @@
     fig.rect(nx - 1, ly + 1, 2, 1, [255, 255, 240]); fig.rect(nx - 4, by - 2, 3, 1, rgb(0xd88a10));
     fig.rect(tx - 1, ly, 3, 3, rgb(0xd01818)); fig.rect(tx, ly, 1, 1, [255, 90, 80]); fig.rect(tx + 2, by - 3, 5, 3, [244, 244, 244]); fig.rect(tx + 3, by - 2, 3, 1, [40, 40, 50]);
     fig.rect(tx + 2, gy - 3, 4, 2, [140, 140, 150]);
+    if (bodyMask) for (let y = 0; y < H; y++) for (let x = Math.max(0, nx - 10); x < W; x++) { const i = (y * W + x) * 4; if (bodyMask[i + 3] === 0) { fig.d[i] = 0; fig.d[i + 1] = 0; fig.d[i + 2] = 0; fig.d[i + 3] = 0; } }
     // antenna
     fig.line(cowl[0] + 4, beltY - 2, cowl[0] + 6, beltY - 12, [90, 90, 100], 1);
     // ground shadow, then composite

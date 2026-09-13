@@ -14,7 +14,9 @@
     { id: 'rocket', name: 'Rheinland Rocket', sub: 'Bayerisches Coupé, Kölner Kennzeichen, Zocker-Streifen.', color: 0xf2f2f2, stripe: 0x1c3f95, shape: 'coupe2',
       accel: 12.5, top: 67, brake: 28, grip: 0.95, steer: 0.9, nitro: 4, stats: [5, 3, 3, 4], plate: 'K-RR 635' },
     { id: 'special', name: 'Milieu-Benz 280 SE', sub: 'Schwarz, lang, Chrom. Dat Auto vum Ring. Fahrer: dä Lange vum Ring.', color: 0x0e0e12, stripe: 0xff2d95, shape: 'limo',
-      accel: 13, top: 71, brake: 26, grip: 0.9, steer: 0.95, nitro: 5, stats: [5, 4, 3, 5], plate: 'K-LT 1' }
+      accel: 13, top: 71, brake: 26, grip: 0.9, steer: 0.95, nitro: 5, stats: [5, 4, 3, 5], plate: 'K-LT 1' },
+    { id: 'countach', name: 'LamboGina Countach', sub: 'Weißer Keil aus Sant’Agata, Kölner Kennzeichen. Hochkant-Türen, Poster im Kinderzimmer.', color: 0xf4f4f2, stripe: 0x111111, shape: 'wedge',
+      accel: 15, top: 74, brake: 27, grip: 0.92, steer: 0.9, nitro: 5, stats: [5, 5, 3, 5], plate: 'K-LG 88' }
   ];
 
   // ---------------- DRIVERS / RACERS ----------------

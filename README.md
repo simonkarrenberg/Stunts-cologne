@@ -126,7 +126,8 @@ Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loo
 sind natürlich Stunts, keine Kölner Verkehrsplanung. Vier der sieben Strecken spielen abends,
 nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
-Alle Stadtstrecken haben mindestens einen Looping oder Sprung im Stunts-Stil. Dazu kommen wie in
+Tunnel sind echte Röhren mit Backsteingewölbe, Lampen und Portalen. Alle Stadtstrecken haben
+mindestens einen Looping oder Sprung im Stunts-Stil. Dazu kommen wie in
 Stunts 4D **Korkenzieher** (die Straße dreht sich einmal um die eigene Achse; Chicago am Rhein an
 St. Gereon, Schäl Sick an der Flora, Rheinauhafen, Poller Wiesen) und **Sprünge über Gebäude**:
 in Chicago über zwei Büdchen, im Karneval und in Ehrenfeld über ein Haus, auf den Poller Wiesen
@@ -146,7 +147,9 @@ fahren neun weitere: Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann un
 nicht genommen hast – ein Feld von zehn.
 
 Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
-Rheinland Rocket, Milieu-Benz 280 SE — echte Karosserien mit Klarlack, Chrom und Himmelsspiegelung.
+Rheinland Rocket, Milieu-Benz 280 SE und der weiße LamboGina Countach (Keil, Klappscheinwerfer,
+Heckflügel, das Poster aus dem Kinderzimmer) — echte Karosserien mit Klarlack, Chrom und
+Himmelsspiegelung.
 
 Im Rennen: **TURBO** lädt beim Fahren und Driften auf, Shift/N zündet ihn. **SCHADEN** steigt
 bei Crashs und Rempeleien und kostet Topspeed; bei 100 % ist der Wagen kurz hin. Vier Kameras
