@@ -104,6 +104,22 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   spielen: ein Demo-Rennen aus der Fernsehkamera, dazu rollt die Geschichte von Chicago am Rhein über
   das Bild („KÖLN, 1968. Die Ringe glühen…“), oben blinkt „INSERT COIN“. Jede Taste oder ein Tipp
   holt zurück ins Menü; der Knopf „VORSPANN“ startet ihn sofort.
+- **Streck des Tages:** Unter den zehn Strecken steht jeden Tag eine elfte, die der Klüngel aus dem
+  Datum würfelt: 15 bis 25 Baukasten-Teile durch ein zufälliges Veedel (Nippes, Sülz, Kalk, Porz…),
+  mindestens ein Stunt, Kulisse von einer der festen Strecken. Sie schließt sich garantiert (der
+  Generator prüft das) und hat eigene Bestzeiten, die nur heute gelten. Wer auf allen Geräten dieselbe
+  Streck fährt, kann Zeiten vergleichen.
+- **Orden:** Zwölf Orden hängen unter REKORDE hinter der Theke – Loopingkönig, Sprungkönig, Kurier vum
+  Klüngel, Rheinbader, Blitzer-Abo, Durstlöscher, Abjehängt, Rekordhalter, Cup-Sieger, Nachtschwärmer,
+  Dat Dach, Tagesstreck. Die Zähler laufen über alle Rennen; ein neuer Orden wird im Ergebnis mit
+  Fanfare verkündet.
+- **Vorstellung der Strecke:** Vor dem Countdown fliegt die Kamera vier Sekunden von hoch über der
+  ersten Kurve hinunter hinter die Startaufstellung, mit Streckenname, Veedel, Runden und Kilometern
+  groß im Bild. Enter oder Leertaste überspringt sie.
+- **Hupe:** H (oder der 📯-Knopf) hupt zweistimmig. Ein Rivale direkt vor dir macht zweieinhalb Sekunden
+  Platz und meckert; sonst kommentiert der Türsteher.
+- **Regen:** Auf nassen Strecken (Domschatz-Raub) fällt Regen.
+- **Siegerehrung:** Nach der letzten Cup-Strecke stehen die ersten drei auf dem Podest, mit Portrait und Punkten.
 - **Razzia:** Ab und zu kommt die Kripo ins Klein Köln – Blaulicht, Sirene, alle Rivalen ducken sich
   und fahren langsam. Du nicht.
 - **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.

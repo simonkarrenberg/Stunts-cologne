@@ -1861,10 +1861,10 @@
   }
 
   // ------------------------------------------------ confetti ----
-  function buildConfetti() {
-    const N = 260;
+  function buildConfetti(opts) {
+    const rain = !!(opts && opts.rain); const N = rain ? 700 : 260;
     const pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
-    const cols = [0xff5fa2, 0xffd400, 0x00a0ff, 0x7fff00, 0xffffff, 0xff2d2d];
+    const cols = rain ? [0x9fb8d8, 0xb8c8e0, 0x8098b8] : [0xff5fa2, 0xffd400, 0x00a0ff, 0x7fff00, 0xffffff, 0xff2d2d];
     for (let i = 0; i < N; i++) {
       pos[i * 3] = (Math.random() - 0.5) * 120; pos[i * 3 + 1] = Math.random() * 40; pos[i * 3 + 2] = (Math.random() - 0.5) * 120;
       const c = new THREE.Color(cols[i % cols.length]); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
@@ -1872,11 +1872,11 @@
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.5, vertexColors: true }));
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: rain ? 0.22 : 0.5, vertexColors: true, transparent: rain, opacity: rain ? 0.7 : 1 }));
     pts.userData.update = (dt, center) => {
       const a = g.attributes.position.array;
       for (let i = 0; i < N; i++) {
-        a[i * 3 + 1] -= dt * (3 + (i % 5)); a[i * 3] += Math.sin(a[i * 3 + 1] * 0.5 + i) * dt * 2;
+        if (rain) a[i * 3 + 1] -= dt * (22 + (i % 7)); else { a[i * 3 + 1] -= dt * (3 + (i % 5)); a[i * 3] += Math.sin(a[i * 3 + 1] * 0.5 + i) * dt * 2; }
         if (a[i * 3 + 1] < -1) { a[i * 3 + 1] = 40; a[i * 3] = center.x + (Math.random() - 0.5) * 120; a[i * 3 + 2] = center.z + (Math.random() - 0.5) * 120; }
       }
       g.attributes.position.needsUpdate = true;

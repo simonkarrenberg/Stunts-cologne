@@ -78,7 +78,7 @@
     <span class="keys"><kbd>↑</kbd><kbd>↓</kbd> STRECK <kbd>←</kbd><kbd>→</kbd> WAGEN <kbd>1-6</kbd> FAHRER <kbd>ENTER</kbd> OK <kbd>ESC</kbd> ZURÜCK</span>
     <span id="slogan" class="slogan"></span>
     <span id="tipp" class="tipp"></span>
-    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET</span>
+    <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE</span>
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY</span>
   </footer>
 </div>
@@ -86,7 +86,7 @@
 <!-- ============ RECORDS ============ -->
 <div id="records" hidden>
   <div class="modal">
-    <h2>🏆 REKORDE – TOP ZEITEN IN KÖLN</h2>
+    <h2>🏆 REKORDE &amp; ORDEN – TOP ZEITEN IN KÖLN</h2>
     <div id="recordsList"></div>
     <button id="recordsClose">ZURÜCK</button>
   </div>
@@ -132,6 +132,7 @@
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
   <div id="msg"><div id="msgWho"></div><div id="msgText"></div></div>
   <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
+  <div id="introCard" hidden><b id="introName"></b><span id="introSub"></span></div>
   <div id="demo" hidden>
     <div class="demoTop"><span>DEMO</span><span class="blink">INSERT COIN · DRÜCK EINE TASTE</span><span>CREDIT 00</span></div>
     <div class="demoCrawlBox"><div id="demoCrawl"></div></div>
@@ -147,6 +148,7 @@
     <div class="barBox"><span>SCHADEN</span><div id="dmgBar" class="bar dmg"></div></div>
   </div>
   <div class="hudBtns">
+    <button id="hornBtn" title="Hupe (H)">📯</button>
     <button id="camBtn" title="Kamera (C)">🎥</button>
     <button id="muteBtn" title="Ton (M)">🔊</button>
     <button id="pixBtn" title="Pixelgröße (P)">▪▪▪</button>
@@ -157,7 +159,7 @@
 <!-- ============ TOUCH ============ -->
 <div id="touch" hidden>
   <div class="tGroup"><button id="tLeft">◀</button><button id="tRight">▶</button></div>
-  <div class="tGroup"><button id="tTel">☎</button><button id="tNitro">N</button><button id="tBrake">■</button><button id="tGas">▲</button></div>
+  <div class="tGroup"><button id="tHorn">📯</button><button id="tTel">☎</button><button id="tNitro">N</button><button id="tBrake">■</button><button id="tGas">▲</button></div>
 </div>
 <div id="rotate"><div><canvas id="rotateArt" width="120" height="33"></canvas>📱↻<br>Handy quer halten, Jung!<small>Kölle 4D läuft nur im Querformat.<br>Dreh dat Handy, dann jeht et los.</small></div></div>
 
@@ -168,6 +170,7 @@
       <h2>RENNERGEBNIS</h2>
       <p id="resTitle" class="resTitle"></p>
       <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt uff de Bierdeckel.</div>
+    <div id="resOrden" class="record orden" hidden></div>
       <div id="resExpress" class="express"></div>
       <table><tbody id="resTable"></tbody></table>
       <p class="small">Beste Runde: <b id="resBest"></b> · * = noch unterwegs, Zeit jeschätzt</p>

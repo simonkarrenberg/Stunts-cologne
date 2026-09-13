@@ -934,6 +934,29 @@
       late: ['Zu spät, Jung. Der {where} hät zujemacht. Zwei Striche weniger.', 'Die Uhr wor schneller. Dat kost dich zwei Striche un ming Laune.', 'Zu langsam. Der Umschlag jeht jetz mit der Post. Mit Briefmarke, Jung.'],
       lost: ['Un fott is et. Bei dem Crash liegt {what} jetz op der Straße. Zwei Striche, un ich sach nix mehr.', 'Verlore. Dat Veedel redet morjen über dich. Nit jut.', 'Kratzer im Lack, Umschlag im Rinnstein. Klüngel kann jeder, du nit.']
     },
+    // horn: dä Lange and the rivals react to the Hupe
+    hupe: ['Hup nit, fahr!', 'Dat Ding hät ne Hupe? Dat wusst ich jar nit.', 'Hupe is für Taxis. Du bes kein Taxi.', 'Lauter! Der Kommissar hät dich noch nit jehört.', 'Hup mal für de Kölsche Jung an der Tür.', 'Jetz han se dich jehört. Alle.'],
+    hupeRival: ['Jo, jo, ich hör dich. Ich mach Platz. Ausnahmsweise.', 'Hup du nur. Hupe macht nit schneller.', 'Wat is, Jung? Feuer?', 'Isch fahr hee, nit du!', 'Hupen kann jeder. Überhole nit.'],
+    // Orden: lifetime achievements on the Bierdeckel, shown under REKORDE
+    orden: [
+      { id: 'loops', name: 'LOOPINGKÖNIG', desc: '10 saubere Loopings', stat: 'loops', need: 10, color: 'y' },
+      { id: 'jumps', name: 'SPRUNGKÖNIG', desc: '20 jelandete Sprünge', stat: 'jumps', need: 20, color: 'o' },
+      { id: 'kurier', name: 'KURIER VUM KLÜNGEL', desc: '5 Aufträge abjeliefert', stat: 'jobs', need: 5, color: 'p' },
+      { id: 'rhein', name: 'RHEINBADER', desc: '3× im Rhing jelandet', stat: 'water', need: 3, color: 'b' },
+      { id: 'blitz', name: 'BLITZER-ABO', desc: '10 Knöllchen kassiert', stat: 'knoellchen', need: 10, color: 'r' },
+      { id: 'stammgast', name: 'DURSTLÖSCHER', desc: '50 Kölsch im Vorbeifahre', stat: 'koelsch', need: 50, color: 'y' },
+      { id: 'kripo', name: 'ABJEHÄNGT', desc: '3× de Kripo abjehängt', stat: 'escapes', need: 3, color: 'g' },
+      { id: 'rekord', name: 'REKORDHALTER', desc: '3 Streckenrekorde', stat: 'records', need: 3, color: 'w' },
+      { id: 'cup', name: 'CUP-SIEGER', desc: 'Kölsch-Cup jewonne', stat: 'cupWins', need: 1, color: 'y' },
+      { id: 'nacht', name: 'NACHTSCHWÄRMER', desc: '3 Nachtrennen jewonne', stat: 'nightWins', need: 3, color: 'b' },
+      { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', stat: 'roofs', need: 1, color: 'r' },
+      { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' }
+    ],
+    ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
+    // the daily track: a random Veedel and a name for it
+    veedel: ['NIPPES', 'SÜLZ', 'LINDENTHAL', 'KALK', 'MÜLHEIM', 'EHRENFELD', 'DEUTZ', 'SÜDSTADT', 'NEUSTADT-NORD', 'BAYENTHAL', 'RIEHL', 'ZOLLSTOCK', 'BICKENDORF', 'PORZ', 'CHORWEILER', 'RADERBERG', 'BRAUNSFELD', 'NEUEHRENFELD'],
+    dailyNames: ['{v}-RUNDE', 'DURCH {v}', '{v} BEI NACHT', 'EINMAL {v} UN ZURÜCK', '{v}-KLÜNGEL', 'STRECK DURCH {v}'],
+    dailyDesc: 'Die Streck des Tages: jeden Tag würfelt der Klüngel eine neue Runde durch ein anderes Veedel. Bestzeiten gelten nur heute – morjen is et wieder wat anderes.',
     // the Vorspann: what the arcade cabinet tells while nobody plays
     vorspann: [
       'KÖLN, 1968.',

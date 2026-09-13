@@ -398,3 +398,22 @@ body.mobile #resPaper { max-width: 260px; } body.mobile #paperBtn { font-size: 7
 @keyframes crawl { from { top: 100%; } to { top: -160%; } }
 body.demo .hudStats, body.demo .hudDash, body.demo .hudBtns, body.demo .hudMini, body.demo #touch, body.demo .hudTitle, body.demo #msg { display: none !important; }
 body.mobile .demoTop { font-size: 9px; top: 8px; } body.mobile #demoCrawl { font-size: 9px; line-height: 1.9; } body.mobile #demoCrawl p.big { font-size: 14px; }
+
+/* ---------- track intro card ---------- */
+#introCard { position: absolute; left: 0; right: 0; top: 30%; text-align: center; pointer-events: none; z-index: 4; animation: introIn 3.8s ease-out forwards; }
+#introCard b { display: block; font-size: clamp(20px, 4.5vw, 44px); color: var(--yellow); text-shadow: 4px 4px 0 var(--red2), 8px 8px 0 #000, 0 0 24px rgba(255,210,63,.5); letter-spacing: .06em; line-height: 1.3; }
+#introCard span { display: block; margin-top: 12px; font-size: clamp(9px, 1.6vw, 14px); color: var(--cyan); text-shadow: 2px 2px 0 #000, 0 0 10px rgba(79,214,255,.6); letter-spacing: .15em; }
+@keyframes introIn { 0% { opacity: 0; transform: translateY(30px) scale(.9); } 12% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+/* ---------- Orden ---------- */
+.ordenGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.ordenHead { grid-column: 1 / -1; color: var(--yellow); font-size: 10px; }
+.orden { background: #0d1024; border: 2px solid var(--line); padding: 8px 6px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: .45; filter: grayscale(1); }
+.orden.on { opacity: 1; filter: none; border-color: var(--yellow); box-shadow: 0 0 10px rgba(255,210,63,.3); }
+.orden canvas { image-rendering: pixelated; width: 48px; height: 48px; } .orden b { font-size: 8px; color: #fff; } .orden small { font-size: 7px; color: var(--cyan); line-height: 1.4; } .orden i { font-style: normal; font-size: 7px; color: #bbb; }
+.record.orden { background: var(--pink); color: #fff; text-align: left; } .record.orden .oitem { display: flex; align-items: center; gap: 8px; } .record.orden .oitem + .oitem { margin-top: 4px; } .record.orden canvas.medal { image-rendering: pixelated; width: 24px; height: 24px; flex: none; }
+body.mobile .ordenGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; } body.mobile .orden canvas { width: 32px; height: 32px; }
+/* ---------- Siegerehrung ---------- */
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin-top: 10px; }
+.podium .step { display: flex; flex-direction: column; align-items: center; gap: 2px; background: linear-gradient(180deg, #6a3fa0, #2c1f4a); border: 2px solid var(--yellow); padding: 6px 8px; min-width: 84px; }
+.podium .step canvas { image-rendering: pixelated; width: 48px; height: 60px; border: 2px solid #000; } .podium .step b { color: var(--yellow); font-size: 12px; } .podium .step span { font-size: 8px; color: #fff; } .podium .step i { font-style: normal; font-size: 7px; color: var(--cyan); }
+.podium .step.s0 { padding-bottom: 22px; } .podium .step.s2 { padding-bottom: 0; } .podium .step.s1 { padding-bottom: 10px; }
