@@ -23,7 +23,7 @@
   let racers = [], player = null, raceTime = 0, countdown = 0, phase = 'menu'; // menu | countdown | race | finished | editor
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
-  let radioTimer = 12, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0;
+  let radioTimer = 40, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0;
   let stories = [], telefon = { ready: true, active: 0, used: 0 };
   let player2 = null, twoPlayer = false, camera2 = null;
   // Chicago am Rhein extras: beer-mat score, Kölsch pickups, the Kripo chase, the doorman's bet, the Kölsch-Cup
@@ -449,7 +449,7 @@
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
     stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, told: false }));
     telefon = { ready: true, active: 0, used: 0 };
-    knoellchen = 0; koelsch = 0; radioTimer = 12; eventTimer = 30;
+    knoellchen = 0; koelsch = 0; radioTimer = 40; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
     $('#hudTrack').textContent = `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
     deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
@@ -462,6 +462,13 @@
 
   // ---------------- race flow ----------------
   let cdShown = -1;
+  function lockLandscape() {
+    if (!document.body.classList.contains('mobile')) return;
+    try {
+      const el = document.documentElement; const fs = el.requestFullscreen ? el.requestFullscreen({ navigationUI: 'hide' }) : Promise.reject();
+      Promise.resolve(fs).catch(() => {}).then(() => { if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape'); }).catch(() => {});
+    } catch (e) { /* iOS: no lock API, the rotate overlay does the job */ }
+  }
   function startRace(def) {
     audioInit();
     buildScene(def);
@@ -577,7 +584,7 @@
       if (phase === 'race') { updatePickups(dt); updateKripo(dt); }
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt;
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 13 + Math.random() * 10; const roll = Math.random(); if (roll < 0.4) say({ name: 'Radio Kölle', emoji: '📻' }, pick(tuenn.radio).replace('RADIO KÖLLE: ', ''), 3500); else if (roll < 0.7) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 55 + Math.random() * 35; const roll = Math.random(); if (roll < 0.5) say({ name: 'EXPRESS', emoji: '📰' }, pick(tuenn.express).replace('EXPRESS: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
         for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 8); } }
         if (telefon.active > 0) telefon.active -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; say(tuenn, pick(tuenn.razziaEnd), 2500); } }
@@ -1087,7 +1094,7 @@
     // turbo/damage bar segments
     for (const id of ['turboBar', 'dmgBar']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
     renderMenu();
-    $('#startBtn').onclick = () => { cup.on = false; startRace(); };
+    $('#startBtn').onclick = () => { cup.on = false; lockLandscape(); startRace(); };
     $('#againBtn').onclick = () => { if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
     $('#cupBtn').onclick = () => { cup.on = true; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
     $('#menuBtn').onclick = toMenu;
@@ -1135,6 +1142,7 @@
     SP.portrait('langer', $('#langerFace'), 5);
     SP.portrait('langer', $('#langerFace2'), 4);
     SP.portrait('langer', $('#resFace'), 5);
+    if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];

@@ -3,7 +3,7 @@
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,
 Nachtrennen in Kalk und der Rosenmontagszoch als Rennstrecke. Kommentiert vom
-**Langen vum Ring**, dem Türsteher-Boss von *Chicago am Rhein*.
+**Türsteher**, dem Boss von *Chicago am Rhein*.
 
 Die Stadt ist aus Pixeln gebaut: Dom mit Doppelspitze und Strebepfeilern, Groß St. Martin,
 Hohenzollernbrücke mit Liebesschlössern und ICE, Kranhäuser, KölnTriangle, Musical Dome,
@@ -19,6 +19,8 @@ Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 veröffentlicht jeden Push auf `main` oder einen `claude/**`-Branch; falls Pages im Repo noch nicht
 aktiv ist: Settings → Pages → Source „GitHub Actions“, danach den Workflow einmal neu starten).
 Link im Handy-Browser öffnen, quer halten, „Zum Home-Bildschirm“ – dann läuft es als App, auch offline.
+Auf dem Handy läuft das Spiel **nur im Querformat**: hochkant zeigt jede Seite nur den Hinweis,
+das Handy zu drehen (auf Android wird die Ausrichtung beim Start zusätzlich verriegelt).
 Den Link einfach per WhatsApp weiterschicken; das Vorschaubild kommt aus `og.png`.
 Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Telefon. Mit **NEIGEN: AN** im Menü lenkst du
 durch Kippen des Handys wie mit einem Lenkrad (iPhone fragt einmal nach Erlaubnis); die Haltung beim
@@ -42,9 +44,9 @@ erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jeder
 | Enter | Rennen starten / nochmal |
 | Esc | Menü |
 
-## Dä Lange und Chicago am Rhein
+## Der Türsteher und Chicago am Rhein
 
-Der Gastgeber des Spiels ist **dä Lange**, ein erfundener Türsteher von den Kölner Ringen: seit den
+Der Gastgeber des Spiels ist **der Türsteher**, eine erfundene Figur von den Kölner Ringen: seit den
 60ern an der Tür, Zocker, Kölsch-Philosoph, zwei Meter zehn. **Chicago am Rhein** nannte die
 Boulevardpresse Köln in den 60ern und 70ern: rund 50.000 Straftaten im Jahr, Zuhälter, Zocker,
 Hehler, Spielclubs, Boxer im „Klein Köln“ (Friesenstraße, seit 1926 mit Nachtlizenz und
@@ -52,7 +54,7 @@ Wiegestation für Profiboxer), die Sartory-Säle, das Residenz-Kino an der Chris
 Banküberfall am Dom und der Einbruch in die Domschatzkammer.
 
 Im Spiel: Die Strecke **Chicago am Rhein** führt als Nachttour über die Ringe (Residenz-Kino,
-Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** dä Lange
+Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** der Türsteher
 eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Du kütts hee nit rein!“,
 kommentiert das Rennen, und mit dem **Klüngel-Telefon** (K) ruft man einmal pro Runde seine
 Türsteher, die das Feld sechs Sekunden aufhalten. Dazu EXPRESS-Schlagzeilen, das Kölsche
@@ -75,7 +77,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 - **Kripo Kölle:** Beim dritten Knöllchen kommt der grün-weiße Peterwagen mit Blaulicht und Sirene
   hinter dir her und rammt, was er kriegt. Das **Klüngel-Telefon** (K) ruft den Kommissar an – die
   Kripo dreht ab. Sonst gibt sie nach einer Weile auf. Oder sie kriegt dich.
-- **Zocker-Wette:** Kurz nach dem Start wettet dä Lange ein paar Kölsch, dass du vor einem bestimmten
+- **Zocker-Wette:** Kurz nach dem Start wettet der Türsteher ein paar Kölsch, dass du vor einem bestimmten
   Rivalen ins Ziel kommst. Gewonnen: doppelte Striche. Verloren: du schuldest ihm Kölsch.
 - **EXPRESS-Schlagzeile:** Das Rennergebnis bekommt eine Schlagzeile über dich – Rekord, Kripo,
   Rheinbad, Knöllchen-Rekord oder Blechschmied-Umsatz.
@@ -83,12 +85,12 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 - **Razzia:** Ab und zu kommt die Kripo ins Klein Köln – Blaulicht, Sirene, alle Rivalen ducken sich
   und fahren langsam. Du nicht.
 - **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.
-- **Sprüche:** Rivalen lästern, wenn du crashst; dä Lange begrüßt dich je nach Uhrzeit; im Menü steht
+- **Sprüche:** Rivalen lästern, wenn du crashst; der Türsteher begrüßt dich je nach Uhrzeit; im Menü steht
   dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
 - **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und EXPRESS-Schlagzeile samt Link
   per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
 - **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 10-8-6-5-4-3-2-1 für alle acht Fahrer,
-  Cup-Tabelle im Ergebnis, Siegerehrung von dä Lange.
+  Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
 
 ## Musik
 
@@ -120,7 +122,7 @@ Alle Stadtstrecken haben jetzt mindestens einen Looping oder Sprung im Stunts-St
 
 Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen (auf LEICHT nimmt das Feld vorne
 den Fuß vom Gas, wenn du hinten hängst; auf EXPERTE kaum noch): **Tünnes** (leicht), **Schäl**
-(mittel), **Heinzel** (schwer) und **Dä Lange** (Experte). Gegen dich fahren sieben weitere:
+(mittel), **Heinzel** (schwer) und **der Türsteher** (Experte). Gegen dich fahren sieben weitere:
 Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
 
 Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
@@ -149,15 +151,16 @@ bleibt bei acht Wagen.
 (WhatsApp), am Rechner landet der Link in der Zwischenablage. Wer den Link öffnet, hat die
 Strecke sofort in seiner Liste.
 
-**Stimme:** Dä Lange, Radio Kölle und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
-des Browsers (deutsche Stimme, tief für den Langen T., hoch für Heinzel). 🗣 STIMME im Menü
+**Stimme:** Der Türsteher und die Fahrer sprechen ihre Sprüche über die Sprachausgabe
+des Browsers (deutsche Stimme, tief für den Türsteher, hoch für Heinzel). 🗣 STIMME im Menü
 schaltet sie aus.
 
 **Chicago am Rhein mit Miami-Vice-Touch:** Neonkanten an den Dächern, Palmen und der
 Rheinstrand km 689 am Rheinauhafen, Speedboote, Riesenrad, Kölner Lichter über dem Rhein,
 der Kölsch-Zeppelin, Polizei Köln mit Blaulicht. Dazu **Blitzer** (ab 120 km/h gibt es ein
-Knöllchen, Klüngel Tom regelt dat), **Radio Kölle** mit Verkehrsmeldungen aus der Hölle,
-zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus) und der Tipp des Tages vom Langen T.
+Knöllchen, Klüngel Tom regelt dat), ab und zu eine EXPRESS-Schlagzeile oder ein Paragraph
+aus dem Kölschen Grundgesetz, zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus)
+und der Tipp des Tages vom Türsteher.
 
 ## Wie es funktioniert
 
@@ -181,13 +184,13 @@ zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus) und der Tipp des
   Blockrandbebauung entlang jeder Straße (Gründerzeit-Stuck, 50er-Jahre-Wiederaufbau, Ehrenfelder
   Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVB-Bahnen in Weiß-Rot mit
   Oberleitung auf den Ringen, Straßenschilder, Hinterhof-Blöcke und Kirchtürme hinter der ersten
-  Reihe, Skyline-Ring im Hintergrund. Die Figuren (dä Lange, Schäl, Tünnes, Heinzelmännchen, Köbes,
+  Reihe, Skyline-Ring im Hintergrund. Die Figuren (der Türsteher, Schäl, Tünnes, Heinzelmännchen, Köbes,
   Anna, Zocker, Polizist, Passanten) haben Gelenke, Hände, Mäntel mit Revers und Krawatte und ein
   gezeichnetes Gesicht (Augen, Brauen, Mund, Schnauzer, Bart) als Textur auf dem Kopf.
   Zwischen den Häuserzeilen liegen Parks (Rasen, Hecken, Platanen, Bänke, Spielplatz oder Brunnen),
   kleine Plätze in den Seitenstraßen (Marktstand, Kölsch-Stand, Denkmal, Litfaßsäule), Graffiti-Wände
   und Plakate mit Türsteher-Weisheiten, Rasenstreifen am Rheinufer, Alleebäume und Kölsch-Trinker
-  vor jedem Brauhaus. Der Gastgeber „Dä Lange“ verzällt an Brauhäusern, Büdchen, Blitzern, Kirchen,
+  vor jedem Brauhaus. Der Türsteher verzällt an Brauhäusern, Büdchen, Blitzern, Kirchen,
   Haltestellen, Parks, Loopings und Sprüngen – ohne dass ein echter Name fällt.
   Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
 - `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft

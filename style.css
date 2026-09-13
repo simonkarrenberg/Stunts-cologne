@@ -196,8 +196,11 @@ body.mobile #touch { bottom: max(64px, env(safe-area-inset-bottom)); padding: 0 
 body.mobile #touch button { width: 76px; height: 76px; font-size: 28px; opacity: .85; }
 body.mobile #cockpit { height: 34%; }
 body.mobile .edBody { grid-template-columns: 1fr; } body.mobile .edPalette { flex-direction: row; flex-wrap: wrap; }
+/* phones: the game only runs in landscape; portrait shows a full-screen "turn your phone" cover on every screen */
 @media (orientation: portrait) {
-  body.mobile.racing #rotate { display: flex; position: fixed; inset: 0; z-index: 60; align-items: center; justify-content: center; background: rgba(10,8,30,.92); color: var(--yellow); text-align: center; font-size: 13px; line-height: 2; pointer-events: none; }
+  body.mobile #rotate { display: flex; position: fixed; inset: 0; z-index: 200; align-items: center; justify-content: center; background: #0a081e; color: var(--yellow); text-align: center; font-size: 15px; line-height: 2; pointer-events: auto; touch-action: none; }
+  body.mobile #rotate div { font-size: 15px; } body.mobile #rotate small { display: block; color: var(--cyan); font-size: 10px; line-height: 1.6; margin-top: 8px; }
+  body.mobile #rotate #rotateArt { display: block; width: 240px; height: 66px; margin: 0 auto 12px; image-rendering: pixelated; }
 }
 
 #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 40; }
@@ -317,8 +320,6 @@ body.mobile .replayKeys button { font-size: 10px; padding: 10px 22px; }
 body.mobile .replayTrack { left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: 54px; }
 body.mobile .replayTop { font-size: 9px; padding: 4px 10px; gap: 10px; margin-top: 8px; }
 body.replaying #touch { display: none !important; }
-/* the "turn your phone" hint only while actually driving, not over the results */
-body.mobile.racing.resultsOpen #rotate, body.mobile.racing.replaying #rotate { display: none !important; }
 
 .replayKeys button { margin-left: 4px; }
 /* phones: messages at the top between title and stats so they never cover the car */
