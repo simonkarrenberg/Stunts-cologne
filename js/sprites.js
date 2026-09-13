@@ -208,7 +208,11 @@
     anna: { skin: 0xffdbac, hair: 0xd9a24a, hairStyle: 'long', hat: 'tricorn', hatC: 0xc1121f, jacket: 0xc1121f, shirt: 0xffffff, lips: true, blush: true, mouth: 'smile', brow: 'up', lashes: true },
     tom: { skin: 0xe8c8a0, hair: 0x9a9a9a, hairStyle: 'slick', jacket: 0x444444, shirt: 0xf4f4f4, tie: 0x1c3f95, glasses: true, mouth: 'flat', brow: 'flat', lapelPin: true },
     willi: { skin: 0xe0ac69, hair: 0x3a2a1a, hat: 'cap', hatC: 0x2a2a30, jacket: 0xf2e6b1, shirt: 0x8a5a2a, mouth: 'smile', brow: 'up', moustache: 0x3a2a1a, stubble: true },
-    koebes: { skin: 0xe0ac69, hair: 0x4a4a4a, hairStyle: 'bald', jacket: 0x1c3f95, shirt: 0xf4f4f4, apron: 0x1c3f95, mouth: 'frown', brow: 'down', moustache: 0x4a4a4a, koelsch: true, kranz: true }
+    koebes: { skin: 0xe0ac69, hair: 0x4a4a4a, hairStyle: 'bald', jacket: 0x1c3f95, shirt: 0xf4f4f4, apron: 0x1c3f95, mouth: 'frown', brow: 'down', moustache: 0x4a4a4a, koelsch: true, kranz: true },
+    // Tango: thin androgynous 80s rocker, long black hair, kohl eyes, leather jacket over a band shirt
+    tango: { skin: 0xf6e0c8, hair: 0x14121a, hairStyle: 'long', jacket: 0x151318, shirt: 0x3a1a3a, lashes: true, lips: true, lipC: 0x9a4a6a, mouth: 'smirk', brow: 'skew', small: true, earring: true, bandShirt: true },
+    // Täsch: muscular 80s rocker, long curly blond hair, headband, denim cut-off vest
+    taesch: { skin: 0xe6b98a, hair: 0xe8c860, hairStyle: 'curly', jacket: 0x3a5a8a, shirt: 0x1a1a1a, headband: 0xc1121f, mouth: 'grin', brow: 'down', stubble: true, broad: true, vest: true, chain: true }
   };
   const INK = [20, 18, 28];
   function portrait(id, canvas) {
@@ -224,14 +228,17 @@
     const cy = o.tall ? 40 : o.small ? 50 : 44, ry = o.tall ? 21 : 19, rx = o.heavy ? 18 : 16, cx = 40;
     const skin = rgb(o.skin), jacket = rgb(o.jacket), shirt = rgb(o.shirt);
     // shoulders / coat
-    const shTop = cy + ry + 6, shW = o.heavy ? 36 : o.small ? 26 : o.tall ? 38 : 32;
-    for (let y = shTop; y < H; y++) { const t = Math.min(1, (y - shTop) / 10); const half = Math.round(shW * (0.45 + 0.55 * t)); for (let x = cx - half; x <= cx + half; x++) { let c = jacket; if (x < cx - half + 4) c = shade(jacket, 0.72); else if (x < cx - half + 10 && dither(x, y)) c = shade(jacket, 0.85); else if (x > cx + half - 5) c = shade(jacket, 1.15); fig.set(x, y, c); } }
+    const shTop = cy + ry + 6, shW = o.broad ? 40 : o.heavy ? 36 : o.small ? 27 : o.tall ? 38 : 32;
+    if (o.vest) for (let y = shTop; y < H; y++) { const t = Math.min(1, (y - shTop) / 10); const half = Math.round(shW * (0.45 + 0.55 * t)); for (let x = cx - half; x <= cx + half; x++) fig.set(x, y, x < cx - half + 5 ? shade(skin, 0.72) : x > cx + half - 5 ? shade(skin, 1.1) : (dither(x, y) && x < cx ? shade(skin, 0.88) : skin)); } // bare arms first
+    for (let y = shTop; y < H; y++) { const t = Math.min(1, (y - shTop) / 10); const half = Math.round(shW * (0.45 + 0.55 * t) * (o.vest ? 0.7 : 1)); for (let x = cx - half; x <= cx + half; x++) { let c = jacket; if (x < cx - half + 4) c = shade(jacket, 0.72); else if (x < cx - half + 10 && dither(x, y)) c = shade(jacket, 0.85); else if (x > cx + half - 5) c = shade(jacket, 1.15); fig.set(x, y, c); } }
     // shirt V, tie or scarf, apron
     for (let y = shTop; y < shTop + 16; y++) { const half = Math.max(1, Math.round(7 - (y - shTop) * 0.45)); fig.rect(cx - half, y, half * 2, 1, shirt); }
     if (o.tie) { const tie = rgb(o.tie); fig.rect(cx - 1, shTop + 4, 3, 22, tie); fig.rect(cx - 2, shTop + 10, 5, 12, tie); fig.rect(cx - 1, shTop + 4, 1, 22, shade(tie, 1.3)); }
     if (o.scarf) { const sc = rgb(o.scarf); for (let y = shTop - 4; y < shTop + 8; y++) fig.rect(cx - 14, y, 28, 1, ((y - shTop) & 2) ? sc : [244, 244, 244]); fig.rect(cx + 6, shTop + 8, 7, 14, sc); fig.rect(cx + 6, shTop + 12, 7, 2, [244, 244, 244]); }
     if (o.apron) { const ap = rgb(o.apron); fig.rect(cx - 12, shTop + 14, 24, 30, shade(ap, 0.8)); fig.rect(cx - 12, shTop + 14, 24, 1, shade(ap, 1.2)); }
     if (o.lapelPin) fig.rect(cx - 12, shTop + 8, 2, 2, rgb(0xffd400));
+    if (o.bandShirt) { fig.rect(cx - 5, shTop + 6, 10, 6, [240, 240, 240]); fig.rect(cx - 4, shTop + 7, 8, 1, [20, 20, 30]); fig.rect(cx - 4, shTop + 9, 8, 1, [20, 20, 30]); fig.rect(cx - 3, shTop + 11, 6, 1, [200, 30, 60]); } // band logo on the shirt
+    if (o.chain) for (let k = -6; k <= 6; k++) fig.set(cx + k, shTop + 9 + Math.round(Math.abs(k) * -0.35 + 2), rgb(0xffd400)); // gold chain
     // lapels
     fig.line(cx - 8, shTop, cx - 13, shTop + 18, shade(jacket, 1.2), 1); fig.line(cx + 8, shTop, cx + 13, shTop + 18, shade(jacket, 1.2), 1);
     // neck
@@ -258,7 +265,7 @@
     const hairC = rgb(o.hair); for (const sx of [-1, 1]) { const ex = cx + sx * 7; const lift = o.brow === 'up' ? -2 : o.brow === 'down' ? 1 : 0; const skew = o.brow === 'skew' ? sx : 0; fig.line(ex - 4, ey - 6 + lift * 0.3 + skew, ex + 4, ey - 6 + lift - skew, hairC, 2); }
     // nose, mouth, blush
     fig.line(cx + 1, ey + 2, cx + 1, ey + 8, shade(skin, 0.7), 1); fig.rect(cx - 1, ey + 8, 4, 1, shade(skin, 0.7)); fig.set(cx + 3, ey + 7, shade(skin, 1.2));
-    const my = ey + 14; const lip = o.lips ? rgb(0xc1121f) : [120, 50, 50];
+    const my = ey + 14; const lip = o.lips ? rgb(o.lipC || 0xc1121f) : [120, 50, 50];
     if (o.mouth === 'grin') { fig.rect(cx - 7, my - 1, 14, 4, [70, 30, 30]); fig.rect(cx - 6, my, 12, 2, [250, 250, 250]); fig.set(cx - 7, my - 2, lip); fig.set(cx + 6, my - 2, lip); }
     else if (o.mouth === 'smile') { fig.line(cx - 6, my - 1, cx - 3, my + 1, lip, o.lips ? 2 : 1); fig.line(cx - 3, my + 1, cx + 3, my + 1, lip, o.lips ? 2 : 1); fig.line(cx + 3, my + 1, cx + 6, my - 1, lip, o.lips ? 2 : 1); }
     else if (o.mouth === 'smirk') { fig.line(cx - 5, my + 1, cx + 5, my - 1, lip, 1); fig.set(cx + 6, my - 2, lip); }
@@ -271,9 +278,14 @@
     // hair
     const hs = o.hairStyle || 'short';
     if (hs !== 'bald' && o.hat !== 'gnome') {
-      fig.ellipse(cx, cy - 6, rx + 1, ry - 4, null, (x, y, dx, dy) => (dy > (hs === 'slick' ? -0.35 : -0.15) && !(hs === 'long' && Math.abs(dx) > 0.78)) ? null : (dither(x, y) && dx > 0.2 ? shade(hairC, 1.25) : hairC));
+      const longish = hs === 'long' || hs === 'curly';
+      fig.ellipse(cx, cy - 6, rx + 1, ry - 4, null, (x, y, dx, dy) => (dy > (hs === 'slick' ? -0.35 : -0.15) && !(longish && Math.abs(dx) > 0.78)) ? null : (dither(x, y) && dx > 0.2 ? shade(hairC, 1.25) : hairC));
       if (hs === 'part') { fig.line(cx - 9, cy - ry + 2, cx + 3, cy - ry - 1, shade(hairC, 1.6), 1); fig.ellipse(cx + 8, cy - ry + 3, 8, 5, hairC); }
       if (hs === 'long') { fig.rect(cx - rx - 3, cy - 6, 6, 30, hairC); fig.rect(cx + rx - 3, cy - 6, 6, 30, hairC); fig.rect(cx - rx - 2, cy - 4, 2, 26, shade(hairC, 1.25)); }
+      if (hs === 'curly') { // big wavy mane down to the shoulders, dithered curls
+        for (let y = cy - 8; y < cy + 30; y++) { const w = 7 + Math.round(2.5 * Math.sin(y * 0.55)) + (y > cy + 14 ? 2 : 0); for (let k = 0; k < w; k++) { const curl = (Math.floor((k * 7 + y * 3) / 4) % 3 === 0); fig.set(cx - rx - k + 2, y, curl ? shade(hairC, 1.3) : (k % 2 ? hairC : shade(hairC, 0.85))); fig.set(cx + rx + k - 2, y, curl ? shade(hairC, 1.3) : (k % 2 ? hairC : shade(hairC, 0.85))); } }
+        for (let x = cx - rx - 2; x <= cx + rx + 2; x += 3) fig.rect(x, cy - ry - 3 + ((x * 5) % 3), 2, 3, shade(hairC, 1.2)); // curls on top
+      }
     } else if (hs === 'bald') { fig.ellipse(cx, cy - 4, rx + 1, ry - 2, null, (x, y, dx, dy) => (Math.abs(dx) > 0.86 && dy > -0.45 && dy < 0.35) ? (dither(x, y) ? shade(hairC, 1.2) : hairC) : null); }
     // hats
     const hatC = rgb(o.hatC || 0x333333);
@@ -281,6 +293,8 @@
     if (o.hat === 'fedora') { const b = cy - ry + 4; fig.rect(cx - rx - 6, b, rx * 2 + 12, 3, shade(hatC, 1.1)); fig.rect(cx - rx - 6, b + 2, rx * 2 + 12, 2, shade(hatC, 0.6)); fig.rect(cx - rx + 2, b - 16, rx * 2 - 4, 17, hatC); fig.rect(cx - rx + 2, b - 16, 3, 17, shade(hatC, 1.35)); fig.rect(cx - rx + 2, b - 4, rx * 2 - 4, 3, rgb(0x8a1a1a)); fig.rect(cx - 4, b - 17, 10, 2, shade(hatC, 0.8)); }
     if (o.hat === 'gnome') { const b = cy - ry + 5; for (let y = b - 30; y <= b; y++) { const t = (y - (b - 30)) / 30; const half = Math.round(2 + (rx + 2) * t); fig.rect(cx - half + Math.round((1 - t) * 4), y, half * 2, 1, t > 0.85 ? shade(hatC, 0.7) : dither(0, y) && t < 0.4 ? shade(hatC, 1.2) : hatC); } fig.rect(cx - rx - 2, b - 2, rx * 2 + 4, 3, shade(hatC, 0.6)); }
     if (o.hat === 'tricorn') { const b = cy - ry + 5; fig.rect(cx - rx - 4, b - 6, rx * 2 + 8, 8, hatC); fig.rect(cx - rx - 4, b - 7, 4, 3, shade(hatC, 1.2)); fig.rect(cx + rx, b - 7, 4, 3, shade(hatC, 1.2)); fig.rect(cx - rx + 3, b - 12, rx * 2 - 6, 7, shade(hatC, 0.9)); fig.rect(cx - rx - 4, b, rx * 2 + 8, 2, rgb(0xffd400)); fig.ellipse(cx, b - 14, 3, 3, [250, 250, 250]); }
+    if (o.headband) { const hb = rgb(o.headband); fig.rect(cx - rx - 1, cy - ry + 7, rx * 2 + 2, 3, hb); fig.rect(cx + rx - 1, cy - ry + 9, 5, 2, hb); fig.rect(cx + rx + 3, cy - ry + 11, 2, 6, shade(hb, 0.85)); }
+    if (o.earring) { fig.rect(cx + rx + 1, cy + 6, 2, 2, rgb(0xffd400)); fig.set(cx + rx + 2, cy + 8, rgb(0xffd400)); }
     // props at the shoulder
     if (o.koelsch) { fig.rect(cx + 22, H - 22, 7, 16, rgb(0xffc300)); fig.rect(cx + 22, H - 24, 7, 3, [250, 250, 250]); fig.rect(cx + 22, H - 22, 1, 16, [255, 240, 160]); fig.rect(cx + 21, H - 6, 9, 1, INK); }
     if (o.wrench) { fig.rect(cx + 20, H - 26, 3, 22, [170, 170, 180]); fig.rect(cx + 18, H - 30, 7, 5, [170, 170, 180]); fig.rect(cx + 20, H - 29, 3, 2, [60, 60, 70]); }

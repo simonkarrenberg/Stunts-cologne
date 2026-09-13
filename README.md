@@ -93,7 +93,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
 - **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und EXPRESS-Schlagzeile samt Link
   per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
-- **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 10-8-6-5-4-3-2-1 für alle acht Fahrer,
+- **Kölsch-Cup:** Alle sieben Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
 
 ## Musik
@@ -139,8 +139,11 @@ Außenhaut zu schauen.
 Vier Fahrer zur Wahl, die auch den Schwierigkeitsgrad bestimmen (die Gegner fahren auf LEICHT mit
 rund drei Vierteln ihres Könnens und nehmen vorne den Fuß vom Gas, wenn du hinten hängst; auf
 EXPERTE fahren sie fast voll und lassen dich kaum ran): **Tünnes** (leicht), **Schäl**
-(mittel), **Heinzel** (schwer) und **der Türsteher** (Experte). Gegen dich fahren sieben weitere:
-Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die drei Fahrer, die du nicht genommen hast.
+(mittel), **Heinzel** (schwer), **der Türsteher** (Experte) und die beiden Rocker von den Ringen:
+**Tango** (mittel; dünn, schwarze Mähne, Kajal, Lederjacke, seit 1984 in der ersten Reihe) und
+**Täsch** (schwer; Muskeln, blonde Lockenmähne, Stirnband, Kutte, Türsteher vom Rose Club). Gegen dich
+fahren neun weitere: Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die fünf Fahrer, die du
+nicht genommen hast – ein Feld von zehn.
 
 Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
 Rheinland Rocket, Milieu-Benz 280 SE — echte Karosserien mit Klarlack, Chrom und Himmelsspiegelung.

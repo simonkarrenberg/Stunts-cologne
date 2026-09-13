@@ -28,7 +28,7 @@
   let player2 = null, twoPlayer = false, camera2 = null;
   // Chicago am Rhein extras: beer-mat score, Kölsch pickups, the Kripo chase, the doorman's bet, the Kölsch-Cup
   let deckel = 0, pickups = [], kripo = null, kripoT = 0, kripoHitCool = 0, sirenT = 0, wette = null, crashes = 0, waterCrashes = 0, kripoCaught = false, kripoSeen = false, lastLapSeen = 1, pickT = 0;
-  const cup = { on: false, i: 0, pts: {} }; const CUP_PTS = [10, 8, 6, 5, 4, 3, 2, 1];
+  const cup = { on: false, i: 0, pts: {} }; const CUP_PTS = [12, 10, 8, 6, 5, 4, 3, 2, 1, 1];
   const KRIPO = { name: 'Kripo Kölle', emoji: '🚓' };
   let razzia = 0, razziaBlink = 0, promille = 0, koelschLap = 0, lastHeadline = '', lastPlace = 0;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
@@ -144,7 +144,7 @@
       speechSynthesis.speak(u);
     } catch (e) { /* ignore */ }
   }
-  const VOICES = { 'Dä Lange': [0.55, 0.92], 'Kripo Kölle': [0.7, 0.98], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95] };
+  const VOICES = { 'Dä Lange': [0.55, 0.92], 'Kripo Kölle': [0.7, 0.98], 'Radio Kölle': [1.1, 1.15], 'Blitzer Kölle': [0.9, 1.05], 'Tünnes': [0.8, 1.05], 'Schäl': [0.7, 1.0], 'Heinzel': [1.5, 1.15], 'Fräulein Anna': [1.4, 1.05], 'Klüngel Tom': [0.75, 0.9], 'Taxi Willi': [0.85, 1.0], 'Köbes Hermann': [0.65, 0.95], 'Tango': [1.05, 1.0], 'Täsch': [0.55, 0.9] };
 
   // ---------------- messages ----------------
   // flavour messages are throttled while driving: never over a message that is still showing, and at least
@@ -442,7 +442,7 @@
       if (!camera2) camera2 = new THREE.PerspectiveCamera(70, 1, 1.0, 4000);
       document.body.classList.add('split');
     } else { document.body.classList.remove('split'); player.name = 'DU'; }
-    const others = D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 6 : 7);
+    const others = D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 8 : 9); // a field of ten
     others.forEach((d, i) => {
       const base = D.CARS.find((c) => c.id === d.car) || D.CARS[1];
       const cdef = Object.assign({}, base, { color: d.color, plate: 'K-' + d.name.slice(0, 2).toUpperCase() + ' ' + (i + 1) });
@@ -686,7 +686,7 @@
       if (e.code === 'KeyP') cyclePixel();
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { sel.car = (sel.car + (e.code === 'ArrowRight' ? 1 : -1) + D.CARS.length) % D.CARS.length; renderMenu(); }
       if (e.code === 'ArrowUp' || e.code === 'ArrowDown') { const n = TRACKS.length + customTracks.length; sel.track = (sel.track + (e.code === 'ArrowDown' ? 1 : -1) + n) % n; onTrackChange(); }
-      if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3' || e.code === 'Digit4') { sel.driver = parseInt(e.code.slice(-1)) - 1; renderMenu(); }
+      if (/^Digit[1-9]$/.test(e.code) && parseInt(e.code.slice(-1)) <= PLAYABLE.length) { sel.driver = parseInt(e.code.slice(-1)) - 1; renderMenu(); }
       return;
     }
     if (phase === 'editor') { if (e.code === 'Escape') toMenu(); if (e.code === 'Delete' || e.code === 'Backspace') edUndo(); if (e.code === 'KeyS') edSave(); if (e.code === 'KeyL') edLoad(); return; }
