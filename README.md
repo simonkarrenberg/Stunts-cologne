@@ -120,6 +120,18 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Platz und meckert; sonst kommentiert der Türsteher.
 - **Regen:** Auf nassen Strecken (Domschatz-Raub) fällt Regen.
 - **Siegerehrung:** Nach der letzten Cup-Strecke stehen die ersten drei auf dem Podest, mit Portrait und Punkten.
+- **Dat Hinterzimmer (zweiter Eingang):** Der grüne Knopf unter dem Start führt durch den Vorhang mit
+  dem PRIVAT-Schild in den Raum, in dem Chicago am Rhein um Bierdeckel-Striche spielt: grüner Filz,
+  Lampe, Kölsch-Kiste, „KEIN KREDIT“ an der Wand. Vier Spiele, alle um deine Striche vom Deckel
+  (Schulden beim Türsteher sind möglich, er vergisst nix):
+  **Skat** gegen Klüngel Tom und Schäl – du reizt immer am höchsten (Klüngel), nimmst den Skat auf,
+  drückst zwei Karten, sagst Farbe, Grand oder Null an; Buben sind Trumpf, Bedienzwang, 61 Augen zum
+  Gewinnen, Spielwert mit/ohne Spitzen, Schneider und Schwarz, verloren zählt doppelt.
+  **Rommé** gegen Klüngel Tom mit zwei Blatt ohne Joker – Sets und Reihen, erste Auslage ab 30 Punkten,
+  dann anlegen an alles auf dem Tisch; wer leer ist, kassiert die Punkte in der Hand des anderen.
+  **Siebzehn un Vier** gegen die Bank (dä Lange) mit einem bis fünf Strichen Einsatz, die Bank zieht bis 17.
+  **Knobeln** mit drei Würfeln und zwei Nachwürfen gegen Tom, Schäl und Täsch – Schock aus, Schock, General,
+  Straße; der Letzte zahlt. Zehn Spiele im Hinterzimmer geben den Orden ZOCKER.
 - **Razzia:** Ab und zu kommt die Kripo ins Klein Köln – Blaulicht, Sirene, alle Rivalen ducken sich
   und fahren langsam. Du nicht.
 - **Zocker-Tisch:** Auf den Ringen und im Hafen sitzen die Zocker unter der Lampe und spielen um dein Auto.

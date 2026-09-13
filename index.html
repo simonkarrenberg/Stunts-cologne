@@ -58,6 +58,7 @@
       <div class="coinLine"><canvas id="coinArt" width="16" height="16"></canvas><span>INSERT COIN · 1 KÖLSCH = 1 CREDIT</span><canvas id="coinArt2" width="16" height="16"></canvas></div>
       <div class="pressStart">PRESS START · DRÜCK OP DÄ KNOPP</div>
       <div class="startCab"><canvas id="joyArt" width="60" height="60"></canvas><button id="startBtn">RENNEN STARTEN</button><canvas id="joyArt2" width="60" height="60"></canvas></div>
+      <button id="clubBtn" class="clubEntry">🚪 HINTERZIMMER · SKAT, ROMMÉ, SIEBZEHN UN VIER, KNOBELN</button>
       <div id="p2Info" class="p2Info" hidden></div>
       <div class="subBtns">
         <button id="editorBtn" data-icon="brick">KLÜNGEL-BAUKASTEN</button>
@@ -81,6 +82,22 @@
     <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE</span>
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY</span>
   </footer>
+</div>
+
+<!-- ============ HINTERZIMMER ============ -->
+<div id="club" hidden>
+  <canvas id="clubRoom"></canvas>
+  <div class="clubTop"><b id="clubTitle">HINTERZIMMER</b><span id="clubDeckel"></span><button id="clubBack">ESC · RAUS</button></div>
+  <div id="clubLobby"></div>
+  <div id="clubTable" hidden>
+    <div class="seat top" id="seat0" hidden><canvas></canvas><b></b><span class="lbl"></span><div class="oh"></div></div>
+    <div class="seat left" id="seat1" hidden><canvas></canvas><b></b><span class="lbl"></span><div class="oh"></div></div>
+    <div class="seat right" id="seat2" hidden><canvas></canvas><b></b><span class="lbl"></span><div class="oh"></div></div>
+    <div id="clubMid"></div>
+    <div id="clubHand"></div>
+  </div>
+  <div id="clubMsg"><b id="clubWho"></b><span id="clubText"></span></div>
+  <div id="clubBtns"></div>
 </div>
 
 <!-- ============ RECORDS ============ -->
@@ -196,6 +213,7 @@
 <script src="js/data.js"></script>
 <script src="js/cars.js"></script>
 <script src="js/world.js"></script>
+<script src="js/club.js"></script>
 <script src="js/game.js"></script>
 <script>
   if ('serviceWorker' in navigator && location.protocol !== 'file:') { navigator.serviceWorker.register('sw.js').catch(function () {}); }

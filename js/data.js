@@ -950,13 +950,32 @@
       { id: 'cup', name: 'CUP-SIEGER', desc: 'Kölsch-Cup jewonne', stat: 'cupWins', need: 1, color: 'y' },
       { id: 'nacht', name: 'NACHTSCHWÄRMER', desc: '3 Nachtrennen jewonne', stat: 'nightWins', need: 3, color: 'b' },
       { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', stat: 'roofs', need: 1, color: 'r' },
-      { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' }
+      { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' },
+      { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' }
     ],
     ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
     // the daily track: a random Veedel and a name for it
     veedel: ['NIPPES', 'SÜLZ', 'LINDENTHAL', 'KALK', 'MÜLHEIM', 'EHRENFELD', 'DEUTZ', 'SÜDSTADT', 'NEUSTADT-NORD', 'BAYENTHAL', 'RIEHL', 'ZOLLSTOCK', 'BICKENDORF', 'PORZ', 'CHORWEILER', 'RADERBERG', 'BRAUNSFELD', 'NEUEHRENFELD'],
     dailyNames: ['{v}-RUNDE', 'DURCH {v}', '{v} BEI NACHT', 'EINMAL {v} UN ZURÜCK', '{v}-KLÜNGEL', 'STRECK DURCH {v}'],
     dailyDesc: 'Die Streck des Tages: jeden Tag würfelt der Klüngel eine neue Runde durch ein anderes Veedel. Bestzeiten gelten nur heute – morjen is et wieder wat anderes.',
+    // dat Hinterzimmer: the back room where the underworld plays cards for Deckel strokes
+    club: {
+      welcome: ['Hinterzimmer. Hee wird jespielt, nit jeredet. Wat darf et sin?', 'Setz dich. Der Köbes bringt Kölsch, Tom bringt Karten, ich bring de Ruhe.', 'Kein Kredit, Jung. Striche op dä Deckel, sonst nix. Also, wat spiele mer?', 'Die Tür is zu. Wat hee passiert, bleibt hee. Außer du verlierst, dat erzähl ich.'],
+      win: ['Kölsch für den Jewinner. Jeht op Tom.', 'Der Strich is drop. Dä Lange nickt. Selten.', 'Jewonne. Der Köbes hät et jesinn, also stimmt et.', 'Dat wor Klüngel oder Glück. Ejal, Striche sin Striche.'],
+      lose: ['Striche weg. Der Köbes streicht se durch. Mit Jenuss.', 'Verlore. Dä Lange schreibt et op. Er vergisst nix.', 'Dat kost. Nächstes Mol bring Jeld statt Hätz.', 'Der Tisch hät jewonne. Der Tisch jewinnt immer. Frag Tom.'],
+      tomLose: ['Dat hät nix mit Können zu dun. Nix.', 'Ich hab dich jewinne lasse. Man kennt sich.', 'Noch e Spiel. Ich hab jrad ming Brille jeputzt.', 'Glück, Jung. Reines Glück. Un e bissche Klüngel.'],
+      tomWin: ['Man kennt sich, man hilft sich. Mir selbst zuerst.', 'Dat wor jar nix. Noch eins? Ich hab Zeit, du häs Striche.', 'Danke. Die Striche jonn an de Bauverein.'],
+      langerWin: ['Die Bank jewinnt. Die Bank bin ich. Kölsch?', 'Ich hab 40 Johr an der Tür jestande. Ich seh, wenn einer blufft.', 'Dat Spiel is älter als du. Un ich och.'],
+      trick: ['Meiner.', 'Dat nehm ich mit, danke.', 'Schmier, Schäl, schmier!', 'Zehn Augen, Jung. Die fehlen dir nachher.'],
+      trickLost: ['Jo, jo. Nimm en. Kütt noch wat.', 'Pff. Der Stich wor nix wert.', 'Tom, wat wor dat?'],
+      rommeStart: ['Rommé. Dreißig Punkte zum Rauskumme, dann anlegen. Kein Joker, der Türsteher traut keinem.', 'Karten sin jemischt. Vum Köbes. Also vielleicht.', 'Ohne Joker, Jung. Joker sin für Zauberer.'],
+      tomMeld: ['Un op der Tisch domet.', 'Dat liegt. Anlegen erlaubt, bitte schön.', 'Ausjelegt. Man kennt sich.'],
+      tomDraw: ['Hm.', 'Nix. Wieder nix.', 'Wat für e Blatt.', 'Köbes, noch e Kölsch, dat Blatt is trocken.'],
+      bankStart: ['Siebzehn un Vier. Ich bin die Bank. Einsatz?', 'Näher an einundzwanzig als ich. Klingt einfach. Is et nit.', 'Setz. Die Bank zieht bis siebzehn, dann steht se. Wie ich an der Tür.'],
+      bust: ['Über einundzwanzig. Dat wor zu viel Hätz.', 'Kaputt. Die Bank sacht danke.', 'Zu jierig, Jung. Wie immer.'],
+      knobelStart: ['Knobeln. Drei Würfel, zwei Nachwürfe. Der Letzte zahlt e Kölsch, also en Strich.', 'Schock schlägt alles. Außer Schock aus. Un Täsch schlägt den Tisch, wenn er verliert.', 'Würfel op der Tisch, Hände op der Tisch.'],
+      knobelTalk: ['Schock! Nä, doch nit.', 'Dat is e Spiel für Männer mit Zeit.', 'Nochmal. Nä, lass liejen.', 'Der Becher is jezinkt. Sacht Täsch. Immer.', 'Straße! Wie op de Ringe.']
+    },
     // the Vorspann: what the arcade cabinet tells while nobody plays
     vorspann: [
       'KÖLN, 1968.',

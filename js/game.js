@@ -599,6 +599,7 @@
     }, 1200);
   }
   function toMenu() {
+    if (window.Club) window.Club.close();
     phase = 'menu'; if (demo) { camMode = demoPrevCam; tvCam = null; } demo = false; idleT = 0; $('#demo').hidden = true; document.body.classList.remove('demo');
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = true; $('#records').hidden = true; $('#replayUI').hidden = true;
     replay.on = false; if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -627,7 +628,7 @@
     const dtReal = Math.min(0.5, (t - lastT) / 1000 || 0.016); adaptQuality(dtReal); lastDtReal = dtReal;
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
     renderer.info.reset();
-    if (!scene) return;
+    if (!scene || phase === 'club') return; // the back room is plain DOM: no 3D work behind it
     const steps = window.STUNTS_SIMSTEPS && (phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
     for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
     if (scenery) W.animate(t, dt, camPos);
@@ -689,7 +690,7 @@
       audioEngine(Math.abs(player.v), ctl.gas, player.turboOn);
     } else if (phase === 'replay') {
       replayStep(dt);
-    } else if (phase === 'menu' || phase === 'editor') {
+    } else if (phase === 'menu' || phase === 'editor' || phase === 'club') {
       if (phase === 'menu' && !document.hidden && $('#records').hidden) { idleT += dt; if (idleT > (window.STUNTS_IDLE || 50)) startDemo(); }
       // idle drive-by behind the menu
       if (player) { player.s = (player.s + dt * 30) % track.length; placeRacer(player, dt); racers.forEach((r, i) => { if (r.isAI) { r.s = (player.s + 8 + i * 7) % track.length; placeRacer(r, dt); } }); }
@@ -754,6 +755,7 @@
     idleT = 0; if (demo) { e.preventDefault(); toMenu(); return; }
     keys[e.code] = true; readKeys();
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && phase !== 'menu' && phase !== 'editor') e.preventDefault();
+    if (phase === 'club') { if (window.Club) window.Club.key(e.code); return; }
     if (phase === 'menu') {
       if (e.code === 'Enter') startRace();
       if (e.code === 'KeyP') cyclePixel();
@@ -965,6 +967,14 @@
     let ahead = null, best = 99; for (const o of racers) { if (o === player || o.isCop) continue; let ds = o.s - player.s; const L = track.length; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (ds > 0 && ds < 22 && ds < best) { best = ds; ahead = o; } }
     if (ahead) { ahead.yieldT = 2.5; if (msgTimer <= 0 && Math.random() < 0.6) say(ahead.driver, pick(tuenn.hupeRival), 2200); }
     else if (msgTimer <= 0 && Math.random() < 0.5) say(tuenn, pick(tuenn.hupe), 2200);
+  }
+
+  // ---------------- dat Hinterzimmer: the second door, cards and dice for Deckel strokes ----------------
+  function openClub() {
+    if (!window.Club) return; audioInit(); phase = 'club'; idleT = 0;
+    $('#menu').hidden = true; $('#records').hidden = true; if ('speechSynthesis' in window) speechSynthesis.cancel();
+    window.Club.open({ lines: tuenn.club, portrait: (id, c) => SP.portrait(id, c, 3), getDeckel: () => deckelTotal(0), addDeckel: (n) => deckelTotal(n), beep, stat: bumpStat, onClose: toMenu,
+      speak: (name, text) => { const v = VOICES[name] || [0.8, 1]; speak(text, v[0], v[1], true, name); } });
   }
 
   // ---------------- Klüngel-Auftrag: carry something for dä Lange from A to B ----------------
@@ -1393,6 +1403,7 @@
     if (linked) { customTracks = customTracks.filter((t) => t.id !== linked.id); customTracks.push(linked); sel.track = allTracks().length - 1; try { localStorage.setItem('stuntskoelle.custom', JSON.stringify(customTracks)); } catch (e) { /* ignore */ } renderMenu(); setTimeout(() => { $('#langerQuote').textContent = '„Ne Link-Streck: ' + linked.name + '. Jemand hät dir wat jebaut. Fahr et, Jung!“'; }, 50); }
     musicInit();
     for (const ev of ['pointerdown', 'wheel', 'touchstart']) document.addEventListener(ev, () => { idleT = 0; if (demo) toMenu(); }, { passive: true });
+    $('#clubBtn').onclick = openClub; $('#clubBack').onclick = toMenu;
     $('#paperBtn').onclick = shareFrontPage; $('#demoBtn').onclick = startDemo; $('#hornBtn').onclick = horn; $('#tHorn').addEventListener('touchstart', (e) => { e.preventDefault(); horn(); }, { passive: false });
     document.addEventListener('touchstart', () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
     buildScene(); builtTrackId = trackDef.id; phase = 'menu';
