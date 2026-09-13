@@ -1,0 +1,12 @@
+{
+  "name": "koelle4d",
+  "version": "1.0.0",
+  "description": "Kölle 4D – Chicago am Rhein. Static browser game; the tests drive it headless with Playwright.",
+  "private": true,
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.45.0"
+  }
+}

@@ -132,13 +132,18 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Kamelle.“) und wo es hin soll. Fahr zum Abhol-Ring, halt an, steig aus (E oder der gelbe Knopf) und
   lauf zu Fuß über den Bürgersteig zur markierten Tür – Pfeile/WASD bzw. die Touch-Knöpfe lenken den
   Fahrer, die Kamera hängt hinter ihm, zu weit vom Auto geht es nicht. Paket holen, zurück zum Wagen,
-  einsteigen. Ab da: Blaulicht. Die Kripo hängt dran und gibt auf einem Botengang nicht auf, die Uhr
+  einsteigen. Zu Fuß bleibt man auf Straße und Bürgersteigen und höchstens 70 m vom Wagen weg. Ab da: Blaulicht. Die Kripo hängt dran und gibt auf einem Botengang nicht auf, die Uhr
   läuft. Pünktlich im Ablieferungs-Ring anhalten ohne erwischt zu werden: acht Striche, Schlagzeile
   „Kurier liefert Paket – Inhalt unbekannt“. Zu spät oder erwischt: drei Striche weg. Drei abgelieferte
   Botengänge geben den Orden BOTE VUM RING.
 - **Fußgänger am Zebrastreifen:** An jedem Übergang gehen ein bis zwei Kölner tatsächlich über die
   Straße. Kommt ein Auto näher, hüpfen sie zurück an den Bordstein, warten, bis es vorbei ist, und
-  gehen dann weiter. Das Klüngel-Telefon macht die Ampeln grün, die Fußgänger nicht.
+  gehen dann weiter – vor jedem Auto, auch vor den Rivalen und dem Peterwagen. Das Klüngel-Telefon macht
+  die Ampeln grün, die Fußgänger nicht.
+- **Deckel mitnehmen:** Unter REKORDE erzeugt „CODE ERZEUGEN“ einen Text-Code mit Strichen, Orden,
+  Statistiken, Karriere, Rekorden und eigenen Strecken (ohne die großen Geisterrunden). Am anderen
+  Gerät einfügen, „ÜBERNEHMEN“, fertig. Beim Start einer Strecke zeigt ein Ladebild mit dem Türsteher
+  an, dass gerade Köln gebaut wird.
 - **Dat Hinterzimmer (zweiter Eingang):** Der grüne Knopf unter dem Start führt durch den Vorhang mit
   dem PRIVAT-Schild in den Raum, in dem Chicago am Rhein um Bierdeckel-Striche spielt: grüner Filz,
   Lampe, Kölsch-Kiste, „KEIN KREDIT“ an der Wand. Vier Spiele, alle um deine Striche vom Deckel
@@ -314,6 +319,13 @@ und der Tipp des Tages vom Türsteher.
   Vorschaubild für WhatsApp & Co.
 
 Three.js r128 liegt unter `vendor/` (MIT-Lizenz, siehe `vendor/THREE-LICENSE`).
+
+## Tests
+
+`npm install` holt Playwright, `npm test` fährt dann headless durch alle Strecken (Autopilot bis 200 m,
+dann erzwungenes Ziel, Ergebnis muss erscheinen) und einen kompletten Botengang (Abholring, aussteigen,
+Paket zu Fuß, einsteigen, Kripo da, abliefern). `CHROME=/pfad/zu/chromium npm test` nimmt einen
+eigenen Browser. Die Skripte liegen in `test/`, jede Datei liefert `{ ok, lines }` zurück.
 
 ## Debug
 

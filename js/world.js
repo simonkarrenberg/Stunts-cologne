@@ -1701,14 +1701,15 @@
   }
 
   const _qTmp = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0), _zAxis = new THREE.Vector3(0, 0, 1);
-  function animate(t, dt, center) {
+  function animate(t, dt, center, cars) { // cars: positions of every car on the road, for the pedestrians
     for (const a of animated) {
       const u = a.userData;
       if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
       else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
       else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
       else if (u.walker) {
-        const w = u.walker; const near = center ? Math.hypot(center.x - a.position.x, center.z - a.position.z) : 999;
+        const w = u.walker; let near = center ? Math.hypot(center.x - a.position.x, center.z - a.position.z) : 999;
+        if (cars) for (const c of cars) { const d = Math.hypot(c.x - a.position.x, c.z - a.position.z) + 12; if (d < near) near = d; }
         const onRoad = w.t > 0.16 && w.t < 0.84;
         if (near < 60 && onRoad) { // a car is coming: hop back to the nearer curb, fast
           const goal = w.t < 0.5 ? 0.05 : 0.95; const step = dt * 7 / w.a.distanceTo(w.b); w.t += Math.sign(goal - w.t) * Math.min(step, Math.abs(goal - w.t)); w.hop = Math.min(1, w.hop + dt * 6); w.wait = 2.5 + Math.random() * 2; w.fled = true;

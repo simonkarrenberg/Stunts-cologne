@@ -185,7 +185,10 @@
   const R = {};
   function rmDeck() { const d = []; for (let k = 0; k < 2; k++) for (let s = 0; s < 4; s++) for (const r of RM_RANKS) d.push({ s, r, id: k * 52 + s * 13 + RM_RANKS.indexOf(r) }); return shuffle(d); }
   function isSet(cs) { return cs.length >= 3 && cs.length <= 4 && cs.every((c) => c.r === cs[0].r) && new Set(cs.map((c) => c.s)).size === cs.length; }
-  function isRun(cs) { if (cs.length < 3 || !cs.every((c) => c.s === cs[0].s)) return false; const idx = cs.map(ri).sort((a, b) => a - b); for (let i = 1; i < idx.length; i++) if (idx[i] !== idx[i - 1] + 1) { if (!(i === idx.length - 1 && idx[i] === 12 && idx[0] === 0)) return false; } return new Set(idx).size === idx.length; }
+  function runIdx(cs, aceHigh) { return cs.map((c) => (c.r === 'A' && aceHigh ? 13 : ri(c))).sort((a, b) => a - b); }
+  function isSeq(idx) { for (let i = 1; i < idx.length; i++) if (idx[i] !== idx[i - 1] + 1) return false; return true; }
+  function isRun(cs) { if (cs.length < 3 || !cs.every((c) => c.s === cs[0].s)) return false; return isSeq(runIdx(cs, false)) || isSeq(runIdx(cs, true)); } // the Ace lies low (A-2-3) or high (Q-K-A), not around the corner
+  function sortRun(m) { const high = !isSeq(runIdx(m, false)); m.sort((a, b) => (a.r === 'A' && high ? 13 : ri(a)) - (b.r === 'A' && high ? 13 : ri(b))); }
   function meldOk(cs) { return isSet(cs) || isRun(cs); }
   function meldPts(cs) { return cs.reduce((a, c) => a + (c.r === 'A' && isRun(cs) && cs.some((x) => x.r === '2') ? 1 : rv(c)), 0); }
   function findMelds(hand) { // greedy: runs first, then sets on the rest; and the other way round; keep the better cover
@@ -195,7 +198,7 @@
       if (runsFirst) { runs(); sets(); } else { sets(); runs(); } return out; };
     const a = tryOrder(true), b = tryOrder(false); const cover = (m) => m.reduce((n, x) => n + x.length, 0); return cover(a) >= cover(b) ? a : b;
   }
-  function layTarget(card, melds) { for (const m of melds) { if (isSet(m) && m.length < 4 && m[0].r === card.r && !m.some((c) => c.s === card.s)) return m; if (isRun(m) && m[0].s === card.s) { const idx = m.map(ri); const lo = Math.min(...idx), hi = Math.max(...idx); if (ri(card) === lo - 1 || ri(card) === hi + 1) return m; } } return null; }
+  function layTarget(card, melds) { for (const m of melds) { if (isSet(m) && m.length < 4 && m[0].r === card.r && !m.some((c) => c.s === card.s)) return m; if (isRun(m) && m[0].s === card.s) { if (isRun(m.concat([card]))) return m; } } return null; }
   function rommeStart() {
     const d = rmDeck(); R.hands = [d.slice(0, 13), d.slice(13, 26)]; R.stock = d.slice(26); R.discard = [R.stock.pop()]; R.melds = [[], []]; R.opened = [false, false]; R.sel = []; R.turn = 0; R.drawn = false; R.over = false;
     seat(1, 'tom', 13, ''); seat(2, null); seat(0, null);
@@ -222,7 +225,7 @@
   function rommeDraw(fromDiscard) { if (R.turn !== 0 || R.drawn || R.over) return; const c = fromDiscard ? R.discard.pop() : rommeStock(); if (!c) return; R.hands[0].push(c); R.drawn = true; R.sel = []; rommeRender(); }
   function rommeStock() { if (!R.stock.length) { const top = R.discard.pop(); R.stock = shuffle(R.discard); R.discard = top ? [top] : []; } return R.stock.pop(); }
   function rommeMeld() { R.melds[0].push(R.sel.slice()); R.hands[0] = R.hands[0].filter((c) => !R.sel.includes(c)); R.opened[0] = true; R.sel = []; if (!R.hands[0].length) return rommeEnd(0); rommeRender(); }
-  function rommeLay() { const c = R.sel[0]; const m = layTarget(c, R.melds[0].concat(R.melds[1])); if (!m) return; m.push(c); if (isRun(m)) m.sort((a, b) => ri(a) - ri(b)); R.hands[0] = R.hands[0].filter((x) => x !== c); R.sel = []; if (!R.hands[0].length) return rommeEnd(0); rommeRender(); }
+  function rommeLay() { const c = R.sel[0]; const m = layTarget(c, R.melds[0].concat(R.melds[1])); if (!m) return; m.push(c); if (isRun(m)) sortRun(m); R.hands[0] = R.hands[0].filter((x) => x !== c); R.sel = []; if (!R.hands[0].length) return rommeEnd(0); rommeRender(); }
   function rommeDiscard() { const c = R.sel[0]; R.hands[0] = R.hands[0].filter((x) => x !== c); R.discard.push(c); R.sel = []; R.drawn = false; if (!R.hands[0].length) return rommeEnd(0); R.turn = 1; rommeRender(); later(rommeAI, 900); }
   function rommeAI() {
     const hand = R.hands[1]; const top = R.discard[R.discard.length - 1];
@@ -230,7 +233,7 @@
     let took = false; if (top && (useful(top, hand) >= 2 || findMelds(hand.concat([top])).reduce((n, m) => n + m.length, 0) > findMelds(hand).reduce((n, m) => n + m.length, 0))) { hand.push(R.discard.pop()); took = true; } else hand.push(rommeStock());
     let melds = findMelds(hand); const pts = melds.reduce((a, m) => a + meldPts(m), 0);
     if (melds.length && (R.opened[1] || pts >= 30)) { for (const m of melds) { R.melds[1].push(m); for (const c of m) hand.splice(hand.indexOf(c), 1); } R.opened[1] = true; say('tom', pick(L.tomMeld)); }
-    if (R.opened[1]) { let laid = true; while (laid) { laid = false; for (const c of hand.slice()) { const m = layTarget(c, R.melds[0].concat(R.melds[1])); if (m) { m.push(c); if (isRun(m)) m.sort((a, b) => ri(a) - ri(b)); hand.splice(hand.indexOf(c), 1); laid = true; } } } }
+    if (R.opened[1]) { let laid = true; while (laid) { laid = false; for (const c of hand.slice()) { const m = layTarget(c, R.melds[0].concat(R.melds[1])); if (m) { m.push(c); if (isRun(m)) sortRun(m); hand.splice(hand.indexOf(c), 1); laid = true; } } } }
     if (!hand.length) return rommeEnd(1);
     hand.sort((a, b) => useful(a, hand) - useful(b, hand) || rv(b) - rv(a)); const out = hand.shift(); R.discard.push(out);
     if (!hand.length) return rommeEnd(1);

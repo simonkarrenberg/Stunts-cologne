@@ -19,6 +19,8 @@
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -101,10 +103,14 @@
   <div id="clubBtns"></div>
 </div>
 
+<!-- ============ LOADING ============ -->
+<div id="loading" hidden><canvas id="loadingFace"></canvas><div class="spinner"><i></i><i></i><i></i><i></i></div><b id="loadingText">Dä Lange kuckt dich an…</b></div>
+
 <!-- ============ RECORDS ============ -->
 <div id="records" hidden>
   <div class="modal">
     <h2>🏆 REKORDE &amp; ORDEN – TOP ZEITEN IN KÖLN</h2>
+    <div class="saveBox"><b>DECKEL MITNEHMEN</b><small>Striche, Orden, Karriere, Rekorde un eigene Strecken als Code zum anderen Handy oder Rechner tragen.</small><div class="saveRow"><button id="saveExport">CODE ERZEUGEN</button><textarea id="saveCode" rows="2" placeholder="K4D1.…"></textarea><button id="saveImport">ÜBERNEHMEN</button></div><small id="saveMsg"></small></div>
     <div id="recordsList"></div>
     <button id="recordsClose">ZURÜCK</button>
   </div>

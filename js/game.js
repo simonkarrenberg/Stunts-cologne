@@ -130,6 +130,7 @@
   // ---------------- voice: dä Lange & co. speak (Web Speech API) ----------------
   function voiceInit() {
     if (!('speechSynthesis' in window)) { voice.on = false; return; }
+    try { speechSynthesis.getVoices(); } catch (e) { /* ignore */ }
     // every German voice the device has; a deep male one first (the doorman), the chosen one is remembered
     const rank = (v) => (/de[-_]DE/i.test(v.lang) ? 0 : 5) + (/Markus|Yannick|Martin|Conrad|Stefan|Klaus|Hans|Michael|Viktor|Kevin|Reed|Male|Mann/i.test(v.name) ? 0 : 2) + (/Google|Microsoft|Siri|Premium|Enhanced|Natural/i.test(v.name) ? 0 : 1);
     const pickVoice = () => {
@@ -396,10 +397,10 @@
   function updateCamera(dt) {
     if (window.STUNTS_FREECAM) { const fc = window.STUNTS_FREECAM; camera.position.set(fc.pos[0], fc.pos[1], fc.pos[2]); camera.up.set(0, 1, 0); camera.lookAt(fc.look[0], fc.look[1], fc.look[2]); return; }
     if (!player || !player.frame) return;
-    if (mission && mission.onFoot && mission.walker) { const w = mission.walker; const fwd = new THREE.Vector3(Math.sin(w.rotation.y), 0, Math.cos(w.rotation.y)); views[0].pos.lerp(w.position.clone().addScaledVector(fwd, -6.5).add(new THREE.Vector3(0, 3.2, 0)), Math.min(1, dt * 6)); views[0].look.lerp(w.position.clone().addScaledVector(fwd, 3).add(new THREE.Vector3(0, 1.3, 0)), Math.min(1, dt * 10)); views[0].up.set(0, 1, 0); camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look); if (player.mesh) player.mesh.visible = true; return; }
+    if (mission && mission.onFoot && mission.walker) { const w = mission.walker; const fwd = new THREE.Vector3(Math.sin(w.rotation.y), 0, Math.cos(w.rotation.y)); views[0].pos.lerp(w.position.clone().addScaledVector(fwd, -4.2).add(new THREE.Vector3(0, 3.6, 0)), Math.min(1, dt * 6)); views[0].look.lerp(w.position.clone().addScaledVector(fwd, 3).add(new THREE.Vector3(0, 1.3, 0)), Math.min(1, dt * 10)); views[0].up.set(0, 1, 0); camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look); if (player.mesh) player.mesh.visible = true; return; }
     if (phase === 'intro') { // flyover: from high above the first bend down into the chase position behind the grid
       const k = Math.min(1, introT / 3.8), e = k * k * (3 - 2 * k); const fr = player.frame;
-      const f = TB.frameAt(track, 170); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
+      let fs = Math.min(170, track.length * 0.3); { const fk = TB.frameAt(track, fs).kind; if (fk === 'loop' || fk === 'ramp' || fk === 'gap') fs = 90; } const f = TB.frameAt(track, fs); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
       const near = fr.pos.clone().addScaledVector(fr.fwd, -11).addScaledVector(fr.up, 4.2);
       views[0].pos.copy(far).lerp(near, e); views[0].look.copy(fr.pos).addScaledVector(fr.fwd, 6 * e); views[0].up.set(0, 1, 0);
       camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look);
@@ -542,8 +543,12 @@
       Promise.resolve(fs).catch(() => {}).then(() => { if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape'); }).catch(() => {});
     } catch (e) { /* iOS: no lock API, the rotate overlay does the job */ }
   }
-  function startRace(def) {
-    audioInit();
+  function startRace(def, after) { // the scenery build blocks for a moment: show the doorman first, then build
+    audioInit(); if (phase === 'loading') return; phase = 'loading';
+    const ov = $('#loading'); ov.hidden = false; $('#loadingText').textContent = pick(tuenn.loading || ['Dä Lange kuckt dich an…']); $('#menu').hidden = true; $('#results').hidden = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { try { startRaceNow(def); if (after) after(); } finally { ov.hidden = true; } }, 20)));
+  }
+  function startRaceNow(def) {
     buildScene(def);
     raceTime = 0; countdown = 4.2; phase = 'intro'; introT = 0; hornCool = 0; newOrden = []; perf.frames = 0;
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
@@ -603,6 +608,7 @@
     }, 1200);
   }
   function toMenu() {
+    if (phase === 'loading') return; $('#loading').hidden = true;
     if (window.Club) window.Club.close(); clearMission(); missionMode = false; careerChapter = null; $('#hudPrompt').hidden = true;
     phase = 'menu'; if (demo) { camMode = demoPrevCam; tvCam = null; } demo = false; idleT = 0; $('#demo').hidden = true; document.body.classList.remove('demo');
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = true; $('#records').hidden = true; $('#replayUI').hidden = true;
@@ -635,7 +641,7 @@
     if (!scene || phase === 'club') return; // the back room is plain DOM: no 3D work behind it
     const steps = window.STUNTS_SIMSTEPS && (phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
     for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
-    if (scenery) W.animate(t, dt, camPos);
+    if (scenery) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
     if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
     updateCamera(dt);
@@ -979,13 +985,14 @@
   function goalText(g) { return g.place ? `TOP ${g.place}` : g.win ? 'SIEG' : g.koelsch ? `${g.koelsch} KÖLSCH` : g.auftrag ? `${g.auftrag} AUFTRAG` : 'ANKOMMEN'; }
   function startMission(def) {
     missionMode = true; missionDef = def; clearMission();
-    startRace(Object.assign({}, def, { laps: 99 }));
+    startRace(Object.assign({}, def, { laps: 99 }), () => {
     const B = tuenn.botengang; const k = Math.floor(Math.random() * B.what.length);
-    const a = roadFrameAhead(player.s, 230 + Math.random() * 150);
+    const a = roadFrameAhead(player.s, 230 + Math.random() * 150, 45);
     mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: B.what[k], short: B.whatShort[k], pickName: pick(B.where), dropName: pick(B.where), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
     if (mission.dropName === mission.pickName) mission.dropName = B.where[(B.where.indexOf(mission.pickName) + 1) % B.where.length];
     const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(a.f.T.x, a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring;
     setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName), 5200); }, 7600);
+    });
   }
   function clearMission() { if (mission) { for (const m of mission.meshes) scene && scene.remove(m); if (mission.walker && scene) scene.remove(mission.walker); } mission = null; $('#hudPrompt').hidden = true; }
   function missionHud() {
@@ -1018,7 +1025,7 @@
     }
     if (mission.stage === 'walkback' && !$('#hudPrompt').hidden) { // back in: the drop-off appears, the Kripo too
       mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
-      const b = roadFrameAhead(player.s, 420 + Math.random() * 260); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
+      const b = roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
       const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
       if (!kripo) startKripo(); sayMust(tuenn, pick(B.back).replace('{drop}', mission.dropName), 3600);
     }
@@ -1027,8 +1034,15 @@
     const w = mission.walker; if (!w) return; const B = tuenn.botengang; walkT += dt;
     const turn = -input.steer * 2.6 * dt; w.rotation.y += turn; const speed = (input.gas ? 5.2 : 0) - (input.brake ? 2.4 : 0);
     if (speed) { w.position.x += Math.sin(w.rotation.y) * speed * dt; w.position.z += Math.cos(w.rotation.y) * speed * dt; w.position.y = W.GROUND_Y + Math.abs(Math.sin(walkT * 11)) * 0.06; w.rotation.z = Math.sin(walkT * 11) * 0.04; } else { w.position.y = W.GROUND_Y; w.rotation.z = 0; }
-    const car = player.mesh.position; const dc = w.position.distanceTo(car); mission.farCool -= dt;
-    if (dc > 80) { const back = car.clone().sub(w.position).normalize(); w.position.addScaledVector(back, dc - 80); if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pick(B.far), 2500); } }
+    const car = player.mesh.position; mission.farCool -= dt;
+    { // project onto the road: the walker may use the street and both sidewalks, up to 70 m from the car along it
+      const L = track.length; let bestD = 1e9, bestI = 0; const i0 = Math.floor(player.s / track.ds); const S = track.samples, n = S.length;
+      for (let k = -80; k <= 80; k += 2) { const q = S[((i0 + k) % n + n) % n]; const d = (q.p.x - w.position.x) ** 2 + (q.p.z - w.position.z) ** 2; if (d < bestD) { bestD = d; bestI = ((i0 + k) % n + n) % n; } }
+      const q = S[bestI]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const bx = q.B.x / bl, bz = q.B.z / bl; let lat = (w.position.x - q.p.x) * bx + (w.position.z - q.p.z) * bz; const along = (w.position.x - q.p.x) * q.T.x + (w.position.z - q.p.z) * q.T.z;
+      const maxLat = ROAD_W + 5.6; let pushed = false; if (Math.abs(lat) > maxLat) { lat = Math.sign(lat) * maxLat; pushed = true; }
+      let ds = (bestI - i0) * track.ds; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (Math.abs(ds) > 70) { pushed = true; if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pick(B.far), 2500); } }
+      if (pushed) { const sI = Math.abs(ds) > 70 ? ((i0 + Math.sign(ds) * Math.round(70 / track.ds)) % n + n) % n : bestI; const qq = S[sI]; const bl2 = Math.hypot(qq.B.x, qq.B.z) || 1; w.position.x = qq.p.x + qq.B.x / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.x * along); w.position.z = qq.p.z + qq.B.z / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.z * along); }
+    }
     if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pick(B.got), 3000); } }
   }
   function missionEnd(ok, why) {
@@ -1050,6 +1064,19 @@
       if (careerChapter != null) applyCareerResult(ok);
       $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1400);
+  }
+
+  // ---------------- Deckel mitnehmen: export and import of everything the browser remembers ----------------
+  const SAVE_SKIP = /^stuntskoelle\.(ghost|sel|pixel|voice|voiceName|tilt|music)/;
+  function exportSave() {
+    const data = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('stuntskoelle.') && !SAVE_SKIP.test(k)) data[k] = localStorage.getItem(k); } } catch (e) { /* ignore */ }
+    const json = JSON.stringify(data); const b64 = btoa(unescape(encodeURIComponent(json))); return 'K4D1.' + b64;
+  }
+  function importSave(code) {
+    code = (code || '').trim(); if (!code.startsWith('K4D1.')) return 'Dat is kein Deckel-Code.';
+    let data; try { data = JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); } catch (e) { return 'Code kaputt. Nochmal kopieren.'; }
+    let n = 0; try { for (const k of Object.keys(data)) if (k.startsWith('stuntskoelle.') && !SAVE_SKIP.test(k)) { localStorage.setItem(k, String(data[k])); n++; } } catch (e) { return 'Speichern jing nit.'; }
+    renderMenu(); return `${n} Einträge übernommen. Der Deckel hängt jetzt hee.`;
   }
 
   // ---------------- Karriere: die Nachtschicht ----------------
@@ -1099,10 +1126,12 @@
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 6), new THREE.MeshBasicMaterial({ color: 0x555555 })); post.position.y = 1.6; g.add(post);
     return g;
   }
-  function roadFrameAhead(fromS, dist) { // a flat, ordinary piece of road at least `dist` ahead of fromS
-    const S = track.samples, L = track.length; let i = Math.floor(((fromS + dist) % L) / track.ds), tries = 0;
-    while (tries++ < 200 && !(['straight', 'curve', 'bridge'].includes(S[i % S.length].kind) && Math.abs(S[i % S.length].p.y) < 1.5)) i += 3;
-    i %= S.length; return { s: i * track.ds, f: TB.frameAt(track, i * track.ds) };
+  function roadFrameAhead(fromS, dist, clear) { // a flat, ordinary piece of road at least `dist` ahead of fromS; `clear` = no stunt within that many metres
+    const S = track.samples, L = track.length, n = S.length; let i = Math.floor(((fromS + dist) % L) / track.ds), tries = 0;
+    const okAt = (k) => { const q = S[((k % n) + n) % n]; return ['straight', 'curve', 'bridge'].includes(q.kind) && Math.abs(q.p.y) < 1.5; };
+    const clearAt = (k) => { if (!clear) return true; const r = Math.round(clear / track.ds); for (let j = -r; j <= r; j += 4) { const q = S[(((k + j) % n) + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap' || q.kind === 'tunnel' || q.p.y > 3) return false; } return true; };
+    while (tries++ < 400 && !(okAt(i) && clearAt(i))) i += 3;
+    i %= n; return { s: i * track.ds, f: TB.frameAt(track, i * track.ds) };
   }
   function startAuftrag() {
     const A = tuenn.auftrag; const what = pick(A.what), where = pick(A.where);
@@ -1184,7 +1213,7 @@
     if (phase !== 'menu') return;
     demo = true; demoT = 0; cup.on = false; demoPrevCam = camMode;
     const def = TRACKS[Math.floor(Math.random() * TRACKS.length)];
-    startRace(def); camMode = 3; tvCam = null;
+    startRace(def, () => { camMode = 3; tvCam = null; });
     document.body.classList.add('demo'); const d = $('#demo'); d.hidden = false;
     const crawl = $('#demoCrawl'); crawl.innerHTML = tuenn.vorspann.map((l, i) => `<p class="${i === 0 || i === tuenn.vorspann.length - 1 ? 'big' : ''}">${l}</p>`).join('');
     crawl.style.animation = 'none'; void crawl.offsetWidth; crawl.style.animation = '';
@@ -1510,6 +1539,8 @@
     musicInit();
     for (const ev of ['pointerdown', 'wheel', 'touchstart']) document.addEventListener(ev, () => { idleT = 0; if (demo) toMenu(); }, { passive: true });
     $('#clubBtn').onclick = openClub; $('#clubBack').onclick = toMenu;
+    $('#saveExport').onclick = () => { const c = exportSave(); $('#saveCode').value = c; $('#saveMsg').textContent = 'Code kopieren un am anderen Jerät einfügen.'; if (navigator.clipboard) navigator.clipboard.writeText(c).then(() => { $('#saveMsg').textContent = 'Code kopiert. Am anderen Jerät einfügen un ÜBERNEHMEN drücken.'; }).catch(() => {}); };
+    $('#saveImport').onclick = () => { $('#saveMsg').textContent = importSave($('#saveCode').value); };
     $('#paperBtn').onclick = shareFrontPage; $('#demoBtn').onclick = startDemo; $('#hornBtn').onclick = horn; $('#tHorn').addEventListener('touchstart', (e) => { e.preventDefault(); horn(); }, { passive: false });
     document.addEventListener('touchstart', () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
     buildScene(); builtTrackId = trackDef.id; phase = 'menu';
@@ -1520,7 +1551,7 @@
     SP.skyline($('#skyline'), Math.max(600, window.innerWidth), 150);
     SP.portrait('langer', $('#langerFace'), 5);
     SP.portrait('langer', $('#langerFace2'), 4);
-    SP.portrait('langer', $('#resFace'), 5);
+    SP.portrait('langer', $('#resFace'), 5); if ($('#loadingFace')) SP.portrait('langer', $('#loadingFace'), 6);
     if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
     // arcade cabinet pixel art: button icons, joystick and buttons, blinking coin, chunky frames
     $('#cupBtn').textContent = `KÖLSCH-CUP (${TRACKS.length} STRECKEN)`; { const st = careerState(); $('#careerBtn').textContent = st.chapter >= tuenn.career.length ? 'KARRIERE: NACHTSCHICHT BEENDET · NOCHMAL' : `KARRIERE · KAPITEL ${st.chapter + 1}/${tuenn.career.length}: ${tuenn.career[st.chapter].title}`; }

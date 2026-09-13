@@ -960,6 +960,7 @@
     veedel: ['NIPPES', 'SÜLZ', 'LINDENTHAL', 'KALK', 'MÜLHEIM', 'EHRENFELD', 'DEUTZ', 'SÜDSTADT', 'NEUSTADT-NORD', 'BAYENTHAL', 'RIEHL', 'ZOLLSTOCK', 'BICKENDORF', 'PORZ', 'CHORWEILER', 'RADERBERG', 'BRAUNSFELD', 'NEUEHRENFELD'],
     dailyNames: ['{v}-RUNDE', 'DURCH {v}', '{v} BEI NACHT', 'EINMAL {v} UN ZURÜCK', '{v}-KLÜNGEL', 'STRECK DURCH {v}'],
     dailyDesc: 'Die Streck des Tages: jeden Tag würfelt der Klüngel eine neue Runde durch ein anderes Veedel. Bestzeiten gelten nur heute – morjen is et wieder wat anderes.',
+    loading: ['Dä Lange kuckt dich an…', 'Der Köbes zapft. Einen Moment.', 'Die Ringe werden jefegt…', 'Klüngel Tom regelt dat mit der Straße…', 'Kölle wird jebaut. Dauert normal 2000 Johr.'],
     // Botengang: fetch something on foot, bring it somewhere by car, with the Kripo in the mirror. What it is stays open.
     botengang: {
       what: ['e Paket. Frag nit, wat drin is.', 'ne Koffer. Schwer. Vielleicht Kamelle.', 'e Kiste Kölsch. Angeblich.', 'en Umschlag vum Notar. Oder vum Zocker.', 'e Tüt vum Bäcker. Rievkooche, sacht er.', 'ne Hutschachtel. Vum Kommissar. Sacht Tom.', 'e Paket mit Löcher. Et bewegt sich nit. Meistens.'],
