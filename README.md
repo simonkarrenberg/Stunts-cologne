@@ -7,8 +7,8 @@ Nachtrennen in Kalk und der Rosenmontagszoch als Rennstrecke. Kommentiert vom
 
 Die Stadt ist aus Pixeln gebaut: Dom mit Doppelspitze und Strebepfeilern, Groß St. Martin,
 Hohenzollernbrücke mit Liebesschlössern und ICE, Kranhäuser, KölnTriangle, Musical Dome,
-Severinsbrücke, Severinstor, Colonius, Helios-Leuchtturm, Bahnbögen, Lanxess Arena,
-Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVB-Haltestellen und jede Menge Jecke.
+Severinsbrücke, Severinstor, Colonius, Helios-Leuchtturm, Bahnbögen, Deutzer Arena,
+Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVK-Haltestellen und jede Menge Jecke.
 
 Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
@@ -69,7 +69,7 @@ Türsteher, die das Feld sechs Sekunden aufhalten. Dazu „Dä Schnelle“-Schla
 Grundgesetz, Boxnacht am Ring, Spiel-Club, Kripo Köln im 60er-Jahre-Streifenwagen.
 
 Die Charaktere sind gerundete Figuren mit Hüten, Bärten, Schals und Kölschgläsern, die
-Wagen echte 60er/70er-Karosserien aus Kölner Produktion (Taunus, Capri) plus Coupé und dem
+Wagen echte 60er/70er-Karosserien aus Kölner Produktion (erfundene Namen, echte Silhouetten) plus Coupé und dem
 schwarzen Milieu-Benz.
 
 Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
@@ -125,7 +125,7 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
   Siege im Hafen und auf der Zülpicher bis zur letzten Nacht auf den Poller Wiesen. Drei Kapitel sind
   Botengänge. Jedes Kapitel hat ein Ziel (Platz, Sieg, Kölsch, Auftrag), das im Streckentitel und in
   der Vorstellung steht; geschafft heißt weiter, sonst nochmal. Der Fortschritt wird gespeichert. Der
-  weiße LamboGina Countach ist bis zum Ende der Nachtschicht gesperrt (🔒 im Menü) und wird mit dem
+  weiße LamboGina Contessa ist bis zum Ende der Nachtschicht gesperrt (🔒 im Menü) und wird mit dem
   letzten Kapitel freigeschaltet, zusammen mit dem Orden LEGENDE VUM RING.
 - **Botengang (vielleicht kriminell, vielleicht nicht):** Auf jeder Strecke startbar, ohne Rivalen.
   Dä Lange sagt, wo etwas liegt („e Paket. Frag nit, wat drin is.“, „ne Koffer. Schwer. Vielleicht
@@ -183,12 +183,12 @@ M schaltet Motor und Musik stumm.
 | # | Strecke | Tageszeit | Route | Besonderheiten |
 |---|---|---|---|---|
 | 1 | Chicago am Rhein | Nacht | Residenz-Kino – Rudolfplatz (Hahnentor) – Friesenstraße (Klein Köln, Sartory) – Hansaring (Hansahochhaus) – Ebertplatz (Eigelsteintor) – Mediapark (Kölnturm) – St. Gereon | Neon, nasse Straßen, Zocker, Kripo, zwei Loopings, Sprung über die Gleise. |
-| 2 | Domblitz 4D | Morgengrauen | Dom – Heinzelmännchenbrunnen (Früh am Dom) – Alter Markt (Rathaus, Groß St. Martin, Tünnes un Schäl) – Hohenzollernbrücke – Deutz (Hyatt, LVR-Turm, Tanzbrunnen, Messe) – Rheinsprung | Tiefe Sonne, lange Schatten, Hauptbahnhof, Museum Ludwig, 4711-Haus. |
-| 3 | Schäl Sick Schraube | Tag | Zoo & Flora – Zoobrücke (unter der Seilbahn) – Rheinpark – Messe – Lanxess Arena – Mülheimer Hafen – Mülheimer Brücke | Der Rhein wird zweimal gequert, Looping (die Schraube), Hafenkräne. |
-| 4 | Ehrenfeld Tape Run | Blaue Stunde | Venloer Straße – Moschee – St. Joseph – Odonien – Bahnbögen (Bahnhof Ehrenfeld) – Helios-Turm – Vulkan | Enge Haken, Tunnel, Colonius, Kassettenladen, Neptunbad, Graffiti, beleuchtete Fenster. |
+| 2 | Domblitz 4D | Morgengrauen | Dom – Heinzelmännchenbrunnen (Brauhaus am Dom) – Alter Markt (Rathaus, Groß St. Martin, Tünnes un Schäl) – Hohenzollernbrücke – Deutz (Hotel am Rhein, LVR-Turm, Tanzbrunnen, Messe) – Rheinsprung | Tiefe Sonne, lange Schatten, Hauptbahnhof, Museum Ludwig, 4711-Haus. |
+| 3 | Schäl Sick Schraube | Tag | Zoo & Flora – Zoobrücke (unter der Seilbahn) – Rheinpark – Messe – Deutzer Arena – Mülheimer Hafen – Mülheimer Brücke | Der Rhein wird zweimal gequert, Looping (die Schraube), Hafenkräne. |
+| 4 | Ehrenfeld Tape Run | Blaue Stunde | Venloer Straße – Moschee – St. Joseph – Ottonien – Bahnbögen (Bahnhof Ehrenfeld) – Helios-Turm – Vulkan | Enge Haken, Tunnel, Colonius, Kassettenladen, Neptunbad, Graffiti, beleuchtete Fenster. |
 | 5 | Karneval Krawall | Rosenmontag | Chlodwigplatz – Severinstor – Heumarkt (Reiterdenkmal) – Alter Markt (Rathaus, Groß St. Martin) – Rudolfplatz (Hahnentor) | Tribünen, Zochwagen, Konfetti, Hügel, Sprung, eine Unterführung. |
 | 6 | Rheinauhafen 4D | Sonnenuntergang | Kranhäuser – Lagerhaus Siebengebirge – Schokoladenmuseum (Malakoffturm) – Severinsbrücke – Chlodwigplatz (Severinstor, St. Severin) – Bayenturm – Rheinsprung | Zwei Sprünge übers Hafenbecken, Rheinstrand, Riesenrad, Looping. |
-| 7 | Poller Wiesen Stunt-Park | Nacht | Poller Wiesen – Lanxess Arena – Deutzer Werft – Südbrücke – Rheinpark | Kölner Lichter über dem Rhein, drei Loopings, zwei Sprünge, Tunnel unter der Deutzer Brücke, Tribünen, Kölsch-Stände. |
+| 7 | Poller Wiesen Stunt-Park | Nacht | Poller Wiesen – Deutzer Arena – Deutzer Werft – Südbrücke – Rheinpark | Kölner Lichter über dem Rhein, drei Loopings, zwei Sprünge, Tunnel unter der Deutzer Brücke, Tribünen, Kölsch-Stände. |
 | 8 | Domschatz-Raub 1975 | Nacht, Regen | Domschatzkammer – Hauptbahnhof (Sprung über die Gleise) – Eigelstein – Ebertplatz (Looping) – Zoobrücke – Rheinpark (Korkenzieher) – Hohenzollernbrücke | Die Kripo hängt ab der ersten Sekunde im Rückspiegel; Fluchtfahrt durch Chicago am Rhein mit Pfandleihe, Hehler und Zockern. |
 | 9 | Zülpicher 11.11. | Tag, Konfetti | Zülpicher Platz – Barbarossaplatz – Luxemburger Straße (Sprung über die Kneipen) – Uni (Mensa-Looping) – Aachener Weiher – Unterführung – Hohenstaufenring | Elfter im Elften im Kwartier Latäng: doppelt so viele Kölsch auf der Strecke, also Schlangenlinie für alle. |
 | 10 | Rodenkirchen Rheinbad | Sommertag | Rheinuferweg – Rheinarm (Sprung) – Rheinstrand (Looping) – Rodenkirchener Brücke – Weiß (Sprung) – Sürther Bootshaus (Korkenzieher) | Drei Sprünge übers Wasser, Strandbar, Fähre, Villen in Weiß. Wer zu kurz springt, badet. |
@@ -202,10 +202,10 @@ nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 Straßen sehen aus wie in Köln: rot-weiße Bordsteine auf voller Länge (als eigenes, ungetextes
 Mesh, damit das Weiß auf Kopfsteinpflaster nicht im Pflaster verschwindet), weiße gestrichelte
 Mittellinie statt der amerikanischen gelben, alle 170 m ein Zebrastreifen mit Ampeln, blauem
-Schild und wartendem Kölner, orange AWB-Abfalleimer auf den Bürgersteigen, KVB-Oberleitungsmasten
-hinter dem Bordstein, echte Ladenschilder (Früh, Gaffel, Päffgen, Merzenich, 4711, KVB, Sparkasse
-KölnBonn). Nichts steht mehr auf dem Bordstein: die Freiräum-Prüfung schiebt jede Kulisse bis
-hinter den Bordstein.
+Schild und wartendem Kölner, orange AWB-Abfalleimer auf den Bürgersteigen, KVK-Oberleitungsmasten
+hinter dem Bordstein, Ladenschilder mit erfundenen Marken (Hätz Kölsch, Ringe Kölsch, Bäckerei Jüpp,
+Eau de Kölle, KVK, Klüngelkasse Köln – nichts davon gibt es wirklich). Nichts steht mehr auf dem
+Bordstein: die Freiräum-Prüfung schiebt jede Kulisse bis hinter den Bordstein.
 
 Tunnel sind echte Röhren mit Backsteingewölbe, Lampen und Portalen. Alle Stadtstrecken haben
 mindestens einen Looping oder Sprung im Stunts-Stil. Dazu kommen wie in
@@ -227,8 +227,8 @@ EXPERTE fahren sie fast voll und lassen dich kaum ran): **Tünnes** (leicht), **
 fahren neun weitere: Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die fünf Fahrer, die du
 nicht genommen hast – ein Feld von zehn.
 
-Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Taunus GT, Capri 2.8i,
-Rheinland Rocket, Milieu-Benz 280 SE und der weiße LamboGina Countach (Keil, Klappscheinwerfer,
+Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Niehl GT, Kapri 2.8i,
+Rheinland Rocket, Milieu-Benz 280 SE und der weiße LamboGina Contessa (Keil, Klappscheinwerfer,
 Heckflügel, das Poster aus dem Kinderzimmer) — echte Karosserien mit Klarlack, Chrom und
 Himmelsspiegelung.
 
@@ -288,7 +288,7 @@ und der Tipp des Tages vom Türsteher.
   prozedural gezeichneten Texturen (Fassaden, Kopfsteinpflaster, Ziegel, Maßwerk für den Dom,
   Wasser, Himmel mit Pixelwolken bzw. Sternen).
 - `js/cars.js` — die Karren: jede Karosserie wird aus abgerundeten Querschnitten (Superellipsen)
-  entlang einer Seitenlinie „geloftet“ — Taunus-Steilheck, Capri-Fließheck, Manta-Coupé, flacher
+  entlang einer Seitenlinie „geloftet“ — Niehler Steilheck, Kapri-Fließheck, Bayern-Coupé, flacher
   Sportwagen, der lange W108-Benz. Klarlack-Lack (`MeshPhysicalMaterial`) mit Himmelsspiegelung
   über eine PMREM-Environment-Map, Chrom, getöntes Glas mit A/B/C-Säulen, Scheinwerfer je nach
   Typ (Doppelrund, Rechteck, Benz-Vertikal, Klappscheinwerfer), drehende Räder mit Lenkeinschlag,
@@ -297,7 +297,7 @@ und der Tipp des Tages vom Türsteher.
 - `js/world.js` — Straßenmesh (Kopfsteinpflaster in der Altstadt, rot-weiße Bordsteine, Zebrastreifen, Bürgersteige, Geländer,
   Tunnelringe, Looping-Stützen) und das Köln: Wahrzeichen, Altstadt-Giebelhäuser, geschlossene
   Blockrandbebauung entlang jeder Straße (Gründerzeit-Stuck, 50er-Jahre-Wiederaufbau, Ehrenfelder
-  Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVB-Bahnen in Weiß-Rot mit
+  Backstein, Altstadt-Giebel), Brauhäuser mit hängendem Kölsch-Schild, KVK-Bahnen in Weiß-Rot mit
   Oberleitung auf den Ringen, Straßenschilder, Hinterhof-Blöcke und Kirchtürme hinter der ersten
   Reihe, Skyline-Ring im Hintergrund. Die Figuren (der Türsteher, Schäl, Tünnes, Heinzelmännchen, Köbes,
   Anna, Zocker, Polizist, Passanten) haben Gelenke, Hände, Mäntel mit Revers und Krawatte und ein
@@ -318,7 +318,16 @@ und der Tipp des Tages vom Türsteher.
 - `manifest.json` + `sw.js` machen das Spiel installierbar und offline-fähig; `og.png` ist das
   Vorschaubild für WhatsApp & Co.
 
-Three.js r128 liegt unter `vendor/` (MIT-Lizenz, siehe `vendor/THREE-LICENSE`).
+Three.js r128 liegt unter `vendor/` (MIT-Lizenz, siehe `vendor/THREE-LICENSE`). Die Pixelschrift
+„Press Start 2P“ liegt unter `fonts/` (SIL Open Font License 1.1, siehe `fonts/OFL.txt`) und wird von
+dort geladen – die Seite baut beim Spielen keine Verbindung zu Google Fonts oder anderen Dritten auf.
+
+## Rechtliches
+
+`rechtliches.html` (verlinkt im Menü-Fuß) enthält Impressum und Datenschutzerklärung. Die drei
+markierten Felder im Impressum (Name, Anschrift, E-Mail) müssen vom Betreiber ausgefüllt werden.
+Alle Marken, Läden, Zeitungen, Autos und Personen im Spiel sind erfunden; die Kölner Orte und
+Wahrzeichen sind echt. Die Musik ist eine eigene Aufnahme.
 
 ## Tests
 

@@ -211,11 +211,11 @@
   const CONCRETE = [0xb8b4a8, 0xc9c4b8, 0xa8a8a0, 0xd2cabd, 0x9c9a94];
   const WIEDER = [0xe6dcc8, 0xd8cdb0, 0xc9c9bd, 0xe8e0d0, 0xd4c4a8, 0xbfc8c0, 0xe0d0b8, 0xd9c8b4];
   const BRICK = [0x8a4a3a, 0x9a5a48, 0x7a4636, 0xa06a50, 0x6e3e30];
-  const PUBS = ['FRÜH KÖLSCH', 'GAFFEL', 'PÄFFGEN', 'SION KÖLSCH', 'REISSDORF', 'MÜHLEN KÖLSCH', 'PETERS BRAUHAUS', 'BRAUHAUS', 'KÖLSCH-KNEIPE', 'GILDEN KÖLSCH', 'DOM KÖLSCH', 'EM KÖLSCHE BOOR'];
+  const PUBS = ['HÄTZ KÖLSCH', 'RINGE KÖLSCH', 'VEEDELS KÖLSCH', 'DECKEL KÖLSCH', 'JECKE KÖLSCH', 'KLÜNGEL BRÄU', 'BRAUHAUS ZUM LANGEN', 'BRAUHAUS', 'KÖLSCH-KNEIPE', 'DOMSPITZ KÖLSCH', 'STRICH KÖLSCH', 'EM KÖLSCHE KLÜNGEL']; // all invented: no real brewery lends its name to a game about drinking and driving
   const INDUSTRIAL = [0x8a4a3a, 0x9a5a48, 0x7a4636, 0xa06a50];
 
   /** generic building: style + wall color + roof type ('flat' | 'gable' | 'stepped' | 'hip') */
-  const SHOPS = ['APOTHEKE', 'CAFÉ', 'DÖNER', 'BÄCKEREI', 'FRISEUR', 'BLUMEN', 'PIZZERIA', 'OPTIK', 'RIEVKOOCHE', 'HALVE HAHN', 'KAMELLE', 'EAU DE COLOGNE', 'FC FANSHOP', 'METZGEREI', 'BUCHLADEN', 'EISDIELE', 'REISEBÜRO', 'SCHNEIDEREI', 'WEINHANDLUNG', 'FLÖNZ & CO', 'TRINKHALLE', 'IMBISS', 'ZEITUNGE', 'STADT-ANZEIGER', 'LOTTO · TOTO', 'SPIELHALLE', 'REWE', 'DROGERIE', 'SCHUHE', 'TABAK', 'BLAU-GOLD', 'ROTE FUNKEN', 'KÖLSCHE KLÜNGEL GMBH', 'KIOSK', 'BÜDCHEN'];
+  const SHOPS = ['APOTHEKE', 'CAFÉ', 'DÖNER', 'BÄCKEREI', 'FRISEUR', 'BLUMEN', 'PIZZERIA', 'OPTIK', 'RIEVKOOCHE', 'HALVE HAHN', 'KAMELLE', 'EAU DE COLOGNE', 'FC FANSHOP', 'METZGEREI', 'BUCHLADEN', 'EISDIELE', 'REISEBÜRO', 'SCHNEIDEREI', 'WEINHANDLUNG', 'FLÖNZ & CO', 'TRINKHALLE', 'IMBISS', 'ZEITUNGE', 'VEEDELS-ANZEIGER', 'LOTTO · TOTO', 'SPIELHALLE', 'RIEVE MARKT', 'DROGERIE', 'SCHUHE', 'TABAK', 'BLAU-GOLD', 'ROTE FUNKEN', 'KÖLSCHE KLÜNGEL GMBH', 'KIOSK', 'BÜDCHEN'];
   function building(w, h, d, style, wall, roof, seed, opts) {
     opts = opts || {};
     const g = new THREE.Group();
@@ -376,7 +376,7 @@
     const hall = new THREE.Mesh(new THREE.CylinderGeometry(17, 17, 130, 10, 1, false, 0, Math.PI), tmat(T.steel(0x6f8f9f), 0xffffff));
     hall.rotation.z = Math.PI / 2; hall.position.y = 14; g.add(hall);
     const sign = textPlane('KÖLN HAUPTBAHNHOF', '#ffffff', '#1c3f95', 36, 3.6, THEME.night, { border: '#ffffff' }); sign.position.set(0, 19, 17.5); g.add(sign);
-    const clock = textPlane('DB', '#ffffff', '#c1121f', 4, 4, THEME.night); clock.position.set(-52, 12, 17.3); g.add(clock);
+    const clock = textPlane('HBF', '#ffffff', '#c1121f', 4, 4, THEME.night, { sizeK: 0.6 }); clock.position.set(-52, 12, 17.3); g.add(clock);
     // platforms with a train
     for (let i = 0; i < 3; i++) g.add(box(120, 0.6, 3, 0x9a9a9a, 0, 0.3, -20 - i * 7));
     const ice = box(70, 3.6, 2.8, 0xf4f4f4, -10, 2.1, -23.5); g.add(ice); g.add(box(70, 0.6, 2.9, 0xc1121f, -10, 1.6, -23.5));
@@ -772,7 +772,7 @@
     const crown = (r, y, dx, dz, col) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col)); m.position.set(dx, y, dz); g.add(m); };
     crown(1.9 * s, 3.8 * s, 0, 0, 0x2f7a3a); crown(1.4 * s, 4.9 * s, 0.6 * s, 0.3 * s, 0x3f9a48); crown(1.3 * s, 4.4 * s, -0.8 * s, -0.4 * s, 0x2a6e34); crown(1.1 * s, 3.4 * s, 0.9 * s, -0.7 * s, 0x358a40);
     return g; };
-  P.tram = (o) => { // KVB Stadtbahn: white with the red band, black window strip, pantograph, line number
+  P.tram = (o) => { // KVK Stadtbahn: white with the red band, black window strip, pantograph, line number
     const g = new THREE.Group(); const line = (o && o.line) || ['1 WEIDEN WEST', '7 ZÜNDORF', '9 KÖNIGSFORST', '12 MERKENICH', '15 CHORWEILER', '16 NIEHL', '18 THIELENBRUCH'][Math.floor(Math.random() * 7)];
     g.add(box(2.4, 1.0, 14, 0xf4f4f0, 0, 1.0, 0)); g.add(box(2.42, 0.22, 14.02, 0xe30613, 0, 1.45, 0)); g.add(box(2.4, 1.0, 14, 0x1a1a22, 0, 2.05, 0));
     for (let z = -6.2; z <= 6.2; z += 1.55) g.add(box(2.44, 0.9, 0.12, 0xf4f4f0, 0, 2.05, z));
@@ -780,8 +780,8 @@
     g.add(box(0.06, 1.0, 1.4, 0x333333, 0, 3.4, 1.5)); g.add(box(0.06, 1.0, 1.4, 0x333333, 0, 3.4, 2.5)); g.add(box(1.2, 0.05, 0.08, 0x333333, 0, 3.9, 2.0));
     g.add(box(2.42, 0.28, 0.5, 0x1a1a22, 0, 0.45, 6.8)); g.add(box(2.42, 0.28, 0.5, 0x1a1a22, 0, 0.45, -6.8));
     for (const zz of [7.02, -7.02]) { const s = textPlane(line, '#ffb000', '#111111', 1.8, 0.4, THEME.night, { sizeK: 0.55 }); s.position.set(0, 2.55, zz); if (zz < 0) s.rotation.y = Math.PI; g.add(s); for (const sx of [-1, 1]) g.add(box(0.3, 0.16, 0.06, THEME.night ? 0xfff2c0 : 0xdde8f0, sx * 0.8, 0.9, zz)); }
-    const kvb = textPlane('KVB', '#e30613', '#f4f4f0', 0.9, 0.3, false, { sizeK: 0.7 }); kvb.position.set(1.215, 1.0, 5.5); kvb.rotation.y = Math.PI / 2; g.add(kvb);
-    const kvb2 = textPlane('KVB', '#e30613', '#f4f4f0', 0.9, 0.3, false, { sizeK: 0.7 }); kvb2.position.set(-1.215, 1.0, 5.5); kvb2.rotation.y = -Math.PI / 2; g.add(kvb2);
+    const kvb = textPlane('KVK', '#e30613', '#f4f4f0', 0.9, 0.3, false, { sizeK: 0.7 }); kvb.position.set(1.215, 1.0, 5.5); kvb.rotation.y = Math.PI / 2; g.add(kvb);
+    const kvb2 = textPlane('KVK', '#e30613', '#f4f4f0', 0.9, 0.3, false, { sizeK: 0.7 }); kvb2.position.set(-1.215, 1.0, 5.5); kvb2.rotation.y = -Math.PI / 2; g.add(kvb2);
     for (const z of [5.5, 1.5, -1.5, -5.5]) for (const x of [-0.95, 0.95]) { const wh = cyl(0.36, 0.36, 0.2, 0x222222, x, 0.36, z, 12); wh.rotation.z = Math.PI / 2; g.add(wh); }
     return g; };
   // --- more Cologne ---
@@ -868,7 +868,7 @@
   P.passant = (o) => { const k = (o && o.k) || 0; return human(Object.assign({ h: 1.55 + (k % 5) * 0.07, lite: true }, CROWD_OUTFITS[k % CROWD_OUTFITS.length])); };
   P.muell = () => { const g = new THREE.Group(); g.add(cyl(0.4, 0.4, 1.1, 0xff7a00, 0, 0.55, 0, 8)); g.add(cyl(0.45, 0.45, 0.15, 0x333333, 0, 1.15, 0, 8)); return g; };
   P.fahrrad = () => { const g = new THREE.Group(); for (const x of [-0.5, 0.5]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.05, 5, 8), mat(0x222222)); w.position.set(x, 0.36, 0); w.rotation.y = Math.PI / 2; g.add(w); } g.add(box(1.0, 0.08, 0.08, 0x2a6a9a, 0, 0.7, 0)); g.add(box(0.08, 0.6, 0.08, 0x2a6a9a, 0.2, 0.7, 0)); return g; };
-  P.tramline = (o) => { // rails alongside the street with a KVB tram shuttling back and forth
+  P.tramline = (o) => { // rails alongside the street with a KVK tram shuttling back and forth
     const g = new THREE.Group(); const len = (o && o.len) || 160;
     const r = tplane(4, len, T.rails(), 1, len / 4); r.rotation.x = -Math.PI / 2; r.position.y = 0.06; g.add(r);
     for (let z = -len / 2; z <= len / 2; z += 30) { g.add(cyl(0.1, 0.12, 6, 0x555555, 2.4, 3, z, 6)); g.add(box(3, 0.1, 0.1, 0x555555, 1, 6, z)); }
@@ -901,7 +901,7 @@
     g.add(box(30, 0.4, 20, 0x5a5a60, 0, 0.2, 0));
     for (let i = 0; i < 9; i++) { const h = 3 + r() * 9; const c = [0x8a7a6a, 0xb07a2a, 0x6a6a72, 0xc1121f][i % 4]; const b = box(1 + r() * 2, h, 1 + r() * 2, c, -12 + i * 3, h / 2 + 0.4, -6 + r() * 12); b.rotation.z = (r() - 0.5) * 0.4; g.add(b); }
     const robot = new THREE.Group(); robot.add(box(3, 4, 2, 0x8a7a6a, 0, 4, 0)); robot.add(box(2, 2, 2, 0x9a8a7a, 0, 7, 0)); robot.add(box(0.8, 3.5, 0.8, 0x7a6a5a, -2.2, 4, 0)); robot.add(box(0.8, 3.5, 0.8, 0x7a6a5a, 2.2, 4, 0)); robot.add(box(0.5, 0.5, 0.2, 0xff2020, -0.5, 7.2, 1.05)); robot.add(box(0.5, 0.5, 0.2, 0xff2020, 0.5, 7.2, 1.05)); robot.position.set(6, 0.4, 5); g.add(robot);
-    const s = textPlane('ODONIEN – FREISTAAT', '#ffd400', '#2a2a2a', 12, 1.6, THEME.night, { border: '#ff2d95' }); s.position.set(0, 6, 10); g.add(s);
+    const s = textPlane('OTTONIEN – FREISTAAT', '#ffd400', '#2a2a2a', 12, 1.6, THEME.night, { border: '#ff2d95' }); s.position.set(0, 6, 10); g.add(s);
     g.add(box(0.3, 6, 0.3, 0x444444, -6, 3, 10)); g.add(box(0.3, 6, 0.3, 0x444444, 6, 3, 10));
     return g;
   };
@@ -965,7 +965,7 @@
     const s = textPlane('AWB', '#ffffff', '#ff6a00', 0.42, 0.18, false, { sizeK: 0.9 }); s.position.set(0, 1.08, 0.27); g.add(s); return g; };
   P.bank = () => { const g = new THREE.Group(); g.add(box(2.2, 0.12, 0.5, 0x6a4a2a, 0, 0.5, 0)); g.add(box(2.2, 0.5, 0.1, 0x6a4a2a, 0, 0.85, -0.25)); g.add(box(0.15, 0.5, 0.5, 0x333333, -1, 0.25, 0)); g.add(box(0.15, 0.5, 0.5, 0x333333, 1, 0.25, 0)); return g; };
   P.fahrradstaender = () => { const g = new THREE.Group(); for (let i = 0; i < 4; i++) { const b = P.fahrrad(); b.position.set(i * 0.7 - 1, 0, 0); b.rotation.y = Math.PI / 2; g.add(b); } return g; };
-  P.bus = () => { const g = new THREE.Group(); g.add(box(2.5, 2.6, 12, 0xe30613, 0, 1.6, 0)); g.add(box(2.52, 1.0, 11.4, 0x9fd3ff, 0, 2.2, 0)); g.add(box(2.5, 0.2, 12.2, 0xf4f4f4, 0, 2.95, 0)); const s = textPlane('KVB 132 · ZOOBRÜCKE', '#ffb000', '#222', 2.2, 0.45, THEME.night); s.position.set(0, 2.5, 6.05); g.add(s); for (const z of [3.8, -3.8]) { for (const x of [-1.1, 1.1]) addm(g, cyl(0.45, 0.45, 0.4, 0x111111, x, 0.45, z, 8)).rotation.z = Math.PI / 2; } return g; };
+  P.bus = () => { const g = new THREE.Group(); g.add(box(2.5, 2.6, 12, 0xe30613, 0, 1.6, 0)); g.add(box(2.52, 1.0, 11.4, 0x9fd3ff, 0, 2.2, 0)); g.add(box(2.5, 0.2, 12.2, 0xf4f4f4, 0, 2.95, 0)); const s = textPlane('KVK 132 · ZOOBRÜCKE', '#ffb000', '#222', 2.2, 0.45, THEME.night); s.position.set(0, 2.5, 6.05); g.add(s); for (const z of [3.8, -3.8]) { for (const x of [-1.1, 1.1]) addm(g, cyl(0.45, 0.45, 0.4, 0x111111, x, 0.45, z, 8)).rotation.z = Math.PI / 2; } return g; };
   P.polizei = () => { // Polizei Köln, blue lights blinking
     const g = new THREE.Group();
     if (window.Cars) g.add(window.Cars.build({ color: 0xf4f4f0, shape: 'sedan', stripe: 0x2d6a3a, plate: 'K-3110' }, THEME.night, { textPlane, mat }, { lite: true }));

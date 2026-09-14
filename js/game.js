@@ -1095,7 +1095,7 @@
       const finale = ch + 1 >= tuenn.career.length;
       if (finale) { try { localStorage.setItem('stuntskoelle.countach', '1'); } catch (e) { /* ignore */ } bumpStat('career'); const no = checkOrden(); if (no.length) { newOrden = newOrden.concat(no); const ob = $('#resOrden'); ob.hidden = false; ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((cv, i) => medalIcon(cv, newOrden[i].color, 2)); } }
       $('#resTitle').textContent = (finale ? 'NACHTSCHICHT BEENDET! ' : `KAPITEL ${ch + 1} JESCHAFFT: ${c.title}. `) + $('#resTitle').textContent;
-      $('#resTuenn').textContent = c.outro + (finale ? ' Der Countach steht im Menü, Jung.' : '');
+      $('#resTuenn').textContent = c.outro + (finale ? ' Die Contessa steht im Menü, Jung.' : '');
       $('#againBtn').textContent = finale ? 'NOCHMAL VON VORNE (ENTER)' : 'NÄCHSTES KAPITEL (ENTER)';
     } else { $('#resTitle').textContent = `KAPITEL ${ch + 1} NIT JESCHAFFT (ZIEL: ${goalText(c.goal)}). ` + $('#resTitle').textContent; $('#resTuenn').textContent = pick(tuenn.careerLines.fail); $('#againBtn').textContent = 'KAPITEL NOCHMAL (ENTER)'; }
   }

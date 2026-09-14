@@ -7,15 +7,15 @@
   // ---------------- CARS ----------------
   // stats 1..5 (Tempo, Beschleunigung, Handling, Nitro) drive the physics numbers below
   const CARS = [
-    { id: 'gti', name: 'Taunus GT', sub: 'Ford Taunus aus Niehl, 1970. Rot, laut, Kölner Werk.', color: 0xd62828, stripe: 0xffffff, shape: 'hatch',
+    { id: 'gti', name: 'Niehl GT', sub: 'Steilheck aus dem Kölner Werk, 1970. Rot, laut, bezahlt in Raten.', color: 0xd62828, stripe: 0xffffff, shape: 'hatch',
       accel: 15, top: 55, brake: 32, grip: 1.15, steer: 1.2, nitro: 3, stats: [3, 4, 5, 3], plate: 'K-GTI 4D' },
-    { id: 'turbo', name: 'Capri 2.8i', sub: 'Der Kölner Mustang. Beige wie de Tapete im Lovers Club.', color: 0xe0b060, stripe: 0x111111, shape: 'coupe',
+    { id: 'turbo', name: 'Kapri 2.8i', sub: 'Dat Kölner Muskelcoupé. Beige wie de Tapete im Lovers Club.', color: 0xe0b060, stripe: 0x111111, shape: 'coupe',
       accel: 14, top: 60, brake: 30, grip: 1.0, steer: 1.0, nitro: 4, stats: [4, 4, 4, 4], plate: 'K-EF 28' },
     { id: 'rocket', name: 'Rheinland Rocket', sub: 'Bayerisches Coupé, Kölner Kennzeichen, Zocker-Streifen.', color: 0xf2f2f2, stripe: 0x1c3f95, shape: 'coupe2',
       accel: 12.5, top: 67, brake: 28, grip: 0.95, steer: 0.9, nitro: 4, stats: [5, 3, 3, 4], plate: 'K-RR 635' },
     { id: 'special', name: 'Milieu-Benz 280 SE', sub: 'Schwarz, lang, Chrom. Dat Auto vum Ring. Fahrer: dä Lange vum Ring.', color: 0x0e0e12, stripe: 0xff2d95, shape: 'limo',
       accel: 13, top: 71, brake: 26, grip: 0.9, steer: 0.95, nitro: 5, stats: [5, 4, 3, 5], plate: 'K-LT 1' },
-    { id: 'countach', name: 'LamboGina Countach', sub: 'Weißer Keil aus Sant’Agata, Kölner Kennzeichen. Hochkant-Türen, Poster im Kinderzimmer.', color: 0xf4f4f2, stripe: 0x111111, shape: 'wedge',
+    { id: 'countach', name: 'LamboGina Contessa', sub: 'Weißer Keil aus Sant’Agata, Kölner Kennzeichen. Hochkant-Türen, Poster im Kinderzimmer.', color: 0xf4f4f2, stripe: 0x111111, shape: 'wedge',
       accel: 15, top: 74, brake: 27, grip: 0.92, steer: 0.9, nitro: 5, stats: [5, 5, 3, 5], plate: 'K-LG 88' }
   ];
 
@@ -65,7 +65,7 @@
       desc: 'Im Morgengrauen vom Dom zum Rhein und wieder zurück. Über die Hohenzollernbrücke nach Deutz, mit Rheinsprung und dickem Po. Tauben inklusive.',
       theme: { sky: 0x5a78b8, fog: 0xffc4a0, ground: 0xa99b86, sun: 0xffd4a8, road: [0x6a6a70, 0x5c5c62], night: false, dawn: true, water: 0x5a7fb0, street: 'altstadt',
         streets: ['HOHE STRASSE', 'DOMKLOSTER', 'GLOCKENGASSE', 'OTTOPLATZ', 'AM HOF', 'TRANKGASSE', 'UNTER FETTENHENNEN', 'FRANKENWERFT', 'DEUTZER FREIHEIT', 'ALTER MARKT', 'HEUMARKT'],
-        shops: ['BRAUHAUS', 'HALVE HAHN', 'RIEVKOOCHE', 'EAU DE COLOGNE', 'KÖLSCH', 'FC FANSHOP', 'DOM-SOUVENIRS', 'BÄCKEREI MERZENICH', '4711', 'KVB KUNDENCENTER'],
+        shops: ['BRAUHAUS', 'HALVE HAHN', 'RIEVKOOCHE', 'EAU DE COLOGNE', 'KÖLSCH', 'FC FANSHOP', 'DOM-SOUVENIRS', 'BÄCKEREI JÜPP', 'EAU DE KÖLLE', 'KVK KUNDENCENTER'],
         far: [{ type: 'colonius', angle: 200, dist: 260 }, { type: 'triangle', angle: 20, dist: 80 }, { type: 'archbridge', angle: 300, dist: 60 }, { type: 'flatbridge', angle: 330, dist: 80 }] },
       // seg: 0 start straight, 1 L, 2 str, 3 hill, 4 str, 5 L, 6 str, 7 R, 8 str, 9 L, 10 bridge, 11 L, 12 str, 13 L, 14 str
       segments: [
@@ -97,7 +97,7 @@
         { type: 'denkmal', seg: 5, u: 0.35, side: -1, dist: 14, story: 'Tünnes un Schäl. Der eine ehrlich un e bessje dumm, der andere schlau un e bessje krumm. Zesamme: Kölle.' },
         { type: 'heinzelbrunnen', seg: 2, u: 0.5, side: 1, dist: 16, keep: 22, story: 'Heinzelmännchenbrunnen. Nachts han se jeschafft, bis de Frau vum Schneider Erbse jestreut hät. Seitdem schafft in Kölle keiner mieh nachts. Außer mir.' },
         { type: 'koelsch', seg: 2, u: 0.4, side: 1, dist: 18 },
-        { type: 'billboard', seg: 2, u: 0.62, side: 1, dist: 14, text: 'FRÜH AM DOM · SEIT 1904' },
+        { type: 'billboard', seg: 2, u: 0.62, side: 1, dist: 14, text: 'BRAUHAUS AM DOM · SEIT 1904' },
         { type: 'hbf', seg: 1, u: 0.5, side: -1, dist: 95, keep: 90, story: 'Hauptbahnhof. 1975: Banküberfall met Geiseln, direkt am Dom. Chicago am Rhein, Jung. Heut nur noch Taube un Verspätung.' },
         { type: 'museum', seg: 0, u: 0.85, side: 1, dist: 42 },
         { type: 'musicaldome', seg: 2, u: 0.3, side: 1, dist: 70 },
@@ -292,12 +292,12 @@
     },
     {
       id: 'ehrenfeld', name: 'Ehrenfeld Tape Run', district: 'Venloer Straße zur blauen Stunde', tag: 'ABEND', order: 4,
-      waypoints: ['Venloer Straße', 'Moschee', 'Odonien', 'Bahnbögen', 'Helios-Turm', 'Vulkan'],
+      waypoints: ['Venloer Straße', 'Moschee', 'Ottonien', 'Bahnbögen', 'Helios-Turm', 'Vulkan'],
       diff: 2, laps: 3, scale: 1.45,
-      desc: 'Zwischen Bahnbögen, Kiosk und Kassettenladen. Enge Haken durch die Venloer Straße, Odonien, Colonius. Rau, schnell, ehrlich.',
+      desc: 'Zwischen Bahnbögen, Kiosk und Kassettenladen. Enge Haken durch die Venloer Straße, Ottonien, Colonius. Rau, schnell, ehrlich.',
       theme: { sky: 0x1c2a5a, fog: 0xd88a68, ground: 0x4a4a52, sun: 0xffb080, road: [0x3e3e46, 0x35353c], night: true, dusk: true, water: 0x243a60, street: 'gruenderzeit', catenary: true,
         streets: ['VENLOER STRASSE', 'LICHTSTRASSE', 'HORNSTRASSE', 'NEPTUNPLATZ', 'KÖRNERSTRASSE', 'SUBBELRATHER STR.', 'VOGELSANGER STR.', 'EHRENFELDGÜRTEL', 'HELIOSSTRASSE', 'LEYENDECKERSTR.'],
-        shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE', 'BÄCKEREI MERZENICH', 'REWE'],
+        shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE', 'BÄCKEREI JÜPP', 'RIEVE MARKT'],
         far: [{ type: 'dom', angle: 30, dist: 200 }, { type: 'triangle', angle: 15, dist: 300 }] },
       // 0 str,1 R,2 str,3 L,4 str,5 L,6 str,7 R,8 hill,9 R,10 str,11 R,12 str,13 L,14 str,15 R,16 tunnel,17 R,18 str,19 R,20 str
       segments: [
@@ -366,7 +366,7 @@
       desc: 'Die Nachttour vum Türsteher als Rennen, mit Korkenzieher an St. Gereon und Sprung über die Büdchen: vom Residenz-Kino über die Friesenstraße am Klein Köln vorbei, Sartory, Lovers Club, Hansaring. Nacht, Neon, nasse Straßen, Zocker, Türsteher, Kripo. 1968. Nix für Sonntagsfahrer.',
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true,
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'MEDIAPARK'],
-        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO', 'SPARKASSE KÖLNBONN', 'KVB'],
+        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO', 'KLÜNGELKASSE KÖLN', 'KVK'],
         posters: ['BOXKELLER', 'DÄ LANGE LIVE', 'KÖLSCH-NACHT', 'VICE KÖLLE', 'FC HEIMSPIEL'],
         far: [{ type: 'dom', angle: 20, dist: 160 }, { type: 'colonius', angle: 200, dist: 120 }, { type: 'triangle', angle: 40, dist: 200 }] },
       // 0 str,1 L,2 str,3 loop,4 str,5 L,6 str,7 jump,8 str,9 R,10 str,11 L,12 loop,13 str,14 L,15 tunnel,16 L,17 str,18 R,19 str,20 L,21 str
@@ -518,7 +518,7 @@
     },
     {
       id: 'poller', name: 'Poller Wiesen Stunt-Park', district: 'Nachts op de Poller Wiesen', tag: 'NACHT', order: 7,
-      waypoints: ['Poller Wiesen', 'Lanxess Arena', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
+      waypoints: ['Poller Wiesen', 'Deutzer Arena', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
       diff: 5, laps: 3, scale: 1.45,
       desc: 'Drei Loopings, ein Korkenzieher, zwei Sprünge (einer übers Brauhaus), ein Tunnel unter der Deutzer Brücke und Steilkurven wie im Boxring. Die Poller Wiesen als Stunt-Arena: Tribünen, Kölsch-Stände, Riesenrad, Rhing. Wer hier bremst, hat verloren.',
       theme: { sky: 0x070a24, fog: 0x1e1a3a, ground: 0x28402a, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, water: 0x102040, street: 'park', arena: true,
@@ -663,7 +663,7 @@
       desc: 'Elfter im Elften, 11 Uhr 11, Zülpicher Straße. Studenten, Kostüme, Kölsch an jeder Ecke. Sprung über die Kneipen im Kwartier Latäng, Looping an der Mensa, Unterführung, Aachener Weiher. Wer fünf Kölsch in einer Runde nimmt, fährt Schlangenlinie. Wie alle anderen auch.',
       theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xa9a49c, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
-        shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP', 'BÄCKEREI MERZENICH', 'KIOSK · KÖLSCH 1,50'],
+        shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP', 'BÄCKEREI JÜPP', 'KIOSK · KÖLSCH 1,50'],
         far: [{ type: 'dom', angle: 40, dist: 180 }, { type: 'colonius', angle: 320, dist: 160 }],
         intro: ['Elfter im Elften, elf Uhr elf. Die Studente han seit sechs Uhr Kölsch im Blut un noch keine Abschluss.', 'Zülpicher Stroß. Hee bruchs de kein Ausweis, nur e Kostüm. Un e Auto, dat jeradeaus fährt.', 'Kwartier Latäng. Latein kann hee keiner, ävver alle kenne dat Wort Kölsch.'] },
       // 0 str,1 L,2 str,3 jump (Kneipen),4 str,5 L,6 hill,7 loop (Mensa),8 str,9 L,10 str (Aachener Weiher),11 R,12 str,13 L,14 dip,15 str,16 L,17 str
@@ -812,7 +812,7 @@
     lap: ['Noch en Rund, Jung. Kölsch is kalt jestellt.', 'Rund vorbei. Der Köbes zählt mit.', 'Letzte Rund! Fott domet!'],
     win: ['Jewonne! Do bes jetz offiziell en Kölsche Jung. Oder Mädche. Ejal, Kölsch is för alle.', 'Ne Sieg in Chicago am Rhein. Ich hätt mich fast jefreut.', 'Alaaf, Jung! Dat kütt in de Express. Un ich kassier de Wette.'],
     lose: ['Verlore. Aber et hätt noch immer jot jejange. Meistens.', 'Et hätz schlecht, ävver et kütt! Nächstes Mol.', 'Nächstes Mol, Jung. Ming Streck läuft nit fott.'],
-    overtake: ['Do bes vorbei! Jetz nit einschlofe.', 'Überholt wie de KVB am Ebertplatz.'],
+    overtake: ['Do bes vorbei! Jetz nit einschlofe.', 'Überholt wie de KVK am Ebertplatz.'],
     overtaken: ['Un fott is er. Wie ming Steuererklärung.', 'Der zieht an dir vorbei wie de Rhing bei Hochwasser.'],
     record: ['NEUE BESTZEIT! Dat schreib ich uff de Deckel.', 'Streckenrekord! Ich lass dich uff ne Bierdeckel drucke.'],
     turbo: ['Turbo! Jetz brennt de Asphalt.', 'Nitro, Jung! Dat riecht nach Kölsch un Benzin.'],
@@ -862,7 +862,7 @@
       'RADIO KÖLLE: Blitzer op der Zoobrücke. Dä Lange vum Ring hät ihn selbst opjestellt.',
       'RADIO KÖLLE: Der FC hät jewonne. Nä, Spaß. Weiter im Programm.',
       'RADIO KÖLLE: Die Oper is fertig! Ha, ha. Verkehrsmeldung: nä.',
-      'RADIO KÖLLE: KVB-Streik. Die Bahn steht, die Jecke laufe.',
+      'RADIO KÖLLE: KVK-Streik. Die Bahn steht, die Jecke laufe.',
       'RADIO KÖLLE: Tauben op der Domplatte. Fahrt bitte vorsichtig durch de Kamelle.',
       'RADIO KÖLLE: Hochwasser. Der Rhing kütt. Der Schäl och.',
       'RADIO KÖLLE: Jetz LamboGina, danach de Verkehr. Oder umjekehrt.',
@@ -896,14 +896,14 @@
       blitzer: ['Blitzer. Der einzije in Kölle, der pünktlich is.', 'Dat Ding hät mieh Fotos vun mir als ming Mutter.', 'Blitzer? Hee? Dat hät mir keiner jesaht. Ich kenn jemand, der dat wegmacht.'],
       polizei: ['Kripo. Die kenne mich, ich kenn die. Mer nicke sich zo. Mieh nit.', 'Peterwagen. Jrön-wieß wie de Ampel: erst jrön, dann wieß mer nix mieh.', 'Die Polizei is ming Freund un Helfer. Meistens Helfer. Beim Rausjonn.'],
       kirche: ['Kirch. Do jeht mer sonntags rein, wenn mer samstags nit reinjekumme is.', 'Zwölf romanische Kirche hät Kölle. Ich hann an elf Türe jestanden. Die zwölfte hät ne Pastor.', 'Der Pastor un ich hann dat selbe Jeschäft: mer entscheide, wer reinkütt.'],
-      haltestelle: ['KVB. Kütt, wann se will. Wie de Schäl.', 'Die Bahn steht, die Lück laufe. Kölle funktioniert trotzdem. Irjendwie.', 'Linie 1 nach Weiden West. Do wollt noch nie einer hin. Fährt trotzdem.'],
+      haltestelle: ['KVK. Kütt, wann se will. Wie de Schäl.', 'Die Bahn steht, die Lück laufe. Kölle funktioniert trotzdem. Irjendwie.', 'Linie 1 nach Weiden West. Do wollt noch nie einer hin. Fährt trotzdem.'],
       park: ['Jrön in Kölle. Hee lieje sonntags de Lück, die samstags bei mir nit reinjekumme sin.', 'Bäume. Die stonn och de janze Nacht. Ohne Kölsch. Respekt.', 'Park. Hee wor mol e Spielcasino. Nä, Spaß. Ävver et hät sich so anjefühlt.'],
       taxi: ['Taxi. Der Fahrer kennt de Stadt un ding Jeheimnisse. Beides fährt er nach Hus.', 'Hellelfenbein, dat Taxi. Wie ming Zähn nach dreißig Johr Zigarre.'],
       platz: ['Ne Platz in Kölle: Marktstand, Kölsch-Stand, Büdchen. Un e Denkmal, dat keiner kennt.', 'Op dem Platz hann se mich mol jefragt, ob ich der Bürjermeister bin. Ich hann nä jesaht. Wor jelogen.'],
       tram: ['Die Bahn. Wieß-rut wie der FC. Un jenau so pünktlich.'],
       tunnel: ['Tunnel. Dunkel, eng, laut. Wie der Boxkeller om Samstag.'],
       loop: ['Looping. Einmol rund, wie ne Zocker-Abend: oben bes de König, unten fällt et Kölsch us der Täsch.', 'Kopp unge, Jas oben. Dat es dat einzije, wat ich in der Schull jelernt hann.'],
-      cork: ['Korkenzieher. Einmol um de eijene Achs, wie ich nach dem zwölfte Kölsch. Nur schneller.', 'Der Korkenzieher. Links Himmel, rechts Kölle, oben Stroß. Dat is Stunts, Jung, nit de KVB.', 'Hee dreht sich de Stroß, nit dinge Kopp. Meistens.'],
+      cork: ['Korkenzieher. Einmol um de eijene Achs, wie ich nach dem zwölfte Kölsch. Nur schneller.', 'Der Korkenzieher. Links Himmel, rechts Kölle, oben Stroß. Dat is Stunts, Jung, nit de KVK.', 'Hee dreht sich de Stroß, nit dinge Kopp. Meistens.'],
       jump: ['Sprung. Wer hee bremst, badet. Wer nit bremst, badet vielleicht och. Ävver met Stil.']
     },
     // wall wisdom for graffiti, billboards and posters
@@ -991,9 +991,9 @@
       { track: 'rheinauhafen', type: 'mission', goal: {}, title: 'DER KOFFER VUM HAFEN', intro: 'Ne Koffer im Hafen. Schwer. Frag nit. Sprung übers Hafenbecken inklusive.', outro: 'Der Koffer is anjekumme. Trocken sojar.' },
       { track: 'heist', type: 'race', goal: { place: 3 }, title: 'DOMSCHATZ', intro: '1975. De Kripo hängt dir vum Start an im Nacken. Podium, un kein Wort.', outro: 'Podium mit der Kripo im Nacken. Du bes jetz einer von uns.' },
       { track: 'zuelpicher', type: 'race', goal: { win: true }, title: 'ELFTER IM ELFTEN', intro: 'Zülpicher, Elfter im Elften. Doppelt so viel Kölsch, un du jewinnst trotzdem.', outro: 'Sieg im Kwartier Latäng. Die Tür jeht auf.' },
-      { track: 'poller', type: 'race', goal: { win: true }, title: 'DIE TÜR STEHT OFFE', intro: 'Letzte Nacht. Poller Wiesen, drei Loopings. Jewinn, un der weiße Keil is dinge.', outro: 'Die Tür steht offe. Für immer. Der weiße Keil is dinge – LamboGina Countach, K-LG 88.' }
+      { track: 'poller', type: 'race', goal: { win: true }, title: 'DIE TÜR STEHT OFFE', intro: 'Letzte Nacht. Poller Wiesen, drei Loopings. Jewinn, un der weiße Keil is dinge.', outro: 'Die Tür steht offe. Für immer. Der weiße Keil is dinge – LamboGina Contessa, K-LG 88.' }
     ],
-    careerLines: { fail: ['Nit jeschafft. Morje nochmal, die Tür läuft nit weg.', 'Dat wor nix. Kapitel nochmal, Jung.'], locked: ['Der weiße Keil steht hinger der Tür. Karriere beenden, dann kütts de dran.', 'Countach? Erst die Nachtschicht, dann der Keil.'] },
+    careerLines: { fail: ['Nit jeschafft. Morje nochmal, die Tür läuft nit weg.', 'Dat wor nix. Kapitel nochmal, Jung.'], locked: ['Der weiße Keil steht hinger der Tür. Karriere beenden, dann kütts de dran.', 'Contessa? Erst die Nachtschicht, dann der Keil.'] },
     // dat Hinterzimmer: the back room where the underworld plays cards for Deckel strokes
     club: {
       welcome: ['Hinterzimmer. Hee wird jespielt, nit jeredet. Wat darf et sin?', 'Setz dich. Der Köbes bringt Kölsch, Tom bringt Karten, ich bring de Ruhe.', 'Kein Kredit, Jung. Striche op dä Deckel, sonst nix. Also, wat spiele mer?', 'Die Tür is zu. Wat hee passiert, bleibt hee. Außer du verlierst, dat erzähl ich.'],
