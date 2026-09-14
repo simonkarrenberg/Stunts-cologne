@@ -1,5 +1,5 @@
 /* STUNTS KÖLLE 4D service worker: caches the game so it works offline / as a home-screen app. */
-const VERSION = 'koelle4d-v39';
+const VERSION = 'koelle4d-v40';
 const FILES = ['./', './index.html', './style.css', './manifest.json', './icon.png', './og.png',
   './vendor/three.min.js', './js/pixel.js', './js/sprites.js', './js/track.js', './js/data.js', './js/cars.js', './js/world.js', './js/club.js', './fonts/press-start-2p-latin.woff2', './fonts/press-start-2p-latin-ext.woff2', './rechtliches.html', './js/game.js'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });

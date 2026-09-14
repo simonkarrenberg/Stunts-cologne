@@ -324,8 +324,7 @@ dort geladen – die Seite baut beim Spielen keine Verbindung zu Google Fonts od
 
 ## Rechtliches
 
-`rechtliches.html` (verlinkt im Menü-Fuß) enthält Impressum und Datenschutzerklärung. Die drei
-markierten Felder im Impressum (Name, Anschrift, E-Mail) müssen vom Betreiber ausgefüllt werden.
+`rechtliches.html` (verlinkt im Menü-Fuß) enthält Impressum und Datenschutzerklärung.
 Alle Marken, Läden, Zeitungen, Autos und Personen im Spiel sind erfunden; die Kölner Orte und
 Wahrzeichen sind echt. Die Musik ist eine eigene Aufnahme.
 
