@@ -65,6 +65,11 @@
   // https://www.stadt-koeln.de/politik-und-verwaltung/presseservice/zukunft-des-fort-x-am-neusser-wall
   // https://www.stadt-koeln.de/mediaasset/content/pdf53/rundgang_agnesviertel.pdf
   // https://www.e-werk-cologne.com/  https://www.palladium-koeln.de/
+  // https://www.koelntourismus.de/kunst-kultur/sehenswuerdigkeiten/detail/st-agnes
+  // https://www.stgereon.de/kirchen/st-gereon/  https://www.sgk.de/gemeinde/standorte/
+  // https://www.kuladig.de/Objektansicht/KLD-298065 (Richmodisturm, Neumarkt)
+  // https://www.stadt-koeln.de/mediaasset/bilder/gruen/pdfua_stk_67_melaten_einzelseiten_231124.pdf
+  // https://www.stadt-koeln.de/mediaasset/content/pdf480/tag_des_offenen_denkmals_2013_bfrei.pdf (Bottmühle, p. 62)
   const TRACKS = [
     {
       id: 'dom', name: 'Domblitz 4D', district: 'Dom & Rhein im Morgengrauen', tag: 'MORJENS', order: 2,
@@ -159,7 +164,7 @@
     },
     {
       id: 'rheinauhafen', name: 'Rheinauhafen 4D', district: 'Kranhäuser to the Limit', tag: 'ABEND', order: 6,
-      waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bayenturm', 'Rheinsprung'],
+      waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bottmühle', 'Bayenturm', 'Rheinsprung'],
       diff: 3, laps: 3, scale: 1.45,
       desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Der Zollhafen-Schleichweg spart Zeit. Zu kurz springen spart die Autowäsche.',
       shortcuts: [{ id: 'rheinauhafen-zoll', name: 'ZOLLHAFEN-SCHLEICHWEG', seg: 1 }],
@@ -225,6 +230,7 @@
         { type: 'malakoff', seg: 4, u: 0.25, side: 1, dist: 22, keep: 20, story: 'Malakoffturm. Fröher hät der de Hafen bewacht, heut de Schokolad. Beides hann se mir nit anvertraut.' },
         { type: 'halle', seg: 0, u: 0.65, side: -1, dist: 52, keep: 50, story: 'Lagerhaus Siebengebirge. 1909, hundert Meter Backstein. Hee drin lag mieh Kaffee als in janz Düsseldorf Verstand.' },
         { type: 'bayenturm', seg: 16, u: 0.35, side: 1, dist: 24, keep: 28, story: 'Bayenturm. 1262 hann de Kölner hee de Erzbischof rusjeworfe. Der erste Türsteher-Job in Kölle. Ohne mich.' },
+        { type: 'bottmuehle', seg: 16, u: 0.72, side: -1, dist: 66, keep: 44, story: 'Bottmühle am Severinswall. Früher Mühle, heute Jugendtreff. De Flügel sin weg, der runde Turm steht noch.' },
         { type: 'severinstor', seg: 9, u: 0.5, side: 1, dist: 30 },
         { type: 'kirche', seg: 10, u: 0.5, side: -1, dist: 40, h: 45, color: 0xb9a184 },
         { type: 'row', seg: 12, u: 0.5, side: -1, dist: 24, style: 'gruenderzeit', seed: 12, n: 5 },
@@ -286,6 +292,7 @@
         { type: 'palladium', seg: 10, u: 0.55, side: -1, dist: 88, keep: 80, story: 'Palladium. Heut spielst du die Vorband. Auf vier Zylinder.' },
         { type: 'ewerk', seg: 12, u: 0.25, side: 1, dist: 102, keep: 80, story: 'E-Werk. Strom för de Verstärker, Nitro för dich. Bitte nit vertausche.' },
         { type: 'fortx', seg: 19, u: 0.5, side: -1, dist: 94, keep: 82, story: 'Fort X am Neusser Wall. Rosen oben, dicke Mauern unten. Beides bitte stehe losse.' },
+        { type: 'agnes', seg: 20, u: 0.55, side: -1, dist: 110, keep: 84, story: 'St. Agnes am Neusser Platz. Helle Fassade, großer Turm ohne Spitze: dat Wahrzeichen vum Agnesveedel.' },
         { type: 'crowd', seg: 5, u: 0.3, side: 1, dist: 12 },
         { type: 'rhine', seg: 6, u: 0.5, side: 0, dist: 0 },
         { type: 'seilbahn', seg: 6, u: 0.15, side: 0, dist: 0 },
@@ -393,9 +400,9 @@
     },
     {
       id: 'kalk', name: 'Chicago am Rhein', district: 'Ringe Nachtfahrt', tag: 'NACHT', order: 1,
-      waypoints: ['Residenz-Kino', 'St. Aposteln', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'Fort X', 'Mediapark'],
+      waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Mediapark', 'St. Gereon'],
       diff: 5, laps: 3, scale: 1.45,
-      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Oper und Friesenstraße, dann Sartory, Hansaring und Fort X. Nasse Straßen, Büdchen-Sprung und Korkenzieher an St. Gereon. Durch den Sartory-Hinterhof geht es schneller, aber ohne Garderobenmarke.',
+      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Nasse Straßen, Büdchen-Sprung und das große Zehneck von St. Gereon. Durch den Sartory-Hinterhof geht es schneller, aber ohne Garderobenmarke.',
       shortcuts: [{ id: 'kalk-sartory', name: 'SARTORY-HINTERHOF', seg: 5 }, { id: 'kalk-hansa', name: 'HANSARING-SCHLUPF', seg: 9 }],
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true,
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'MEDIAPARK'],
@@ -451,13 +458,15 @@
         { type: 'palm', seg: 0, u: 0.36, side: -1, dist: 9, h: 7 },
         { type: 'hahnentor', seg: 2, u: 0.5, side: 1, dist: 26, keep: 40, story: 'Hahnentor, Rudolfplatz. Da kome früher de Könige durch. Heut de Jecke. Un du, wenn de nit bremst.' },
         { type: 'aposteln', seg: 2, u: 0.5, side: -1, dist: 92, keep: 80, story: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens dat Radio runter.' },
+        { type: 'richmodisturm', seg: 2, u: 0.15, side: 1, dist: 78, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.' },
         { type: 'oper', seg: 4, u: 0.15, side: 1, dist: 124, keep: 98, story: 'Die Oper am Offenbachplatz. Wenn dä Motor so singt, kriss de vielleicht e Engagement.' },
         { type: 'kunibert', seg: 13, u: 0.4, side: -1, dist: 96, keep: 76 },
+        { type: 'agnes', seg: 13, u: 0.68, side: 1, dist: 116, keep: 84 },
         { type: 'fortx', seg: 14, u: 0.75, side: 1, dist: 104, keep: 82 },
         { type: 'sartory', seg: 4, u: 0.5, side: 1, dist: 30, keep: 50, story: 'Sartory-Säle. Boxnächte, Prunksitzunge, Schlägereien. Manchmal alles an einem Abend.' },
         { type: 'neon', seg: 4, u: 0.5, side: -1, dist: 13, text: 'KIOSK', color: '#00e5ff', light: false },
         { type: 'koelnturm', seg: 17, u: 0.5, side: -1, dist: 90, keep: 60 },
-        { type: 'kirche', seg: 19, u: 0.5, side: -1, dist: 60, h: 44, color: 0xc4ad8c, story: 'St. Gereon. Zwölf romanische Kirche hät Kölle, die hee is die met dem Zehneck. Ich hann mol ne Zocker drin jefunge. Beim Bete. För Rot.' },
+        { type: 'gereon', seg: 19, u: 0.5, side: -1, dist: 94, keep: 88, story: 'St. Gereon am Gereonskloster. Das große Zehneck heißt Dekagon und gehört zu den zwölf romanischen Kirchen Kölns.' },
         { type: 'rails', seg: 7, u: 0.55, side: 0, dist: 0 },
         { type: 'loversclub', seg: 8, u: 0.5, side: 1, dist: 24, keep: 40, story: 'Lovers Club. Ming erste Tür, 1961. Reejel Nummer eins: Wer hee nit reinkütt, kütt nirjendwo rein. Du kütts rein. Ausnahmsweise.' },
         { type: 'tram', seg: 8, u: 0.5, side: -1, dist: 14 },
@@ -483,7 +492,7 @@
     },
     {
       id: 'zoch', name: 'Karneval Krawall', district: 'Altstadt Rallye', tag: 'TAG', order: 5,
-      waypoints: ['Chlodwigplatz', 'Severinstor', 'St. Maria im Kapitol', 'Gürzenich', 'Wallraf & Rathaus', 'St. Aposteln', 'Rudolfplatz'],
+      waypoints: ['Chlodwigplatz', 'Bottmühle', 'Severinstor', 'St. Maria im Kapitol', 'Gürzenich', 'Wallraf & Rathaus', 'Richmodisturm', 'St. Aposteln', 'Rudolfplatz'],
       diff: 3, laps: 3, scale: 1.45,
       desc: 'Der Zochweg als Rennstrecke: durchs Severinstor zu St. Maria im Kapitol, Gürzenich, Wallraf und Rathaus, dann über den Neumarkt an St. Aposteln vorbei. Zwei Gassen durch den Kamelleregen. Selbst die Gebäude tragen heute gute Laune.',
       shortcuts: [{ id: 'zoch-heumarkt', name: 'KAMELLE-GASSE', seg: 8 }, { id: 'zoch-neumarkt', name: 'NEUMARKT-SCHLUPF', seg: 12 }],
@@ -520,6 +529,7 @@
         { type: 'crowd', seg: 0, u: 0.15, side: -1, dist: 10 },
         { type: 'tribuene', seg: 0, u: 0.3, side: 1, dist: 12, keep: 30 },
         { type: 'zochwagen', seg: 0, u: 0.5, side: -1, dist: 13 },
+        { type: 'bottmuehle', seg: 0, u: 0.85, side: -1, dist: 62, keep: 44, story: 'Bottmühle. Ein runder Mühlenturm auf einem grünen Hügel, mitten in der Südstadt. Der dreht sich nit, nur ding Runde.' },
         { type: 'tribuene', seg: 9, u: 0.3, side: -1, dist: 12, keep: 30 },
         { type: 'zochwagen', seg: 13, u: 0.6, side: 1, dist: 13 },
         { type: 'tribuene', seg: 17, u: 0.5, side: -1, dist: 12, keep: 30 },
@@ -544,6 +554,7 @@
         { type: 'guerzenich', seg: 7, u: 0.5, side: -1, dist: 104, keep: 82, story: 'Gürzenich. Hee flieje Kamelle, draußen flieje Autos. Die Sitzungsleitung hat Fragen.' },
         { type: 'wallraf', seg: 9, u: 0.25, side: -1, dist: 148, keep: 70 },
         { type: 'aposteln', seg: 13, u: 0.5, side: -1, dist: 88, keep: 80 },
+        { type: 'richmodisturm', seg: 13, u: 0.85, side: 1, dist: 54, keep: 32, story: 'Die zwei Pferdeköpfe am Richmodisturm erinnern an die Richmodis-Sage. Heute gucken se sich den Zoch an.' },
         { type: 'wasserturm', seg: 16, u: 0.4, side: -1, dist: 90, keep: 58 },
         { type: 'koelsch', seg: 9, u: 0.5, side: -1, dist: 18 },
         { type: 'bunting', seg: 9, u: 0.5, side: 0, dist: 0 },
@@ -638,7 +649,7 @@
     }
     ,{
       id: 'heist', name: 'Domschatz-Raub 1975', district: 'Fluchtfahrt durch Chicago am Rhein', tag: 'NACHT', order: 8,
-      waypoints: ['Domschatzkammer', 'Hauptbahnhof', 'St. Kunibert', 'Eigelstein', 'Fort X', 'Bastei', 'Bahnhof Deutz', 'Hohenzollernbrücke'],
+      waypoints: ['Domschatzkammer', 'Hauptbahnhof', 'St. Kunibert', 'Eigelstein', 'St. Agnes', 'Fort X', 'Bastei', 'Bahnhof Deutz', 'Hohenzollernbrücke'],
       diff: 4, laps: 3, scale: 1.4,
       desc: 'Domschatz im Kofferraum, Kripo im Rückspiegel. An St. Kunibert und Fort X vorbei, von der Bastei über die Zoobrücke nach Deutz und über die Hohenzollernbrücke zurück. Zwei Fluchtgassen, ein viel zu auffälliges Auto. 1975. Nix für Ehrliche.',
       shortcuts: [{ id: 'heist-eigelstein', name: 'EIGELSTEIN-FLUCHTGASSE', seg: 3 }, { id: 'heist-messe', name: 'MESSEHOF-FLUCHTWEG', seg: 14 }],
@@ -682,6 +693,7 @@
         { type: 'eigelsteintor', seg: 4, u: 0.5, side: 1, dist: 28, keep: 40, story: 'Eigelsteintor. Hee wor et immer e bessje krummer. Perfekt för ne Fluchtweg.' },
         { type: 'kunibert', seg: 2, u: 0.4, side: 1, dist: 86, keep: 76, story: 'St. Kunibert. Wer hee läutet, bestellt keine Fluchthilfe. Schäl versucht et trotzdem.' },
         { type: 'fortx', seg: 6, u: 0.5, side: -1, dist: 90, keep: 82 },
+        { type: 'agnes', seg: 4, u: 0.88, side: -1, dist: 120, keep: 84 },
         { type: 'bastei', seg: 8, u: 0.55, side: 1, dist: 90, keep: 58 },
         { type: 'deutzbahnhof', seg: 15, u: 0.35, side: -1, dist: 92, keep: 82, story: 'Deutzer Bahnhof. Mit dem Domschatz steigste besser nit in de falsche Zug.' },
         { type: 'gangster', seg: 4, u: 0.3, side: -1, dist: 9 },
@@ -711,9 +723,9 @@
     },
     {
       id: 'zuelpicher', name: 'Zülpicher 11.11.', district: 'Kwartier Latäng um 11 Uhr 11', tag: 'TAG', order: 9,
-      waypoints: ['Zülpicher Platz', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'St. Aposteln', 'Wasserturm'],
+      waypoints: ['Zülpicher Platz', 'Synagoge Roonstraße', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'Melaten', 'St. Aposteln', 'Richmodisturm', 'Wasserturm'],
       diff: 2, laps: 3, scale: 1.35,
-      desc: 'Elfter im Elften im Kwartier Latäng. Zwischen St. Pantaleon, Uni, Aachener Weiher und Wasserturm liegen Kneipen-Sprung und Mensa-Looping. Die Rathenau-Gasse kürzt die Runde ab. Das Studium dauert trotzdem länger.',
+      desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann zum Aachener Weiher und Melatens historischem Tor. Am Neumarkt schauen die Pferde vom Richmodisturm zu. Die Rathenau-Gasse kürzt die Runde ab. Das Studium dauert trotzdem länger.',
       shortcuts: [{ id: 'zuelpicher-rathenau', name: 'RATHENAU-GASSE', seg: 1 }, { id: 'zuelpicher-ring', name: 'RING-HINTERHOF', seg: 16 }],
       theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xa9a49c, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
@@ -750,6 +762,7 @@
         { type: 'bude', seg: 0, u: 0.75, side: 1, dist: 11, text: 'KÖLSCH · 11.11. · 11 UHR 11' },
         { type: 'blitzer', seg: 0, u: 0.9, side: -1, dist: 8 },
         { type: 'kirche', seg: 1, u: 0.5, side: 1, dist: 46, h: 34, color: 0x9a4a34 },
+        { type: 'synagoge', seg: 0, u: 0.88, side: -1, dist: 88, keep: 78, story: 'Die Synagoge an der Roonstraße, gegenüber vom Rathenauplatz. Ihr markantes Dach und die Rundbogenfenster prägen das jüdische Gemeindezentrum.' },
         { type: 'platz', seg: 2, u: 0.3, side: -1, dist: 21, seed: 4, keep: 16, story: 'Barbarossaplatz. Der schönste Platz vun Kölle, sagt keiner. Ävver de Bahn hält, un dat is hee schon vill.' },
         { type: 'pantaleon', seg: 2, u: 0.65, side: -1, dist: 100, keep: 80, story: 'St. Pantaleon. Hier war schon Ruhe, als du noch keinen Führerschein hattest.' },
         { type: 'neon', seg: 2, u: 0.6, side: 1, dist: 14, text: 'BÜTZJE-BAR · KOSTÜM-PFLICHT', color: '#ff2d95', light: false },
@@ -763,9 +776,11 @@
         { type: 'koelsch', seg: 8, u: 0.7, side: -1, dist: 18 },
         { type: 'pond', seg: 10, u: 0.5, side: 1, dist: 40, seed: 3, keep: 30, story: 'Aachener Weiher. An Wieverfastelovend schwemme hee de Krawatte. An 11.11. de Studente.' },
         { type: 'park', seg: 10, u: 0.3, side: -1, dist: 44, seed: 6, w: 40, d: 40, keep: 30 },
+        { type: 'melaten', seg: 10, u: 0.74, side: -1, dist: 140, keep: 74, story: 'Melaten. Das historische Tor an der Aachener Straße führt zu einem grünen Ort der Erinnerung. Die Rennstrecke bleibt draußen.' },
         { type: 'crowd', seg: 10, u: 0.8, side: 1, dist: 10 },
         { type: 'polizei', seg: 12, u: 0.5, side: 1, dist: 10 },
         { type: 'aposteln', seg: 15, u: 0.35, side: 1, dist: 98, keep: 80 },
+        { type: 'richmodisturm', seg: 15, u: 0.78, side: 1, dist: 60, keep: 32 },
         { type: 'wasserturm', seg: 17, u: 0.4, side: -1, dist: 88, keep: 58, story: 'Wasserturm an der Kaygasse. Viel Wasser drin jewesen. Bei dir eher Kölsch.' },
         { type: 'row', seg: 8, u: 0.5, side: -1, dist: 62, style: 'concrete', seed: 94, n: 5 },
         { type: 'bunting', seg: 15, u: 0.4, side: 0, dist: 0 },

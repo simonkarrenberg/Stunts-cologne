@@ -2,7 +2,9 @@
 
 ## Mehr Kölle: Bauwerke und Abkürzungen
 
-17 zusätzliche, eigens modellierte Kölner Bauwerke stehen jetzt in den passenden Veedeln. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Insgesamt ergänzen 37 Wahrzeichen-Platzierungen und weitere Veedelsdetails die zehn Karten. Die Gebäude haben eigene Silhouetten, Fassaden und Namensschilder; die Architekturquellen stehen im Katalog in `js/landmarks.js`.
+23 eigens modellierte Kölner Bauwerke verteilen sich inzwischen auf 46 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Gebäude ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen im Katalog in `js/landmarks.js`.
+
+Der zweite Ausbau ergänzt St. Agnes mit ihrem Turm ohne Spitze, das große Zehneck von St. Gereon, die Synagoge an der Roonstraße, den Richmodisturm mit seinen beiden Pferdeköpfen, Melatens historisches Tor II an der Aachener Straße und die Bottmühle ohne Mühlenflügel. Zehn zusätzliche Standorte und ein gezielter Austausch machen die Stadt genauer: St. Gereon ersetzt dort die bisherige allgemeine Kirchenkulisse. Melaten bleibt eine Sehenswürdigkeit am Straßenrand; die Rennstrecke führt nicht durch den Friedhof.
 
 Auf allen zehn Strecken gibt es zusammen 17 **fahrbare Abkürzungen**: unter anderem Sartory-Hinterhof, Hansaring-Schlupf und die Gassen rund um die Altstadt. Grüne Schilder kündigen die Einfahrt an, grüne Linien zeigen den Weg auf der Straße und der Minikarte. Vor dem Schild auf die angezeigte Straßenseite einordnen und in der schmalen Gasse vom Gas gehen. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie auf der Hauptstrecke. Die Gassen sparen je nach Kurve einige Meter; die weißen Straßen bleiben immer befahrbar. Einmal pro Gasse und Runde gibt es einen zusätzlichen Deckel-Strich. Rivalen bleiben auf der Hauptstrecke.
 
@@ -20,7 +22,7 @@ npx playwright install chromium
 npm test
 ```
 
-Die Geometrieprüfungen kontrollieren kürzere, kontinuierliche Nebenwege und schließen Kreuzungen mit anderen Streckenabschnitten aus. Die Browserprüfungen lenken über echte Tastatureingaben in alle 17 Einfahrten, fahren jede Gasse vollständig ab und prüfen Wiedereinfahrt, Rundenstand, Reset, Replay und gespeicherten Geist. Dazu kommen Botengang, Rennen, Handy-Menü, Streckenlinks und Offline-Neustart. Pull Requests werden geprüft; Pages wird erst nach erfolgreichen Tests veröffentlicht.
+Die Geometrieprüfungen kontrollieren kürzere, kontinuierliche Nebenwege und schließen Kreuzungen mit anderen Streckenabschnitten aus. Die Browserprüfungen lenken über echte Tastatureingaben in alle 17 Einfahrten, fahren jede Gasse vollständig ab und prüfen Wiedereinfahrt, Rundenstand, jeden Reset, Replay und gespeicherten Geist. Jeder geplante Wahrzeichen-Standort muss den Kulissenaufbau überstehen; Modelle werden auf gültige Geometrie, Bodenhöhe und Quellenangaben geprüft. Dazu kommen freie Fahrbahnen, getrennte Gebäudegrundrisse, Botengang, Rennen, Handy-Menü, Streckenlinks und Offline-Neustart. Pull Requests werden geprüft; Pages wird erst nach erfolgreichen Tests veröffentlicht.
 
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,

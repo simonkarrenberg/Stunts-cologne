@@ -47,6 +47,13 @@
     const m = part(g, new THREE.ShapeGeometry(s, 6), color || DARK, x, y, z);
     m.rotation.y = rotation || 0; return m;
   }
+  function pointed(g, w, h, x, y, z, color, rotation) {
+    const s = new THREE.Shape();
+    s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w / 2, h * 0.66);
+    s.lineTo(0, h); s.lineTo(-w / 2, h * 0.66); s.closePath();
+    const m = part(g, new THREE.ShapeGeometry(s), color || DARK, x, y, z);
+    m.rotation.y = rotation || 0; return m;
+  }
   function window(g, w, h, x, y, z, rotation) {
     const m = box(g, w, h, 0.14, DARK, x, y, z); m.rotation.y = rotation || 0; return m;
   }
@@ -358,5 +365,167 @@
     part(g, new THREE.SphereGeometry(0.6, 8, 6), 0x425c50, 13, 4.4, 17.9);
     for (const x of [12.5, 13.5]) box(g, 0.4, 1.7, 0.5, 0x425c50, x, 1.2, 19);
     box(g, 1.6, 0.22, 1, 0x6c7d62, 13, 2.7, 19);
+  });
+
+  // Neusser Platz: neo-Gothic hall and a deliberately spireless square belfry.
+  register('agnes', 'St. Agnes · Neusser Platz', 'https://www.koelntourismus.de/kunst-kultur/sehenswuerdigkeiten/detail/st-agnes', (g) => {
+    const stone = 0xd0c6ae, red = 0xa7725e;
+    box(g, 24, 24, 48, stone, 0, 12, -2); roof(g, 25, 10, 49, SLATE, 0, 24, -2);
+    box(g, 39, 21, 17, stone, 0, 10.5, -13);
+    const transept = roof(g, 18, 9, 40, SLATE, 0, 21, -13); transept.rotation.y = Math.PI / 2;
+    cyl(g, 10.5, 10.5, 22, stone, 0, 11, -25, 8); cone(g, 11.2, 10, SLATE, 0, 27, -25, 8);
+    for (const side of [-1, 1]) for (const z of [-20, -8, 4, 16]) {
+      pointed(g, 3.7, 12, side * 12.06, 7, z, DARK, side * Math.PI / 2);
+      box(g, 1, 23, 1.7, red, side * 12.25, 11.5, z + 3.8);
+    }
+    box(g, 14, 49, 14, stone, 0, 24.5, 23);
+    for (const y of [15, 29, 46.5, 49]) cornice(g, 14, 14, y, red, 0, 23);
+    for (let side = 0; side < 4; side++) {
+      const a = side * Math.PI / 2;
+      for (const dx of [-3, 3]) {
+        const x = Math.sin(a) * 7.1 + Math.cos(a) * dx, z = 23 + Math.cos(a) * 7.1 - Math.sin(a) * dx;
+        pointed(g, 3.4, 13, x, 32, z, DARK, a);
+      }
+      pointed(g, 3, 9, Math.sin(a) * 7.15, 18, 23 + Math.cos(a) * 7.15, DARK, a);
+    }
+    // Open-looking parapet and four little pinnacles, never a generic steeple.
+    box(g, 12, 0.5, 12, SLATE, 0, 48.7, 23);
+    for (const x of [-6, 6]) for (const z of [17, 29]) {
+      box(g, 1.6, 5, 1.6, stone, x, 50.5, z); cone(g, 1.2, 2.4, red, x, 54.2, z, 4);
+    }
+    for (const x of [-4, 0, 4]) box(g, 1, 1.6, 0.8, stone, x, 49.9, 30);
+    pointed(g, 5.2, 10, 0, 0, 30.15); sign(g, 'ST. AGNES', 12, 0, 12.4, 30.25);
+  });
+
+  // Ten-sided central body, long choir and paired eastern towers—not a generic basilica.
+  register('gereon', 'St. Gereon · Dekagon', 'https://www.stgereon.de/kirchen/st-gereon/', (g) => {
+    const pale = 0xc9b99d, red = 0x9d6b51;
+    box(g, 19, 20, 32, pale, 0, 10, -25); roof(g, 20, 9, 33, 0x825b49, 0, 20, -25);
+    apse(g, 9.5, 21, 0, -41, pale, 0x825b49);
+    for (const x of [-12, 12]) tower(g, 7.5, 33, x, -36, pale, SLATE, 13);
+    // Rotate the polygon geometry before stretching its north/south axis. An
+    // object rotation would turn that stretch too and bury the facade windows.
+    const base = cyl(g, 18, 18, 28, pale, 0, 14, 3, 10); base.geometry.rotateY(Math.PI / 10); base.scale.z = 1.13;
+    for (const y of [10, 20, 28]) {
+      const band = cyl(g, 18.25, 18.25, 0.65, red, 0, y, 3, 10); band.geometry.rotateY(Math.PI / 10); band.scale.z = 1.13;
+    }
+    const cap = cyl(g, 9, 19, 9, SLATE, 0, 32.5, 3, 10); cap.geometry.rotateY(Math.PI / 10); cap.scale.z = 1.13;
+    const top = cone(g, 9, 6, SLATE, 0, 40, 3, 10); top.geometry.rotateY(Math.PI / 10); top.scale.z = 1.13;
+    cross(g, 0, 44, 3);
+    for (let i = 0; i < 10; i++) {
+      const a = i * Math.PI / 5, radius = 18 * Math.cos(Math.PI / 10) + 0.12;
+      const x = Math.sin(a) * radius, z = 3 + Math.cos(a) * radius * 1.13;
+      // Facade normals differ from radial angles on the elongated decagon.
+      const facing = Math.atan2(Math.sin(a) * 1.13, Math.cos(a));
+      arch(g, 3.4, 8, x, 17.8, z, DARK, facing);
+      arch(g, 3, 5.4, x, 3, z, DARK, facing);
+      const buttress = box(g, 0.9, 28, 1.3, red, Math.sin(a + Math.PI / 10) * 18.2, 14, 3 + Math.cos(a + Math.PI / 10) * 20.55);
+      buttress.rotation.y = a + Math.PI / 10;
+    }
+    box(g, 16, 8, 9, pale, 0, 4, 23); roof(g, 17, 4, 10, 0x825b49, 0, 8, 23);
+    arch(g, 4.7, 6.4, 0, 0, 27.6); sign(g, 'ST. GEREON', 14, 0, 9, 28.1);
+  });
+
+  // Roonstraße: neo-Romanesque rose window, pyramidal roof and slender corner turrets.
+  register('synagoge', 'Synagoge Roonstraße', 'https://willkommen.koelntourismus.de/sehenswuerdigkeiten/synagoge', (g) => {
+    const stone = 0xc4b89e, trim = 0x9e8b70, roofColor = 0x657069;
+    box(g, 39, 21, 36, stone, 0, 10.5, -1); cornice(g, 39, 36, 20.7, trim, 0, -1);
+    box(g, 25, 8, 25, stone, 0, 25, -3);
+    const cap = cone(g, 21, 17, roofColor, 0, 37.5, -3, 4); cap.rotation.y = Math.PI / 4;
+    roof(g, 31, 11, 1.3, stone, 0, 21, 17.6);
+    for (const x of [-17, 17]) {
+      cyl(g, 2.5, 2.5, 29, stone, x, 14.5, 17, 8);
+      for (const y of [10, 20, 28]) cyl(g, 2.7, 2.7, 0.6, trim, x, y, 17, 8);
+      cone(g, 3.2, 8, roofColor, x, 33, 17, 8); arch(g, 1.3, 5, x, 21, 19.55);
+    }
+    for (const x of [-7, 0, 7]) {
+      arch(g, 5, 8, x, 0.5, 18.4);
+      for (const dx of [-2.6, 2.6]) cyl(g, 0.4, 0.4, 5.5, trim, x + dx, 3.25, 18.6, 8);
+    }
+    // Round rose window with six-point tracery drawn as two original triangle outlines.
+    const pane = cyl(g, 5.1, 5.1, 0.15, 0x496c76, 0, 18, 18.45, 18); pane.rotation.x = Math.PI / 2;
+    part(g, new THREE.TorusGeometry(5.4, 0.55, 5, 18), trim, 0, 18, 18.6);
+    for (const flip of [0, Math.PI]) for (let i = 0; i < 3; i++) {
+      const a = i * Math.PI * 2 / 3 + flip, b = (i + 1) * Math.PI * 2 / 3 + flip;
+      const x1 = Math.sin(a) * 4.4, y1 = Math.cos(a) * 4.4, x2 = Math.sin(b) * 4.4, y2 = Math.cos(b) * 4.4;
+      const bar = box(g, Math.hypot(x2 - x1, y2 - y1), 0.24, 0.18, LIGHT, (x1 + x2) / 2, 18 + (y1 + y2) / 2, 18.85);
+      bar.rotation.z = Math.atan2(y2 - y1, x2 - x1);
+    }
+    for (const side of [-1, 1]) for (const z of [-12, -3, 6]) arch(g, 3, 9, side * 19.56, 8, z, DARK, side * Math.PI / 2);
+    sign(g, 'SYNAGOGE · ROONSTRASSE', 26, 0, 10.4, 18.9);
+    for (let i = 0; i < 3; i++) box(g, 29, 0.4, 1.3, LIGHT, 0, 0.2 + i * 0.4, 22 - i * 1.3);
+  });
+
+  // The Neumarkt legend is told by two white horse heads peering from high windows.
+  register('richmodisturm', 'Richmodisturm · Zwei Päädsköpp', 'https://www.kuladig.de/Objektansicht/KLD-298065', (g) => {
+    const brick = 0xa56e50, cream = 0xd3bc94;
+    box(g, 17, 19, 14, 0xc4ae90, -7, 9.5, -3); roof(g, 18, 7, 15, 0x54615a, -7, 19, -3);
+    const shaft = cyl(g, 4.9, 5.3, 32, brick, 0, 16, 5, 8); shaft.rotation.y = Math.PI / 8;
+    for (const y of [6, 12, 18, 23, 30.5]) {
+      const band = cyl(g, 5.2, 5.2, 0.6, cream, 0, y, 5, 8); band.rotation.y = Math.PI / 8;
+    }
+    const cap = cone(g, 5.6, 11, 0x4f665b, 0, 37.5, 5, 8); cap.rotation.y = Math.PI / 8;
+    cyl(g, 0.13, 0.13, 3, 0x6d785d, 0, 44, 5, 6);
+    for (const a of [0, Math.PI / 4, -Math.PI / 4]) for (const y of [8, 15, 24]) {
+      arch(g, 2.2, 4.2, Math.sin(a) * 4.91, y, 5 + Math.cos(a) * 4.91, DARK, a);
+    }
+    for (const a of [0, Math.PI / 4]) {
+      const horse = new THREE.Group(); horse.name = 'Richmodis-Pferdekopf';
+      horse.position.set(Math.sin(a) * 4.95, 25, 5 + Math.cos(a) * 4.95); horse.rotation.y = a;
+      const neck = box(horse, 1, 1.9, 0.9, 0xeee9d7, 0, 0.35, 0.2); neck.rotation.x = -0.25;
+      box(horse, 1.15, 1, 1.7, 0xeee9d7, 0, 1.45, 0.65);
+      box(horse, 1.05, 0.7, 0.75, 0xded7c5, 0, 1.14, 1.7);
+      for (const x of [-0.35, 0.35]) cone(horse, 0.22, 0.8, 0xeee9d7, x, 2.3, 0.1, 4);
+      for (const x of [-0.6, 0.6]) box(horse, 0.1, 0.2, 0.2, DARK, x, 1.65, 0.7);
+      box(horse, 0.24, 1.6, 0.4, 0xc4bcab, 0, 0.8, -0.26); g.add(horse);
+    }
+    for (const x of [-12, -7]) for (const y of [5, 11, 16]) window(g, 2.4, 3, x, y, 4.1);
+    arch(g, 3.3, 5.4, 0, 0, 10.1); sign(g, 'RICHMODISTURM', 13, -4, 4.3, 10.25);
+  });
+
+  // Historic Tor II on Aachener Straße, not today's principal Piusstraße entrance.
+  register('melaten', 'Melaten · Historisches Tor II', 'https://www.stadt-koeln.de/mediaasset/bilder/gruen/pdfua_stk_67_melaten_einzelseiten_231124.pdf', (g) => {
+    const stone = 0xb8a88f, trim = 0xd4c5a5;
+    for (const x of [-15, 15]) { box(g, 19, 5.2, 1.8, stone, x, 2.6, 7); box(g, 19.4, 0.45, 2.2, trim, x, 5.3, 7); }
+    for (const x of [-5.5, 5.5]) {
+      box(g, 3, 8, 3, stone, x, 4, 7); box(g, 3.4, 0.6, 3.5, trim, x, 0.4, 7);
+      box(g, 3.7, 0.5, 3.5, trim, x, 7.7, 7);
+      for (const dx of [-0.9, 0.9]) box(g, 0.45, 6.7, 0.35, trim, x + dx, 4.1, 8.6);
+    }
+    box(g, 14.4, 2.1, 3.4, trim, 0, 8.8, 7); box(g, 15.2, 0.45, 3.8, stone, 0, 10, 7);
+    roof(g, 15, 3.2, 3.6, stone, 0, 10.2, 7);
+    sign(g, 'FUNERIBUS AGRIPPINENSIUM SACER LOCUS', 13.5, 0, 8.7, 8.8, '#716857');
+    // Fine iron gates leave the archway visually open onto a short tree-lined path.
+    for (let x = -3.8; x <= 3.8; x += 0.76) box(g, 0.12, 6, 0.12, 0x35463e, x, 3, 7);
+    for (const y of [1.5, 4.2, 5.6]) box(g, 8.2, 0.12, 0.14, 0x35463e, 0, y, 7);
+    box(g, 10, 0.14, 27, 0xb8b39a, 0, 0.08, -7.5);
+    for (const x of [-8.5, 8.5]) for (const z of [-2, -12, -21]) {
+      cyl(g, 0.5, 0.75, 7, 0x6c604b, x, 3.5, z, 7);
+      const crown = part(g, new THREE.IcosahedronGeometry(4.6, 0), 0x627d46, x, 9.2, z); crown.scale.y = 1.25;
+    }
+    sign(g, 'MELATEN · TOR II', 12, -16, 3.8, 8.05, '#596648');
+  });
+
+  // The surviving four-storey mill tower has no sails: a round stone landmark on a green mound.
+  register('bottmuehle', 'Bottmühle · Severinswall', 'https://www.kuladig.de/Objektansicht/O-69809-20130716-3', (g) => {
+    const stone = 0x7f8074, trim = 0x9b947d;
+    cyl(g, 14, 16, 3.4, 0x77776a, 0, 1.7, 0, 16);
+    cyl(g, 12.4, 14.3, 2.5, 0x617a40, 0, 4.1, 0, 16);
+    cyl(g, 7.4, 8, 24, stone, 0, 17.2, 0, 16);
+    for (const y of [6, 12, 18, 24, 29.3]) cyl(g, 8.15 - (y - 6) * 0.025, 8.15 - (y - 6) * 0.025, 0.5, trim, 0, y, 0, 16);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      for (const y of [8, 14, 20, 25]) {
+        const r = 8.02 - (y - 6) * 0.025;
+        arch(g, y === 8 ? 2.4 : 1.5, y === 8 ? 3.4 : 2.5, Math.sin(a) * r, y - 1.3, Math.cos(a) * r, DARK, a);
+      }
+      const tooth = box(g, 2.1, 1.5, 1.1, stone, Math.sin(a) * 7.2, 30.1, Math.cos(a) * 7.2); tooth.rotation.y = a;
+    }
+    cyl(g, 6.8, 6.8, 0.2, 0x4c564b, 0, 29.1, 0, 16);
+    // A steep little access stair and railing explain its raised position at the wall.
+    for (let i = 0; i < 7; i++) box(g, 3, 0.75, 1.1, trim, 0, 0.375 + i * 0.75, 15.4 - i * 1.1);
+    for (const x of [-1.8, 1.8]) for (let i = 0; i < 4; i++) box(g, 0.13, 1.7, 0.13, DARK, x, 1.4 + i * 1.5, 14.8 - i * 2.2);
+    cyl(g, 0.12, 0.12, 6, 0x9a9c8b, 0, 32.4, 0, 6); box(g, 2.4, 1.4, 0.08, 0xc4483b, 1.2, 34.5, 0);
+    sign(g, 'BOTTMÜHLE', 11, 0, 3.1, 15.1, '#566847');
   });
 })(window);

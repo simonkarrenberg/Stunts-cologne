@@ -87,7 +87,7 @@ module.exports = async function () {
     await page.goto(url, { waitUntil: 'load' });
     await ready(page);
     assert(await page.evaluate(() => typeof window.Shortcuts.buildRoutes === 'function' && typeof window.World.buildShortcutRoads === 'function'
-      && ['aposteln', 'guerzenich', 'deutzbahnhof', 'altstmaternus', 'neptunbad', 'unikoeln'].every((id) => typeof window.World.P[id] === 'function')), 'offline reload must initialize shortcut and landmark constructors');
+      && ['aposteln', 'guerzenich', 'deutzbahnhof', 'altstmaternus', 'neptunbad', 'unikoeln', 'agnes', 'gereon', 'synagoge', 'richmodisturm', 'melaten', 'bottmuehle'].every((id) => typeof window.World.P[id] === 'function')), 'offline reload must initialize shortcut and landmark constructors, including the latest heritage expansion');
     lines.push('Offline reload: service worker serves the menu and all new city modules');
     assert.deepStrictEqual(errors, [], 'no browser exceptions');
     return { name: 'menu-links', ok: true, lines };

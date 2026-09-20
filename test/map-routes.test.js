@@ -7,7 +7,7 @@ module.exports = async function () {
   const port = 8900 + Math.floor(Math.random() * 90), server = serve(port);
   let browser;
   const errors = [], lines = [], landmarks = new Set();
-  let landmarkPlacements = 0, clearanceTotal = 0;
+  let landmarkPlacements = 0, clearanceTotal = 0, mainRoadClearanceTotal = 0;
   try {
     browser = await launch();
     const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
@@ -24,11 +24,16 @@ module.exports = async function () {
         // world's placement flags and clearance routines. A retained model
         // must have its own footprint and an alley must be physically clear.
         group.updateMatrixWorld(true);
-        const ids = [], footprints = [], overlaps = [], obstructions = [];
+        const ids = [], footprints = [], overlaps = [], obstructions = [], mainRoadObstructions = [];
+        const authoredCounts = {}, retainedCounts = {};
+        for (const prop of track.def.props || []) if (World.landmarkCatalog[prop.type]) {
+          authoredCounts[prop.type] = (authoredCounts[prop.type] || 0) + 1;
+        }
         const point = new THREE.Vector3(), corner = new THREE.Vector3();
         group.traverse((obj) => {
           if (!obj.userData.landmarkId) return;
           ids.push(obj.userData.landmarkId);
+          retainedCounts[obj.userData.landmarkId] = (retainedCounts[obj.userData.landmarkId] || 0) + 1;
           const inverse = new THREE.Matrix4().copy(obj.matrixWorld).invert();
           const bounds = new THREE.Box3();
           obj.traverse((mesh) => {
@@ -75,10 +80,13 @@ module.exports = async function () {
             if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
             const local = mesh.geometry.boundingBox;
             const world = local.clone().applyMatrix4(mesh.matrixWorld);
-            if (world.max.y < minY || world.min.y > maxY) return;
+            const landmark = child.userData.landmarkId;
+            // Keep upper landmark geometry too: the main track also contains
+            // raised roads, not just the ground-level shortcut corridors.
+            if (!landmark && (world.max.y < minY || world.min.y > maxY)) return;
             const entry = { local, world, inverse: new THREE.Matrix4().copy(mesh.matrixWorld).invert(),
               label: child.userData.landmarkId || child.userData.kind || child.userData.type || mesh.geometry.type,
-              owner: child.uuid };
+              owner: child.uuid, landmark };
             for (let x = Math.floor(world.min.x / cell); x <= Math.floor(world.max.x / cell); x++) {
               for (let z = Math.floor(world.min.z / cell); z <= Math.floor(world.max.z / cell); z++) {
                 const key = x + ',' + z;
@@ -104,12 +112,34 @@ module.exports = async function () {
             obstructions.push({ route: route.id, object: entry.label, metre: Math.round(sample.s), lat, height });
           }
         }
-        window.__mapAudit[track.def.id] = { ids: [...new Set(ids)], overlaps, obstructions, clearanceProbes };
+        const mainSeen = new Set();
+        let mainRoadClearanceProbes = 0;
+        for (let i = 0; i < track.samples.length; i += 2) {
+          const sample = track.samples[i];
+          for (const lat of [-4, 0, 4]) for (const height of [0.45, 1.15]) {
+            point.set(sample.p.x + sample.B.x * lat + sample.N.x * height,
+              sample.p.y + sample.B.y * lat + sample.N.y * height,
+              sample.p.z + sample.B.z * lat + sample.N.z * height);
+            mainRoadClearanceProbes++;
+            const nearby = grid.get(Math.floor(point.x / cell) + ',' + Math.floor(point.z / cell)) || [];
+            for (const entry of nearby) {
+              if (!entry.landmark || !entry.world.containsPoint(point)) continue;
+              corner.copy(point).applyMatrix4(entry.inverse);
+              if (!entry.local.containsPoint(corner) || mainSeen.has(entry.owner)) continue;
+              mainSeen.add(entry.owner);
+              mainRoadObstructions.push({ object: entry.landmark, metre: Math.round(sample.s), lat, height });
+            }
+          }
+        }
+        window.__mapAudit[track.def.id] = { ids: [...new Set(ids)], authoredCounts, retainedCounts,
+          placements: ids.length, overlaps, obstructions, clearanceProbes, mainRoadObstructions, mainRoadClearanceProbes };
       };
     });
     await page.goto(`http://localhost:${port}/`);
     await page.waitForFunction(() => typeof window.STUNTS_ROUTES === 'function' && typeof window.STUNTS_DRIVE_STEPS === 'function', undefined, { timeout: 60000 });
     const tracks = await page.evaluate(() => window.GameData.TRACKS.slice().sort((a, b) => (a.order || 9) - (b.order || 9)).map((d) => ({ id: d.id, name: d.name, routes: d.shortcuts.length })));
+    const authoredIds = await page.evaluate(() => [...new Set(GameData.TRACKS.flatMap((d) => d.props || [])
+      .filter((p) => World.landmarkCatalog[p.type]).map((p) => p.type))].sort());
     const which = process.env.TRACKS ? process.env.TRACKS.split(',').map(Number) : tracks.map((_, i) => i);
     let resetChecks = 0, replayChecked = false;
 
@@ -145,11 +175,15 @@ module.exports = async function () {
       const audit = await page.evaluate((id) => window.__mapAudit[id], track.id);
       const ids = audit && audit.ids;
       assert(ids && ids.length, track.name + ': a new real Cologne landmark must survive scenery placement');
+      assert.deepStrictEqual(audit.retainedCounts, audit.authoredCounts, track.name + ': every authored landmark placement must survive, including repeated models');
       assert.deepStrictEqual(audit.overlaps, [], track.name + ': real landmark footprints must not overlap');
       assert.deepStrictEqual(audit.obstructions, [], track.name + ': alley center and both driving lanes must clear static scenery at car height');
+      assert.deepStrictEqual(audit.mainRoadObstructions, [], track.name + ': real landmarks must not obstruct the main road at car height');
       assert(audit.clearanceProbes >= 100, track.name + ': clearance must be inspected throughout every alley');
+      assert(audit.mainRoadClearanceProbes >= 1000, track.name + ': landmark clearance must be inspected throughout the main road');
       ids.forEach((id) => landmarks.add(id));
-      landmarkPlacements += ids.length; clearanceTotal += audit.clearanceProbes;
+      landmarkPlacements += audit.placements; clearanceTotal += audit.clearanceProbes;
+      mainRoadClearanceTotal += audit.mainRoadClearanceProbes;
       let replaySample = null;
       for (const route of routes) {
         const entry = await enter(route);
@@ -214,13 +248,13 @@ module.exports = async function () {
           await page.keyboard.press('Escape');
         }
       }
-      lines.push(track.name + ': ' + routes.length + ' keyboard entries, complete traversals and rejoins; ' + ids.length + ' separate landmarks; ' + audit.clearanceProbes + ' clear car-height probes');
+      lines.push(track.name + ': ' + routes.length + ' keyboard entries, complete traversals and rejoins; ' + audit.placements + ' retained landmark placements; ' + audit.clearanceProbes + ' alley and ' + audit.mainRoadClearanceProbes + ' main-road clear car-height probes');
       console.log('   ' + lines[lines.length - 1]);
       await page.keyboard.press('Escape');
       assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'menu', 10000), 'return to menu');
     }
-    if (!process.env.TRACKS) assert(landmarks.size >= 15, 'the maps must contain a substantial variety of new real landmarks');
-    lines.push(landmarks.size + ' distinct Cologne landmarks in ' + landmarkPlacements + ' separate placements; ' + clearanceTotal + ' clear car-height probes; ' + resetChecks + ' stable branch resets' + (replayChecked ? '; saved ghost route and recorded branch replay checked' : ''));
+    if (!process.env.TRACKS) assert.deepStrictEqual([...landmarks].sort(), authoredIds, 'every authored landmark model must remain present across the maps');
+    lines.push(landmarks.size + ' distinct Cologne landmarks in ' + landmarkPlacements + ' separate placements; ' + clearanceTotal + ' alley and ' + mainRoadClearanceTotal + ' main-road clear car-height probes; ' + resetChecks + ' stable branch resets' + (replayChecked ? '; saved ghost route and recorded branch replay checked' : ''));
     assert.deepStrictEqual(errors, [], 'no browser exceptions');
     return { name: 'map-routes', ok: true, lines };
   } finally {
