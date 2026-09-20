@@ -1,5 +1,27 @@
 # KÖLLE 4D — Chicago am Rhein
 
+## Mehr Kölle: Bauwerke und Abkürzungen
+
+17 zusätzliche, eigens modellierte Kölner Bauwerke stehen jetzt in den passenden Veedeln. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Insgesamt ergänzen 37 Wahrzeichen-Platzierungen und weitere Veedelsdetails die zehn Karten. Die Gebäude haben eigene Silhouetten, Fassaden und Namensschilder; die Architekturquellen stehen im Katalog in `js/landmarks.js`.
+
+Auf allen zehn Strecken gibt es zusammen 17 **fahrbare Abkürzungen**: unter anderem Sartory-Hinterhof, Hansaring-Schlupf und die Gassen rund um die Altstadt. Grüne Schilder kündigen die Einfahrt an, grüne Linien zeigen den Weg auf der Straße und der Minikarte. Vor dem Schild auf die angezeigte Straßenseite einordnen und in der schmalen Gasse vom Gas gehen. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie auf der Hauptstrecke. Die Gassen sparen je nach Kurve einige Meter; die weißen Straßen bleiben immer befahrbar. Einmal pro Gasse und Runde gibt es einen zusätzlichen Deckel-Strich. Rivalen bleiben auf der Hauptstrecke.
+
+Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten. Runden, Platzierung, Geister und Replays berücksichtigen den gewählten Weg. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude und Wasser werden auch von diesen Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Abkürzungen sind Spielstrecken, keine realen Verkehrswege.
+
+**JETZ FAHREN** bleibt im Menü auf Rechner und Handy erreichbar. Die 3D-Stadt wird erst beim Rennstart gebaut; Streckenwechsel im Menü laden nur die Vorschau. Geteilte Baukasten-Strecken unterstützen auch Haus-Sprünge und Korkenzieher.
+
+### Entwicklung und Tests
+
+Zum lokalen Spielen `python3 -m http.server 8000` im Projektordner starten und `http://localhost:8000` öffnen. Für die Tests:
+
+```sh
+npm install
+npx playwright install chromium
+npm test
+```
+
+Die Geometrieprüfungen kontrollieren kürzere, kontinuierliche Nebenwege und schließen Kreuzungen mit anderen Streckenabschnitten aus. Die Browserprüfungen lenken über echte Tastatureingaben in alle 17 Einfahrten, fahren jede Gasse vollständig ab und prüfen Wiedereinfahrt, Rundenstand, Reset, Replay und gespeicherten Geist. Dazu kommen Botengang, Rennen, Handy-Menü, Streckenlinks und Offline-Neustart. Pull Requests werden geprüft; Pages wird erst nach erfolgreichen Tests veröffentlicht.
+
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,
 Nachtrennen in Kalk und der Rosenmontagszoch als Rennstrecke. Kommentiert vom

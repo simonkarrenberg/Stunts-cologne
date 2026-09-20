@@ -1321,6 +1321,8 @@
     THEME = theme;
     const g = new THREE.Group();
     const S = track.samples, n = S.length, L = track.length;
+    // Reserve both the circuit and every alley before placing or batching the city.
+    const streetSamples = S.concat(...(track.shortcuts || []).map((r) => r.samples.map((q) => Object.assign({ clearanceWidth: r.halfWidth + 1.2 }, q))));
     // ground
     const gtex = (theme.street === 'altstadt' ? T.cobble(theme.ground, 1) : theme.street && theme.street !== 'park' ? T.asphalt(theme.ground, 1) : T.grass(theme.ground, 1)).clone();
     gtex.needsUpdate = true; gtex.repeat.set(1500, 1500);
@@ -1358,44 +1360,149 @@
     }
     const SPANS = /^prop:(jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
     function clearTheStreets(group) {
-      const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.6; const lats = [-m, -m / 2, 0, m / 2, m];
-      const footprint = (obj) => {
+      const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.6;
+      const footprint = (obj, buildingOnly) => {
         obj.updateMatrixWorld(true); lb.makeEmpty(); inv.copy(obj.matrixWorld).invert();
-        obj.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox); tm.multiplyMatrices(inv, o.matrixWorld); tb.applyMatrix4(tm); lb.union(tb); });
+        obj.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); tb.copy(o.geometry.boundingBox); tm.multiplyMatrices(inv, o.matrixWorld); tb.applyMatrix4(tm); if (buildingOnly && tb.max.y < 4) return; lb.union(tb); });
         if (!isFinite(lb.min.x)) return null;
         const c = [[lb.min.x, lb.min.z], [lb.max.x, lb.min.z], [lb.max.x, lb.max.z], [lb.min.x, lb.max.z]].map(([x, z]) => new THREE.Vector3(x, 0, z).applyMatrix4(obj.matrixWorld));
         let minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9; for (const v of c) { minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x); minZ = Math.min(minZ, v.z); maxZ = Math.max(maxZ, v.z); }
         return { c, minX, maxX, minZ, maxZ, minY: obj.position.y + lb.min.y, maxY: obj.position.y + lb.max.y };
       };
       const inside = (c, px, pz) => { let sgn = 0; for (let k = 0; k < 4; k++) { const a = c[k], b = c[(k + 1) % 4]; const cr = (b.x - a.x) * (pz - a.z) - (b.z - a.z) * (px - a.x); if (Math.abs(cr) < 1e-6) continue; const s2 = cr > 0 ? 1 : -1; if (sgn === 0) sgn = s2; else if (s2 !== sgn) return false; } return true; };
-      const hit = (fp) => { for (let i = 0; i < n; i++) { const q = S[i]; if (q.p.x < fp.minX - m || q.p.x > fp.maxX + m || q.p.z < fp.minZ - m || q.p.z > fp.maxZ + m) continue; if (!(fp.maxY > q.p.y - 0.2 && fp.minY < q.p.y + 3.5)) continue; const bl = Math.hypot(q.B.x, q.B.z) || 1; for (const lat of lats) if (inside(fp.c, q.p.x + q.B.x / bl * lat, q.p.z + q.B.z / bl * lat)) return i; } return -1; };
+      // Test the whole corridor against each oriented footprint. A few lateral
+      // probes miss narrow posts, benches and trees between the probe lines.
+      const hit = (fp) => {
+        for (let i = 0; i < streetSamples.length; i++) {
+          const q = streetSamples[i], radius = q.clearanceWidth || m;
+          if (q.p.x < fp.minX - radius || q.p.x > fp.maxX + radius || q.p.z < fp.minZ - radius || q.p.z > fp.maxZ + radius) continue;
+          if (!(fp.maxY > q.p.y - 0.2 && fp.minY < q.p.y + 3.5)) continue;
+          if (inside(fp.c, q.p.x, q.p.z)) return i;
+          for (let k = 0; k < 4; k++) {
+            const a = fp.c[k], b = fp.c[(k + 1) % 4], dx = b.x - a.x, dz = b.z - a.z;
+            const u = Math.max(0, Math.min(1, ((q.p.x - a.x) * dx + (q.p.z - a.z) * dz) / Math.max(1e-9, dx * dx + dz * dz)));
+            if ((q.p.x - a.x - u * dx) ** 2 + (q.p.z - a.z - u * dz) ** 2 <= radius * radius) return i;
+          }
+        }
+        return -1;
+      };
       let moved = 0, removed = 0;
       for (const ch of group.children.slice()) {
         if (ch.userData.keep || ch.userData.sky || ch.userData.water) continue;
         const kind = ch.userData.kind || ''; if (SPANS.test(kind)) continue;
         let fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700) continue;
         let i = hit(fp); if (i < 0) continue;
-        const q = S[i]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const sgn = ((ch.position.x - q.p.x) * q.B.x + (ch.position.z - q.p.z) * q.B.z) >= 0 ? 1 : -1; const dx = q.B.x / bl * sgn, dz = q.B.z / bl * sgn;
+        const q = streetSamples[i]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const sgn = ((ch.position.x - q.p.x) * q.B.x + (ch.position.z - q.p.z) * q.B.z) >= 0 ? 1 : -1; const dx = q.B.x / bl * sgn, dz = q.B.z / bl * sgn;
         let pushed = 0;
-        while (i >= 0 && pushed < 24) { ch.position.x += dx * 2; ch.position.z += dz * 2; pushed += 2; fp = footprint(ch); i = hit(fp); }
+        const limit = ch.userData.landmarkName ? 140 : 32;
+        while (i >= 0 && pushed < limit) { ch.position.x += dx * 2; ch.position.z += dz * 2; pushed += 2; fp = footprint(ch); i = hit(fp); }
         if (i >= 0) { group.remove(ch); removed++; } else moved++;
       }
-      if (root.STUNTS_AUDIT) console.log('clearTheStreets: moved', moved, 'removed', removed);
+      // Street clearance can push two named buildings onto the same plot.
+      // Reserve existing architecture, then find the nearest clear plot for
+      // each new landmark without changing its orientation or district.
+      const overlaps = (a, b, margin) => {
+        if (a.maxX + margin <= b.minX || b.maxX + margin <= a.minX || a.maxZ + margin <= b.minZ || b.maxZ + margin <= a.minZ || a.maxY <= b.minY || b.maxY <= a.minY) return false;
+        for (const corners of [a.c, b.c]) for (let k = 0; k < 2; k++) {
+          const v = corners[k], w = corners[k + 1], ex = w.x - v.x, ez = w.z - v.z, len = Math.hypot(ex, ez) || 1;
+          const ax = -ez / len, az = ex / len;
+          let amin = Infinity, amax = -Infinity, bmin = Infinity, bmax = -Infinity;
+          for (const p of a.c) { const d = p.x * ax + p.z * az; amin = Math.min(amin, d); amax = Math.max(amax, d); }
+          for (const p of b.c) { const d = p.x * ax + p.z * az; bmin = Math.min(bmin, d); bmax = Math.max(bmax, d); }
+          if (amax + margin <= bmin || bmax + margin <= amin) return false;
+        }
+        return true;
+      };
+      const shifted = (fp, x, z) => ({ ...fp, c: fp.c.map((p) => new THREE.Vector3(p.x + x, p.y, p.z + z)), minX: fp.minX + x, maxX: fp.maxX + x, minZ: fp.minZ + z, maxZ: fp.maxZ + z });
+      const landmarks = group.children.filter((ch) => ch.userData.landmarkName);
+      const reserved = [];
+      for (const ch of group.children) {
+        const u = ch.userData, kind = u.kind || '';
+        if (u.landmarkName || !kind.startsWith('prop:') || u.keep || u.sky || u.water) continue;
+        if (SPANS.test(kind) && kind !== 'prop:dom' && kind !== 'prop:hbf') continue;
+        // Ignore the Domplatte, station platforms and other low surroundings
+        // when reserving a building; the structure itself owns the plot.
+        const fp = footprint(ch, true);
+        if (!fp || fp.maxY - fp.minY < 4) continue;
+        const width = fp.c[0].distanceTo(fp.c[1]), depth = fp.c[1].distanceTo(fp.c[2]);
+        if (width >= 15 && depth >= 15 && width < 700 && depth < 700) reserved.push(fp);
+      }
+      const landmarkPlots = []; let relocated = 0, engulfed = 0, unresolved = 0;
+      for (const ch of landmarks) {
+        const original = footprint(ch); if (!original) continue;
+        const available = (fp) => hit(fp) < 0 && !reserved.some((other) => overlaps(fp, other, 2));
+        let plot = original;
+        if (!available(plot)) {
+          const f = TB.frameAt(track, (ch.userData.at || 0) * L);
+          let ox = ch.position.x - f.p.x, oz = ch.position.z - f.p.z, ol = Math.hypot(ox, oz);
+          if (ol < 1) { ox = f.B.x; oz = f.B.z; ol = Math.hypot(ox, oz) || 1; }
+          ox /= ol; oz /= ol;
+          let found = null;
+          // Outward first, then both along-street directions. Expanding rings
+          // keep relocation local and deterministic, even on crowded circuits.
+          const angles = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8];
+          for (let radius = 10; radius <= 160 && !found; radius += 10) for (const step of angles) {
+            const a = step * Math.PI / 8, dx = (ox * Math.cos(a) - oz * Math.sin(a)) * radius, dz = (ox * Math.sin(a) + oz * Math.cos(a)) * radius;
+            const candidate = shifted(original, dx, dz);
+            if (available(candidate)) { found = { dx, dz, candidate }; break; }
+          }
+          if (found) { ch.position.x += found.dx; ch.position.z += found.dz; ch.updateMatrixWorld(true); plot = found.candidate; relocated++; }
+          else { unresolved++; console.warn('No clear landmark plot:', track.def.id, ch.userData.landmarkName); }
+        }
+        reserved.push(plot); landmarkPlots.push(plot);
+      }
+      // Procedural houses, trees and street furniture were generated before
+      // relocation. Clear only fillers that now intersect a landmark's plot.
+      for (const ch of group.children.slice()) {
+        const u = ch.userData;
+        if (u.landmarkName || u.keep || u.sky || u.water || (u.kind || '').startsWith('prop:')) continue;
+        const fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700 || fp.maxY < GROUND_Y + 0.3) continue;
+        if (landmarkPlots.some((plot) => overlaps(fp, plot, 1))) { group.remove(ch); engulfed++; }
+      }
+      // Water was clipped before the final buildings were moved. Give the
+      // occupied city plots dry ground too, while leaving the river beneath
+      // bridges and jump gaps intact. Nearby plot margins naturally join.
+      const waterCrossings = S.filter((q) => q.kind === 'gap' || q.kind === 'ramp' || q.kind === 'bridge');
+      const landAt = (x, z) => {
+        let occupied = false;
+        for (const fp of reserved) {
+          const margin = 7; // six-metre water tiles leave a small dry border
+          if (x < fp.minX - margin || x > fp.maxX + margin || z < fp.minZ - margin || z > fp.maxZ + margin) continue;
+          if (inside(fp.c, x, z)) { occupied = true; break; }
+          for (let k = 0; k < 4; k++) {
+            const a = fp.c[k], b = fp.c[(k + 1) % 4], dx = b.x - a.x, dz = b.z - a.z;
+            const u = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / Math.max(1e-9, dx * dx + dz * dz)));
+            if ((x - a.x - u * dx) ** 2 + (z - a.z - u * dz) ** 2 <= margin * margin) { occupied = true; break; }
+          }
+          if (occupied) break;
+        }
+        if (!occupied) return false;
+        for (let i = 0; i < waterCrossings.length; i += 2) {
+          const p = waterCrossings[i].p;
+          if ((p.x - x) ** 2 + (p.z - z) ** 2 < (ROAD_W + 2) ** 2) return false;
+        }
+        return true;
+      };
+      for (const ch of group.children) if (ch.userData.type === 'rhine' || ch.userData.type === 'rhineSide') clipWater(ch, landAt);
+      if (root.STUNTS_AUDIT) console.log('clearTheStreets:', { moved, removed, relocated, engulfed, unresolved });
     }
     // water never lies on a street: the plane is rebuilt from tiles, dropping every tile close to a
     // ground-level road sample (bridges, ramps and gaps keep their water underneath)
-    function clipWater(prop) {
+    function clipWater(prop, landAt) {
       prop.updateMatrixWorld(true);
       const R2 = (ROAD_W + 10) * (ROAD_W + 10); const wp = new THREE.Vector3();
       prop.traverse((m) => {
-        if (!m.userData.water || !m.geometry.parameters) return;
-        const w = m.geometry.parameters.width, l = m.geometry.parameters.height; const tile = 6;
+        if (!m.userData.water) return;
+        const dimensions = m.userData.waterGrid || m.geometry.parameters;
+        if (!dimensions || !Number.isFinite(dimensions.width) || !Number.isFinite(dimensions.height)) return;
+        const w = dimensions.width, l = dimensions.height; const tile = 6;
+        m.userData.waterGrid = { width: w, height: l };
         const nx = Math.ceil(w / tile), nz = Math.ceil(l / tile); const pos = [], uv = [], idx = []; let dropped = 0;
         for (let ix = 0; ix < nx; ix++) for (let iz = 0; iz < nz; iz++) {
           const x0 = -w / 2 + ix * tile, x1 = Math.min(w / 2, x0 + tile), y0 = -l / 2 + iz * tile, y1 = Math.min(l / 2, y0 + tile);
           wp.set((x0 + x1) / 2, (y0 + y1) / 2, 0).applyMatrix4(m.matrixWorld);
-          let near = false;
-          for (let i = 0; i < n; i += 2) { const q = S[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
+          let near = !!(landAt && landAt(wp.x, wp.z));
+          if (!near) for (let i = 0; i < streetSamples.length; i += 2) { const q = streetSamples[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
           if (near) { dropped++; continue; }
           const b = pos.length / 3; pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
           uv.push((x0 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y1 + l / 2) / l, (x0 + w / 2) / w, (y1 + l / 2) / l);
@@ -1438,7 +1545,7 @@
         pd.extent = ext;
       }
       const prop = fn(pd, theme);
-      place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : FACING.includes(pd.type));
+      place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : !!prop.userData.landmarkName || FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
       prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) prop.userData.story = pd.story; propList.push(prop);
@@ -1451,10 +1558,10 @@
     }
     // street fillers along the track
     const rnd = mulberry(1234 + track.def.id.length * 77);
-    const grid = S.map((s) => [s.p.x, s.p.z]);
-    function trackFree(x, z, minD, iSkip) { for (let i = 0; i < grid.length; i += 3) { if (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; } return true; }
+    const grid = streetSamples.map((s) => [s.p.x, s.p.z]);
+    function trackFree(x, z, minD, iSkip) { for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; } return true; }
     function freeAt(x, z, minD, iSkip) {
-      for (let i = 0; i < grid.length; i += 3) { if (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; }
+      for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; }
       for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < k.r * k.r) return false; }
       return true;
     }

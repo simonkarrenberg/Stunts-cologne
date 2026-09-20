@@ -44,6 +44,7 @@
       <h2>STRECKEN WÄHLEN</h2>
       <div id="trackList" class="trackList"></div>
       <p id="trackDesc" class="desc"></p>
+      <p id="trackRoutes" class="routeLegend"></p>
     </section>
     <section class="panel cars">
       <h2>WAGEN WÄHLEN</h2>
@@ -82,6 +83,7 @@
     <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE <kbd>E</kbd> AUS-/EINSTEIJEN</span>
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY · <a href="rechtliches.html">IMPRESSUM &amp; DATENSCHUTZ</a></span>
   </footer>
+  <div class="quickStart"><span id="quickTrack"></span><button id="quickStartBtn">JETZ FAHREN ↗</button></div>
 </div>
 
 <!-- ============ HINTERZIMMER ============ -->
@@ -134,6 +136,7 @@
 <!-- ============ HUD ============ -->
 <div id="hud" hidden>
   <div id="hudTrack" class="hudTitle"></div>
+  <div id="hudShortcut" hidden></div>
   <div class="hudStats">
     <div><span>ZEIT</span><b id="hudZeit">0:00.00</b></div>
     <div><span>RUNDE</span><b id="hudRunde">1 / 3</b></div>
@@ -215,9 +218,12 @@
 <script src="js/pixel.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/track.js"></script>
+<script src="js/shortcuts.js"></script>
 <script src="js/data.js"></script>
 <script src="js/cars.js"></script>
 <script src="js/world.js"></script>
+<script src="js/landmarks.js"></script>
+<script src="js/streets.js"></script>
 <script src="js/club.js"></script>
 <script src="js/game.js"></script>
 <script>

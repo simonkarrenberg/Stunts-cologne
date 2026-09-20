@@ -485,3 +485,15 @@ body.mobile #hudPrompt { bottom: 130px; font-size: 10px; padding: 10px 14px; } b
 .saveRow button { background: #0d1024; color: var(--cyan); border: 2px solid var(--line2); font-size: 7px; padding: 6px 8px; }
 
 .menuFooter .copy a { color: var(--cyan); text-decoration: none; border-bottom: 1px dotted var(--cyan); }
+
+/* Green routes are optional, narrower shortcuts; the white line remains the race circuit. */
+.routeLegend { color: #83e7b3; font-size: 8px; line-height: 1.8; margin: 10px 0 0; }
+#menu { padding-bottom: 72px; }
+#menu > .quickStart { position: fixed; z-index: 8; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px 18px max(12px, env(safe-area-inset-bottom)); background: #0b101dee; border-top: 2px solid #83e7b3; }
+#quickTrack { font-size: 9px; color: #83e7b3; }
+#quickStartBtn { border: 2px solid #ffdf66; background: #c1121f; color: white; padding: 12px 20px; font-size: 11px; }
+#hudShortcut { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); max-width: 46vw; padding: 8px 12px; border: 2px solid #83e7b3; background: #071c18e8; color: #baffd8; font-size: 10px; text-align: center; line-height: 1.7; }
+body.mobile #hudShortcut { top: 70px; max-width: 48vw; font-size: 7px; padding: 5px 8px; }
+body.mobile #quickTrack { font-size: 7px; max-width: 50vw; }
+body.mobile #quickStartBtn { font-size: 8px; padding: 9px 12px; }
+body.demo #hudShortcut, body.replaying #hudShortcut { display: none !important; }
