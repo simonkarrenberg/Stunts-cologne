@@ -207,7 +207,8 @@ module.exports = async function () {
         assert(result.state.player.s >= route.endS && result.state.player.s < route.endS + 3, route.name + ': rejoins at the correct distance');
         assert.strictEqual(result.state.player.lap, entry.player.lap, route.name + ': a shortcut must not award an extra lap');
         assert(result.maxJump < 2, route.name + ': movement must remain continuous, without teleporting to the exit');
-        assert(result.distance < route.endS - entry.player.s, route.name + ': world distance must be less than skipped race distance');
+        if ((route.type || 'cut') === 'cut') assert(result.distance < route.endS - entry.player.s, route.name + ': a cut must be shorter than the circuit it skips');
+        else assert(Math.abs(result.distance - route.length) < 12, route.name + ': the car drives the whole parallel street or bypass');
         assert(result.sample, route.name + ': route must contain actual intermediate driving frames');
         replaySample = replaySample || result.sample;
 

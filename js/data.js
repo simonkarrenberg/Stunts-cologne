@@ -896,6 +896,19 @@
     overtaken: ['Un fott is er. Wie ming Steuererklärung.', 'Der zieht an dir vorbei wie de Rhing bei Hochwasser.'],
     record: ['NEUE BESTZEIT! Dat schreib ich uff de Deckel.', 'Streckenrekord! Ich lass dich uff ne Bierdeckel drucke.'],
     turbo: ['Turbo! Jetz brennt de Asphalt.', 'Nitro, Jung! Dat riecht nach Kölsch un Benzin.'],
+    // real side streets: what dä Lange says when you come out at the other end ({street}, {m} metres)
+    routes: {
+      cut: ['{street}: {m} Meter jespart. Dat steht nit im Stadtplan, Jung.', 'Dörch de {street}! Dat weiß nur, wer he jebore es.', '{street} – de Taxifahrer nemme die och. Frach nit wieso.'],
+      parallel: ['{street}: e Stöck parallel, keiner hät jet jemerk.', 'Övver de {street}. Ander Stroß, selve Kölle.', '{street} – wat e Veedel. Un dä Ring hät dich nit jesinn.'],
+      bypass: ['{street}: kein Looping, dafür heile Karosserie.', 'Umjehung övver de {street}. Dä Kotflügel dank et dir.', '{street} statt Stunt. Och dat es Kölle: jet Jemütlich.'],
+      bump: ['Pass op, dä Marktstand! Die Äppel wore frisch.', 'Kölschkiste! Die zahls do, Jung.', 'Dat wor dä Stand vum Hermann. Dä vergiss dat nit.']
+    },
+    // LamboGina, the title song: dä Lange reacts to its sections (hook, riser, the long bass run)
+    lambo: {
+      drop: ['Jetz kütt dä Bass! Foß op et Jas – dä Turbo lädt doppelt.', 'Hür ens, dä Bass! Dat es LamboGina. Dä weiße Keil fährt mit.', 'Bass-Stroß! Jetz jeiht de Stadt in de Knie, un du jeihs in de Kurv.', 'Wenn dä Bass kütt, bliev et Pedal unge. Dat es Jesetz in Kölle.'],
+      rise: ['Et baut sich op … wie de Oper. Nur schneller.', 'Jleich kütt et. Janz ruhig. Nä – janz schnell!', 'Hörs de dat? Do kütt jet Jroßes. Wie Rosenmontag, nur lauter.'],
+      hook: ['LamboGina! Ganz Kölle singk mit.', 'Refrain! Dä Dom wippt, dat han ich jesinn.', 'Dat Leed. Dä Keil. Dä Ring. Mieh bruch keiner.']
+    },
     damage: ['Totalschaden. Heinzel schraubt dich nachts wieder zesamme.', 'Dat Auto is fott. Dat nächste is uff Deckel.'],
     events: [
       'Ne Taube op der Windschutzscheibe. Typisch Domplatte.',
@@ -954,6 +967,8 @@
       'RADIO KÖLLE: In Düsseldorf hät et jeregnet. Wie schade.',
       'RADIO KÖLLE: Neonlicht op der Ringe, Palmen am Rhing. Miami? Nä. Kölle.'
     ],
+    rotlicht: ['Rot jefahre! Dat Foto kütt per Post, mit Jrooß vum Ordnungsamt.', 'Dat wor rut. Nit Kirschrut – Knöllchen-Rut.', 'Ampel rut, Foß schwer. Dä Rotlichtblitzer freut sich.', 'Rut is och en Farv, Jung. En düür Farv.'],
+    gelb: ['Dat wor noch jelb. Dunkeljelb.', 'Kirschgrün! Jrad noch.', 'Jelb heiß: Jas. Steht su in keiner Fahrschul.'],
     blitzer: [
       'BLITZ! Dat Foto kütt an de Bierdeckel. Knöllchen: 60 Euro.',
       'BLITZ! Klüngel Tom regelt dat. Für 40 Euro un e Kölsch.',
@@ -971,6 +986,24 @@
     ],
     // place anecdotes: told when you pass a Brauhaus, Büdchen, Blitzer, church ... (the doorman knows every door in town)
     places: {
+      // the street scenes of js/veedel.js
+      nubbel: ['Dä Nubbel. Dä hängk övver dr Kneip, un an Aschermittwoch es hä schuld an allem. Praktisch.', 'Wer hät dat Kölsch jetrunke? Dä Nubbel. Wer hät dat Fenster kapott jemaat? Dä Nubbel. Ene jode Mann.'],
+      schunkeln: ['Schunkele! Links, rächs, links. Wer nit schunkelt, weed nit jesinn.', 'Die schunkele jetz seit elf Uhr elf. Dat es kein Tanz, dat es Ausdauersport.'],
+      dreigestirn: ['Dat Dreijestirn: Prinz, Bauer, Jungfrau. Die Jungfrau hät ene Bart. Dat es Tradition, kein Fehler.', 'Dä Bauer hät dä Stadtschlüssel. Ich hann ihn ens jefrog, ob hä och die vum Büdchen hät. Nä.'],
+      kamellewagen: ['Kamelle! Kopp enzeje, Jung. Die Bonbons kumme met hundert Sache.', 'Strüßjer un Kamelle. Wer zwei Tüte fängk, es Käpt\'n vum Veedel.'],
+      funkemariechen: ['Dat Mariechen flüch höher als dä Looping. Ohne Sicherheitsgurt.', 'Die Tanzjarde. Drei Mol die Woch Training, un dann ene Samstag lang lächle.'],
+      musikwagen: ['Dä Musikwagen spillt LamboGina. Hundertdressisch Schläch en dr Minutt – dat es ming Pulsfrequenz nachts um drei.', 'Wenn dä Bass kütt, wackelt dr Dom. Ich hann et jesinn.'],
+      spielhalle: ['Spielhalle. Do drin es et immer drei Uhr nachts, och mittags.', 'Hee hann ich ens ene Automat jesinn, dä hät jewonne. Dä Automat.'],
+      wettbuero: ['Wettbüro. Dat Pääd heiß „Morje Widder“. Dat heiß su, weil et nie jewinnt.', 'Die zwei do wette seit 1971 op dat selve Pääd. Et läuf immer noch.'],
+      tresorknacker: ['Dat do sin keine Möbelpacker. Möbelpacker trage kein Masken.', 'Dä Tresor es schwerer als ihr Jewesse. Ävver nur knapp.'],
+      paketdienst: ['Zweite Reih, Warnblinker an. Dat es dä Kölsche Parkplatz.', 'Dä Paketmann. Dä fährt mieh Kilometer als du, un hät kein Turbo.'],
+      baustelle: ['Baustell seit 1972. Fertig demnächst. Dat es dat Motto vun dr janze Stadt.', 'Dä Bagger hät Paus. Dä Bauarbeiter och. Dat Loch nit.'],
+      tauben: ['De Domtaube. Die hann hee mieh Rechte als du.', 'Fahr nit ze flöck, sons fliege die op. Un dann weiß mer nit, wo die landen.'],
+      strassenband: ['Kölsche Tön op dr Stroß. Wer do nit mitsingk, es nit vun hee.', 'Die Tuba es älter als dä Musiker. Un leuter.'],
+      jga: ['Junggesellinnenabschied. Die kumme us Bielefeld un jonn als Kölsche heim.', 'Team Braut. Dä Bräutijam es bestemmp och in dr Stadt. Im andere Veedel. Zom Glück.'],
+      rievkoochebud: ['Rievkooche met Appelkruut. Dat es kein Snack, dat es e Jrundrääch.', 'Drei Stöck, un dann nochens drei. Dä Magen vergiss dat nit.'],
+      autohausgina: ['Autohaus Gina. Do steiht dä weiße Keil. Dä Poster wor fröher övver mingem Bett.', 'LamboGina. Lurens, wie dä sich drieht. Wie ich, wenn dä Bass kütt.'],
+      lamboposter: ['LamboGina op dem Plakat. Dä weiße Keil vun Kölle, hundertdressisch BPM.', 'Dat Plakat hing fröher in jedem Jugendzemmer. Jetz hängk et am Ring.'],
       brauhaus: ['Brauhaus. Der Köbes bringt Kölsch, bis de ne Deckel op et Glas lächs. Ich hann noch nie ne Deckel jebruch.', 'Hee drin hann ich mieh Lück rausjeschmisse als reinjelosse. Wor e jutes Jeschäft.', 'Kölsch is dat einzije Bier, dat mer och versteht, wenn mer et nit trinkt.', 'Der Wirt schuldet mir noch e Kölsch vun 1974. Ich wart. Ich hann Zick.', 'Die stonn vor der Tür, weil se drinne nit mieh stonn künne.'],
       buedchen: ['Büdchen. Dat Kölner Wohnzimmer. Kölsch, Zigaretten, Klüngel. Alles zum Mitnehmen.', 'Am Büdchen hann ich mieh jelernt als op der Schull. Vor allem rechne. Met Deckel.', 'Der Büdchen-Mann kennt jeden. Ich kenn ihn. Also kenn ich jeden.'],
       blitzer: ['Blitzer. Der einzije in Kölle, der pünktlich is.', 'Dat Ding hät mieh Fotos vun mir als ming Mutter.', 'Blitzer? Hee? Dat hät mir keiner jesaht. Ich kenn jemand, der dat wegmacht.'],
@@ -1032,6 +1065,9 @@
       { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', stat: 'roofs', need: 1, color: 'r' },
       { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' },
       { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' },
+      { id: 'veedel', name: 'VEEDELSKENNER', desc: '10 echte Seitenstroße jefahre', stat: 'streets', need: 10, color: 'b' },
+      { id: 'jasse', name: 'EN DE JASSE VERSCHWUNDE', desc: '3× de Kripo in ner Seitenstroß abjehängt', stat: 'veedelEscapes', need: 3, color: 'g' },
+      { id: 'bass', name: 'LAMBOGINA', desc: '5× dä Bass vum Titelleed im Rennen', stat: 'bassRuns', need: 5, color: 'w' },
       { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', stat: 'boten', need: 3, color: 'o' },
       { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' }
     ],
@@ -1114,6 +1150,8 @@
       hit: ['Rammstoß! Dat jibt Punkte in Flensburg. Un ne Beule.', 'Der Peterwagen küsst dich. Ohne Bützje.', 'Kripo: „Anhalten!“ Du: „Später.“'],
       off: ['Ich hab met dem Kommissar telefoniert. Mer kenne uns vum Kegeln. Die Kripo dreht ab.', 'Klüngel, Jung. Der Peterwagen hät plötzlich Feierabend.', 'Dat wor der Hauptkommissar. Ich hann ihm 1974 an der Tür jeholfe. Erledigt.'],
       giveup: ['Kripo: „Schichtwechsel.“ Der Peterwagen dreht ab. Dat wor knapp.', 'Die Kripo hät dich verlore. Oder Hunger. Beides jut för dich.'],
+      lost: ['Wo es dä hin? Dä es en de Seitenstroß verschwunde!', 'Funkspruch: Verdächtijer im Veedel verloore. Schon widder.', 'Mer han en verloore. Dat Veedel hät zo vill Jasse.'],
+      follows: ['Die Kripo kütt hinger dir her en de Seitenstroß!', 'Blaulich im Rückspiejel – die fahre mit en et Veedel!', 'Dä Peterwagen biegt och av. Jas!'],
       caught: ['Die Kripo hät dich zerlegt. Der Blechschmied freut sich. Ming Schwager.']
     },
     // the doorman's bet before the race
@@ -1147,7 +1185,7 @@
       podium: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
       default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
     },
-    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.']
+    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DÄ POSTER HING ÖVVER DÄM BETT. JETZ HÄNGT HÄ OP DÄM RING.']
   };
 
   root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN };

@@ -23,7 +23,7 @@
   let racers = [], player = null, raceTime = 0, countdown = 0, phase = 'menu'; // menu | countdown | race | finished | editor
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
-  let radioTimer = 45, storyCool = 0, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0;
+  let radioTimer = 45, storyCool = 0, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0, signals = [];
   let stories = [], telefon = { ready: true, active: 0, used: 0 };
   let player2 = null, twoPlayer = false, camera2 = null;
   // Chicago am Rhein extras: beer-mat score, Kölsch pickups, the Kripo chase, the doorman's bet, the Kölsch-Cup
@@ -127,6 +127,72 @@
     if (audio.muted) { if (music.el) music.el.pause(); chipStop(); } else if (music.wanted) musicPlay();
   }
 
+  // ---------------- LamboGina: the title song drives the menu (jukebox, beat, the white wedge over the skyline) ----------------
+  const juke = { on: true, started: false, fx: null, ctx: null, carX: -40, lastDraw: 0, sec: '' };
+  try { juke.on = localStorage.getItem('stuntskoelle.jukebox') !== 'off' && localStorage.getItem('stuntskoelle.music') !== '0'; } catch (e) { /* ignore */ }
+  if (window.LamboBeat) window.LamboBeat.attach(() => ({ el: music.el, title: music.title }));
+  const beatNow = () => (window.LamboBeat ? window.LamboBeat.now() : { pulse: 0, energy: 0.3, section: 'a', playing: false, song: false, beat: 0, rise: 0 });
+  const SECTION_KOELSCH = { a: 'STROPH', b: 'REFRAIN', rise: 'JLEICH KÜTT ET …', drop: 'DÄ BASS!', end: 'US' };
+  // in the race the song is part of the drive: dä Lange calls the hook and the riser, and in the long bass run
+  // the player's turbo recharges twice as fast (only while the song really plays)
+  let bassRun = false, hookSaid = 0;
+  if (window.LamboBeat) window.LamboBeat.onSection((sec) => {
+    bassRun = sec === 'drop' && phase === 'race';
+    if (phase !== 'race' || !tuenn.lambo) return;
+    if (sec === 'drop') { sayMust(tuenn, pick(tuenn.lambo.drop), 3200); document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
+    else document.body.classList.remove('bassrun');
+    if (sec === 'rise') say(tuenn, pick(tuenn.lambo.rise), 2600);
+    if (sec === 'b' && raceTime - hookSaid > 60) { hookSaid = raceTime; say(tuenn, pick(tuenn.lambo.hook), 2400); }
+  });
+  function jukeStart() { if (!juke.on || phase !== 'menu' || music.muted || demo) return; juke.started = true; musicPlay(); updateJuke(); }
+  function jukeToggle() {
+    juke.on = !juke.on; try { localStorage.setItem('stuntskoelle.jukebox', juke.on ? 'on' : 'off'); } catch (e) { /* ignore */ }
+    if (juke.on) jukeStart(); else if (phase === 'menu') musicStop(); updateJuke();
+  }
+  function updateJuke() {
+    const b = $('#jukeBtn'); if (!b) return;
+    const st = beatNow(), playing = st.playing;
+    const title = music.el ? music.title.toUpperCase() : 'CHIPTUNE';
+    b.classList.toggle('on', playing); b.classList.toggle('drop', playing && st.section === 'drop');
+    b.querySelector('.jt').textContent = `${playing ? '■' : '▶'} ${title}${st.song ? ' · 130 BPM' : ''}`;
+    b.querySelector('.js').textContent = playing && st.song ? SECTION_KOELSCH[st.section] || '' : juke.on ? 'KLICK = MUSIK' : 'MUSIK AUS';
+  }
+  // the banner lives with the song: logo pumps on the kick, skyline windows flash, an equaliser dances on the Rhine,
+  // and in the hook and the bass run the white wedge (the LamboGina) races over the Hohenzollernbrücke
+  function menuFx(t) {
+    const cv = juke.fx; if (!cv || $('#menu').hidden) return;
+    if (t - juke.lastDraw < 33) return; const dt = Math.min(0.1, (t - juke.lastDraw) / 1000); juke.lastDraw = t;
+    const st = beatNow(), x = juke.ctx, W2 = cv.width, H2 = cv.height, live = st.playing;
+    const beat = live ? st.pulse : 0.15 + 0.1 * Math.sin(t / 600), energy = live ? st.energy : 0.3;
+    document.documentElement.style.setProperty('--beat', beat.toFixed(3));
+    document.documentElement.style.setProperty('--energy', energy.toFixed(3));
+    x.clearRect(0, 0, W2, H2);
+    // skyline windows flash on the kick
+    if (beat > 0.2) { x.fillStyle = `rgba(255,214,120,${(beat * 0.9).toFixed(2)})`; for (let i = 0; i < 40; i++) if ((i * 7 + (live ? st.beat : 0)) % 3 === 0) x.fillRect(i * 10 - 2 + (i % 3) * 2, 25 + (i * 5) % 7, 1, 1); }
+    // equaliser on the river
+    for (let i = 0; i < 24; i++) {
+      const k = live && st.song ? (parseInt(window.LamboBeat.song.kick[(st.beat + i) % 480] || '0', 10) / 9) : 0.4;
+      const h = Math.max(1, Math.round((i < 6 ? beat * 9 : k * 5 * energy + Math.abs(Math.sin(t / 180 + i * 1.7)) * 4 * energy)));
+      x.fillStyle = i % 3 === 0 ? '#ff2d95' : i % 3 === 1 ? '#00e5ff' : '#ffd23f'; x.fillRect(4 + i * 16, 47 - h, 10, h);
+    }
+    // the white wedge: in the hook (b), the bass run (drop) and, without music, every now and then
+    const go = live ? (st.section === 'b' || st.section === 'drop') : (Math.floor(t / 1000) % 24) < 5;
+    if (go || juke.carX > -40) {
+      juke.carX += dt * (st.section === 'drop' ? 170 : 110);
+      if (juke.carX > W2 + 40) juke.carX = go ? -40 : -41;
+      const cx = Math.round(juke.carX), cy = 31;
+      if (juke.carX > -40) {
+        for (let k = 1; k < 14; k++) { x.fillStyle = k % 2 ? 'rgba(255,45,149,0.5)' : 'rgba(0,229,255,0.45)'; x.fillRect(cx - k * 3, cy + 2 + (k % 2), 3, 1); } // neon trail
+        x.fillStyle = '#f4f4f2'; x.fillRect(cx, cy + 1, 14, 2); x.fillRect(cx + 3, cy, 8, 1); x.fillRect(cx + 5, cy - 1, 4, 1); // wedge
+        x.fillStyle = '#111'; x.fillRect(cx + 5, cy, 4, 1); x.fillRect(cx + 2, cy + 3, 2, 1); x.fillRect(cx + 10, cy + 3, 2, 1); // glass, wheels
+        x.fillStyle = '#ff2020'; x.fillRect(cx, cy + 1, 1, 1); x.fillStyle = '#fff6b0'; x.fillRect(cx + 14, cy + 1, 2, 1); // tail and head light
+      }
+    }
+    // the bass run: searchlights from behind the Dom
+    if (live && st.section === 'drop') { x.globalAlpha = 0.25 + 0.35 * beat; x.strokeStyle = '#ffffff'; x.lineWidth = 2; for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + Math.sin(t / 700 + k * 2.1) * 0.7; x.beginPath(); x.moveTo(175, 30); x.lineTo(175 + Math.cos(a) * 60, 30 + Math.sin(a) * 60); x.stroke(); } x.globalAlpha = 1; }
+    const lbl = (st.playing ? 'p' : 's') + st.section; if (lbl !== juke.sec) { juke.sec = lbl; updateJuke(); }
+  }
+
   // ---------------- voice: dä Lange & co. speak (Web Speech API) ----------------
   function voiceInit() {
     if (!('speechSynthesis' in window)) { voice.on = false; return; }
@@ -219,11 +285,30 @@
     return TB.frameAt(track, s);
   }
   function sameRoad(a, b) { return (a.shortcut == null ? -1 : a.shortcut) === (b.shortcut == null ? -1 : b.shortcut); }
+  // Real side streets: what kind of branch it is, and how tight its corners are (for the AI's braking)
+  const ROUTE_KIND = { cut: 'ABKÜRZUNG', parallel: 'PARALLELSTROSS', bypass: 'UMJEHUNG' };
+  const ROUTE_PERK = { koelsch: 'KÖLSCH', market: 'MARKT', parked: 'PARKER', shakeKripo: 'KRIPO-FREI', tram: 'KVB-GLEISE', brauhaus: 'BRAUHAUS', kiosk: 'BÜDCHEN' };
+  function routeLabel(q) { return `${q.street.toUpperCase()} · ${ROUTE_KIND[q.type] || 'SEITENSTROSS'}${q.surface === 'cobble' ? ' · KOPPSTEIN' : ''}`; }
+  function routePerks(q) { return (q.perks || []).map((k) => ROUTE_PERK[k]).filter(Boolean).join(' · '); }
+  function routeMaxCurv(q) { if (q._maxCurv == null) { let m = 0.001; for (const sm of q.samples) m = Math.max(m, Math.abs(sm.curv || 0)); q._maxCurv = m; } return q._maxCurv; }
+  // does this AI driver take the next branch this lap? Taxi Willi knows every Veedel, a damaged car avoids the stunts
+  function aiWantsRoute(r, q) {
+    const id = r.driver && r.driver.id, h = Math.abs(Math.sin((r.lap * 7.3 + q.index * 3.1 + (r.wobblePhase || 0)) * 12.9898)) % 1;
+    let p = q.type === 'cut' ? 0.35 : q.type === 'bypass' ? 0.18 : 0.12;
+    if (id === 'willi') p = q.type === 'cut' ? 0.95 : 0.6;
+    else if (id === 'tom') p = q.type === 'cut' ? 0.7 : 0.35;
+    else if (id === 'koebes' && (q.perks || []).includes('brauhaus')) p = 0.9;
+    if (q.type === 'bypass' && r.damage > 0.3) p = 0.9;
+    if ((q.perks || []).includes('market')) p *= 0.7;
+    return h < p;
+  }
+  // an obstacle on a branch (market stall, crate stack) at distance d along it, lateral lat, radius rad
+  function routeObstacles(q) { if (!q._obst) q._obst = window.RouteExtras ? window.RouteExtras.obstacles(q) : []; return q._obst; }
   function advanceRacer(r, distance) {
     let route = routeFor(r);
-    if (!route && distance > 0 && !r.isAI && !r.air && !r.finished) {
-      route = track.shortcuts.find((q) => r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8);
-      if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.safeS = route.resetS + 18; } // respawn() subtracts 18 m
+    if (!route && distance > 0 && (!r.isAI || r.routePlan != null) && !r.air && !r.finished) {
+      route = track.shortcuts.find((q) => r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8 && (!r.isAI || r.routePlan === q.index));
+      if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.safeS = route.resetS + 18; r.routePlan = null; if (r === player) enterRoute(route); } // respawn() subtracts 18 m
     }
     if (!route) { r.s += distance; return; }
     const scale = (route.endS - route.startS) / route.length;
@@ -235,9 +320,22 @@
       const key = r.lap + ':' + route.id;
       if (forward && r === player && !r.shortcutsDone.has(key)) {
         r.shortcutsDone.add(key); addDeckel(1); bumpStat('shortcuts');
-        say(tuenn, `${route.name}: ${Math.round(route.saved)} Meter jespart. Dat steht nit im Stadtplan, Jung.`, 2600);
+        const seen = getVeedel(); if (!seen.includes(route.id)) { seen.push(route.id); try { localStorage.setItem('stuntskoelle.veedel', JSON.stringify(seen)); } catch (e) { /* ignore */ } bumpStat('streets'); }
+        const lines = (tuenn.routes && tuenn.routes[route.type]) || ['{street}: dat steht nit im Stadtplan, Jung.'];
+        say(tuenn, pick(lines).replace('{street}', route.street).replace('{m}', Math.round(Math.abs(route.saved))), 2800);
       }
     } else r.s = next;
+  }
+  function getVeedel() { try { return JSON.parse(localStorage.getItem('stuntskoelle.veedel') || '[]'); } catch (e) { return []; } }
+  // the player turns into a side street: the Kripo follows when it is close behind, otherwise it loses you in the Veedel
+  function enterRoute(q) {
+    if (!kripo) return;
+    const L = track.length; let behind = player.s - kripo.s; if (behind > L / 2) behind -= L; if (behind < -L / 2) behind += L;
+    if ((q.perks || []).includes('shakeKripo') || behind > 45 || behind < -10) {
+      sayMust(KRIPO, pick(tuenn.kripo.lost || tuenn.kripo.giveup), 2800);
+      if (mission) { kripo.lostT = 9; kripo.s = ((kripo.s - 60) % L + L) % L; kripo.safeS = kripo.s; }
+      else endKripo('lost');
+    } else { kripo.routePlan = q.index; say(tuenn, pick(tuenn.kripo.follows || ['Die Kripo kütt hinger dir her!']), 2000); }
   }
   function makeRacer(carDef, mesh, driver, isAI) {
     return {
@@ -274,7 +372,7 @@
     // turbo
     const nitroK = 0.6 + car.nitro * 0.12;
     if (ctl.turbo && r.turbo > 0.02 && r.v > 5 && !r.air) { r.turboOn = true; r.turbo = Math.max(0, r.turbo - dt * 0.22); if (!r.isAI && !r.turboWasOn) say(tuenn, pick(tuenn.turbo), 1500); }
-    else { r.turboOn = false; if (r.v > 15) r.turbo = Math.min(1, r.turbo + dt * (0.035 + (Math.abs(r.slide || 0) > 1 ? 0.06 : 0)) * nitroK); }
+    else { r.turboOn = false; if (r.v > 15) r.turbo = Math.min(1, r.turbo + dt * (0.035 + (Math.abs(r.slide || 0) > 1 ? 0.06 : 0)) * nitroK * (bassRun && !r.isAI && phase === 'race' ? 2 : 1)); }
     r.turboWasOn = r.turboOn;
     const topMul = (1 - r.damage * 0.2) * (r.turboOn ? 1.18 : 1);
     if (!r.air) {
@@ -284,15 +382,23 @@
       r.v += a * dt;
       r.v = clamp(r.v, -8, car.top * topMul * (1.0 + (slope < 0 ? 0.15 : 0)));
       const bankAssist = Math.min(1, Math.abs(f.roll) / (25 * Math.PI / 180)) * 0.6;
-      const gripAcc = 24 * car.grip * (1 + bankAssist);
+      const onRoute = routeFor(r);
+      const gripAcc = 24 * car.grip * (1 + bankAssist) * (onRoute && onRoute.surface === 'cobble' ? 0.85 : 1); // Kopfsteinpflaster: less grip
       const need = f.curv * r.v * Math.abs(r.v);
       const centrifugal = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
       r.slide = centrifugal;
       const steerV = (ctl.steer + (r === player && promille > 0 ? Math.sin(raceTime * 4.5) * 0.45 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
       r.lat += (steerV + centrifugal) * dt;
       if (Math.abs(r.lat) > roadWidth) {
-        if (r.isAI) { r.lat = clamp(r.lat, -ROAD_W, ROAD_W); r.v *= 0.6; }
+        if (r.isAI) { r.lat = clamp(r.lat, -roadWidth, roadWidth); r.v *= 0.6; }
         else { crash(r, 'off'); return; }
+      }
+      if (onRoute) { // market stall and crate stacks in a Gasse: a bump that costs speed, and a word from the stall
+        const d = (r.s - onRoute.startS) * onRoute.length / (onRoute.endS - onRoute.startS);
+        for (const o of routeObstacles(onRoute)) if (Math.abs(d - o.d) < 1.8 && Math.abs(r.lat - o.lat) < o.r + 0.9 && !(r.bumpT > 0)) {
+          r.bumpT = 1.2; r.v *= 0.45; r.lat += (r.lat >= o.lat ? 1 : -1) * 0.8; if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.08); crashSound(); shake = 0.4; say(tuenn, pick(tuenn.routes && tuenn.routes.bump || ['Pass op, dä Maat!']), 2000); }
+        }
+        if (r.bumpT > 0) r.bumpT -= dt;
       }
       if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
       else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); } }
@@ -336,9 +442,15 @@
   }
 
   function aiControl(r, dt) {
-    if (routeFor(r)) {
-      const f = racerFrame(r), target = Math.min(r.car.top * 0.8, Math.sqrt(24 * r.car.grip / Math.max(0.001, Math.abs(f.curv))) * 0.85);
-      return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: clamp(-r.lat * 0.6, -1, 1), turbo: 0 };
+    const q0 = routeFor(r);
+    if (q0) {
+      const f = racerFrame(r), d = (r.s - q0.startS) * q0.length / (q0.endS - q0.startS);
+      // look ahead along the street for the tightest corner in the next 30 m
+      let curv = Math.abs(f.curv); for (let k = 4; k <= 30; k += 4) curv = Math.max(curv, Math.abs(window.Shortcuts.frameAt(q0, Math.min(q0.length, d + k)).curv || 0));
+      const grip = q0.surface === 'cobble' ? 0.85 : 1, target = Math.min(r.car.top * 0.8, Math.sqrt(24 * r.car.grip * grip / Math.max(0.001, curv)) * 0.85);
+      let wantLat = 0;
+      for (const o of routeObstacles(q0)) if (o.d - d > -2 && o.d - d < 26) wantLat = o.lat > 0 ? o.lat - o.r - 1.4 : o.lat + o.r + 1.4; // pass the stall on the free side
+      return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: clamp((wantLat - r.lat) * 0.6, -1, 1), turbo: 0 };
     }
     r.aiTimer -= dt;
     if (r.aiTimer <= 0) { r.aiTimer = 4 + Math.random() * 8; r.aiSlow = Math.random() < r.wobble * 0.6 ? 0.55 + Math.random() * 0.3 : 1; r.laneBias = (Math.random() - 0.5) * 6; }
@@ -355,6 +467,17 @@
       if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v && track.samples[i].kind !== 'ramp') gas = 0.3; } // never lift on a ramp: too slow means the roof
     }
     if (r.yieldT > 0) { r.yieldT -= dt; wantLat = r.lat >= 0 ? ROAD_W - 1.5 : -ROAD_W + 1.5; gas = Math.min(gas, 0.6); }
+    // a planned branch: line up on its side of the road and brake for the corner into the side street
+    const nextQ = r.isAI && !r.isCop && phase === 'race' && track.shortcuts.length ? track.shortcuts.find((q) => { let d = q.startS - r.s; if (d < -track.length / 2) d += track.length; return d > 0 && d < 110; }) : null;
+    if (nextQ) {
+      const key = r.lap + ':' + nextQ.index;
+      if (r.routeKey !== key) { r.routeKey = key; r.routePlan = aiWantsRoute(r, nextQ) ? nextQ.index : null; }
+      if (r.routePlan === nextQ.index) {
+        let d = nextQ.startS - r.s; if (d < 0) d += track.length;
+        wantLat = nextQ.side * Math.min(2.4, nextQ.halfWidth - 1.1);
+        const vIn = Math.sqrt(24 * r.car.grip / routeMaxCurv(nextQ)) * 0.82; if (d < 70 && r.v > vIn + d * 0.35) { gas = 0; brake = 0.8; }
+      }
+    } else if (r.routePlan != null && !routeFor(r)) r.routePlan = null;
     wantLat = clamp(wantLat, -ROAD_W + 1.5, ROAD_W - 1.5);
     let steer = clamp((wantLat - r.lat) * 0.35, -1, 1);
     const f = TB.frameAt(track, r.s);
@@ -468,7 +591,7 @@
     x.clearRect(0, 0, c.width, c.height);
     x.lineWidth = 5; x.strokeStyle = '#000'; x.stroke(miniPath);
     x.lineWidth = 2; x.strokeStyle = 'rgba(255,255,255,0.9)'; x.stroke(miniPath);
-    x.strokeStyle = '#83e7b3'; x.lineWidth = 2;
+    x.strokeStyle = '#b8b8c0'; x.lineWidth = 2;
     for (const route of track.shortcuts) { x.beginPath(); route.samples.forEach((f, i) => { const px = c.width - (f.p.x * miniScale + miniOff.x), py = c.height - (f.p.z * miniScale + miniOff.z); if (i) x.lineTo(px, py); else x.moveTo(px, py); }); x.stroke(); }
     const dot = (r, col, rad) => { const f = racerFrame(r); x.beginPath(); x.arc(c.width - (f.p.x * miniScale + miniOff.x), c.height - (f.p.z * miniScale + miniOff.z), rad, 0, Math.PI * 2); x.fillStyle = col; x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); };
     for (const r of racers) if (r.isAI) dot(r, '#ffd400', 2.5);
@@ -484,8 +607,11 @@
     const activeRoute = routeFor(player);
     const aheadRoute = !activeRoute && track.shortcuts.find((r) => r.startS - player.s > 0 && r.startS - player.s < 85);
     const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = !activeRoute && (!aheadRoute || (mission && mission.onFoot));
-    if (activeRoute) shortcutHint.textContent = `${activeRoute.name.toUpperCase()} · SCHMALE GASSE · ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M`;
-    else if (aheadRoute) shortcutHint.textContent = `${aheadRoute.side < 0 ? '← LINKS' : 'RECHTS →'} EINORDNEN · ${aheadRoute.name.toUpperCase()} · ${Math.round(aheadRoute.startS - player.s)} M`;
+    if (activeRoute) { const perks = routePerks(activeRoute); shortcutHint.textContent = `${routeLabel(activeRoute)} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M${perks ? ' · ' + perks : ''}`; }
+    else if (aheadRoute) {
+      const kind = aheadRoute.type === 'cut' ? `${Math.round(aheadRoute.saved)} M KÜRZER` : aheadRoute.type === 'bypass' ? 'OHNE STUNT' : `${aheadRoute.saved >= 0 ? Math.round(aheadRoute.saved) + ' M KÜRZER' : Math.round(-aheadRoute.saved) + ' M LÄNGER'}`;
+      shortcutHint.textContent = `${aheadRoute.side < 0 ? '← LINKS' : 'RECHTS →'} IN DE ${aheadRoute.street.toUpperCase()} · ${kind}${aheadRoute.toward ? ' · ' + aheadRoute.toward.toUpperCase() : ''} · ${Math.round(aheadRoute.startS - player.s)} M${routeMaxCurv(aheadRoute) > 0.04 ? ' · BREMSEN!' : ''}`;
+    }
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
     $('#hudRunde').textContent = `${player.lap} / ${trackDef.laps}`;
     $('#hudZeit').textContent = fmtTime(raceTime);
@@ -564,6 +690,7 @@
     buildMinimap(); lastPos = null;
     rec.frames = []; rec.t = []; rec.acc = 0; loadGhost();
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
+    signals = (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
     stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, told: false }));
     telefon = { ready: true, active: 0, used: 0 };
@@ -661,7 +788,7 @@
     if (isMobile && twoPlayer) toggleTwoPlayer();
     document.body.classList.remove('racing', 'resultsOpen', 'replaying');
     $('#msg').classList.remove('show');
-    audioEngine(0, 0); musicStop();
+    audioEngine(0, 0); bassRun = false; document.body.classList.remove('bassrun'); if (juke.on && juke.started && !music.muted) { musicPlay(); updateJuke(); } else musicStop();
     if (player && player.mesh) player.mesh.visible = true;
     renderMenu();
   }
@@ -683,7 +810,7 @@
     const dtReal = Math.min(0.5, (t - lastT) / 1000 || 0.016); adaptQuality(dtReal); lastDtReal = dtReal;
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
     renderer.info.reset();
-    if (phase === 'menu' || phase === 'editor') { tick(dt); return; }
+    if (phase === 'menu' || phase === 'editor') { tick(dt); if (phase === 'menu') menuFx(t); return; }
     if (!scene || phase === 'club') return;
     const steps = window.STUNTS_SIMSTEPS && (phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
     if (!window.STUNTS_MANUAL_STEP) for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
@@ -736,6 +863,15 @@
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
           let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;
           if (!routeFor(player) && ds > 0 && ds < 4 && b.cool <= 0) { b.cool = 8; if (Math.abs(player.v) * 3.6 > 120 && !player.air) { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); if (b.flash) b.flash.material.opacity = 1; flashTimer = 0.25; beep(1400, 0.12, 'square', 0.12); say({ name: 'Blitzer Kölle', emoji: '📸' }, pick(tuenn.blitzer), 2600); } }
+        }
+        // Ampeln: over the stop line at red = Rotlichtblitzer (counts like a Knöllchen), at yellow a word from dä Lange
+        for (const sg of signals) {
+          sg.cool -= dt; let ds = player.s - sg.s; if (ds > track.length / 2) ds -= track.length;
+          if (!routeFor(player) && ds > 0 && ds < 4 && sg.cool <= 0 && !player.air && player.crashed <= 0) {
+            sg.cool = 6; const st = W.signalState(sg);
+            if (st === 'red' || st === 'redyellow') { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); flashTimer = 0.25; beep(1400, 0.12, 'square', 0.1); say({ name: 'Rotlichtblitzer', emoji: '🚦' }, pick(tuenn.rotlicht || tuenn.blitzer), 2600); }
+            else if (st === 'yellow') say(tuenn, pick(tuenn.gelb || ['Dat wor noch jelb.']), 1800);
+          }
         }
         if (flashTimer > 0) { flashTimer -= dt; $('#flash').style.opacity = String(Math.max(0, flashTimer * 3)); }
       }
@@ -855,10 +991,11 @@
     const tr = outlineCache[def.id + def.segments.length];
     if (!tr.shortcuts) tr.shortcuts = window.Shortcuts.buildRoutes(tr);
     const projection = SP.outline(tr.samples, canvas, w, h, '#f4f4f4'), ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#6ffc95'; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#9aa4b8'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 2]); // side streets: dashed, like the small streets on a city map
     for (const route of tr.shortcuts) {
       ctx.beginPath(); route.samples.forEach((q, i) => i ? ctx.lineTo(projection.px(q), projection.pz(q)) : ctx.moveTo(projection.px(q), projection.pz(q))); ctx.stroke();
     }
+    ctx.setLineDash([]);
     return tr;
   }
   function renderMenu() {
@@ -899,7 +1036,8 @@
     const t = all[sel.track] || TRACKS[0];
     $('#trackDesc').textContent = t.desc || 'Eigene Streck aus dem Klüngel-Baukasten.';
     const routes = outlineCache[t.id + t.segments.length].shortcuts;
-    $('#trackRoutes').textContent = routes.length ? 'GRÜNE ABKÜRZUNGEN: ' + routes.map((r) => `${r.name} (−${Math.round(r.saved)} m)`).join(' · ') + '. Am Schild einordnen; in der schmalen Gasse vom Gas.' : '';
+    const kindTxt = (r) => r.type === 'bypass' ? 'Umjehung ohne Stunt' : r.type === 'parallel' ? (r.saved >= 0 ? `Parallelstroß, −${Math.round(r.saved)} m` : `Parallelstroß, +${Math.round(-r.saved)} m`) : `Abkürzung, −${Math.round(r.saved)} m`;
+    $('#trackRoutes').textContent = routes.length ? 'SEITENSTROSSE: ' + routes.map((r) => `${r.street} (${kindTxt(r)})`).join(' · ') + '. Am weißen Wegweiser einordnen, in de Kurv bremsen.' : '';
     $('#quickTrack').textContent = t.name.toUpperCase();
     $('#langerQuote').textContent = '„' + pick(tuenn.intro) + '“';
     $('#slogan').textContent = tuenn.slogans[Math.floor(Date.now() / 86400000) % tuenn.slogans.length];
@@ -1304,6 +1442,12 @@
       const mesh = koelschMesh(); const base = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), lat).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 0.9);
       mesh.position.copy(base); scene.add(mesh); pickups.push({ s: i * track.ds, lat, mesh, base, taken: false, phase: Math.random() * 6 });
     }
+    // Kölsch waits in the side streets that are known for it (a Brauhaus on the corner, a Büdchen)
+    for (const q of track.shortcuts) for (const k of (window.RouteExtras ? window.RouteExtras.koelsch(q) : [])) {
+      const f = window.Shortcuts.frameAt(q, k.d); const mesh = koelschMesh();
+      const base = new THREE.Vector3(f.p.x + f.B.x * k.lat, f.p.y + 0.9 + (f.surfaceOffset || 0.1), f.p.z + f.B.z * k.lat);
+      mesh.position.copy(base); scene.add(mesh); pickups.push({ route: q.index, d: k.d, lat: k.lat, mesh, base, taken: false, phase: Math.random() * 6 });
+    }
   }
   function updatePickups(dt) {
     pickT += dt;
@@ -1313,8 +1457,10 @@
     for (const p of pickups) {
       if (p.taken) continue;
       p.mesh.rotation.y += dt * 2.2; p.mesh.position.y = p.base.y + Math.sin(pickT * 3 + p.phase) * 0.22;
-      let ds = player.s - p.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
-      if (!routeFor(player) && Math.abs(ds) < 3.6 && Math.abs(player.lat - p.lat) < 2.0 && !player.air && player.crashed <= 0) {
+      let ds, onIt;
+      if (p.route != null) { const q = routeFor(player); onIt = !!q && q.index === p.route; ds = onIt ? (player.s - q.startS) * q.length / (q.endS - q.startS) - p.d : 99; }
+      else { ds = player.s - p.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; onIt = !routeFor(player); }
+      if (onIt && Math.abs(ds) < 3.6 && Math.abs(player.lat - p.lat) < 2.0 && !player.air && player.crashed <= 0) {
         p.taken = true; p.mesh.visible = false; koelsch++; koelschLap++; addDeckel(1); player.turbo = Math.min(1, player.turbo + 0.3);
         if (koelschLap >= 5 && promille <= 0) { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); }
         beep(1180, 0.07, 'square', 0.1); setTimeout(() => beep(1580, 0.1, 'square', 0.1), 70);
@@ -1337,9 +1483,17 @@
   }
   function copControl(r) {
     const L = track.length; let ds = player.s - r.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
+    const rq = routeFor(r);
+    if (rq) { // chasing through a side street: as fast as its corners allow
+      const f = racerFrame(r), target = Math.min(r.car.top * 0.85, Math.sqrt(24 * r.car.grip / Math.max(0.001, Math.abs(f.curv))) * 0.9);
+      return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: clamp(((sameRoad(r, player) ? player.lat : 0) - r.lat) * 0.5, -1, 1), turbo: 0 };
+    }
+    if (r.lostT > 0) r.lostT -= 1 / 60;
+    if (r.routePlan != null) { const q = track.shortcuts[r.routePlan]; let d = q ? q.startS - r.s : -1; if (d < 0) d += L; if (!q || d > 200 || routeFor(player) == null && d > 60) r.routePlan = null;
+      else { const vIn = Math.sqrt(24 * r.car.grip / routeMaxCurv(q)) * 0.85; const steer = clamp((q.side * Math.min(2.4, q.halfWidth - 1.1) - r.lat) * 0.45, -1, 1); return { gas: r.v < vIn + d * 0.3 ? 1 : 0, brake: r.v > vIn + d * 0.35 ? 0.8 : 0, steer, turbo: 0 }; } }
     const i = Math.floor(((r.s % L) + L) % L / track.ds) % track.samples.length;
     const safe = track.safe[i] * 1.12;
-    const target = ds > 5 ? Math.min(safe, r.car.top) : Math.max(0, Math.abs(player.v) - 1);
+    const target = (ds > 5 ? Math.min(safe, r.car.top) : Math.max(0, Math.abs(player.v) - 1)) * (r.lostT > 0 ? 0.5 : 1); // lost you in the Veedel: searching
     const gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     const wantLat = clamp(player.lat, -ROAD_W + 1.2, ROAD_W - 1.2);
     let steer = clamp((wantLat - r.lat) * 0.45, -1, 1);
@@ -1368,6 +1522,7 @@
     kripoEndT = raceTime;
     if (!kripo) return; scene.remove(kripo.mesh); kripo = null;
     if (why === 'giveup') sayMust(KRIPO, pick(tuenn.kripo.giveup), 3000);
+    if (why === 'lost') bumpStat('veedelEscapes');
     if (why !== 'caught') bumpStat('escapes');
   }
   function offerWette() {
@@ -1606,6 +1761,11 @@
     $('#paperBtn').onclick = shareFrontPage; $('#demoBtn').onclick = startDemo; $('#hornBtn').onclick = horn; $('#tHorn').addEventListener('touchstart', (e) => { e.preventDefault(); horn(); }, { passive: false });
     document.addEventListener('touchstart', () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
     phase = 'menu';
+    juke.fx = $('#lamboFx'); if (juke.fx) { juke.fx.width = 384; juke.fx.height = 48; juke.ctx = juke.fx.getContext('2d'); }
+    if ($('#jukeBtn')) $('#jukeBtn').onclick = (e) => { e.stopPropagation(); if (!juke.started && juke.on) jukeStart(); else jukeToggle(); };
+    const firstTouch = () => { if (!juke.started) jukeStart(); };
+    document.addEventListener('pointerdown', firstTouch, { once: true }); document.addEventListener('keydown', firstTouch, { once: true });
+    updateJuke();
     requestAnimationFrame(frame);
   }
   function drawBanner() {

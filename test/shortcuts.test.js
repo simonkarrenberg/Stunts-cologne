@@ -8,7 +8,11 @@ module.exports = async function () {
   let count = 0;
   function check(track, route) {
     count++;
-    assert(route.length > 0 && route.saved >= 3, 'shortcut must save real distance');
+    const kind = route.type || 'cut';
+    assert(['cut', 'parallel', 'bypass'].includes(kind), 'known branch type');
+    assert(typeof route.street === 'string' && route.street.length > 1, 'every branch carries its street name');
+    if (kind === 'cut') assert(route.length > 0 && route.saved >= 3, 'a cut must save real distance');
+    else assert(route.length > 0 && route.length < (route.endS - route.startS) + 150, 'a parallel street or bypass stays a sensible detour');
     assert(route.startS > 0 && route.endS < track.length, 'branch must not straddle the finish line');
     assert(route.startS < route.endS, 'race progress must increase monotonically');
     assert(route.resetS < route.startS - 5, 'reset plot must precede the branch');
@@ -42,14 +46,22 @@ module.exports = async function () {
     }
     assert(Math.abs(travelled - route.length) < 0.1, 'reported distance matches rendered path');
     const speed = 25, shortcutTime = route.length / speed, mainTime = (route.endS - route.startS) / speed;
-    assert(shortcutTime < mainTime, 'taking the branch actually saves driving time');
+    if (kind === 'cut') assert(shortcutTime < mainTime, 'taking the cut actually saves driving time');
+    if (kind === 'bypass') {
+      let stunt = false; for (let s = route.startS; s <= route.endS; s += 1) { const q = TB.frameAt(track, s); if (!['straight', 'curve', 'bridge', 'tunnel'].includes(q.kind) || Math.abs(q.p.y - route.samples[0].p.y) > 0.3) stunt = true; }
+      assert(stunt, 'a bypass must go round a stunt on the circuit');
+    }
+    const y0 = route.samples[0].p.y; assert(route.samples.every((q) => Math.abs(q.p.y - y0) < 0.05), 'a side street runs at street level');
+    // curb and sidewalk open only where the street meets the circuit
+    assert(route.mouthCut && Array.isArray(route.mouthCut['-1']) && Array.isArray(route.mouthCut['1']), 'junction mouths are known to the road builder');
+    assert(route.mouthCut['-1'].length + route.mouthCut['1'].length > 0 && route.mouthCut['-1'].length + route.mouthCut['1'].length < 120, 'the mouths are short openings, not a missing curb');
   }
   for (const def of D.TRACKS) {
     const track = TB.buildTrack(def), routes = SC.buildRoutes(track);
     for (const route of routes) check(track, route);
     if (def.shortcuts && def.shortcuts.length) {
       assert.strictEqual(routes.length, def.shortcuts.length, def.id + ': each advertised route must be buildable');
-      lines.push(def.id + ': ' + routes.length + ' continuous, shorter routes');
+      lines.push(def.id + ': ' + routes.length + ' real streets (' + routes.map((r) => r.street + ' ' + (r.type || 'cut')).join(', ') + ')');
     }
   }
   // A stable fixture exercises the module independently of the built-in map
@@ -80,6 +92,17 @@ module.exports = async function () {
   const crossing = TB.buildTrack(fixture), mid = SC.frameAt(routes[0], routes[0].length / 2).p;
   crossing.samples[400].p = { ...mid };
   assert.deepStrictEqual(SC.buildRoutes(crossing), [], 'unrelated road crossings must be rejected');
-  lines.push(count + ' route geometries checked; invalid, overlap, stunt, and crossing guards passed');
+  // v2 branch types: a parallel street one block over, and a street round a jump over a Büdchen
+  const blocks = [{ t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }];
+  const par = TB.buildTrack({ id: 'fx-par', segments: blocks, shortcuts: [{ id: 'p', street: 'Teststraße', type: 'parallel', from: { seg: 0, u: 0.5 }, to: { seg: 2, u: 0.5 }, side: 1, offset: 40 }] });
+  const parRoutes = SC.buildRoutes(par); assert.strictEqual(parRoutes.length, 1, 'a parallel street round the outside of a corner builds'); check(par, parRoutes[0]);
+  const why = []; SC.buildRoutes(TB.buildTrack({ id: 'fx-in', segments: blocks, shortcuts: [{ id: 'p', street: 'Teststraße', type: 'parallel', from: { seg: 0, u: 0.5 }, to: { seg: 2, u: 0.5 }, side: -1, offset: 40 }] }), why);
+  assert(why.length === 1 && /corner too tight|crosses/.test(why[0].reason), 'a parallel street on the inside of a tight corner is rejected with a reason');
+  const jumpy = blocks.slice(0, 2).concat([{ t: 'straight', len: 110 }, { t: 'jump', ramp: 30, angle: 16, gap: 34, over: 'buedchen' }, { t: 'straight', len: 150 }], blocks.slice(3));
+  const byp = TB.buildTrack({ id: 'fx-byp', segments: jumpy, shortcuts: [{ id: 'b', street: 'Umweg', type: 'bypass', from: { seg: 2, u: 0.15 }, to: { seg: 4, u: 0.6 }, side: 1, offset: 40 }] });
+  const bypRoutes = SC.buildRoutes(byp); assert.strictEqual(bypRoutes.length, 1, 'a bypass round a jump over a Büdchen builds (only water jumps are refused)'); check(byp, bypRoutes[0]);
+  const noStunt = []; SC.buildRoutes(TB.buildTrack({ id: 'fx-ns', segments: blocks, shortcuts: [{ id: 'b', street: 'Umweg', type: 'bypass', from: { seg: 0, u: 0.5 }, to: { seg: 2, u: 0.5 }, side: 1, offset: 40 }] }), noStunt);
+  assert(noStunt.length === 1, 'a bypass needs a stunt to go round');
+  lines.push(count + ' route geometries checked; invalid, overlap, stunt, crossing, parallel and bypass guards passed');
   return { name: 'shortcuts', ok: true, lines };
 };
