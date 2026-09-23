@@ -528,4 +528,10 @@
     cyl(g, 0.12, 0.12, 6, 0x9a9c8b, 0, 32.4, 0, 6); box(g, 2.4, 1.4, 0.08, 0xc4483b, 1.2, 34.5, 0);
     sign(g, 'BOTTMÜHLE', 11, 0, 3.1, 15.1, '#566847');
   });
+
+  // More landmarks can be registered from other files with the same helpers (see js/wahrzeichen.js):
+  // World.registerLandmark(id, name, sourceUrl, (g, options, kit) => { kit.box(g, ...); ... })
+  const kit = { STONE, LIGHT, DARK, SLATE, BRICK, TRIM, mat, part, box, cyl, cone, roof, dome, arch, pointed, window, sign, cross, cornice, nave, apse, tower };
+  W.landmarkKit = kit;
+  W.registerLandmark = (id, name, source, make) => register(id, name, source, (g, o) => make(g, o, kit));
 })(window);
