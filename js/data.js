@@ -159,7 +159,10 @@
         { type: 'row', seg: 15, u: 0.3, side: -1, dist: 24, style: 'concrete', seed: 4, n: 5 },
         { type: 'koelsch', seg: 15, u: 0.9, side: 1, dist: 18 },
         { type: 'billboard', seg: 17, u: 0.3, side: -1, dist: 14, text: 'CHICAGO AM RHEIN – MAN KENNT SICH' },
-        { type: 'flag', seg: 17, u: 0.6, side: 1, dist: 9 }
+        { type: 'flag', seg: 17, u: 0.6, side: 1, dist: 9 },
+        { type: 'kreuzblume', seg: 0, u: 0.45, side: 1, dist: 16, story: 'De Kreuzblum vum Dom, in Orijinaljröß. Do bovve op 157 Meter süht se winzich us. Wie ming Chance op ne Parkplatz.' },
+        { type: 'stapelhaus', seg: 7, u: 0.15, side: 1, dist: 32, story: 'Stapelhaus. Fröher musst jedes Schiff sing Fesch hee dreii Daach feilbeede. Stapelrääch. Hück säht mer Klüngel.' },
+        { type: 'pegel', seg: 9, u: 0.8, side: -1, dist: 14, story: 'Kölner Pegel. Kleine Zeijer Meter, jroße Zeijer Dezimeter. Över zehn Meter nemme mer et Boot, nit et Auto.' }
       ]
     },
     {
@@ -242,7 +245,10 @@
         { type: 'barge', seg: 15, u: 0.5, side: -1, dist: 60 },
         { type: 'row', seg: 16, u: 0.5, side: -1, dist: 24, style: 'modern', seed: 2, n: 4 },
         { type: 'billboard', seg: 16, u: 0.8, side: 1, dist: 14, text: 'DÄ LANGE – KÖLSCH & KREDIT' },
-        { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 }
+        { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 },
+        { type: 'ulrepforte', seg: 13, u: 0.5, side: -1, dist: 70, story: 'Ulrepforte. Hee sitze de Rote Funke. Die verteidije Kölle zick 1823 – vör allem jäje de Nüchternheit.' },
+        { type: 'stseverin', seg: 6, u: 0.5, side: -1, dist: 110, story: 'St. Severin, dat Hätz vum Vringsveedel. Wä dä Turm nit mieh sieht, es ze wick jefahre – oder en Düsseldorf.' },
+        { type: 'lyskirchen', seg: 2, u: 0.5, side: -1, dist: 70, story: 'Lyskirchen, de Kirch vun de Rheinschiffer. Die bedde zor Schiffermadonna. Ich bedde, dat dä Blitzer kapott es.' }
       ]
     },
     {
@@ -320,7 +326,10 @@
         { type: 'billboard', seg: 12, u: 0.7, side: -1, dist: 14, text: 'MÜLHEIM – HEE FÄNGT DER OSTEN AN' },
         { type: 'row', seg: 12, u: 0.6, side: 1, dist: 26, style: 'concrete', seed: 7, n: 5 },
         { type: 'buedchen', seg: 18, u: 0.5, side: -1, dist: 11 },
-        { type: 'crowd', seg: 20, u: 0.5, side: 1, dist: 10 }
+        { type: 'crowd', seg: 20, u: 0.5, side: 1, dist: 10 },
+        { type: 'stclemens', seg: 12, u: 0.5, side: -1, dist: 45, story: 'St. Clemens in Mülheim steiht met de Föß fass im Rhing. Bei Huhwasser kütt dä Pastor met dem Boot.' },
+        { type: 'oberlandesgericht', seg: 20, u: 0.5, side: 1, dist: 75, story: 'Oberlandesgericht am Reichenspergerplatz. Hee weed jeurteilt. Ding Fahrstil kütt en de nächste Instanz.' },
+        { type: 'staatenhaus', seg: 7, u: 0.5, side: -1, dist: 70, story: 'Staatenhaus am Rheinpark. Fröher Messe, hück Oper. Drinne weed jesunge, drusse quietsche ding Reife.' }
       ]
     },
     {
@@ -395,7 +404,10 @@
         { type: 'billboard', seg: 20, u: 0.3, side: 1, dist: 14, text: 'HELIOS-TURM – NUR ECHT MIT LEUCHTTURM' },
         { type: 'graffiti', seg: 20, u: 0.7, side: -1, dist: 12, text: 'DÄ LANGE WOR HEE', color: '#7fff00' },
         { type: 'buedchen', seg: 20, u: 0.9, side: 1, dist: 11 },
-        { type: 'crowd', seg: 22, u: 0.5, side: 1, dist: 10 }
+        { type: 'crowd', seg: 22, u: 0.5, side: 1, dist: 10 },
+        { type: 'hochbunker', seg: 12, u: 0.5, side: -1, dist: 50, story: 'Hochbunker Körnerstroß. Wo bes 1938 de Synagog stund. Hück Kunst un Erinnerung. Dä Beton bliev, et Verjesse nit.' },
+        { type: 'herkuleshochhaus', seg: 10, u: 0.5, side: -1, dist: 90, story: 'Herkules-Hochhaus, et Papageiehuus. Bunt wie ne Karnevalsorden un 31 Etasche huh. Aufzoch kaputt? Dann is et Sport.' },
+        { type: 'herkulesberg', seg: 9, u: 0.5, side: -1, dist: 110, story: 'Herkulesberg. Us Trümmer vum Kreech jebaut, jetzt jrön. Kölle schmieß nix fott. Mer mäht drus ne Berg.' }
       ]
     },
     {
@@ -487,7 +499,10 @@
         { type: 'blitzer', seg: 21, u: 0.9, side: -1, dist: 8 },
         { type: 'bude', seg: 21, u: 0.2, side: 1, dist: 11, text: 'CURRYWURST BEI JUPP' },
         { type: 'neon', seg: 21, u: 0.4, side: -1, dist: 14, text: 'ET HÄTT NOCH IMMER JOT JEJANGE', color: '#7fff00', light: false },
-        { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 }
+        { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 },
+        { type: 'roemerturm', seg: 4, u: 0.5, side: -1, dist: 68, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.' },
+        { type: 'gereonsmuehle', seg: 10, u: 0.5, side: 1, dist: 30, story: 'De Gereonsmühl. Fröher hät se hee Mähl jemahle. Hück mahlt nur noch dä Verkehr op dem Hansaring.' },
+        { type: 'eistuete', seg: 2, u: 0.5, side: 1, dist: 72, story: 'De Eistüt op dem Dach am Neumarkt. Einer hät se falle looße – un keiner hät se opjehovve. Typisch Kölle.' }
       ]
     },
     {
@@ -567,7 +582,8 @@
         { type: 'bunting', seg: 17, u: 0.7, side: 0, dist: 0 },
         { type: 'crowd', seg: 17, u: 0.8, side: 1, dist: 10 },
         { type: 'crowd', seg: 20, u: 0.5, side: -1, dist: 10 },
-        { type: 'bunting', seg: 20, u: 0.4, side: 0, dist: 0 }
+        { type: 'bunting', seg: 20, u: 0.4, side: 0, dist: 0 },
+        { type: 'janvonwerth', seg: 10, u: 0.5, side: 1, dist: 14, story: 'Jan un Griet. Hä kom als Jeneral zeröck, sei stundt met Obs am Severinstor. Wer et hätt jewoss! Zo spät, Griet.' }
       ]
     },
     {
@@ -644,7 +660,10 @@
         { type: 'koelsch', seg: 23, u: 0.8, side: 1, dist: 18 },
         { type: 'crowd', seg: 23, u: 0.3, side: 1, dist: 12 },
         { type: 'billboard', seg: 24, u: 0.5, side: -1, dist: 14, text: 'WER BREMST, ZAHLT DE KÖLSCH' },
-        { type: 'tribuene', seg: 24, u: 0.8, side: 1, dist: 14 }
+        { type: 'tribuene', seg: 24, u: 0.8, side: 1, dist: 14 },
+        { type: 'drehbruecke', seg: 13, u: 0.5, side: 1, dist: 70, story: 'Drehbröck am Deutzer Hafen. Sit 1908 dreiht se sich för jedes Scheff. Ich dreih mich nur för e Kölsch.' },
+        { type: 'pollerkoepfe', seg: 16, u: 0.5, side: 1, dist: 80, story: 'Poller Köpfe. Sit 1560 hale die Stein der Rhing en Reih, dat hä nit durch Poll avhaut. Türsteher us Basalt, wie ich.' },
+        { type: 'rheinboulevard', seg: 4, u: 0.5, side: 1, dist: 80, story: 'Rheinboulevard. Hee sitze se all op de Trappe un luure noh em Dom. Dä luurt nit zeröck. Dä hät dat nit nüdig.' }
       ]
     }
     ,{
