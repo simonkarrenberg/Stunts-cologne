@@ -4,10 +4,13 @@ const assert = require('assert');
 const { serve, launch, waitFor } = require('./helpers');
 
 module.exports = async function () {
+  // Static placement-only rechecks are useful after scenery/sign edits.
+  // Normal npm test always retains the complete driving and replay suite.
+  const auditOnly = process.env.AUDIT_ONLY === '1';
   const port = 8900 + Math.floor(Math.random() * 90), server = serve(port);
   let browser;
   const errors = [], lines = [], landmarks = new Set();
-  let landmarkPlacements = 0, clearanceTotal = 0, mainRoadClearanceTotal = 0, supportClearanceTotal = 0;
+  let landmarkPlacements = 0, clearanceTotal = 0, mainRoadClearanceTotal = 0, supportClearanceTotal = 0, streetClearanceTotal = 0, wayfinderTotal = 0, routeAuditCount = 0;
   try {
     browser = await launch();
     const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
@@ -20,7 +23,8 @@ module.exports = async function () {
       window.STUNTS_SIMSTEPS = 8;
       window.__mapAudit = {};
       window.__roadDetailAudit = {};
-      const auditGroup = (group, track) => {
+      window.__streetDetailAudit = {};
+      const auditGroup = (group, track, probeAllMain = false) => {
         // Inspect the visible scene before batching, independently of the
         // world's placement flags and clearance routines. A retained model
         // must have its own footprint and an alley must be physically clear.
@@ -74,9 +78,11 @@ module.exports = async function () {
             if (!mesh.isMesh || !mesh.geometry || !mesh.visible) return;
             // Crossing pedestrians are intentional moving gameplay scenery;
             // static furniture, buses, walls and support posts are not.
+            let obstacleRoute = null;
             for (let p = mesh; p && p !== group; p = p.parent) {
               const u = p.userData;
-              if (u.sky || u.water || u.walker || u.human || u.crowd || u.wave || !p.visible) return;
+              if (u.sky || u.water || u.walker || u.human || u.crowd || u.wave || u.kind === 'streetSurface' || u.kind === 'streetPaint' || !p.visible) return;
+              if (typeof u.routeObstacle === 'string') obstacleRoute = u.routeObstacle;
             }
             if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
             const local = mesh.geometry.boundingBox;
@@ -84,10 +90,10 @@ module.exports = async function () {
             const landmark = child.userData.landmarkId;
             // Keep upper landmark geometry too: the main track also contains
             // raised roads, not just the ground-level shortcut corridors.
-            if (!landmark && (world.max.y < minY || world.min.y > maxY)) return;
+            if (!landmark && !probeAllMain && (world.max.y < minY || world.min.y > maxY)) return;
             const entry = { local, world, inverse: new THREE.Matrix4().copy(mesh.matrixWorld).invert(),
               label: child.userData.landmarkId || child.userData.kind || child.userData.type || mesh.geometry.type,
-              owner: child.uuid, landmark };
+              owner: child.uuid, landmark, obstacleRoute };
             for (let x = Math.floor(world.min.x / cell); x <= Math.floor(world.max.x / cell); x++) {
               for (let z = Math.floor(world.min.z / cell); z <= Math.floor(world.max.z / cell); z++) {
                 const key = x + ',' + z;
@@ -105,6 +111,7 @@ module.exports = async function () {
           clearanceProbes++;
           const nearby = grid.get(Math.floor(point.x / cell) + ',' + Math.floor(point.z / cell)) || [];
           for (const entry of nearby) {
+            if (entry.obstacleRoute === route.id) continue; // A declared market hazard belongs only to its own lane.
             if (!entry.world.containsPoint(point)) continue;
             corner.copy(point).applyMatrix4(entry.inverse);
             if (!entry.local.containsPoint(corner)) continue;
@@ -125,22 +132,42 @@ module.exports = async function () {
             mainRoadClearanceProbes++;
             const nearby = grid.get(Math.floor(point.x / cell) + ',' + Math.floor(point.z / cell)) || [];
             for (const entry of nearby) {
-              if (!entry.landmark || !entry.world.containsPoint(point)) continue;
+              if ((!probeAllMain && !entry.landmark) || !entry.world.containsPoint(point)) continue;
               corner.copy(point).applyMatrix4(entry.inverse);
               if (!entry.local.containsPoint(corner) || mainSeen.has(entry.owner)) continue;
               mainSeen.add(entry.owner);
-              mainRoadObstructions.push({ object: entry.landmark, metre: Math.round(sample.s), lat, height });
+              mainRoadObstructions.push({ object: entry.landmark || entry.label, metre: Math.round(sample.s), lat, height });
             }
           }
         }
         return { ids: [...new Set(ids)], authoredCounts, retainedCounts,
           placements: ids.length, overlaps, obstructions, clearanceProbes, mainRoadObstructions, mainRoadClearanceProbes };
       };
-      window.STUNTS_AUDIT = (group, track) => { window.__mapAudit[track.def.id] = auditGroup(group, track); };
+      window.STUNTS_AUDIT = (group, track) => {
+        const audit = auditGroup(group, track), keepouts = track.wayfinderKeepouts || [];
+        const wayfinderOccluders = [], authoredWayfinderOverlaps = [];
+        for (const child of group.children) {
+          const u = child.userData || {};
+          if (u.keep || u.sky || u.water || !child.visible) continue;
+          const bounds = new THREE.Box3().setFromObject(child);
+          if (bounds.isEmpty()) continue;
+          for (const zone of keepouts) if (zone.bounds.intersectsBox(bounds)) {
+            const result = { sign: zone.routeId || zone.fork, object: u.kind || u.type || child.type };
+            // Named architecture and authored props are protected. Report
+            // separately; the scenery pass must never erase a landmark to
+            // make a warning sign fit. Procedural canopy/row overlap is a
+            // regression because it can make an otherwise safe fork unreadable.
+            if ((u.kind || '').startsWith('prop:') || u.landmarkName) authoredWayfinderOverlaps.push(result);
+            else wayfinderOccluders.push(result);
+          }
+        }
+        window.__mapAudit[track.def.id] = { ...audit, wayfinderCount: keepouts.length, wayfinderOccluders, authoredWayfinderOverlaps };
+      };
       // Structural columns and tunnel/bridge details belong to the road
       // group, not the scenery. Probe them before batching as well, so a
       // clear building footprint cannot hide a support through an alley.
       window.STUNTS_AUDIT_DETAILS = (group, track) => { window.__roadDetailAudit[track.def.id] = auditGroup(group, track); };
+      window.STUNTS_AUDIT_STREETS = (group, track) => { window.__streetDetailAudit[track.def.id] = auditGroup(group, track, true); };
     });
     await page.goto(`http://localhost:${port}/`);
     await page.waitForFunction(() => typeof window.STUNTS_ROUTES === 'function' && typeof window.STUNTS_DRIVE_STEPS === 'function', undefined, { timeout: 60000 });
@@ -178,7 +205,8 @@ module.exports = async function () {
         window.STUNTS_AUTOPILOT = false;
         document.getElementById('startBtn').click();
       }, index);
-      assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'race', 120000), track.name + ': scene and countdown must finish');
+      if (auditOnly) await page.waitForFunction((id) => !!window.__mapAudit[id], track.id, { timeout: 120000 });
+      else assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'race', 120000), track.name + ': scene and countdown must finish');
       await page.evaluate(() => { window.STUNTS_MANUAL_STEP = true; });
       const routes = await page.evaluate(() => window.STUNTS_ROUTES());
       assert.strictEqual(routes.length, track.routes, track.name + ': all advertised roads must be available in the race');
@@ -190,15 +218,32 @@ module.exports = async function () {
       assert.deepStrictEqual(audit.overlaps, [], track.name + ': real landmark footprints must not overlap');
       assert.deepStrictEqual(audit.obstructions, [], track.name + ': route centers, narrow lanes and wide-road shoulders must clear static scenery at car height');
       assert.deepStrictEqual(audit.mainRoadObstructions, [], track.name + ': real landmarks must not obstruct the main road at car height');
+      const expectedWayfinders = routes.length + new Set(routes.filter((r) => r.fork).map((r) => r.fork)).size;
+      assert.strictEqual(audit.wayfinderCount, expectedWayfinders, track.name + ': every route and shared fork needs a reserved readable sign');
+      assert.deepStrictEqual(audit.wayfinderOccluders, [], track.name + ': procedural trees and buildings must not hide route/fork signs');
       const structural = await page.evaluate((id) => window.__roadDetailAudit[id], track.id);
       assert(structural && structural.clearanceProbes >= 100, track.name + ': each branch must also be checked against road structures');
       assert.deepStrictEqual(structural.obstructions, [], track.name + ': branch lanes must clear stunt supports, bridge rails and tunnel walls');
+      const streets = await page.evaluate((id) => window.__streetDetailAudit[id], track.id);
+      assert(streets && streets.clearanceProbes >= 100, track.name + ': each branch must be checked against its street furniture');
+      assert.deepStrictEqual(streets.obstructions, [], track.name + ': branch lanes must clear street lamps, parked cars and signs');
+      assert.deepStrictEqual(streets.mainRoadObstructions, [], track.name + ': branch street furniture must not intrude into the main course');
       assert(audit.clearanceProbes >= 100, track.name + ': clearance must be inspected throughout every alley');
       assert(audit.mainRoadClearanceProbes >= 1000, track.name + ': landmark clearance must be inspected throughout the main road');
       ids.forEach((id) => landmarks.add(id));
       landmarkPlacements += audit.placements; clearanceTotal += audit.clearanceProbes;
       mainRoadClearanceTotal += audit.mainRoadClearanceProbes;
       supportClearanceTotal += structural.clearanceProbes;
+      streetClearanceTotal += streets.clearanceProbes;
+      wayfinderTotal += audit.wayfinderCount;
+      routeAuditCount += routes.length;
+      if (auditOnly) {
+        lines.push(track.name + ': ' + audit.placements + ' retained landmark placements; ' + routes.length + ' roads clear of scenery/supports/furniture; ' + audit.wayfinderCount + ' readable sign reservations');
+        console.log('   ' + lines[lines.length - 1]);
+        await page.keyboard.press('Escape');
+        assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'menu', 10000), 'return to menu after placement audit');
+        continue;
+      }
       // At a real fork both sides must work, but staying centered must keep
       // the main course. Opposing routes intentionally share race progress.
       const forks = new Map();
@@ -287,7 +332,7 @@ module.exports = async function () {
         assert(result.maxJump < 2, route.name + ': movement must remain continuous, without teleporting to the exit');
         assert(Math.abs(route.saved - (route.endS - route.startS - route.length)) < 0.01, route.name + ': signed distance saving must match the physical road');
         assert(['shortcut', 'alternate'].includes(route.kind), route.name + ': roads must declare their advertised type');
-        assert.strictEqual(route.type, route.kind, route.name + ': public route type aliases must agree');
+        assert(['cut', 'parallel', 'bypass', 'authored'].includes(route.type), route.name + ': street construction metadata must remain available');
         if (route.kind === 'shortcut') assert(route.saved >= 3, route.name + ': advertised shortcuts must genuinely save distance');
         if (route.saved > 0) {
           assert(result.distance < route.endS - entry.player.s, route.name + ': a shortcut must actually drive fewer metres');
@@ -297,6 +342,7 @@ module.exports = async function () {
           assert(result.distance > route.endS - entry.player.s, route.name + ': a longer alternative must actually drive the extra distance');
           alternateChecks++;
         }
+        assert(Math.abs(result.distance - route.length) < 12, route.name + ': the car must physically drive the whole street');
         assert(result.sample, route.name + ': route must contain actual intermediate driving frames');
         replaySamples.push({ ...result.sample, name: route.name });
 
@@ -339,22 +385,24 @@ module.exports = async function () {
           await page.keyboard.press('Escape');
         }
       }
-      lines.push(track.name + ': ' + routes.length + ' keyboard entries, complete traversals, rejoins and replays; ' + audit.placements + ' retained landmark placements; ' + audit.clearanceProbes + ' branch, ' + structural.clearanceProbes + ' support and ' + audit.mainRoadClearanceProbes + ' main-road clear car-height probes');
+      lines.push(track.name + ': ' + routes.length + ' keyboard entries, complete traversals, rejoins and replays; ' + audit.placements + ' retained landmark placements; ' + audit.clearanceProbes + ' branch, ' + structural.clearanceProbes + ' support, ' + streets.clearanceProbes + ' street-furniture and ' + audit.mainRoadClearanceProbes + ' main-road clear car-height probes');
       console.log('   ' + lines[lines.length - 1]);
       await page.keyboard.press('Escape');
       assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'menu', 10000), 'return to menu');
     }
     if (!process.env.TRACKS) assert.deepStrictEqual([...landmarks].sort(), authoredIds, 'every authored landmark model must remain present across the maps');
-    if (!process.env.TRACKS) {
+    if (!process.env.TRACKS && !auditOnly) {
       assert(forkChecks >= 6, 'the maps must include at least six shared left/main/right junctions');
       assert(alternateChecks >= 6, 'each new fork must include a genuinely longer alternative road');
       assert(resetChecks >= 29, 'all original shortcuts and twelve new branching streets must remain drivable');
       assert.strictEqual(aiForkChecks, forkChecks, 'rival route choices must be tested at every shared fork');
     }
+    if (!process.env.TRACKS) assert(routeAuditCount >= 29 && wayfinderTotal >= 35, 'all roads and their route/fork warning reservations must be audited');
     assert.strictEqual(replayChecks, resetChecks, 'every driven route must preserve ghost and replay positions');
-    lines.push(landmarks.size + ' distinct Cologne landmarks in ' + landmarkPlacements + ' separate placements; ' + clearanceTotal + ' branch, ' + supportClearanceTotal + ' support and ' + mainRoadClearanceTotal + ' main-road clear car-height probes; ' + resetChecks + ' stable branch resets; ' + replayChecks + ' saved ghost routes and recorded replays; ' + forkChecks + ' left/main/right forks; ' + shortcutChecks + ' shortcuts and ' + alternateChecks + ' longer alternatives');
+    lines.push(landmarks.size + ' distinct Cologne landmarks in ' + landmarkPlacements + ' separate placements; ' + clearanceTotal + ' branch, ' + supportClearanceTotal + ' support, ' + streetClearanceTotal + ' street-furniture and ' + mainRoadClearanceTotal + ' main-road clear car-height probes' + (auditOnly ? '' : '; ' + resetChecks + ' stable branch resets; ' + replayChecks + ' saved ghost routes and recorded replays; ' + forkChecks + ' left/main/right forks; ' + shortcutChecks + ' shortcuts and ' + alternateChecks + ' longer alternatives'));
     assert.deepStrictEqual(errors, [], 'no browser exceptions');
-    return { name: 'map-routes', ok: true, lines };
+    lines.push(wayfinderTotal + ' wayfinder sightlines clear of procedural scenery' + (auditOnly ? '; placement-only mode (driving/replay checks are retained in normal npm test)' : ''));
+    return { name: auditOnly ? 'map-routes (placement audit)' : 'map-routes', ok: true, lines };
   } finally {
     if (browser) await browser.close();
     await new Promise((resolve) => server.close(resolve));

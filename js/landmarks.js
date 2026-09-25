@@ -529,37 +529,6 @@
     sign(g, 'BOTTMÜHLE', 11, 0, 3.1, 15.1, '#566847');
   });
 
-  // Ülepooz: the old gate, attached mill tower and low caponier are one ensemble.
-  // The present mill tower has a slate cap, not working windmill sails.
-  register('ulrepforte', 'Ulrepforte · Ülepooz', 'https://rote-funken.de/historie/', (g) => {
-    const stone = 0xa7997d, trim = 0xc4b494;
-    box(g, 28, 10, 12, stone, 0, 5, 0);
-    for (const x of [-12, 12]) {
-      cyl(g, 4.9, 4.9, 14, stone, x, 7, 3, 12);
-      cyl(g, 5.3, 5.3, 0.7, trim, x, 13.8, 3, 12);
-      for (let i = 0; i < 8; i++) {
-        const a = i * Math.PI / 4;
-        const tooth = box(g, 1.7, 1.6, 1.1, stone, x + Math.sin(a) * 4.55, 14.8, 3 + Math.cos(a) * 4.55);
-        tooth.rotation.y = a;
-      }
-      arch(g, 1.4, 3.5, x, 7, 7.96);
-    }
-    cyl(g, 6.1, 6.5, 25, 0xa28e71, -6, 12.5, -5, 16);
-    for (const y of [11, 20, 24.5]) cyl(g, 6.45, 6.45, 0.6, trim, -6, y, -5, 16);
-    for (let i = 0; i < 8; i++) {
-      const a = i * Math.PI / 4;
-      arch(g, 1.6, 4.5, -6 + Math.sin(a) * 6.26, 17, -5 + Math.cos(a) * 6.26, DARK, a);
-    }
-    cone(g, 7.2, 10, SLATE, -6, 30, -5, 8);
-    cyl(g, 1.8, 1.8, 4, 0xa28e71, -6, 36, -5, 8);
-    cone(g, 2.7, 7, SLATE, -6, 41.5, -5, 8);
-    box(g, 27, 4.5, 16, stone, 5, 2.25, -12); box(g, 28, 0.5, 17, 0x657044, 5, 4.75, -12);
-    for (const x of [-20, 20]) { box(g, 8, 7, 2, stone, x, 3.5, 0); cornice(g, 8, 2, 7, trim, x, 0); }
-    arch(g, 5, 7, 0, 0, 6.12); sign(g, 'ULREPFORTE', 15, 0, 9, 6.2);
-    // Red-and-white Funken colours are a small present-day local clue.
-    for (const x of [-3.7, 3.7]) { box(g, 0.45, 5, 0.18, 0xb83634, x, 3, 6.3); box(g, 0.45, 1.4, 0.2, LIGHT, x, 4.3, 6.4); }
-  });
-
   // Five window axes and a deep stepped gable distinguish this medieval town house.
   register('overstolzenhaus', 'Overstolzenhaus · Rheingasse', 'https://www.khm.de/bib_ueber_uns/', (g) => {
     const stone = 0xb6a083, trim = 0xd5bc95;
@@ -581,33 +550,6 @@
     }
     arch(g, 3.8, 5, -9.6, 0, 11.96); sign(g, 'OVERSTOLZENHAUS', 21, 0, 2.8, 12.1);
     for (const side of [-1, 1]) for (const z of [-7, 0, 7]) for (const y of [6, 14]) window(g, 2.3, 3.7, side * 12.57, y, z, side * Math.PI / 2);
-  });
-
-  // St. Severin's tall Gothic west tower and two much smaller choir towers.
-  register('severin', 'St. Severin · Vringsveedel', 'https://www.st-severin-koeln.de/kirchen/st.-severin/bau/', (g) => {
-    const stone = 0xc8b99d, trim = 0xa58d71;
-    nave(g, 20, 18, 42, 0, -1, stone, SLATE);
-    for (const x of [-13, 13]) { box(g, 7, 10, 40, stone, x, 5, -1); roof(g, 8, 4.5, 41, SLATE, x, 10, -1); }
-    box(g, 34, 21, 15, stone, 0, 10.5, -18);
-    const choir = cyl(g, 10, 10, 21, stone, 0, 10.5, -28, 8); choir.rotation.y = Math.PI / 8;
-    const choirRoof = cone(g, 10.8, 9, SLATE, 0, 25.5, -28, 8); choirRoof.rotation.y = Math.PI / 8;
-    for (const x of [-11, 11]) tower(g, 5.5, 28, x, -24, stone, SLATE, 10);
-    box(g, 12, 38, 12, stone, 0, 19, 21);
-    for (const y of [13, 25, 37.5]) cornice(g, 12, 12, y, trim, 0, 21);
-    for (const x of [-5.7, 5.7]) for (const z of [15.3, 26.7]) {
-      box(g, 1.6, 35, 1.6, trim, x, 17.5, z);
-      cone(g, 1.4, 4.5, stone, x, 39.5, z, 4);
-    }
-    for (let side = 0; side < 4; side++) {
-      const a = side * Math.PI / 2;
-      for (const dx of [-2.3, 2.3]) pointed(g, 3, 10, Math.sin(a) * 6.08 + Math.cos(a) * dx, 26, 21 + Math.cos(a) * 6.08 - Math.sin(a) * dx, DARK, a);
-    }
-    // A broad lower pitch changes into the very slender slate Knickhelm.
-    const skirt = cyl(g, 3.1, 9.2, 7, SLATE, 0, 41.5, 21, 4); skirt.rotation.y = Math.PI / 4;
-    cone(g, 3.3, 19, SLATE, 0, 54.5, 21, 8); cross(g, 0, 65, 21);
-    pointed(g, 5, 11, 0, 12, 27.12); pointed(g, 4.5, 8, 0, 0, 27.15);
-    sign(g, 'ST. SEVERIN', 13, 0, 10, 27.2);
-    for (const side of [-1, 1]) for (const z of [-12, -3, 6, 15]) pointed(g, 2.6, 6, side * 16.56, 2, z, DARK, side * Math.PI / 2);
   });
 
   // The square westwork carries Ursula's unmistakable crown, not a pointed spire.
@@ -722,4 +664,9 @@
     box(g, 22, 8, 0.3, basalt, 20, 4.5, -31.6);
     sign(g, 'BUTZWEILERHOF', 27, -5, 2.2, 14.1, '#53616b');
   });
+  // More landmarks can be registered from other files with the same helpers (see js/wahrzeichen.js):
+  // World.registerLandmark(id, name, sourceUrl, (g, options, kit) => { kit.box(g, ...); ... })
+  const kit = { STONE, LIGHT, DARK, SLATE, BRICK, TRIM, mat, part, box, cyl, cone, roof, dome, arch, pointed, window, sign, cross, cornice, nave, apse, tower };
+  W.landmarkKit = kit;
+  W.registerLandmark = (id, name, source, make) => register(id, name, source, (g, o) => make(g, o, kit));
 })(window);

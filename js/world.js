@@ -475,6 +475,8 @@
     g.add(box(0.4, 3.5, 0.4, 0x555555, -6, 1.75, 0)); g.add(box(0.4, 3.5, 0.4, 0x555555, 6, 1.75, 0));
     return g;
   };
+  // LamboGina: everything that pumps with the song's kick (reset for every new scene)
+  const beatFx = { mats: new Set(), glows: new Set(), lights: [] };
   const glowCache = new Map();
   function glowMat(color) { const k = 'g' + color; if (!glowCache.has(k)) glowCache.set(k, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.11, blending: THREE.AdditiveBlending, depthWrite: false })); return glowCache.get(k); }
   function glow(w, d, color, x, z) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), glowMat(color)); m.rotation.x = -Math.PI / 2; m.position.set(x || 0, 0.12, z || 0); return m; }
@@ -482,10 +484,10 @@
     const g = new THREE.Group(); const col = o.color || '#ff2d95';
     const w = o.small ? 9 : 18, h = o.small ? 2.4 : 4;
     const s = textPlane(o.text, col, '#0a0a18', w, h, true, { border: col });
-    s.position.y = o.small ? 4.2 : 6; g.add(s);
+    s.position.y = o.small ? 4.2 : 6; g.add(s); beatFx.mats.add(s.material);
     g.add(box(0.5, 4, 0.5, 0x333344, -w / 2 + 1, 2, 0)); g.add(box(0.5, 4, 0.5, 0x333344, w / 2 - 1, 2, 0));
-    if (THEME.night) { g.add(glow(w + 6, 14, new THREE.Color(col).getHex(), 0, 5)); }
-    if (o.light !== false && THEME.night) { const light = new THREE.PointLight(new THREE.Color(col), 1.2, 60); light.position.set(0, 6, 3); g.add(light); }
+    if (THEME.night) { const gl = glow(w + 6, 14, new THREE.Color(col).getHex(), 0, 5); g.add(gl); beatFx.glows.add(gl.material); }
+    if (o.light !== false && THEME.night) { const light = new THREE.PointLight(new THREE.Color(col), 1.2, 60); light.position.set(0, 6, 3); g.add(light); beatFx.lights.push(light); }
     return g;
   };
   P.graffiti = (o) => {
@@ -857,7 +859,18 @@
   P.kirche = (o) => { const g = new THREE.Group(); const tex = T.romanesque((o && o.color) || 0xc4ad8c); const h = (o && o.h) || 40; g.add(tbox(14, 18, 34, tex, 0, 9, -6, 0xffffff, [16, 16])); g.add(gable(15, 8, 35, T.roof(0x6a3a2a, 2), 0xffffff, 0, 18, -6)); g.add(tbox(9, h, 9, tex, 0, h / 2, 12, 0xffffff, [16, 16])); g.add(cone(6, 16, 0x3a3a44, 0, h + 8, 12, 4)); return g; };
   P.hyatt = () => { const g = new THREE.Group(); g.add(tbox(50, 42, 30, T.facade('modern', 0xb8c8d8, 4, THEME.night), 0, 21, 0, 0xffffff, [12, 12])); g.add(box(52, 1.5, 32, 0xdddddd, 0, 42.7, 0)); return g; };
   P.cafe = () => { const g = new THREE.Group(); const r = mulberry(88); for (let i = 0; i < 3; i++) { const x = -3 + i * 3; g.add(cyl(0.6, 0.6, 0.1, 0xf4f4f4, x, 0.9, 0, 8)); g.add(cyl(0.06, 0.08, 0.9, 0x555555, x, 0.45, 0, 6)); g.add(cyl(0.1, 0.1, 2.6, 0x8a8a8a, x, 1.3, 0, 6)); g.add(cone(1.6, 0.9, [0xc1121f, 0xffd400, 0xf4f4f4][i % 3], x, 2.9, 0, 8)); if (r() < 0.7) { const hm = human({ shirt: [0x3a3a5a, 0xc1121f, 0x2d6a4f][i % 3], koelsch: true }); hm.position.set(x + 0.9, 0, 0.5); hm.rotation.y = Math.PI; g.add(hm); } } return g; };
-  P.ampel = () => { const g = new THREE.Group(); g.add(cyl(0.1, 0.12, 4.2, 0x444444, 0, 2.1, 0, 6)); g.add(box(0.5, 1.4, 0.4, 0x222222, 0, 3.6, 0)); addm(g, new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.1), bmat(0xff2020))).position.set(0, 4.05, 0.22); g.add(box(0.28, 0.28, 0.1, 0x3a2a00, 0, 3.6, 0.22)); g.add(box(0.28, 0.28, 0.1, 0x0a3a1a, 0, 3.15, 0.22)); return g; };
+  // Ampel: red, yellow and green lamps that really switch (see signalState); a white backplate like the real ones
+  const LAMP = { red: [bmat(0xff2020), mat(0x3a0a0a)], yellow: [bmat(0xffb000), mat(0x3a2a00)], green: [bmat(0x30ff70), mat(0x0a3a1a)] };
+  P.ampel = () => { const g = new THREE.Group(); g.add(cyl(0.1, 0.12, 4.2, 0x444444, 0, 2.1, 0, 6)); g.add(box(0.72, 1.6, 0.06, 0xe8e8e8, 0, 3.6, -0.2)); g.add(box(0.5, 1.4, 0.4, 0x222222, 0, 3.6, 0));
+    // only the three lamps switch; they live in their own small group so the pole and housing still get batched
+    const lamps = {}, lampGroup = new THREE.Group(); g.add(lampGroup);
+    [['red', 4.05], ['yellow', 3.6], ['green', 3.15]].forEach(([k, y]) => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.1), LAMP[k][k === 'red' ? 0 : 1]); m.position.set(0, y, 0.22); lampGroup.add(m); lamps[k] = m; g.add(box(0.36, 0.06, 0.2, 0x222222, 0, y + 0.18, 0.28)); });
+    lampGroup.userData.lamps = lamps; g.userData.lampGroup = lampGroup; return g; };
+  // one clock for every traffic light in town: 8 s green, 2 s yellow, 6 s red, 1 s red-yellow; each crossing its own offset
+  function signalState(sig, t) {
+    const c = (((t == null ? performance.now() / 1000 : t) + sig.off) % 17 + 17) % 17;
+    return c < 8 ? 'green' : c < 10 ? 'yellow' : c < 16 ? 'red' : 'redyellow';
+  }
   P.schild = (o) => { const g = new THREE.Group(); g.add(cyl(0.06, 0.08, 3, 0x777777, 0, 1.5, 0, 6)); const s = textPlane((o && o.text) || 'HOHE STRASSE', '#ffffff', '#1c3f95', 2.6, 0.5, false, { border: '#ffffff', sizeK: 0.5 }); s.position.set(0.9, 2.7, 0); g.add(s); return g; };
   P.parkedcar = (o) => { o = o || {}; const c = o.taxi ? 0xf1e2b0 : (o.color || 0x888888);
     if (!window.Cars) { const g = new THREE.Group(); g.add(box(1.8, 0.6, 4.0, c, 0, 0.7, 0)); g.add(box(1.6, 0.55, 2.0, c, 0, 1.25, -0.2)); g.add(box(1.62, 0.3, 1.8, 0x223344, 0, 1.3, -0.2)); for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z)); return g; }
@@ -1145,10 +1158,19 @@
       if (i - last < gap) continue;
       let ok = true;
       for (let j = i - 14; j <= i + 18 && ok; j++) { const q = S[j]; if (q.kind !== 'straight' || Math.abs(q.p.y) > 0.05 || Math.abs(q.curv || 0) > 0.002) ok = false; }
+      if (ok) { const m = mouthSets(track); for (let j = i - 18; j <= i + 22 && ok; j++) if (m['-1'].has(j) || m['1'].has(j)) ok = false; } // no crossing painted into a junction
       if (!ok) continue;
       out.push(i); last = i;
     }
     return (track.zebra = out);
+  }
+
+  // Per side of the circuit, the sample indices where a branch street's mouth opens the curb.
+  function mouthSets(track) {
+    if (track._mouth) return track._mouth;
+    const out = { '-1': new Set(), '1': new Set() };
+    for (const r of track.shortcuts || []) for (const side of ['-1', '1']) for (const i of (r.mouthCut && r.mouthCut[side]) || []) out[side].add(i);
+    return (track._mouth = out);
   }
 
   function buildRoad(track, theme) {
@@ -1174,6 +1196,7 @@
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
     const city = theme.street && theme.street !== 'park';
     const zebra = new Set(); for (const z of zebraSamples(track, theme)) for (let k = 0; k < 4; k++) zebra.add(z + k);
+    const mouth = mouthSets(track); // where a real side street joins, the curb and the sidewalk open up
     for (let i = 0; i < n; i++) {
       const a = S[i], b = S[(i + 1) % n];
       if (a.kind === 'gap') continue;
@@ -1185,19 +1208,23 @@
       quad(off(a, -ROAD_W, h), off(a, ROAD_W, h), off(b, -ROAD_W, h), off(b, ROAD_W, h), color, 0, 5, v0, v1);
       const curb = Math.floor(i / 4) % 2 === 0 ? cRed : cWhite;
       const ch = h + 0.06;
-      paint(off(a, -ROAD_W - 1.1, ch), off(a, -ROAD_W, ch), off(b, -ROAD_W - 1.1, ch), off(b, -ROAD_W, ch), curb);
-      paint(off(a, ROAD_W, ch), off(a, ROAD_W + 1.1, ch), off(b, ROAD_W, ch), off(b, ROAD_W + 1.1, ch), curb);
+      const openL = mouth['-1'].has(i), openR = mouth['1'].has(i);
+      if (!openL) paint(off(a, -ROAD_W - 1.1, ch), off(a, -ROAD_W, ch), off(b, -ROAD_W - 1.1, ch), off(b, -ROAD_W, ch), curb);
+      if (!openR) paint(off(a, ROAD_W, ch), off(a, ROAD_W + 1.1, ch), off(b, ROAD_W, ch), off(b, ROAD_W + 1.1, ch), curb);
       // the curb stone's vertical face towards the road, so the edge reads as a step, not as paint
-      paint(off(a, -ROAD_W, h), off(a, -ROAD_W, ch), off(b, -ROAD_W, h), off(b, -ROAD_W, ch), curb);
-      paint(off(a, ROAD_W, ch), off(a, ROAD_W, h), off(b, ROAD_W, ch), off(b, ROAD_W, h), curb);
+      if (!openL) paint(off(a, -ROAD_W, h), off(a, -ROAD_W, ch), off(b, -ROAD_W, h), off(b, -ROAD_W, ch), curb);
+      if (!openR) paint(off(a, ROAD_W, ch), off(a, ROAD_W, h), off(b, ROAD_W, ch), off(b, ROAD_W, h), curb);
+      // a junction mouth: a short grey edge line instead of the red/white curb, like a real Einmündung
+      if (openL && !mouth['-1'].has(i - 1)) paint(off(a, -ROAD_W - 0.25, h + 0.04), off(a, -ROAD_W + 0.1, h + 0.04), off(b, -ROAD_W - 0.25, h + 0.04), off(b, -ROAD_W + 0.1, h + 0.04), cLine);
+      if (openR && !mouth['1'].has(i - 1)) paint(off(a, ROAD_W - 0.1, h + 0.04), off(a, ROAD_W + 0.25, h + 0.04), off(b, ROAD_W - 0.1, h + 0.04), off(b, ROAD_W + 0.25, h + 0.04), cLine);
       if (zebra.has(i)) { // Zebrastreifen: white bars across the road at the crossings of city straights
         for (let k = -5; k <= 5; k++) paint(off(a, k * 1.05 - 0.28, h + 0.04), off(a, k * 1.05 + 0.28, h + 0.04), off(b, k * 1.05 - 0.28, h + 0.04), off(b, k * 1.05 + 0.28, h + 0.04), cWhite);
       } else if (Math.floor(i / 4) % 2 === 0 && !nearStart) paint(off(a, -0.18, h + 0.04), off(a, 0.18, h + 0.04), off(b, -0.18, h + 0.04), off(b, 0.18, h + 0.04), cLine);
       // sidewalks in the city
       const flat = (a.kind === 'straight' || a.kind === 'curve' || a.kind === 'hill' || a.kind === 'dip' || a.kind === 'tunnel') && a.p.y > -0.02 && b.p.y > -0.02;
       if (city && flat) {
-        quad(off(a, -ROAD_W - 4.5, h + 0.12), off(a, -ROAD_W - 1.1, h + 0.12), off(b, -ROAD_W - 4.5, h + 0.12), off(b, -ROAD_W - 1.1, h + 0.12), cWalk, 0, 1.4, v0, v1);
-        quad(off(a, ROAD_W + 1.1, h + 0.12), off(a, ROAD_W + 4.5, h + 0.12), off(b, ROAD_W + 1.1, h + 0.12), off(b, ROAD_W + 4.5, h + 0.12), cWalk, 0, 1.4, v0, v1);
+        if (!openL) quad(off(a, -ROAD_W - 4.5, h + 0.12), off(a, -ROAD_W - 1.1, h + 0.12), off(b, -ROAD_W - 4.5, h + 0.12), off(b, -ROAD_W - 1.1, h + 0.12), cWalk, 0, 1.4, v0, v1);
+        if (!openR) quad(off(a, ROAD_W + 1.1, h + 0.12), off(a, ROAD_W + 4.5, h + 0.12), off(b, ROAD_W + 1.1, h + 0.12), off(b, ROAD_W + 4.5, h + 0.12), cWalk, 0, 1.4, v0, v1);
       }
       if (a.kind === 'loop' || a.kind === 'ramp' || a.p.y > 1.5) { underRanges.push([vi, a.N]); quad(off(a, ROAD_W, -0.3), off(a, -ROAD_W, -0.3), off(b, ROAD_W, -0.3), off(b, -ROAD_W, -0.3), cUnder, 0, 2, v0, v1); }
     }
@@ -1324,11 +1351,17 @@
   // ------------------------------------------------ scene ----
   function buildScenery(track, theme) {
     animated.length = 0;
+    beatFx.mats.clear(); beatFx.glows.clear(); beatFx.lights.length = 0;
     THEME = theme;
     const g = new THREE.Group();
     const S = track.samples, n = S.length, L = track.length;
     // Reserve both the circuit and every alley before placing or batching the city.
-    const streetSamples = S.concat(...(track.shortcuts || []).map((r) => r.samples.map((q) => Object.assign({ clearanceWidth: r.halfWidth + 1.2 }, q))));
+    // A branch street reserves its carriageway, parking lane and sidewalks (buildings stand behind them).
+    // clearanceWidth: nothing may stand on the carriageway, parking lane or most of the sidewalk (a chase
+    // camera swings wide in a side street's corners); reserveWidth: fillers are placed behind the sidewalk
+    // (the circuit's equivalents are ROAD_W + 1.6 and ROAD_W + 4.7)
+    const branchW = (r) => r.halfWidth + (root.RouteExtras ? root.RouteExtras.parking(r) : 0);
+    const streetSamples = S.concat(...(track.shortcuts || []).map((r) => r.samples.map((q) => Object.assign({ clearanceWidth: branchW(r) + 3.0, reserveWidth: branchW(r) + 3.4, route: r }, q))));
     // ground
     const gtex = (theme.street === 'altstadt' ? T.cobble(theme.ground, 1) : theme.street && theme.street !== 'park' ? T.asphalt(theme.ground, 1) : T.grass(theme.ground, 1)).clone();
     gtex.needsUpdate = true; gtex.repeat.set(1500, 1500);
@@ -1378,8 +1411,8 @@
       const inside = (c, px, pz) => { let sgn = 0; for (let k = 0; k < 4; k++) { const a = c[k], b = c[(k + 1) % 4]; const cr = (b.x - a.x) * (pz - a.z) - (b.z - a.z) * (px - a.x); if (Math.abs(cr) < 1e-6) continue; const s2 = cr > 0 ? 1 : -1; if (sgn === 0) sgn = s2; else if (s2 !== sgn) return false; } return true; };
       // Test the whole corridor against each oriented footprint. A few lateral
       // probes miss narrow posts, benches and trees between the probe lines.
-      const hit = (fp) => {
-        for (let i = 0; i < streetSamples.length; i++) {
+      const hit = (fp, from) => {
+        for (let i = from || 0; i < streetSamples.length; i++) {
           const q = streetSamples[i], radius = q.clearanceWidth || m;
           if (q.p.x < fp.minX - radius || q.p.x > fp.maxX + radius || q.p.z < fp.minZ - radius || q.p.z > fp.maxZ + radius) continue;
           if (!(fp.maxY > q.p.y - 0.2 && fp.minY < q.p.y + 3.5)) continue;
@@ -1395,14 +1428,15 @@
       let moved = 0, removed = 0;
       for (const ch of group.children.slice()) {
         if (ch.userData.keep || ch.userData.sky || ch.userData.water) continue;
-        const kind = ch.userData.kind || ''; if (SPANS.test(kind) && kind !== 'prop:neon') continue;
+        const kind = ch.userData.kind || '', span = SPANS.test(kind);
+        const from = span ? (/^prop:(neon|bunting|banner|gantry)$/.test(kind) ? n : -1) : 0; if (from < 0) continue;
         let fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700) continue;
         const obstacle = () => {
-          if (kind !== 'prop:neon') return hit(fp);
+          if (kind !== 'prop:neon') return hit(fp, from);
           // A neon sign may span the original road. Only its support posts
           // occupy car height; keep the sign but move posts out of new forks.
           let collision = -1;
-          ch.traverse((mesh) => { if (collision >= 0 || !mesh.isMesh || mesh.geometry.type !== 'BoxGeometry') return; const post = footprint(mesh); if (post) collision = hit(post); });
+          ch.traverse((mesh) => { if (collision >= 0 || !mesh.isMesh || mesh.geometry.type !== 'BoxGeometry') return; const post = footprint(mesh); if (post) collision = hit(post, from); });
           return collision;
         };
         let i = obstacle(); if (i < 0) continue;
@@ -1465,13 +1499,20 @@
         }
         reserved.push(plot); landmarkPlots.push(plot);
       }
+      // Keep the new wayfinders readable too: a tree clear of the carriageway
+      // can still cover the warning. Only procedural fillers are cleared;
+      // authored buildings and landmarks retain their protected placements.
+      const signPlots = (track.wayfinderKeepouts || []).map(({ bounds: b }) => ({
+        c: [[b.min.x, b.min.z], [b.max.x, b.min.z], [b.max.x, b.max.z], [b.min.x, b.max.z]].map(([x, z]) => new THREE.Vector3(x, 0, z)),
+        minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z, minY: b.min.y, maxY: b.max.y
+      }));
       // Procedural houses, trees and street furniture were generated before
-      // relocation. Clear only fillers that now intersect a landmark's plot.
+      // relocation. Clear fillers intersecting a landmark plot or sign view.
       for (const ch of group.children.slice()) {
         const u = ch.userData;
         if (u.landmarkName || u.keep || u.sky || u.water || (u.kind || '').startsWith('prop:')) continue;
         const fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700 || fp.maxY < GROUND_Y + 0.3) continue;
-        if (landmarkPlots.some((plot) => overlaps(fp, plot, 1))) { group.remove(ch); engulfed++; }
+        if (landmarkPlots.some((plot) => overlaps(fp, plot, 1)) || signPlots.some((plot) => overlaps(fp, plot, 0))) { group.remove(ch); engulfed++; }
       }
       // Water was clipped before the final buildings were moved. Give the
       // occupied city plots dry ground too, while leaving the river beneath
@@ -1572,10 +1613,12 @@
     }
     // street fillers along the track
     const rnd = mulberry(1234 + track.def.id.length * 77);
-    const grid = streetSamples.map((s) => [s.p.x, s.p.z]);
-    function trackFree(x, z, minD, iSkip) { for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; } return true; }
+    // grid[i][2]: how much wider than the circuit (road + curb) this sample's street is, so a filler keeps
+    // the same distance from a side street's sidewalk edge as from the circuit's curb
+    const grid = streetSamples.map((s) => [s.p.x, s.p.z, s.reserveWidth ? Math.max(0, s.reserveWidth - ROAD_W - 1.1) : 0]);
+    function trackFree(x, z, minD, iSkip) { for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z, r = minD + grid[i][2]; if (dx * dx + dz * dz < r * r) return false; } return true; }
     function freeAt(x, z, minD, iSkip) {
-      for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z; if (dx * dx + dz * dz < minD * minD) return false; }
+      for (let i = 0; i < grid.length; i += 3) { if (i < n && (Math.abs(i - iSkip) < 40 || Math.abs(i - iSkip) > n - 40)) continue; const dx = grid[i][0] - x, dz = grid[i][1] - z, r = minD + grid[i][2]; if (dx * dx + dz * dz < r * r) return false; }
       for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < k.r * k.r) return false; }
       return true;
     }
@@ -1592,6 +1635,20 @@
     for (const ps of pendingStories) story(ps[0], ps[1]);
     { let seenLoop = false, seenJump = false, seenTunnel = false, seenCork = false;
       for (let i = 0; i < n; i++) { const k = S[i].kind; if (S[i].cork && !seenCork) { seenCork = true; story('cork', i * track.ds - 40); } else if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
+    // oriented footprints of the houses, so the side streets' own rows can fill in without overlapping them
+    const houseBoxes = [];
+    function obbOf(o, hu, hv) {
+      o.updateMatrix(); const e = o.matrix.elements, ul = Math.hypot(e[0], e[2]) || 1, vl = Math.hypot(e[8], e[10]) || 1;
+      return { x: o.position.x, z: o.position.z, u: [e[0] / ul, e[2] / ul], v: [e[8] / vl, e[10] / vl], hu: hu != null ? hu : o.userData.w / 2, hv: hv != null ? hv : o.userData.d / 2 };
+    }
+    function obbHit(A, B, margin) {
+      const dx = B.x - A.x, dz = B.z - A.z;
+      for (const ax of [A.u, A.v, B.u, B.v]) {
+        const pr = (b) => b.hu * Math.abs(b.u[0] * ax[0] + b.u[1] * ax[1]) + b.hv * Math.abs(b.v[0] * ax[0] + b.v[1] * ax[1]);
+        if (Math.abs(dx * ax[0] + dz * ax[1]) >= pr(A) + pr(B) + margin) return false;
+      }
+      return true;
+    }
     // closed street walls (Blockrandbebauung): houses shoulder to shoulder along both sides, a side street now and then
     if (street === 'park') { // Rheinpark / Poller Wiesen: plane-tree alleys, lamps, benches and the odd Kölsch stand along the road
       for (const side of [-1, 1]) {
@@ -1618,12 +1675,14 @@
       const bl = Math.hypot(s.B.x, s.B.z) || 1; const x = s.p.x + s.B.x / bl * side * (ROAD_W + 2.3), z = s.p.z + s.B.z / bl * side * (ROAD_W + 2.3);
       if (!trackFree(x, z, 3, i)) continue; const b = P.awb(); b.position.set(x, GROUND_Y, z); b.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(b); } }
     // traffic lights, a waiting Kölner and the blue crossing sign at every Zebrastreifen (they also mark the keep-out for houses)
+    const signals = [];
     for (const zi of zebraSamples(track, theme)) {
+      const sig = { s: (zi - 3) * track.ds, off: rnd() * 17 }; signals.push(sig);
       for (const side of [-1, 1]) {
         const s = S[zi - 3]; const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
         const lat = ROAD_W + 2.0; const x = s.p.x + bx / bl * side * lat, z = s.p.z + bz / bl * side * lat;
         if (!trackFree(x, z, 4, zi)) continue;
-        const a = P.ampel(); a.position.set(x, GROUND_Y, z); a.lookAt(s.p.x - s.T.x * 9, GROUND_Y, s.p.z - s.T.z * 9); a.userData.kind = 'ampel'; g.add(a);
+        const a = P.ampel(); a.position.set(x, GROUND_Y, z); a.lookAt(s.p.x - s.T.x * 9, GROUND_Y, s.p.z - s.T.z * 9); a.userData.kind = 'ampel'; g.add(a); a.userData.lampGroup.userData.signal = sig; animated.push(a.userData.lampGroup);
         const sg = S[zi + 5]; const sx = sg.p.x + sg.B.x / bl * side * (ROAD_W + 2.4), sz = sg.p.z + sg.B.z / bl * side * (ROAD_W + 2.4);
         const sign = new THREE.Group(); sign.add(cyl(0.05, 0.06, 2.6, 0x777777, 0, 1.3, 0, 6)); const face = textPlane('ZEBRA', '#ffffff', '#1c3f95', 0.7, 0.7, false, { border: '#ffffff', sizeK: 0.45 }); face.position.set(0, 2.5, 0); sign.add(face);
         sign.position.set(sx, GROUND_Y, sz); sign.lookAt(sg.p.x - sg.T.x * 9, GROUND_Y, sg.p.z - sg.T.z * 9); sign.userData.kind = 'zebrasign'; g.add(sign);
@@ -1635,6 +1694,77 @@
         }
         keepOut.push({ x, z, r: 3 });
       }
+    }
+    placeVeedelLife();
+    // Veedel life (js/veedel.js): Karneval, Chicago-am-Rhein milieu, everyday street scenes and a LamboGina
+    // moment or two, spread over the flat stretches. Small scenes stand on the sidewalk between curb and
+    // houses; big ones (a float, the showroom) take a plot in the street wall, and the houses leave the gap.
+    // A moving scene keeps only its moving parts separate: probe its tick at a few moments (a car near and far,
+    // the beat on and off), mark every part whose pose, visibility or material changes, and batch the rest.
+    // A float with eighty parts then costs a handful of draw calls instead of eighty.
+    function batchStill(prop) {
+      const nodes = []; prop.traverse((o) => { if (o !== prop) nodes.push(o); });
+      const snap = () => nodes.map((o) => `${o.position.x},${o.position.y},${o.position.z},${o.rotation.x},${o.rotation.y},${o.rotation.z},${o.scale.x},${o.scale.y},${o.scale.z},${o.visible},${o.material ? o.material.id : ''}`);
+      const before = snap(), moving = new Set(), near = [new THREE.Vector3(0, 0, 6)], far = [new THREE.Vector3(900, 0, 900)];
+      const beats = [null, { pulse: 1, energy: 1, section: 'drop', playing: true, song: true, beat: 3, bar: 0, phase: 0, rise: 0, t: 1 }, { pulse: 0.05, energy: 0.5, section: 'b', playing: true, song: true, beat: 6, bar: 1, phase: 0.7, rise: 0, t: 2 }];
+      let k = 0;
+      try {
+        for (const t of [0.13, 0.71, 1.37, 2.9, 4.6, 7.3, 9.9]) for (const cars of [far, near, far]) {
+          prop.userData.tick(t, 1 / 60, { center: null, cars, beat: beats[k++ % 3] });
+          const now = snap(); for (let i = 0; i < nodes.length; i++) if (now[i] !== before[i]) moving.add(nodes[i]);
+        }
+      } catch (e) { return; } // a scene that cannot be probed stays unbatched
+      prop.updateMatrixWorld(true); mergeStatic(prop, moving);
+    }
+    function placeVeedelLife() {
+      const cat = (root.World && root.World.veedelCatalog) || {}, ids = Object.keys(cat).filter((id) => P[id] && id[0] !== '_');
+      if (!ids.length) return;
+      const carnival = !!theme.confetti, night = !!theme.night, park = street === 'park';
+      const weight = (m) => {
+        if (park) return ['strasse', 'lambogina'].includes(m.kind) && m.d <= 3.2 ? 1 : m.kind === 'karneval' && carnival ? 1 : 0;
+        return m.kind === 'karneval' ? (carnival ? 4 : 0.6) : m.kind === 'chicago' ? (night || /kalk|heist/.test(track.def.id) ? 2.5 : 0.8) : m.kind === 'lambogina' ? 1 : 1.4;
+      };
+      const pool = ids.map((id) => ({ id, m: cat[id], w: weight(cat[id]) })).filter((q) => q.w > 0);
+      if (!pool.length) return;
+      const mouth = mouthSets(track), zebras = zebraSamples(track, theme), routes = track.shortcuts || [];
+      const count = Math.max(3, Math.min(14, Math.round(L / 120))), used = {}; let lambo = 0, veedelMiss = 0, veedelPlaced = 0;
+      for (let k = 0; k < count; k++) {
+        const s0 = 70 + (L - 130) * (k + 0.1 + rnd() * 0.3) / count;
+        // walk forward from the spot to the first flat, gentle stretch away from crossings and junctions
+        let i = -1;
+        for (let t = 0; t < (L - 130) / count * 0.8 && i < 0; t += 4) {
+          const sPos = s0 + t, ci = Math.floor(sPos / track.ds) % n, q = S[ci];
+          if (!['straight', 'curve'].includes(q.kind) || Math.abs(q.p.y) > 0.3 || Math.abs(q.curv || 0) > 0.03) continue;
+          if (zebras.some((z) => Math.abs(z - ci) < 22) || routes.some((r) => Math.abs(r.startS - sPos) < 36 || Math.abs(r.endS - sPos) < 36)) continue;
+          i = ci;
+        }
+        if (i < 0) continue;
+        let tot = 0; const cand = pool.filter((c) => (used[c.id] || 0) < 2 && !(c.m.kind === 'lambogina' && lambo >= 2)); for (const c of cand) tot += c.w / (1 + (used[c.id] || 0) * 3);
+        let r = rnd() * tot, pickC = cand[0]; for (const c of cand) { r -= c.w / (1 + (used[c.id] || 0) * 3); if (r <= 0) { pickC = c; break; } }
+        if (!pickC) continue;
+        const m = pickC.m, w = m.w || 4, d = m.d || 2, side0 = rnd() < 0.5 ? -1 : 1;
+        const prop = P[pickC.id]({ seed: Math.floor(rnd() * 1e6), theme });
+        if (prop.userData.tick) batchStill(prop);
+        const height = new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()).y;
+        const big = d > 2.6 || height > 4.5; // floats, facades and billboards take a plot in the street wall
+        let ok = false;
+        for (let t = 0; t < 10 && !ok; t++) {
+          const j = [-6, -3, 0, 3, 6][t % 5], side = t < 5 ? side0 : -side0; // both sides of the street before giving up
+          const ii = ((i + j) % n + n) % n, sq = S[ii]; if (mouth['-1'].has(ii) || mouth['1'].has(ii)) continue;
+          const bl = Math.hypot(sq.B.x, sq.B.z) || 1, dist = big ? ROAD_W + 4.8 + d / 2 : ROAD_W + 1.9 + d / 2;
+          const x = sq.p.x + sq.B.x / bl * side * dist, z = sq.p.z + sq.B.z / bl * side * dist;
+          // big scenes need a whole plot; a sidewalk scene only has to keep clear of the roads and of what
+          // actually stands next to it (landmark keep-outs are sized for house rows, not for a Köbes)
+          const R = Math.hypot(w, d) / 2;
+          if (big ? !freeAt(x, z, R + 2, ii) : (!trackFree(x, z, R + 0.5, ii) || keepOut.some((k) => (k.x - x) ** 2 + (k.z - z) ** 2 < (Math.min(k.r, 14) * 0.55 + R) ** 2))) { veedelMiss++; continue; }
+          prop.position.set(x, GROUND_Y, z); prop.lookAt(sq.p.x, GROUND_Y, sq.p.z); prop.userData.kind = 'veedel:' + pickC.id; prop.userData.at = ii * track.ds / L;
+          g.add(prop); if (prop.userData.tick) animated.push(prop);
+          keepOut.push({ x, z, r: Math.hypot(w, d) / 2 + (big ? 6 : 1.5) }); houseBoxes.push(obbOf(prop, w / 2 + 0.5, d / 2 + 0.5));
+          used[pickC.id] = (used[pickC.id] || 0) + 1; if (m.kind === 'lambogina') lambo++;
+          story(pickC.id, ii * track.ds, prop); ok = true; veedelPlaced++;
+        }
+      }
+      if (root.STUNTS_AUDIT) console.log('veedel life:', { spots: count, placed: veedelPlaced, blocked: veedelMiss });
     }
     if (street !== 'park') {
       for (const side of [-1, 1]) {
@@ -1652,7 +1782,7 @@
             if (trackFree(gx, gz, 7, i) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
             continue;
           }
-          house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); house.userData.kind = 'house'; g.add(house); count++; houses++; sinceGap++;
+          house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); house.userData.kind = 'house'; g.add(house); count++; houses++; sinceGap++; houseBoxes.push(obbOf(house));
           if (house.userData.pub) { // Kölsch drinkers in front of every Brauhaus
             for (let k = 0; k < 2; k++) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const lat = ROAD_W + 2.6 + rnd() * 1.6; const off = (rnd() - 0.5) * w * 0.6; f.position.set(x + bx / bl * side * (lat - dist) + s.T.x * off, GROUND_Y, z + bz / bl * side * (lat - dist) + s.T.z * off); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
             story('brauhaus', sPos + w / 2, house);
@@ -1671,6 +1801,67 @@
             sPos += gapLen;
           }
         }
+      }
+    }
+    if ((track.shortcuts || []).length) placeStreetWalls();
+    // The real side streets get their own Veedel: a closed row of houses behind each sidewalk (trees and
+    // benches in the park themes), a Büdchen or a Brauhaus where the street is known for one. Every
+    // footprint point keeps clear of the circuit, its sidewalks and every branch; rows never overlap the
+    // circuit's own houses, landmarks or the Rhine.
+    function placeStreetWalls() {
+      const RX = root.RouteExtras, SH = root.Shortcuts, park = street === 'park';
+      const waters = []; g.traverse((m) => { if (m.userData && m.userData.water && m.isMesh) { m.updateMatrixWorld(true); const d = m.userData.waterGrid || m.geometry.parameters; if (d && Number.isFinite(d.width)) waters.push({ inv: new THREE.Matrix4().copy(m.matrixWorld).invert(), w: d.width, l: d.height }); } });
+      const wv = new THREE.Vector3();
+      const wet = (x, z) => { for (const wt of waters) { wv.set(x, GROUND_Y, z).applyMatrix4(wt.inv); if (Math.abs(wv.x) < wt.w / 2 && Math.abs(wv.y) < wt.l / 2) { // inside the river plane, unless a street keeps it dry here
+        let dry = false; for (let i = 0; i < streetSamples.length && !dry; i += 3) { const q = streetSamples[i]; if ((q.p.x - x) ** 2 + (q.p.z - z) ** 2 < (ROAD_W + 9) ** 2) dry = true; } if (!dry) return true; } } return false; };
+      // every point of a footprint must be this far from each street sample (circuit: road, curb and sidewalk)
+      const clearPoint = (x, z) => {
+        for (let i = 0; i < streetSamples.length; i += 2) { const q = streetSamples[i], r = q.reserveWidth || ROAD_W + 4.7; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < r * r) return false; }
+        for (const k of keepOut) if ((k.x - x) ** 2 + (k.z - z) ** 2 < k.r * k.r) return false;
+        return !wet(x, z);
+      };
+      const footprintClear = (box) => {
+        for (const [a, b] of [[0, 0], [1, 1], [1, -1], [-1, 1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const x = box.x + box.u[0] * box.hu * a + box.v[0] * box.hv * b, z = box.z + box.u[1] * box.hu * a + box.v[1] * box.hv * b;
+          if (!clearPoint(x, z)) return false;
+        }
+        return !houseBoxes.some((o) => obbHit(o, box, -0.05));
+      };
+      const put = (obj, f, lat, hu, hv) => { obj.position.set(f.p.x + f.B.x * lat, GROUND_Y, f.p.z + f.B.z * lat); obj.lookAt(f.p.x, GROUND_Y, f.p.z); const box = obbOf(obj, hu, hv); if (!footprintClear(box)) return null; g.add(obj); houseBoxes.push(box); return obj; };
+      for (const r of track.shortcuts) {
+        const hw = r.halfWidth, parkW = RX ? RX.parking(r) : 0, Lr = r.length, back = hw + parkW + 4.4; // facades 1.4 m behind the clearance, room for awnings
+        const frame = (d) => SH.frameAt(r, Math.max(0, Math.min(Lr, d)));
+        let pub = r.perks.includes('brauhaus'), kiosk = r.perks.includes('kiosk');
+        for (const side of [-1, 1]) {
+          if (park) { // an avenue: trees, a lamp now and then, benches facing the street
+            for (let d = 8 + (side > 0 ? 5 : 0), k = 0; d < Lr - 8; d += 11 + rnd() * 3, k++) {
+              const f = frame(d), obj = k % 6 === 3 ? P.bank() : P.tree(k + 3);
+              if (put(obj, f, side * (back + (k % 6 === 3 ? -0.6 : 1.2)), 1.2, 1.2) && k % 6 !== 3) obj.rotation.y = rnd() * 6.28;
+            }
+            continue;
+          }
+          let d = 3 + rnd() * 4, rowLen = 0, tries = 0;
+          while (d < Lr - 3 && tries < 400) {
+            tries++;
+            const wantPub = pub && side === (r.side > 0 ? -1 : 1) && d > Lr * 0.2;
+            { const f0 = frame(d + 5), probe = new THREE.Object3D(); probe.position.set(f0.p.x + f0.B.x * side * (back + 6), GROUND_Y, f0.p.z + f0.B.z * side * (back + 6)); probe.lookAt(f0.p.x, GROUND_Y, f0.p.z);
+              if (!footprintClear(obbOf(probe, 4.5, 5.5))) { d += 3; rowLen = 0; continue; } } // blocked plot: skip it before building a house
+            const house = P.house(Math.floor(rnd() * 1e6), wantPub ? { pub: true } : undefined), w = house.userData.w, dd = house.userData.d;
+            const f = frame(d + w / 2), lat = side * (back + dd / 2);
+            if (!put(house, f, lat)) { d += 3; rowLen = 0; continue; }
+            house.userData.kind = 'house'; count++;
+            if (house.userData.pub) { pub = false; story('brauhaus', r.startS, house);
+              for (let k = 0; k < 2; k++) { const fp = frame(d + w * (0.3 + 0.4 * k)), pf = P.passant({ k: Math.floor(rnd() * 20) }); pf.position.set(fp.p.x + fp.B.x * side * (back + 0.6), GROUND_Y, fp.p.z + fp.B.z * side * (back + 0.6)); pf.rotation.y = rnd() * 6.28; g.add(pf); } }
+            d += w + 0.15; rowLen++;
+            if (rowLen > 5 + rnd() * 4) { // a Hofeinfahrt or a tiny Platz between the houses
+              rowLen = 0; const gap = 9 + rnd() * 5, gf = frame(d + gap / 2);
+              if (kiosk) { if (put(P.buedchen(), gf, side * (back + 2.2), 2.2, 2.2)) { kiosk = false; story('buedchen', r.startS); } }
+              else if (rnd() < 0.5) put(P.tree(Math.floor(rnd() * 3)), gf, side * (back + 2.5), 1.5, 1.5);
+              d += gap;
+            }
+          }
+        }
+        if (kiosk) { const f = frame(Math.min(Lr - 12, 16)); put(P.buedchen(), f, -r.side * (back + 2.2), 2.2, 2.2); }
       }
     }
     // tram catenary along the Ringe streets: poles, arms and wires
@@ -1810,6 +2001,19 @@
       else { b = building(11, 2.8, 9, 'gruenderzeit', PASTEL[(k * 3) % PASTEL.length], 'hip', 70 + k, { night: theme.night, shop: ['KIOSK', 'BÜDCHEN', 'HALVE HAHN'][k % 3] }); }
       b.position.set(m.p.x, GROUND_Y, m.p.z); b.rotation.y = Math.atan2(m.T.x, m.T.z) + Math.PI / 2; b.userData.kind = 'prop:jumphouse'; g.add(b);
     });
+    // LamboGina searchlights: two beams behind the start/finish sweep the sky in the song's hook and bass run
+    { const s0 = S[Math.min(n - 1, 8)], bl = Math.hypot(s0.B.x, s0.B.z) || 1;
+      for (const side of [-1, 1]) {
+        const x = s0.p.x + s0.B.x / bl * side * (ROAD_W + 34), z = s0.p.z + s0.B.z / bl * side * (ROAD_W + 34); // behind the street wall
+        const base = new THREE.Group(); base.position.set(x, GROUND_Y, z);
+        base.add(cyl(0.9, 1.1, 1.2, 0x2a2a30, 0, 0.6, 0, 10));
+        const head = new THREE.Group(); head.position.y = 1.4; base.add(head);
+        head.add(cyl(0.7, 0.7, 1.1, 0x3a3a44, 0, 0, 0, 10)); const lens = new THREE.Mesh(new THREE.CircleGeometry(0.62, 12), bmat(0xfff6d0)); lens.position.y = 0.56; lens.rotation.x = -Math.PI / 2; head.add(lens);
+        const beam = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 0.5, 160, 12, 1, true), new THREE.MeshBasicMaterial({ color: side < 0 ? 0xff9ad0 : 0x9af4ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+        beam.position.y = 80; head.add(beam);
+        base.userData.kind = 'searchlight'; base.userData.searchlight = { head, beam, side, night: !!theme.night }; g.add(base); animated.push(base); keepOut.push({ x, z, r: 4 });
+      }
+    }
     // final pass: nothing static may stand on the road. Every placed object gets its footprint (oriented
     // box of all its meshes) tested against the road corridor of the whole circuit; offenders are pushed
     // sideways off the road, and removed if 24 m of pushing does not free them. Structures that span the
@@ -1818,14 +2022,38 @@
     if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
     mergeStatic(g, new Set(animated));
-    return { group: g, animated, props: propList };
+    return { group: g, animated, props: propList, signals };
   }
 
   const _qTmp = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0), _zAxis = new THREE.Vector3(0, 0, 1);
   function animate(t, dt, center, cars) { // cars: positions of every car on the road, for the pedestrians
+    const beat = root.LamboBeat ? root.LamboBeat.now() : null;
+    if (beat) { // neon pumps with the kick, a little brighter in the hook, all in in the bass run
+      const k = beat.playing ? beat.pulse : 0, e = beat.playing ? beat.energy : 0.35;
+      const lum = 0.72 + 0.28 * e + 0.5 * k;
+      for (const m of beatFx.mats) m.color.setScalar(Math.min(1.25, lum));
+      for (const m of beatFx.glows) m.opacity = 0.11 * (0.55 + 0.45 * e + 1.6 * k * e);
+      for (const l of beatFx.lights) l.intensity = 1.2 * (0.6 + 0.3 * e + 0.9 * k);
+    }
     for (const a of animated) {
       const u = a.userData;
-      if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
+      if (u.signal) { // switch the lamps only when the phase changes
+        const st = signalState(u.signal, t / 1000); if (u.lampState !== st) { u.lampState = st; const L = u.lamps;
+          L.red.material = LAMP.red[st === 'red' || st === 'redyellow' ? 0 : 1]; L.yellow.material = LAMP.yellow[st === 'yellow' || st === 'redyellow' ? 0 : 1]; L.green.material = LAMP.green[st === 'green' ? 0 : 1]; }
+        continue;
+      }
+      if (u.searchlight) {
+        const sl = u.searchlight, on = beat && beat.playing && (beat.section === 'b' || beat.section === 'drop' || beat.section === 'rise');
+        const target = on ? (beat.section === 'drop' ? 0.2 : beat.section === 'rise' ? 0.06 + 0.12 * beat.rise : 0.1) * (sl.night ? 1 : 0.45) * (0.75 + 0.5 * beat.pulse) : 0;
+        sl.beam.material.opacity += (target - sl.beam.material.opacity) * Math.min(1, dt * 6);
+        sl.beam.visible = sl.beam.material.opacity > 0.004;
+        const sp = beat && beat.section === 'drop' ? 0.0011 : 0.0006;
+        sl.head.rotation.z = Math.sin(t * sp + sl.side) * 0.45; sl.head.rotation.x = Math.cos(t * sp * 0.8 + sl.side * 2) * 0.3;
+        continue;
+      }
+      if (u.fw && beat && beat.playing && beat.section === 'drop' && u.fw.timer > 0.5) u.fw.timer = 0.46; // Kölner Lichter go off with the bass
+      if (u.tick) u.tick(t / 1000, dt, { center, cars, beat: root.LamboBeat ? root.LamboBeat.now() : null }); // street life with its own animation (js/veedel.js)
+      else if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
       else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
       else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
       else if (u.walker) {
@@ -2021,5 +2249,6 @@
     return pts;
   }
 
-  root.World = { buildRoad, buildScenery, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored };
+  root.World = { buildRoad, buildScenery, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored, mergeStatic,
+    setTheme: (t) => { THEME = t; }, theme: () => THEME, signalState };
 })(window);

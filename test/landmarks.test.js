@@ -1,8 +1,15 @@
 // The city catalog is executable geometry, not just names in map metadata.
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { serve, launch } = require('./helpers');
 
 module.exports = async function () {
+  // A later script must never silently replace another sourced building.
+  const registrations = ['landmarks.js', 'wahrzeichen.js'].flatMap((file) =>
+    Array.from(fs.readFileSync(path.join(__dirname, '../js', file), 'utf8')
+      .matchAll(/\b(?:register|World\.registerLandmark)\('([^']+)'/g), (match) => match[1]));
+  assert.strictEqual(new Set(registrations).size, registrations.length, 'landmark registrations must have unique canonical IDs');
   const port = 9000 + Math.floor(Math.random() * 90), server = serve(port);
   let browser;
   try {
@@ -38,10 +45,16 @@ module.exports = async function () {
         min: bounds.min.toArray(), max: bounds.max.toArray(), size: size.toArray() };
     }));
     const ids = models.map((m) => m.id);
-    for (const id of ['agnes', 'gereon', 'synagoge', 'richmodisturm', 'melaten', 'bottmuehle']) {
+    assert.deepStrictEqual([...ids].sort(), [...registrations].sort(), 'every declared landmark must reach the runtime catalog');
+    for (const id of ['agnes', 'gereon', 'synagoge', 'richmodisturm', 'melaten', 'bottmuehle',
+      'overstolzenhaus', 'ursula', 'makk', 'altheribert', 'siebengebirge', 'butzweilerhof',
+      'kreuzblume', 'stapelhaus', 'pegel', 'roemerturm', 'gereonsmuehle', 'eistuete', 'ulrepforte',
+      'stseverin', 'lyskirchen', 'stclemens', 'oberlandesgericht', 'staatenhaus', 'hochbunker',
+      'herkuleshochhaus', 'herkulesberg', 'janvonwerth', 'drehbruecke', 'pollerkoepfe', 'rheinboulevard']) {
       assert(ids.includes(id), id + ': the new real Cologne model must be registered');
     }
-    assert(models.length >= 23, 'the complete expanded city catalog must load');
+    assert(models.length >= 48, 'both city catalogs and the new landmarks must load');
+    assert(!ids.includes('severin'), 'St. Severin has one canonical model, stseverin');
     for (const model of models) {
       assert.deepStrictEqual(model.issues, [], model.id + ': visible geometry must be finite and valid');
       assert(model.meshes > 0 && model.vertices > 0 && model.triangles > 0, model.id + ': must contain actual geometry');

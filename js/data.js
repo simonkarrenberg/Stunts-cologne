@@ -171,7 +171,10 @@
         { type: 'row', seg: 15, u: 0.3, side: -1, dist: 24, style: 'concrete', seed: 4, n: 5 },
         { type: 'koelsch', seg: 15, u: 0.9, side: 1, dist: 18 },
         { type: 'billboard', seg: 17, u: 0.3, side: -1, dist: 14, text: 'CHICAGO AM RHEIN – MAN KENNT SICH' },
-        { type: 'flag', seg: 17, u: 0.6, side: 1, dist: 9 }
+        { type: 'flag', seg: 17, u: 0.6, side: 1, dist: 9 },
+        { type: 'kreuzblume', seg: 0, u: 0.45, side: 1, dist: 16, story: 'De Kreuzblum vum Dom, in Orijinaljröß. Do bovve op 157 Meter süht se winzich us. Wie ming Chance op ne Parkplatz.' },
+        { type: 'stapelhaus', seg: 7, u: 0.15, side: 1, dist: 32, story: 'Stapelhaus. Fröher musst jedes Schiff sing Fesch hee dreii Daach feilbeede. Stapelrääch. Hück säht mer Klüngel.' },
+        { type: 'pegel', seg: 9, u: 0.8, side: -1, dist: 14, story: 'Kölner Pegel. Kleine Zeijer Meter, jroße Zeijer Dezimeter. Över zehn Meter nemme mer et Boot, nit et Auto.' }
       ]
     },
     {
@@ -250,7 +253,6 @@
         { type: 'bayenturm', seg: 16, u: 0.35, side: 1, dist: 24, keep: 28, story: 'Bayenturm. 1262 hann de Kölner hee de Erzbischof rusjeworfe. Der erste Türsteher-Job in Kölle. Ohne mich.' },
         { type: 'bottmuehle', seg: 16, u: 0.72, side: -1, dist: 66, keep: 44, story: 'Bottmühle am Severinswall. Früher Mühle, heute Jugendtreff. De Flügel sin weg, der runde Turm steht noch.' },
         { type: 'severinstor', seg: 9, u: 0.5, side: 1, dist: 30 },
-        { type: 'severin', seg: 10, u: 0.5, side: -1, dist: 94, keep: 82, story: 'St. Severin in der Südstadt. Drei Türme als Orientierung. Schäl fragt trotzdem dat Navi.' },
         { type: 'row', seg: 12, u: 0.5, side: -1, dist: 24, style: 'gruenderzeit', seed: 12, n: 5 },
         { type: 'tramline', seg: 12, u: 0.5, side: 1, dist: 14, len: 90, face: false },
         { type: 'cafe', seg: 11, u: 0.8, side: 1, dist: 13 },
@@ -260,7 +262,10 @@
         { type: 'barge', seg: 15, u: 0.5, side: -1, dist: 60 },
         { type: 'row', seg: 16, u: 0.5, side: -1, dist: 24, style: 'modern', seed: 2, n: 4 },
         { type: 'billboard', seg: 16, u: 0.8, side: 1, dist: 14, text: 'DÄ LANGE – KÖLSCH & KREDIT' },
-        { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 }
+        { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 },
+        { type: 'ulrepforte', seg: 13, u: 0.5, side: -1, dist: 70, story: 'Ulrepforte. Hee sitze de Rote Funke. Die verteidije Kölle zick 1823 – vör allem jäje de Nüchternheit.' },
+        { type: 'stseverin', seg: 6, u: 0.5, side: -1, dist: 110, story: 'St. Severin, dat Hätz vum Vringsveedel. Wä dä Turm nit mieh sieht, es ze wick jefahre – oder en Düsseldorf.' },
+        { type: 'lyskirchen', seg: 2, u: 0.5, side: -1, dist: 70, story: 'Lyskirchen, de Kirch vun de Rheinschiffer. Die bedde zor Schiffermadonna. Ich bedde, dat dä Blitzer kapott es.' }
       ]
     },
     {
@@ -339,7 +344,10 @@
         { type: 'billboard', seg: 12, u: 0.7, side: -1, dist: 14, text: 'MÜLHEIM – HEE FÄNGT DER OSTEN AN' },
         { type: 'row', seg: 12, u: 0.6, side: 1, dist: 26, style: 'concrete', seed: 7, n: 5 },
         { type: 'buedchen', seg: 18, u: 0.5, side: -1, dist: 11 },
-        { type: 'crowd', seg: 20, u: 0.5, side: 1, dist: 10 }
+        { type: 'crowd', seg: 20, u: 0.5, side: 1, dist: 10 },
+        { type: 'stclemens', seg: 12, u: 0.5, side: -1, dist: 45, story: 'St. Clemens in Mülheim steiht met de Föß fass im Rhing. Bei Huhwasser kütt dä Pastor met dem Boot.' },
+        { type: 'oberlandesgericht', seg: 20, u: 0.5, side: 1, dist: 75, story: 'Oberlandesgericht am Reichenspergerplatz. Hee weed jeurteilt. Ding Fahrstil kütt en de nächste Instanz.' },
+        { type: 'staatenhaus', seg: 7, u: 0.5, side: -1, dist: 70, story: 'Staatenhaus am Rheinpark. Fröher Messe, hück Oper. Drinne weed jesunge, drusse quietsche ding Reife.' }
       ]
     },
     {
@@ -415,7 +423,10 @@
         { type: 'billboard', seg: 20, u: 0.3, side: 1, dist: 14, text: 'HELIOS-TURM – NUR ECHT MIT LEUCHTTURM' },
         { type: 'graffiti', seg: 20, u: 0.7, side: -1, dist: 12, text: 'DÄ LANGE WOR HEE', color: '#7fff00' },
         { type: 'buedchen', seg: 20, u: 0.9, side: 1, dist: 11 },
-        { type: 'crowd', seg: 22, u: 0.5, side: 1, dist: 10 }
+        { type: 'crowd', seg: 22, u: 0.5, side: 1, dist: 10 },
+        { type: 'hochbunker', seg: 12, u: 0.5, side: -1, dist: 50, story: 'Hochbunker Körnerstroß. Wo bes 1938 de Synagog stund. Hück Kunst un Erinnerung. Dä Beton bliev, et Verjesse nit.' },
+        { type: 'herkuleshochhaus', seg: 10, u: 0.5, side: -1, dist: 90, story: 'Herkules-Hochhaus, et Papageiehuus. Bunt wie ne Karnevalsorden un 31 Etasche huh. Aufzoch kaputt? Dann is et Sport.' },
+        { type: 'herkulesberg', seg: 9, u: 0.5, side: -1, dist: 110, story: 'Herkulesberg. Us Trümmer vum Kreech jebaut, jetzt jrön. Kölle schmieß nix fott. Mer mäht drus ne Berg.' }
       ]
     },
     {
@@ -515,7 +526,10 @@
         { type: 'blitzer', seg: 21, u: 0.9, side: -1, dist: 8 },
         { type: 'bude', seg: 21, u: 0.2, side: 1, dist: 11, text: 'CURRYWURST BEI JUPP' },
         { type: 'neon', seg: 21, u: 0.4, side: -1, dist: 14, text: 'ET HÄTT NOCH IMMER JOT JEJANGE', color: '#7fff00', light: false },
-        { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 }
+        { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 },
+        { type: 'roemerturm', seg: 4, u: 0.5, side: -1, dist: 68, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.' },
+        { type: 'gereonsmuehle', seg: 10, u: 0.5, side: 1, dist: 30, story: 'De Gereonsmühl. Fröher hät se hee Mähl jemahle. Hück mahlt nur noch dä Verkehr op dem Hansaring.' },
+        { type: 'eistuete', seg: 2, u: 0.5, side: 1, dist: 72, story: 'De Eistüt op dem Dach am Neumarkt. Einer hät se falle looße – un keiner hät se opjehovve. Typisch Kölle.' }
       ]
     },
     {
@@ -561,7 +575,7 @@
         { type: 'tribuene', seg: 9, u: 0.3, side: -1, dist: 12, keep: 30 },
         { type: 'zochwagen', seg: 13, u: 0.6, side: 1, dist: 13 },
         { type: 'tribuene', seg: 17, u: 0.5, side: -1, dist: 12, keep: 30 },
-        { type: 'severin', seg: 8, u: 0.5, side: 1, dist: 90, keep: 82 },
+        { type: 'stseverin', seg: 8, u: 0.5, side: 1, dist: 90, keep: 82 },
         { type: 'makk', seg: 13, u: 0.8, side: -1, dist: 116, keep: 72 },
         { type: 'bunting', seg: 0, u: 0.4, side: 0, dist: 0 },
         { type: 'billboard', seg: 0, u: 0.6, side: -1, dist: 14, text: 'KÖLLE ALAAF – KAMELLE!' },
@@ -596,7 +610,8 @@
         { type: 'bunting', seg: 17, u: 0.7, side: 0, dist: 0 },
         { type: 'crowd', seg: 17, u: 0.8, side: 1, dist: 10 },
         { type: 'crowd', seg: 20, u: 0.5, side: -1, dist: 10 },
-        { type: 'bunting', seg: 20, u: 0.4, side: 0, dist: 0 }
+        { type: 'bunting', seg: 20, u: 0.4, side: 0, dist: 0 },
+        { type: 'janvonwerth', seg: 10, u: 0.5, side: 1, dist: 14, story: 'Jan un Griet. Hä kom als Jeneral zeröck, sei stundt met Obs am Severinstor. Wer et hätt jewoss! Zo spät, Griet.' }
       ]
     },
     {
@@ -681,7 +696,10 @@
         { type: 'koelsch', seg: 23, u: 0.8, side: 1, dist: 18 },
         { type: 'crowd', seg: 23, u: 0.3, side: 1, dist: 12 },
         { type: 'billboard', seg: 24, u: 0.5, side: -1, dist: 14, text: 'WER BREMST, ZAHLT DE KÖLSCH' },
-        { type: 'tribuene', seg: 24, u: 0.8, side: 1, dist: 14 }
+        { type: 'tribuene', seg: 24, u: 0.8, side: 1, dist: 14 },
+        { type: 'drehbruecke', seg: 13, u: 0.5, side: 1, dist: 70, story: 'Drehbröck am Deutzer Hafen. Sit 1908 dreiht se sich för jedes Scheff. Ich dreih mich nur för e Kölsch.' },
+        { type: 'pollerkoepfe', seg: 16, u: 0.5, side: 1, dist: 80, story: 'Poller Köpfe. Sit 1560 hale die Stein der Rhing en Reih, dat hä nit durch Poll avhaut. Türsteher us Basalt, wie ich.' },
+        { type: 'rheinboulevard', seg: 4, u: 0.5, side: 1, dist: 80, story: 'Rheinboulevard. Hee sitze se all op de Trappe un luure noh em Dom. Dä luurt nit zeröck. Dä hät dat nit nüdig.' }
       ]
     }
     ,{
@@ -948,6 +966,19 @@
     overtaken: ['Un fott is er. Wie ming Steuererklärung.', 'Der zieht an dir vorbei wie de Rhing bei Hochwasser.'],
     record: ['NEUE BESTZEIT! Dat schreib ich uff de Deckel.', 'Streckenrekord! Ich lass dich uff ne Bierdeckel drucke.'],
     turbo: ['Turbo! Jetz brennt de Asphalt.', 'Nitro, Jung! Dat riecht nach Kölsch un Benzin.'],
+    // real side streets: what dä Lange says when you come out at the other end ({street}, {m} metres)
+    routes: {
+      cut: ['{street}: {m} Meter jespart. Dat steht nit im Stadtplan, Jung.', 'Dörch de {street}! Dat weiß nur, wer he jebore es.', '{street} – de Taxifahrer nemme die och. Frach nit wieso.'],
+      parallel: ['{street}: e Stöck parallel, keiner hät jet jemerk.', 'Övver de {street}. Ander Stroß, selve Kölle.', '{street} – wat e Veedel. Un dä Ring hät dich nit jesinn.'],
+      bypass: ['{street}: kein Looping, dafür heile Karosserie.', 'Umjehung övver de {street}. Dä Kotflügel dank et dir.', '{street} statt Stunt. Och dat es Kölle: jet Jemütlich.'],
+      bump: ['Pass op, dä Marktstand! Die Äppel wore frisch.', 'Kölschkiste! Die zahls do, Jung.', 'Dat wor dä Stand vum Hermann. Dä vergiss dat nit.']
+    },
+    // LamboGina, the title song: dä Lange reacts to its sections (hook, riser, the long bass run)
+    lambo: {
+      drop: ['Jetz kütt dä Bass! Foß op et Jas – dä Turbo lädt doppelt.', 'Hür ens, dä Bass! Dat es LamboGina. Dä weiße Keil fährt mit.', 'Bass-Stroß! Jetz jeiht de Stadt in de Knie, un du jeihs in de Kurv.', 'Wenn dä Bass kütt, bliev et Pedal unge. Dat es Jesetz in Kölle.'],
+      rise: ['Et baut sich op … wie de Oper. Nur schneller.', 'Jleich kütt et. Janz ruhig. Nä – janz schnell!', 'Hörs de dat? Do kütt jet Jroßes. Wie Rosenmontag, nur lauter.'],
+      hook: ['LamboGina! Ganz Kölle singk mit.', 'Refrain! Dä Dom wippt, dat han ich jesinn.', 'Dat Leed. Dä Keil. Dä Ring. Mieh bruch keiner.']
+    },
     damage: ['Totalschaden. Heinzel schraubt dich nachts wieder zesamme.', 'Dat Auto is fott. Dat nächste is uff Deckel.'],
     events: [
       'Ne Taube op der Windschutzscheibe. Typisch Domplatte.',
@@ -1006,6 +1037,8 @@
       'RADIO KÖLLE: In Düsseldorf hät et jeregnet. Wie schade.',
       'RADIO KÖLLE: Neonlicht op der Ringe, Palmen am Rhing. Miami? Nä. Kölle.'
     ],
+    rotlicht: ['Rot jefahre! Dat Foto kütt per Post, mit Jrooß vum Ordnungsamt.', 'Dat wor rut. Nit Kirschrut – Knöllchen-Rut.', 'Ampel rut, Foß schwer. Dä Rotlichtblitzer freut sich.', 'Rut is och en Farv, Jung. En düür Farv.'],
+    gelb: ['Dat wor noch jelb. Dunkeljelb.', 'Kirschgrün! Jrad noch.', 'Jelb heiß: Jas. Steht su in keiner Fahrschul.'],
     blitzer: [
       'BLITZ! Dat Foto kütt an de Bierdeckel. Knöllchen: 60 Euro.',
       'BLITZ! Klüngel Tom regelt dat. Für 40 Euro un e Kölsch.',
@@ -1023,6 +1056,24 @@
     ],
     // place anecdotes: told when you pass a Brauhaus, Büdchen, Blitzer, church ... (the doorman knows every door in town)
     places: {
+      // the street scenes of js/veedel.js
+      nubbel: ['Dä Nubbel. Dä hängk övver dr Kneip, un an Aschermittwoch es hä schuld an allem. Praktisch.', 'Wer hät dat Kölsch jetrunke? Dä Nubbel. Wer hät dat Fenster kapott jemaat? Dä Nubbel. Ene jode Mann.'],
+      schunkeln: ['Schunkele! Links, rächs, links. Wer nit schunkelt, weed nit jesinn.', 'Die schunkele jetz seit elf Uhr elf. Dat es kein Tanz, dat es Ausdauersport.'],
+      dreigestirn: ['Dat Dreijestirn: Prinz, Bauer, Jungfrau. Die Jungfrau hät ene Bart. Dat es Tradition, kein Fehler.', 'Dä Bauer hät dä Stadtschlüssel. Ich hann ihn ens jefrog, ob hä och die vum Büdchen hät. Nä.'],
+      kamellewagen: ['Kamelle! Kopp enzeje, Jung. Die Bonbons kumme met hundert Sache.', 'Strüßjer un Kamelle. Wer zwei Tüte fängk, es Käpt\'n vum Veedel.'],
+      funkemariechen: ['Dat Mariechen flüch höher als dä Looping. Ohne Sicherheitsgurt.', 'Die Tanzjarde. Drei Mol die Woch Training, un dann ene Samstag lang lächle.'],
+      musikwagen: ['Dä Musikwagen spillt LamboGina. Hundertdressisch Schläch en dr Minutt – dat es ming Pulsfrequenz nachts um drei.', 'Wenn dä Bass kütt, wackelt dr Dom. Ich hann et jesinn.'],
+      spielhalle: ['Spielhalle. Do drin es et immer drei Uhr nachts, och mittags.', 'Hee hann ich ens ene Automat jesinn, dä hät jewonne. Dä Automat.'],
+      wettbuero: ['Wettbüro. Dat Pääd heiß „Morje Widder“. Dat heiß su, weil et nie jewinnt.', 'Die zwei do wette seit 1971 op dat selve Pääd. Et läuf immer noch.'],
+      tresorknacker: ['Dat do sin keine Möbelpacker. Möbelpacker trage kein Masken.', 'Dä Tresor es schwerer als ihr Jewesse. Ävver nur knapp.'],
+      paketdienst: ['Zweite Reih, Warnblinker an. Dat es dä Kölsche Parkplatz.', 'Dä Paketmann. Dä fährt mieh Kilometer als du, un hät kein Turbo.'],
+      baustelle: ['Baustell seit 1972. Fertig demnächst. Dat es dat Motto vun dr janze Stadt.', 'Dä Bagger hät Paus. Dä Bauarbeiter och. Dat Loch nit.'],
+      tauben: ['De Domtaube. Die hann hee mieh Rechte als du.', 'Fahr nit ze flöck, sons fliege die op. Un dann weiß mer nit, wo die landen.'],
+      strassenband: ['Kölsche Tön op dr Stroß. Wer do nit mitsingk, es nit vun hee.', 'Die Tuba es älter als dä Musiker. Un leuter.'],
+      jga: ['Junggesellinnenabschied. Die kumme us Bielefeld un jonn als Kölsche heim.', 'Team Braut. Dä Bräutijam es bestemmp och in dr Stadt. Im andere Veedel. Zom Glück.'],
+      rievkoochebud: ['Rievkooche met Appelkruut. Dat es kein Snack, dat es e Jrundrääch.', 'Drei Stöck, un dann nochens drei. Dä Magen vergiss dat nit.'],
+      autohausgina: ['Autohaus Gina. Do steiht dä weiße Keil. Dä Poster wor fröher övver mingem Bett.', 'LamboGina. Lurens, wie dä sich drieht. Wie ich, wenn dä Bass kütt.'],
+      lamboposter: ['LamboGina op dem Plakat. Dä weiße Keil vun Kölle, hundertdressisch BPM.', 'Dat Plakat hing fröher in jedem Jugendzemmer. Jetz hängk et am Ring.'],
       brauhaus: ['Brauhaus. Der Köbes bringt Kölsch, bis de ne Deckel op et Glas lächs. Ich hann noch nie ne Deckel jebruch.', 'Hee drin hann ich mieh Lück rausjeschmisse als reinjelosse. Wor e jutes Jeschäft.', 'Kölsch is dat einzije Bier, dat mer och versteht, wenn mer et nit trinkt.', 'Der Wirt schuldet mir noch e Kölsch vun 1974. Ich wart. Ich hann Zick.', 'Die stonn vor der Tür, weil se drinne nit mieh stonn künne.'],
       buedchen: ['Büdchen. Dat Kölner Wohnzimmer. Kölsch, Zigaretten, Klüngel. Alles zum Mitnehmen.', 'Am Büdchen hann ich mieh jelernt als op der Schull. Vor allem rechne. Met Deckel.', 'Der Büdchen-Mann kennt jeden. Ich kenn ihn. Also kenn ich jeden.'],
       blitzer: ['Blitzer. Der einzije in Kölle, der pünktlich is.', 'Dat Ding hät mieh Fotos vun mir als ming Mutter.', 'Blitzer? Hee? Dat hät mir keiner jesaht. Ich kenn jemand, der dat wegmacht.'],
@@ -1084,9 +1135,11 @@
       { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', stat: 'roofs', need: 1, color: 'r' },
       { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' },
       { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' },
+      { id: 'veedel', name: 'VEEDELSKENNER', desc: '10 echte Seitenstroße jefahre', stat: 'streets', need: 10, color: 'b' },
+      { id: 'jasse', name: 'EN DE JASSE VERSCHWUNDE', desc: '3× de Kripo in ner Seitenstroß abjehängt', stat: 'veedelEscapes', need: 3, color: 'g' },
+      { id: 'bass', name: 'LAMBOGINA', desc: '5× dä Bass vum Titelleed im Rennen', stat: 'bassRuns', need: 5, color: 'w' },
       { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', stat: 'boten', need: 3, color: 'o' },
       { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' },
-      { id: 'veedelskenner', name: 'VEEDELSKENNER', desc: '10 verschiedene Nebenwege entdeckt', stat: 'streetsFound', need: 10, color: 'g' },
       { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: 'Alle 29 Nebenwege entdeckt', stat: 'streetsFound', need: 29, color: 'b' }
     ],
     ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
@@ -1168,6 +1221,8 @@
       hit: ['Rammstoß! Dat jibt Punkte in Flensburg. Un ne Beule.', 'Der Peterwagen küsst dich. Ohne Bützje.', 'Kripo: „Anhalten!“ Du: „Später.“'],
       off: ['Ich hab met dem Kommissar telefoniert. Mer kenne uns vum Kegeln. Die Kripo dreht ab.', 'Klüngel, Jung. Der Peterwagen hät plötzlich Feierabend.', 'Dat wor der Hauptkommissar. Ich hann ihm 1974 an der Tür jeholfe. Erledigt.'],
       giveup: ['Kripo: „Schichtwechsel.“ Der Peterwagen dreht ab. Dat wor knapp.', 'Die Kripo hät dich verlore. Oder Hunger. Beides jut för dich.'],
+      lost: ['Wo es dä hin? Dä es en de Seitenstroß verschwunde!', 'Funkspruch: Verdächtijer im Veedel verloore. Schon widder.', 'Mer han en verloore. Dat Veedel hät zo vill Jasse.'],
+      follows: ['Die Kripo kütt hinger dir her en de Seitenstroß!', 'Blaulich im Rückspiejel – die fahre mit en et Veedel!', 'Dä Peterwagen biegt och av. Jas!'],
       caught: ['Die Kripo hät dich zerlegt. Der Blechschmied freut sich. Ming Schwager.']
     },
     // the doorman's bet before the race
@@ -1201,7 +1256,7 @@
       podium: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
       default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
     },
-    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.']
+    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DÄ POSTER HING ÖVVER DÄM BETT. JETZ HÄNGT HÄ OP DÄM RING.']
   };
 
   root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN };

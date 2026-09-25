@@ -74,6 +74,7 @@ module.exports = async function () {
     // Seed nine valid discoveries as a saved-game fixture, then earn the
     // tenth through physics. The medal itself is granted at normal results.
     await page.evaluate((next) => {
+      localStorage.removeItem('stuntskoelle.veedel');
       let remaining = 9;
       for (const def of GameData.TRACKS) {
         const ids = [...(def.shortcuts || []), ...(def.branches || [])].map((r) => r.id).filter((id) => id !== next).slice(0, remaining);
@@ -88,8 +89,19 @@ module.exports = async function () {
     assert.strictEqual(await page.evaluate(() => STUNTS_ORDEN().stats.streetsFound), 10, 'discovery total must be derived from unique valid saved route IDs');
     await page.evaluate(() => { STUNTS_MANUAL_STEP = false; STUNTS_FINISH(); });
     assert(await waitFor(page, () => !document.getElementById('results').hidden, 15000), 'race must reach normal result handling');
-    assert((await page.evaluate(() => STUNTS_ORDEN().orden)).includes('veedelskenner'), 'ten distinct roads must award Veedelskenner');
+    assert((await page.evaluate(() => STUNTS_ORDEN().orden)).includes('veedel'), 'ten distinct roads must award the existing Veedelskenner medal');
     lines.push('Tenth distinct route awards VEEDELSKENNER through normal race results');
+    await page.evaluate((id) => {
+      for (const def of GameData.TRACKS) localStorage.removeItem('stuntskoelle.routes.' + def.id);
+      localStorage.setItem('stuntskoelle.veedel', JSON.stringify([id, id, 'unknown-route', null]));
+    }, cut.id);
+    await page.keyboard.press('Escape');
+    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 1/4'), 'older shared Veedel saves must migrate without duplicate or unknown stamps');
+    await page.evaluate(() => localStorage.setItem('stuntskoelle.veedel', '{"invalid":true}'));
+    await page.reload();
+    await page.waitForFunction(() => window.STUNTS_ROUTES);
+    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 0/4'), 'malformed older Veedel saves must not break the menu');
+    lines.push('Legacy Veedel discoveries migrate safely; malformed, duplicate and unknown IDs are ignored');
     assert.deepStrictEqual(errors, [], 'no browser errors');
     return { name: 'passport', ok: true, lines };
   } finally {

@@ -2,13 +2,17 @@
 
 ## Mehr Kölle: Bauwerke und Abkürzungen
 
-23 eigens modellierte Kölner Bauwerke verteilen sich inzwischen auf 46 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Gebäude ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen im Katalog in `js/landmarks.js`.
+48 eigens modellierte Kölner Bauwerke und Denkmäler verteilen sich inzwischen auf 80 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Modelle ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen in den Katalogen `js/landmarks.js` und `js/wahrzeichen.js`.
 
 Der zweite Ausbau ergänzt St. Agnes mit ihrem Turm ohne Spitze, das große Zehneck von St. Gereon, die Synagoge an der Roonstraße, den Richmodisturm mit seinen beiden Pferdeköpfen, Melatens historisches Tor II an der Aachener Straße und die Bottmühle ohne Mühlenflügel. Zehn zusätzliche Standorte und ein gezielter Austausch machen die Stadt genauer: St. Gereon ersetzt dort die bisherige allgemeine Kirchenkulisse. Melaten bleibt eine Sehenswürdigkeit am Straßenrand; die Rennstrecke führt nicht durch den Friedhof.
 
+Neu dabei sind unter anderem Overstolzenhaus, St. Ursula, MAKK, Alt St. Heribert und das gelbe Siebengebirge im Rheinauhafen. Der Butzweilerhof bekommt einen ausdrücklich als Ossendorfer Gastauftritt gekennzeichneten Platz. Dazu kommen Kreuzblume, Stapelhaus, Kölner Pegel, Römerturm, Gereonsmühle, Ulrepforte, St. Severin, St. Maria in Lyskirchen, St. Clemens, Oberlandesgericht, Staatenhaus, Herkulesberg und Rheinboulevard. Ulrepforte und St. Severin haben jeweils ein gemeinsames, eindeutiges Modell statt doppelter Varianten.
+
 Auf allen zehn Strecken gibt es zusammen **29 fahrbare Nebenwege**: Die ursprünglichen 17 Abkürzungen bleiben erhalten, dazu kommen zwölf Straßen an **sechs Drei-Wege-Gabelungen** – am Dom, an den Ringen, im Rheinauhafen, auf den Poller Wiesen, rund um die Zülpicher Straße und in Rodenkirchen. Jede Gabelung bietet die Hauptstrecke, eine engere Abkürzung und eine breitere Panoramaroute; alle drei treffen sich wieder. Der Poller Wiesenschnitt fährt etwa 288 statt 350 Meter, während der Wiesenbogen mehr Platz und eine längere Runde ums Viertel bietet.
 
-**Grün** markiert Abkürzungen, **Blau** die breiteren Alternativen und **Weiß** die Hauptstrecke – auf Straßenschildern, Fahrbahnen und Minikarte. Die Schilder nennen ehrlich die gesparten oder zusätzlichen Meter. Vor der Einfahrt links oder rechts einordnen; mittig bleibst du auf der Hauptstrecke. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie bisher. In engen Gassen vom Gas gehen! Rivalen wählen ebenfalls unterschiedliche Wege und ändern ihre Entscheidung pro Runde. Einmal pro Gabelung und Runde gibt es einen Deckel-Strich, auch fürs Erkunden einer längeren Route: „Dä Köbes nennt dat Sightseeing.“
+**Grün** markiert Abkürzungen, **Blau** die breiteren Alternativen und **Weiß** die Hauptstrecke – in der Streckenvorschau und Minikarte, mit passenden Hinweisschildern vor den Gabelungen. Die Fahrbahnen bleiben richtige Straßen mit Asphalt oder Kopfsteinpflaster, Bordsteinen und Straßenlaternen. Die Schilder nennen ehrlich die gesparten oder zusätzlichen Meter. Vor der Einfahrt links oder rechts einordnen; mittig bleibst du auf der Hauptstrecke. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie bisher. In engen Gassen vom Gas gehen! Rivalen wählen ebenfalls unterschiedliche Wege und ändern ihre Entscheidung pro Runde. Einmal pro Gabelung und Runde gibt es einen Deckel-Strich, auch fürs Erkunden einer längeren Route: „Dä Köbes nennt dat Sightseeing.“
+
+Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 29 „DAT NAVI BIN ICH“. Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
 
 Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten, keine Teleports. Runden, Platzierung, Geister, Replays und TV-Kameras berücksichtigen den gewählten Weg; alte Geister behalten ihre ursprünglichen Routen. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude, Schilderstützen und Wasser werden von den Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Nebenwege sind Spielstrecken, keine realen Verkehrswege.
 
@@ -38,9 +42,11 @@ Messeturm, Schlote in Kalk, Büdchen, Brauhäuser, KVK-Haltestellen und jede Men
 
 Keine Installation, kein Build-Schritt: `index.html` öffnen und fahren.
 
-Das Startmenü ist eine Arcade-Kiste der 80er: Marquee mit Lauflicht, Neonüberschriften, genietete
-Pixel-Rahmen, Pixel-Icons auf allen Knöpfen, zwei Pixel-Joysticks um den roten Start-Knopf und eine
-blinkende Münze für „Insert Coin“. Wie am Automaten gibt es oben die Zeile „1UP · HI-SCORE · CREDIT“
+Das Startmenü ist eine Arcade-Kiste der 80er: beleuchtetes Glas-Marquee, Lautsprechergitter, genieteter
+Bildschirmrahmen, nummerierte Auswahlfelder, eine Metallkonsole mit griffigen Knöpfen und Münzrückgabe.
+Pixel-Icons, zwei Pixel-Joysticks um den roten Start-Knopf und eine blinkende Münze für „Insert Coin“ bleiben.
+Die Streckenliste scrollt innerhalb des Automaten; auch die Pfeiltasten halten die Auswahl sichtbar.
+Wie am Automaten gibt es oben die Zeile „1UP · HI-SCORE · CREDIT“
 (gefüttert aus dem Bierdeckel), ein blinkendes „PRESS START“ und unten das Kleingedruckte von
 Klüngel Amusements. Fahrer, Wagen und Strecken haben schwarze Namensschilder, auf denen jeder Name
 vollständig steht (lange Namen brechen um, nichts wird abgeschnitten) – auch auf dem Handy, wo die

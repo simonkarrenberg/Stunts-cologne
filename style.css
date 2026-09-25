@@ -356,8 +356,8 @@ body.mobile .trackRow .info span { font-size: 7px; }
   body.mobile .banner { height: 64px; } body.mobile #logo { width: 210px; height: 52px; top: 4px; } body.mobile #langerFace { width: 40px; height: 50px; }
 }
 
-/* tilt steering: hide the left/right buttons, keep gas, brake, nitro, phone */
-body.tilt #touch .tGroup:first-child { visibility: hidden; }
+/* tilt steering keeps the left/right arrows on screen: a pressed arrow always overrides the tilt */
+body.tilt #touch .tGroup:first-child button { opacity: .6; }
 /* editor on phones: natural flow with scrolling, short preview, wrapped palette and footer */
 body.mobile #editor { display: block; overflow: auto; padding: 8px max(10px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
 body.mobile .edHead { margin-bottom: 6px; } body.mobile .edHead h2 { font-size: 10px; } body.mobile #edCount { font-size: 8px; }
@@ -487,13 +487,13 @@ body.mobile #hudPrompt { bottom: 130px; font-size: 10px; padding: 10px 14px; } b
 .menuFooter .copy a { color: var(--cyan); text-decoration: none; border-bottom: 1px dotted var(--cyan); }
 
 /* Green routes are optional, narrower shortcuts; the white line remains the race circuit. */
-.routeLegend { color: #83e7b3; font-size: 8px; line-height: 1.8; margin: 10px 0 0; }
+.routeLegend { color: #c9ccd4; font-size: 8px; line-height: 1.8; margin: 10px 0 0; }
 #menu { padding-bottom: 72px; }
 #menu > .quickStart { position: fixed; z-index: 8; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px 18px max(12px, env(safe-area-inset-bottom)); background: #0b101dee; border-top: 2px solid #83e7b3; }
 #quickTrack { font-size: 9px; color: #83e7b3; }
 #quickStartBtn { border: 2px solid #ffdf66; background: #c1121f; color: white; padding: 12px 20px; font-size: 11px; }
-#hudShortcut { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); max-width: 46vw; padding: 8px 12px; border: 2px solid #83e7b3; background: #071c18e8; color: #baffd8; font-size: 10px; text-align: center; line-height: 1.7; }
-#hudShortcut.alternate { border-color: #6ccfff; background: #071a2be8; color: #bceaff; }
+#hudShortcut { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); max-width: min(40vw, 520px); padding: 8px 12px; border: 3px solid #f4f4f0; outline: 2px solid #1c3f95; background: #1c3f95f0; color: #ffffff; font-size: 10px; text-align: center; line-height: 1.7; } /* like a Cologne street-name sign */
+#hudShortcut.alternate { border-color: #6ccfff; outline-color: #6ccfff; background: #071a2be8; color: #bceaff; }
 body.mobile #hudShortcut { top: 70px; max-width: 48vw; font-size: 7px; padding: 5px 8px; }
 body.mobile #quickTrack { font-size: 7px; max-width: 50vw; }
 body.mobile #quickStartBtn { font-size: 8px; padding: 9px 12px; }
@@ -679,3 +679,16 @@ body.mobile #menu > .quickStart { padding-top: 7px; padding-bottom: max(9px, env
   #menu .pressStart, #menu .banner::before, #menu .coinLine span, #menu .hiScore span, #menu #startBtn, #menu .card.active::after { animation: none; }
   #menu .card, #menu .trackRow { transition: none; }
 }
+
+/* LamboGina: the banner moves with the song (--beat 0..1 on every kick, --energy 0..1 per song section) */
+:root { --beat: 0; --energy: 0.3; }
+#lamboFx { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; z-index: 1; }
+#logo { z-index: 2; transform: scale(calc(1 + var(--beat) * 0.025)); transform-origin: 30% 50%; filter: drop-shadow(0 0 calc(var(--beat) * 14px) #ff2d95); }
+.banner::after { opacity: calc(0.55 + var(--beat) * 0.45); }
+.juke { position: absolute; z-index: 4; right: 18px; bottom: 12px; display: flex; gap: 10px; align-items: center; padding: 6px 10px; font-size: 8px; color: #baffd8; background: #071c18d8; border: 2px solid #83e7b3; box-shadow: 0 0 calc(var(--beat) * 16px) #00e5ff; cursor: pointer; }
+.juke .js { color: var(--yellow); }
+.juke.on { border-color: #ff2d95; color: #fff; }
+.juke.drop { background: #2a0a24e8; box-shadow: 0 0 calc(8px + var(--beat) * 22px) #ff2d95; }
+body.mobile .juke { bottom: 4px; right: 8px; font-size: 6px; padding: 4px 6px; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { #logo { transform: none; filter: none; } }
+body.bassrun #turboBar, body.bassrun #turboBar2 { box-shadow: 0 0 calc(6px + var(--beat) * 14px) #ff2d95; }
