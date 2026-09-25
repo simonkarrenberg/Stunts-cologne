@@ -26,6 +26,8 @@
 
 <!-- ============ MENU ============ -->
 <div id="menu">
+  <div class="arcadeCabinet">
+  <div class="cabinetCrown" aria-hidden="true"><span class="speakerGrille"></span><span>KLÜNGEL AMUSEMENTS <b>•</b> KÖLN · 1989</span><span class="speakerGrille"></span></div>
   <div class="banner">
     <canvas id="skyline"></canvas>
     <canvas id="logo"></canvas>
@@ -35,26 +37,28 @@
       <canvas id="langerFace"></canvas>
     </div>
   </div>
+  <div class="selectionRail" aria-hidden="true"><span><i></i> AUTOMAT BEREIT</span><b>DEIN VEEDEL. DEIN WAGEN. DEIN RENNEN.</b><span>ORIGINAL KÖLSCHE HARDWARE</span></div>
   <div class="menuGrid">
     <section class="panel drivers">
-      <h2>FAHRER WÄHLEN</h2>
+      <h2><span class="panelNumber" aria-hidden="true">01</span> FAHRER WÄHLEN</h2>
       <div id="driverCards" class="cards"></div>
     </section>
     <section class="panel tracks">
-      <h2>STRECKEN WÄHLEN</h2>
-      <div id="trackList" class="trackList"></div>
+      <h2><span class="panelNumber" aria-hidden="true">03</span> STRECKEN WÄHLEN <span class="panelHint" aria-hidden="true">MEHR ↓</span></h2>
+      <div id="trackList" class="trackList" role="region" aria-label="Streckenliste – zum Blättern scrollen" tabindex="0"></div>
       <p id="trackDesc" class="desc"></p>
       <p id="trackRoutes" class="routeLegend"></p>
     </section>
     <section class="panel cars">
-      <h2>WAGEN WÄHLEN</h2>
+      <h2><span class="panelNumber" aria-hidden="true">02</span> WAGEN WÄHLEN</h2>
       <div id="carCards" class="cards"></div>
     </section>
     <section class="panel langer">
-      <h2>DÄ LANGE SAGT:</h2>
+      <h2><span class="panelNumber" aria-hidden="true">!</span> DÄ LANGE SAGT:</h2>
       <div class="langerBox"><canvas id="langerFace2"></canvas><p id="langerQuote"></p></div>
     </section>
     <div class="startRow">
+      <div class="deckPlate" aria-hidden="true"><span>PLAYER CONTROL</span><span>GAS · HÄTZ · VERSTAND</span></div>
       <div class="coinLine"><canvas id="coinArt" width="16" height="16"></canvas><span>INSERT COIN · 1 KÖLSCH = 1 CREDIT</span><canvas id="coinArt2" width="16" height="16"></canvas></div>
       <div class="pressStart">PRESS START · DRÜCK OP DÄ KNOPP</div>
       <div class="startCab"><canvas id="joyArt" width="60" height="60"></canvas><button id="startBtn">RENNEN STARTEN</button><canvas id="joyArt2" width="60" height="60"></canvas></div>
@@ -74,6 +78,7 @@
         <span id="musicTitle"></span>
         <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
       </div>
+      <div class="coinReturn" aria-hidden="true"><span>1 KÖLSCH</span><i></i><small>KEIN WECHSELGELD. NUR VOLLJAS.</small></div>
     </div>
   </div>
   <footer class="menuFooter">
@@ -83,6 +88,7 @@
     <span class="keys">IM RENNEN: <kbd>SHIFT</kbd> NITRO <kbd>C</kbd> KAMERA <kbd>V</kbd> KAMERA P2 <kbd>P</kbd> PIXEL <kbd>M</kbd> TON <kbd>R</kbd> RESET <kbd>H</kbd> HUPE <kbd>E</kbd> AUS-/EINSTEIJEN</span>
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY · <a href="rechtliches.html">IMPRESSUM &amp; DATENSCHUTZ</a></span>
   </footer>
+  </div>
   <div class="quickStart"><span id="quickTrack"></span><button id="quickStartBtn">JETZ FAHREN ↗</button></div>
 </div>
 

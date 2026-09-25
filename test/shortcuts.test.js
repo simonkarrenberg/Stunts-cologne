@@ -8,7 +8,10 @@ module.exports = async function () {
   let count = 0;
   function check(track, route) {
     count++;
-    assert(route.length > 0 && route.saved >= 3, 'shortcut must save real distance');
+    assert(route.length > 0 && Number.isFinite(route.saved), 'route must have a real signed distance difference');
+    assert.strictEqual(route.type, route.kind, 'route type and renderer kind agree');
+    if (route.kind === 'shortcut') assert(route.saved >= 3, 'shortcut must save real distance');
+    else assert.strictEqual(route.kind, 'alternate', 'longer paths are explicitly marked alternate');
     assert(route.startS > 0 && route.endS < track.length, 'branch must not straddle the finish line');
     assert(route.startS < route.endS, 'race progress must increase monotonically');
     assert(route.resetS < route.startS - 5, 'reset plot must precede the branch');
@@ -25,8 +28,11 @@ module.exports = async function () {
     assert(TB.dot(a.T, ma.T) > 0.9999 && TB.dot(b.T, mb.T) > 0.9999, 'junction headings must be continuous');
     assert.deepStrictEqual(SC.frameAt(route, -100).p, a.p, 'reverse travel clamps to the entry');
     assert.deepStrictEqual(SC.frameAt(route, route.length + 100).p, b.p, 'open branches must not wrap');
-    const mid = SC.frameAt(route, route.length / 2), main = TB.frameAt(track, (route.startS + route.endS) / 2);
-    assert.strictEqual(Math.sign(TB.dot(TB.sub(mid.p, main.p), main.B)), route.side, 'sign must point toward the physical branch');
+    assert([-1, 1].includes(route.side), 'each entrance has a physical steering side');
+    if ((track.def.shortcuts || []).some((d) => d.seg === route.seg && (!d.id || d.id === route.id))) {
+      const mid = SC.frameAt(route, route.length / 2), main = TB.frameAt(track, (route.startS + route.endS) / 2);
+      assert.strictEqual(Math.sign(TB.dot(TB.sub(mid.p, main.p), main.B)), route.side, 'legacy sign must point toward the physical branch');
+    }
     let travelled = 0;
     for (let i = 0; i < route.samples.length; i++) {
       const f = route.samples[i];
@@ -42,14 +48,14 @@ module.exports = async function () {
     }
     assert(Math.abs(travelled - route.length) < 0.1, 'reported distance matches rendered path');
     const speed = 25, shortcutTime = route.length / speed, mainTime = (route.endS - route.startS) / speed;
-    assert(shortcutTime < mainTime, 'taking the branch actually saves driving time');
+    assert.strictEqual(Math.sign(mainTime - shortcutTime), Math.sign(route.saved), 'signed saving matches actual driving distance');
   }
   for (const def of D.TRACKS) {
     const track = TB.buildTrack(def), routes = SC.buildRoutes(track);
     for (const route of routes) check(track, route);
-    if (def.shortcuts && def.shortcuts.length) {
-      assert.strictEqual(routes.length, def.shortcuts.length, def.id + ': each advertised route must be buildable');
-      lines.push(def.id + ': ' + routes.length + ' continuous, shorter routes');
+    if (def.shortcuts && def.shortcuts.length || def.branches && def.branches.length) {
+      assert.strictEqual(routes.length, (def.shortcuts || []).length + (def.branches || []).length, def.id + ': each advertised route must be buildable');
+      lines.push(def.id + ': ' + routes.length + ' continuous roads (' + routes.filter((r) => r.kind === 'alternate').length + ' scenic alternatives)');
     }
   }
   // A stable fixture exercises the module independently of the built-in map
@@ -80,6 +86,83 @@ module.exports = async function () {
   const crossing = TB.buildTrack(fixture), mid = SC.frameAt(routes[0], routes[0].length / 2).p;
   crossing.samples[400].p = { ...mid };
   assert.deepStrictEqual(SC.buildRoutes(crossing), [], 'unrelated road crossings must be rejected');
-  lines.push(count + ' route geometries checked; invalid, overlap, stunt, and crossing guards passed');
+
+  // A pair of side streets makes a real three-way fork: the unmodified main
+  // road plus two independent routes, with exact shared entry/exit frames.
+  const multi = { id: 'multiway-fixture', segments: [
+    { t: 'straight', len: 240 }, { t: 'curve', r: 80, angle: 90 },
+    { t: 'straight', len: 240 }, { t: 'curve', r: 80, angle: 90 },
+    { t: 'straight', len: 240 }, { t: 'curve', r: 80, angle: 90 },
+    { t: 'straight', len: 240 }, { t: 'curve', r: 80, angle: 90 }
+  ], branches: [-1, 1].map((side) => ({ id: 'side-' + side, name: 'Nebenstraße ' + side, fork: 'three-way',
+    from: { seg: 0, u: 0.25 }, to: { seg: 0, u: 0.9 }, style: 'scenic',
+    via: [{ x: side * 32, z: 115 }, { x: side * 32, z: 160 }] })) };
+  const multiTrack = TB.buildTrack(multi), multiRoutes = SC.buildRoutes(multiTrack);
+  assert.strictEqual(multiRoutes.length, 2, 'left and right routes must coexist at one fork');
+  assert.strictEqual(multiRoutes[0].side, -multiRoutes[1].side, 'steering left/right must select different siblings');
+  assert.strictEqual(multiRoutes[0].startS, multiRoutes[1].startS, 'fork mouths align');
+  assert.strictEqual(multiRoutes[0].endS, multiRoutes[1].endS, 'fork rejoins align');
+  for (const route of multiRoutes) {
+    check(multiTrack, route);
+    assert(route.saved < -10 && route.kind === 'alternate', 'scenic streets may be honestly longer than the main road');
+  }
+  const crossDistrict = { id: 'district-cut', name: 'Real multi-segment cut', from: { seg: 0, u: 0.5 }, to: { seg: 2, u: 0.5 },
+    via: [{ x: 32, z: 175 }, { x: 65, z: 250 }, { x: 140, z: 289 }] };
+  const districtTrack = TB.buildTrack({ ...multi, branches: [crossDistrict] }), districtRoutes = SC.buildRoutes(districtTrack);
+  assert.strictEqual(districtRoutes.length, 1, 'a route may bypass several main-road segments');
+  assert(districtRoutes[0].saved > 50, 'cross-district route saves meaningful real distance');
+  check(districtTrack, districtRoutes[0]);
+  for (const via of crossDistrict.via) assert(Math.min(...districtRoutes[0].samples.map((s) => Math.hypot(s.p.x - via.x, s.p.z - via.z))) < 0.6, 'rendered street follows each authored waypoint');
+
+  function buildInvalid(branches) { return SC.buildRoutes(TB.buildTrack({ ...multi, branches })); }
+  assert.strictEqual(buildInvalid([multi.branches[0], { ...multi.branches[1], fork: 'different' }]).length, 1, 'overlapping intervals require the same fork');
+  assert.strictEqual(buildInvalid([multi.branches[0], { ...multi.branches[0], id: 'same-side' }]).length, 1, 'two roads cannot claim the same steering choice');
+  assert.strictEqual(buildInvalid([multi.branches[0], { ...multi.branches[1], to: { seg: 0, u: 0.95 } }]).length, 1, 'same-fork siblings require the exact same rejoin');
+  const secondStreet = TB.frameAt(multiTrack, multiTrack.samples.findIndex((s) => s.seg === 2));
+  const reusedFork = { ...multi.branches[1], id: 'duplicate-fork', from: { seg: 2, u: 0.25 }, to: { seg: 2, u: 0.9 },
+    via: [{ x: secondStreet.p.x + 115, z: secondStreet.p.z + 32 }, { x: secondStreet.p.x + 160, z: secondStreet.p.z + 32 }] };
+  assert.strictEqual(buildInvalid([multi.branches[0], reusedFork]).length, 1, 'one fork identifier cannot silently name two different intersections');
+  for (const broken of [
+    { from: { seg: -1, u: 0.5 } }, { to: { seg: 0, u: 2 } }, { from: { seg: 0, u: 0.01 } },
+    { from: { seg: 2, u: 0.5 }, to: { seg: 0, u: 0.5 } }, { via: [] },
+    { via: [{ x: NaN, z: 150 }] }, { via: [{ x: 1e100, z: 150 }] }, { halfWidth: 0.2 },
+    { via: [{ x: 0, z: 115 }, { x: 0, z: 160 }] },
+    { via: [{ x: -100, z: 115 }, { x: -50, z: 200 }, { x: -100, z: 200 }, { x: -50, z: 115 }] }
+  ]) assert.deepStrictEqual(buildInvalid([{ ...multi.branches[0], ...broken }]), [], 'invalid, overlapping-main or self-crossing authored branch is rejected');
+  const intersecting = TB.buildTrack(multi);
+  intersecting.samples[700].p = { ...SC.frameAt(multiRoutes[0], multiRoutes[0].length / 2).p };
+  assert(!SC.buildRoutes(intersecting).some((r) => r.id === multiRoutes[0].id), 'authored route cannot cross an unrelated main-road section');
+  for (const kind of ['bridge', 'tunnel']) {
+    const enclosed = TB.buildTrack({ ...multi, segments: multi.segments.map((s, i) => i === 0 ? { ...s, t: kind } : s) });
+    assert.deepStrictEqual(SC.buildRoutes(enclosed), [], 'fork mouths cannot intersect ' + kind + ' walls or railings');
+  }
+  const floating = TB.buildTrack(multi);
+  for (const q of floating.samples) q.p.y += 5;
+  assert.deepStrictEqual(SC.buildRoutes(floating), [], 'authored streets must meet the ground, not float between elevated endpoints');
+  for (const distance of [3, 35, 45]) {
+    const landing = TB.buildTrack(multi), gate = multiRoutes[0].startS;
+    landing.samples[gate - distance].kind = 'gap';
+    landing.samples[gate - distance - 1].kind = 'ramp';
+    assert.deepStrictEqual(SC.buildRoutes(landing), [], 'a fork only ' + distance + ' m after a jump must not admit an airborne approach');
+  }
+  const recoveredLanding = TB.buildTrack(multi);
+  recoveredLanding.samples[multiRoutes[0].startS - 48].kind = 'gap';
+  recoveredLanding.samples[multiRoutes[0].startS - 49].kind = 'ramp';
+  assert.strictEqual(SC.buildRoutes(recoveredLanding).length, 2, 'a sufficient grounded landing run keeps both choices accessible');
+  const recoveredLoop = TB.buildTrack(multi);
+  recoveredLoop.samples[multiRoutes[0].startS - 22].kind = 'loop';
+  assert.strictEqual(SC.buildRoutes(recoveredLoop).length, 2, 'a grounded loop exit may precede the 20 m clear steering approach');
+  recoveredLoop.samples[multiRoutes[0].startS - 12].kind = 'loop';
+  assert.deepStrictEqual(SC.buildRoutes(recoveredLoop), [], 'fork steering cannot begin while still inside a loop');
+
+  // Recording files refer to numeric route indices, so the original route
+  // catalogue must keep its exact path geometry and order when forks grow.
+  const crypto = require('crypto');
+  const legacy = D.TRACKS.map((def) => SC.buildRoutes(TB.buildTrack(def)).slice(0, (def.shortcuts || []).length).map((r) => ({ id: r.id, startS: r.startS, endS: r.endS, resetS: r.resetS, samples: r.samples })));
+  // Round only sub-micrometre noise so CI's Node/CPU math implementation
+  // does not turn an unchanged street into a floating-point snapshot diff.
+  const legacySnapshot = JSON.stringify(legacy, (_key, value) => typeof value === 'number' ? Math.round(value * 1e7) / 1e7 : value);
+  assert.strictEqual(crypto.createHash('sha256').update(legacySnapshot).digest('hex'), 'e922326dde4af05228b066135c5b56df4414a5a0541370f0b73f3625c7fbf7ea', 'old ghost route indices and paths must remain stable');
+  lines.push(count + ' route geometries checked; multi-way, legacy replay stability, invalid, overlap, stunt, and crossing guards passed');
   return { name: 'shortcuts', ok: true, lines };
 };

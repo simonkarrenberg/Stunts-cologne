@@ -1234,7 +1234,13 @@
     const off = (s, lat, up) => new THREE.Vector3(s.p.x + s.B.x * lat + s.N.x * up, s.p.y + s.B.y * lat + s.N.y * up, s.p.z + s.B.z * lat + s.N.z * up);
     const railGeo = new THREE.BoxGeometry(0.25, 1.1, 1.05); const tpos = [], tuv = [], tidx = []; // tunnel tube geometry
     // is this ground point clear of every ground-level road (with curb)? Used for every support column.
-    const groundFree = (x, z) => { const r2 = (ROAD_W + 1.8) * (ROAD_W + 1.8); for (let k = 0; k < n; k += 2) { const q = S[k]; if (q.p.y > 1.5) continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < r2) return false; } return true; };
+    const groundFree = (x, z) => {
+      for (const road of [{ samples: S, halfWidth: ROAD_W }].concat(track.shortcuts || [])) {
+        const r2 = (road.halfWidth + 1.8) ** 2;
+        for (let k = 0; k < road.samples.length; k += 2) { const q = road.samples[k]; if (q.p.y > 1.5) continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < r2) return false; }
+      }
+      return true;
+    };
     // loop scaffolding: columns stand OUTSIDE the loop's footprint (the road runs underneath the loop at
     // ground level, shifted sideways by `shift`), each with a horizontal beam to the loop road edge
     let loop0 = -1, loopEnd = -1, loopShift = 0;
@@ -1367,7 +1373,7 @@
         if (!isFinite(lb.min.x)) return null;
         const c = [[lb.min.x, lb.min.z], [lb.max.x, lb.min.z], [lb.max.x, lb.max.z], [lb.min.x, lb.max.z]].map(([x, z]) => new THREE.Vector3(x, 0, z).applyMatrix4(obj.matrixWorld));
         let minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9; for (const v of c) { minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x); minZ = Math.min(minZ, v.z); maxZ = Math.max(maxZ, v.z); }
-        return { c, minX, maxX, minZ, maxZ, minY: obj.position.y + lb.min.y, maxY: obj.position.y + lb.max.y };
+        return { c, minX, maxX, minZ, maxZ, minY: obj.matrixWorld.elements[13] + lb.min.y, maxY: obj.matrixWorld.elements[13] + lb.max.y };
       };
       const inside = (c, px, pz) => { let sgn = 0; for (let k = 0; k < 4; k++) { const a = c[k], b = c[(k + 1) % 4]; const cr = (b.x - a.x) * (pz - a.z) - (b.z - a.z) * (px - a.x); if (Math.abs(cr) < 1e-6) continue; const s2 = cr > 0 ? 1 : -1; if (sgn === 0) sgn = s2; else if (s2 !== sgn) return false; } return true; };
       // Test the whole corridor against each oriented footprint. A few lateral
@@ -1389,13 +1395,21 @@
       let moved = 0, removed = 0;
       for (const ch of group.children.slice()) {
         if (ch.userData.keep || ch.userData.sky || ch.userData.water) continue;
-        const kind = ch.userData.kind || ''; if (SPANS.test(kind)) continue;
+        const kind = ch.userData.kind || ''; if (SPANS.test(kind) && kind !== 'prop:neon') continue;
         let fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700) continue;
-        let i = hit(fp); if (i < 0) continue;
+        const obstacle = () => {
+          if (kind !== 'prop:neon') return hit(fp);
+          // A neon sign may span the original road. Only its support posts
+          // occupy car height; keep the sign but move posts out of new forks.
+          let collision = -1;
+          ch.traverse((mesh) => { if (collision >= 0 || !mesh.isMesh || mesh.geometry.type !== 'BoxGeometry') return; const post = footprint(mesh); if (post) collision = hit(post); });
+          return collision;
+        };
+        let i = obstacle(); if (i < 0) continue;
         const q = streetSamples[i]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const sgn = ((ch.position.x - q.p.x) * q.B.x + (ch.position.z - q.p.z) * q.B.z) >= 0 ? 1 : -1; const dx = q.B.x / bl * sgn, dz = q.B.z / bl * sgn;
         let pushed = 0;
         const limit = ch.userData.landmarkName ? 140 : 32;
-        while (i >= 0 && pushed < limit) { ch.position.x += dx * 2; ch.position.z += dz * 2; pushed += 2; fp = footprint(ch); i = hit(fp); }
+        while (i >= 0 && pushed < limit) { ch.position.x += dx * 2; ch.position.z += dz * 2; pushed += 2; fp = footprint(ch); i = obstacle(); }
         if (i >= 0) { group.remove(ch); removed++; } else moved++;
       }
       // Street clearance can push two named buildings onto the same plot.

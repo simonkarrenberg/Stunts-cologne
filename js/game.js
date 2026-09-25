@@ -219,10 +219,39 @@
     return TB.frameAt(track, s);
   }
   function sameRoad(a, b) { return (a.shortcut == null ? -1 : a.shortcut) === (b.shortcut == null ? -1 : b.shortcut); }
+  function routeGroups(routes) {
+    const groups = [];
+    for (const route of routes) {
+      let group = groups.find((g) => Math.abs(g.startS - route.startS) < 0.01);
+      if (!group) { group = { startS: route.startS, routes: [] }; groups.push(group); }
+      group.routes.push(route);
+    }
+    return groups.sort((a, b) => a.startS - b.startS);
+  }
+  function routeDelta(route) { return `${route.saved >= 0 ? '−' : '+'}${Math.round(Math.abs(route.saved))} m`; }
+  function routePassport(def) {
+    try {
+      const ids = JSON.parse(localStorage.getItem('stuntskoelle.routes.' + def.id) || '[]');
+      const valid = new Set([...(def.shortcuts || []), ...(def.branches || [])].map((r) => r.id));
+      return new Set(Array.isArray(ids) ? ids.filter((id) => typeof id === 'string' && valid.has(id)) : []);
+    } catch (e) { return new Set(); }
+  }
+  function discoverRoute(route) {
+    const have = routePassport(trackDef);
+    if (have.has(route.id)) return false;
+    have.add(route.id);
+    try {
+      localStorage.setItem('stuntskoelle.routes.' + trackDef.id, JSON.stringify([...have]));
+      // Derive the counter from distinct authored roads, never from repeat laps.
+      const stats = getStats(); stats.streetsFound = TRACKS.reduce((sum, def) => sum + routePassport(def).size, 0);
+      localStorage.setItem('stuntskoelle.stats', JSON.stringify(stats));
+    } catch (e) { /* Driving still works when browser storage is unavailable. */ }
+    return true;
+  }
   function advanceRacer(r, distance) {
     let route = routeFor(r);
-    if (!route && distance > 0 && !r.isAI && !r.air && !r.finished) {
-      route = track.shortcuts.find((q) => r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8);
+    if (!route && distance > 0 && !r.isCop && !r.air && !r.finished) {
+      route = track.shortcuts.find((q) => (!r.isAI || r.branchPlan === q.index) && r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8);
       if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.safeS = route.resetS + 18; } // respawn() subtracts 18 m
     }
     if (!route) { r.s += distance; return; }
@@ -232,10 +261,12 @@
       const forward = next >= route.endS;
       r.s = (forward ? route.endS : route.startS) + (next - (forward ? route.endS : route.startS)) / scale;
       r.shortcut = -1; r.prevRoadVy = 0;
-      const key = r.lap + ':' + route.id;
+      const discovered = forward && r === player && discoverRoute(route);
+      const key = r.lap + ':' + (route.fork || route.id);
       if (forward && r === player && !r.shortcutsDone.has(key)) {
         r.shortcutsDone.add(key); addDeckel(1); bumpStat('shortcuts');
-        say(tuenn, `${route.name}: ${Math.round(route.saved)} Meter jespart. Dat steht nit im Stadtplan, Jung.`, 2600);
+        const message = route.saved > 0 ? `${route.name}: ${Math.round(route.saved)} Meter jespart. Dat steht nit im Stadtplan, Jung.` : `${route.name}: ${Math.round(-route.saved)} Meter extra. Dä Köbes nennt dat Sightseeing.`;
+        say(tuenn, message + (discovered ? ' Neuer Stempel im Veedels-Pass!' : ''), 3200);
       }
     } else r.s = next;
   }
@@ -246,10 +277,10 @@
       finished: false, finishTime: null, laps: [], lapStart: 0, prevRoadVy: 0, wasInLoop: false,
       steerVis: 0, aiTimer: 0, aiSlow: 1, jumpStartS: 0, bestLap: null, wobblePhase: Math.random() * 10, laneBias: 0,
       turbo: 0.5, turboOn: false, damage: 0, skill: driver.skill, wobble: driver.wobble,
-      shortcut: -1, shortcutsDone: new Set()
+      shortcut: -1, shortcutsDone: new Set(), routeSeed: 0, branchPlan: -1, branchKey: ''
     };
   }
-  function respawn(r) { r.shortcut = -1; r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
+  function respawn(r) { r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
   function crash(r, kind) {
     if (r === player && auftrag && auftrag.stage === 'carry') failAuftrag('lost');
     if (r.crashed > 0) return;
@@ -291,7 +322,7 @@
       const steerV = (ctl.steer + (r === player && promille > 0 ? Math.sin(raceTime * 4.5) * 0.45 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
       r.lat += (steerV + centrifugal) * dt;
       if (Math.abs(r.lat) > roadWidth) {
-        if (r.isAI) { r.lat = clamp(r.lat, -ROAD_W, ROAD_W); r.v *= 0.6; }
+        if (r.isAI) { r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); r.v *= 0.6; }
         else { crash(r, 'off'); return; }
       }
       if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
@@ -317,7 +348,7 @@
       if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over) { crash(r, 'roof'); return; } }
       else if (r.y <= ry + 0.12) {
         r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y;
-        if (Math.abs(r.lat) > roadWidth) { if (r.isAI) r.lat = clamp(r.lat, -ROAD_W, ROAD_W); else { crash(r, 'off'); return; } }
+        if (Math.abs(r.lat) > roadWidth) { if (r.isAI) r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); else { crash(r, 'off'); return; } }
         if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); } else if (r.vy < -14) r.v *= 0.8;
         if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pick(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); } }
         r.vy = 0;
@@ -336,8 +367,16 @@
   }
 
   function aiControl(r, dt) {
-    if (routeFor(r)) {
-      const f = racerFrame(r), target = Math.min(r.car.top * 0.8, Math.sqrt(24 * r.car.grip / Math.max(0.001, Math.abs(f.curv))) * 0.85);
+    const activeRoute = routeFor(r);
+    if (activeRoute) {
+      const distance = (r.s - activeRoute.startS) * activeRoute.length / (activeRoute.endS - activeRoute.startS);
+      let target = r.car.top * 0.8;
+      // Brake before an alley bend, using real branch metres instead of main-road progress.
+      for (let ahead = 0; ahead <= 75; ahead += 5) {
+        const f = window.Shortcuts.frameAt(activeRoute, distance + ahead);
+        const safe = Math.sqrt(24 * r.car.grip / Math.max(0.001, Math.abs(f.curv))) * 0.8;
+        target = Math.min(target, Math.sqrt(safe * safe + 2 * r.car.brake * 0.55 * ahead));
+      }
       return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: clamp(-r.lat * 0.6, -1, 1), turbo: 0 };
     }
     r.aiTimer -= dt;
@@ -355,13 +394,28 @@
       if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v && track.samples[i].kind !== 'ramp') gas = 0.3; } // never lift on a ramp: too slow means the roof
     }
     if (r.yieldT > 0) { r.yieldT -= dt; wantLat = r.lat >= 0 ? ROAD_W - 1.5 : -ROAD_W + 1.5; gas = Math.min(gas, 0.6); }
+    const fork = r.isAI && !r.isCop && track.routeGroups.find((g) => g.startS >= r.s && g.startS - r.s < 100);
+    if (fork) {
+      const key = r.lap + ':' + fork.startS;
+      if (r.branchKey !== key) {
+        // Stable choices per rival/lap: some stay on the main road, others take either arm.
+        const choice = (r.routeSeed + r.lap - 1 + track.routeGroups.indexOf(fork)) % (fork.routes.length + 1);
+        r.branchPlan = choice ? fork.routes[choice - 1].index : -1; r.branchKey = key;
+      }
+      const approach = TB.frameAt(track, r.s);
+      if (fork.startS - r.s < 50 && !r.air && ['straight', 'curve'].includes(approach.kind)) {
+        const planned = track.shortcuts[r.branchPlan];
+        wantLat = planned ? planned.side * 2.2 : 0;
+        if (planned && r.v > 23) { gas = 0; brake = Math.max(brake, 0.8); }
+      }
+    }
     wantLat = clamp(wantLat, -ROAD_W + 1.5, ROAD_W - 1.5);
     let steer = clamp((wantLat - r.lat) * 0.35, -1, 1);
     const f = TB.frameAt(track, r.s);
     const need = f.curv * r.v * r.v, gripAcc = 24 * r.car.grip;
     const slide = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
     steer -= clamp(slide / (2.5 + 0.16 * r.v), -1, 1);
-    const turbo = r.turbo > 0.6 && f.kind === 'straight' && r.skill > 0.88 && Math.random() < 0.02 ? 1 : (r.turboOn && r.turbo > 0.05 ? 1 : 0);
+    const turbo = fork ? 0 : r.turbo > 0.6 && f.kind === 'straight' && r.skill > 0.88 && Math.random() < 0.02 ? 1 : (r.turboOn && r.turbo > 0.05 ? 1 : 0);
     return { gas, brake, steer: clamp(steer, -1, 1), turbo };
   }
 
@@ -420,7 +474,11 @@
       look = fr.pos.clone().addScaledVector(T, 30).addScaledVector(N, 1.0); up = N;
     } else {
       view.tvTimer -= dt;
-      if (!view.tv || view.tvTimer <= 0 || view.tv.distanceTo(fr.pos) > 140) { const f = TB.frameAt(track, r.s + 60); const side = Math.random() < 0.5 ? -1 : 1; view.tv = new THREE.Vector3(f.p.x + f.B.x * side * 22, f.p.y + 12 + Math.random() * 10, f.p.z + f.B.z * side * 22); view.tvTimer = 5; }
+      if (!view.tv || view.tvRoute !== r.shortcut || view.tvTimer <= 0 || view.tv.distanceTo(fr.pos) > 140) {
+        const route = routeFor(r);
+        const f = route ? window.Shortcuts.frameAt(route, (r.s - route.startS) * route.length / (route.endS - route.startS) + 60) : TB.frameAt(track, r.s + 60);
+        const side = Math.random() < 0.5 ? -1 : 1; view.tv = new THREE.Vector3(f.p.x + f.B.x * side * 22, f.p.y + 12 + Math.random() * 10, f.p.z + f.B.z * side * 22); view.tvTimer = 5; view.tvRoute = r.shortcut;
+      }
       target = view.tv; look = fr.pos.clone(); up = new THREE.Vector3(0, 1, 0);
     }
     const k = mode === 3 ? 1 : Math.min(1, dt * (mode === 1 ? 30 : 6));
@@ -455,7 +513,7 @@
   function buildMinimap() {
     const c = $('#minimap'); const S = track.samples;
     let minx = 1e9, maxx = -1e9, minz = 1e9, maxz = -1e9;
-    for (const s of S) { minx = Math.min(minx, s.p.x); maxx = Math.max(maxx, s.p.x); minz = Math.min(minz, s.p.z); maxz = Math.max(maxz, s.p.z); }
+    for (const s of S.concat(...track.shortcuts.map((r) => r.samples))) { minx = Math.min(minx, s.p.x); maxx = Math.max(maxx, s.p.x); minz = Math.min(minz, s.p.z); maxz = Math.max(maxz, s.p.z); }
     const pad = 12, w = c.width - pad * 2, h = c.height - pad * 2;
     miniScale = Math.min(w / (maxx - minx + 1), h / (maxz - minz + 1));
     miniOff = { x: pad + (w - (maxx - minx) * miniScale) / 2 - minx * miniScale, z: pad + (h - (maxz - minz) * miniScale) / 2 - minz * miniScale };
@@ -469,7 +527,7 @@
     x.lineWidth = 5; x.strokeStyle = '#000'; x.stroke(miniPath);
     x.lineWidth = 2; x.strokeStyle = 'rgba(255,255,255,0.9)'; x.stroke(miniPath);
     x.strokeStyle = '#83e7b3'; x.lineWidth = 2;
-    for (const route of track.shortcuts) { x.beginPath(); route.samples.forEach((f, i) => { const px = c.width - (f.p.x * miniScale + miniOff.x), py = c.height - (f.p.z * miniScale + miniOff.z); if (i) x.lineTo(px, py); else x.moveTo(px, py); }); x.stroke(); }
+    for (const route of track.shortcuts) { x.strokeStyle = route.kind === 'alternate' ? '#6ccfff' : '#83e7b3'; x.beginPath(); route.samples.forEach((f, i) => { const px = c.width - (f.p.x * miniScale + miniOff.x), py = c.height - (f.p.z * miniScale + miniOff.z); if (i) x.lineTo(px, py); else x.moveTo(px, py); }); x.stroke(); }
     const dot = (r, col, rad) => { const f = racerFrame(r); x.beginPath(); x.arc(c.width - (f.p.x * miniScale + miniOff.x), c.height - (f.p.z * miniScale + miniOff.z), rad, 0, Math.PI * 2); x.fillStyle = col; x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); };
     for (const r of racers) if (r.isAI) dot(r, '#ffd400', 2.5);
     if (kripo) dot(kripo, '#2060ff', 3.5);
@@ -482,10 +540,11 @@
   function standings() { return racers.slice().sort((a, b) => progress(b) - progress(a)); }
   function updateHUD() {
     const activeRoute = routeFor(player);
-    const aheadRoute = !activeRoute && track.shortcuts.find((r) => r.startS - player.s > 0 && r.startS - player.s < 85);
-    const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = !activeRoute && (!aheadRoute || (mission && mission.onFoot));
-    if (activeRoute) shortcutHint.textContent = `${activeRoute.name.toUpperCase()} · SCHMALE GASSE · ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M`;
-    else if (aheadRoute) shortcutHint.textContent = `${aheadRoute.side < 0 ? '← LINKS' : 'RECHTS →'} EINORDNEN · ${aheadRoute.name.toUpperCase()} · ${Math.round(aheadRoute.startS - player.s)} M`;
+    const aheadFork = !activeRoute && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < 100);
+    const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = !activeRoute && (!aheadFork || (mission && mission.onFoot));
+    shortcutHint.classList.toggle('alternate', !!activeRoute && activeRoute.kind === 'alternate');
+    if (activeRoute) shortcutHint.textContent = `${activeRoute.name.toUpperCase()} · ${activeRoute.kind === 'alternate' ? 'PANORAMAROUTE' : 'SCHMALE GASSE'} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M`;
+    else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`;
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
     $('#hudRunde').textContent = `${player.lap} / ${trackDef.laps}`;
     $('#hudZeit').textContent = fmtTime(raceTime);
@@ -520,6 +579,7 @@
     theme = trackDef.theme;
     track = TB.buildTrack(trackDef);
     track.shortcuts = window.Shortcuts.buildRoutes(track);
+    track.routeGroups = routeGroups(track.shortcuts);
     if (scene) scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     scene = new THREE.Scene();
     scene.background = new THREE.Color(theme.sky);
@@ -553,6 +613,7 @@
       const base = D.CARS.find((c) => c.id === d.car) || D.CARS[1];
       const cdef = Object.assign({}, base, { color: d.color, plate: 'K-' + d.name.slice(0, 2).toUpperCase() + ' ' + (i + 1) });
       const r = makeRacer(cdef, W.buildCar(cdef, theme.night), d, true);
+      r.routeSeed = i;
       r.skill = clamp(d.skill * diffMul, 0.7, 1.08);
       scene.add(r.mesh); racers.push(r);
     });
@@ -854,9 +915,10 @@
     if (!outlineCache[def.id + def.segments.length]) outlineCache[def.id + def.segments.length] = TB.buildTrack(def);
     const tr = outlineCache[def.id + def.segments.length];
     if (!tr.shortcuts) tr.shortcuts = window.Shortcuts.buildRoutes(tr);
-    const projection = SP.outline(tr.samples, canvas, w, h, '#f4f4f4'), ctx = canvas.getContext('2d');
+    const projection = SP.outline(tr.samples, canvas, w, h, '#f4f4f4', null, tr.shortcuts.flatMap((r) => r.samples)), ctx = canvas.getContext('2d');
     ctx.strokeStyle = '#6ffc95'; ctx.lineWidth = 1.5;
     for (const route of tr.shortcuts) {
+      ctx.strokeStyle = route.kind === 'alternate' ? '#6ccfff' : '#83e7b3';
       ctx.beginPath(); route.samples.forEach((q, i) => i ? ctx.lineTo(projection.px(q), projection.pz(q)) : ctx.moveTo(projection.px(q), projection.pz(q))); ctx.stroke();
     }
     return tr;
@@ -896,10 +958,19 @@
       row.onclick = () => { sel.track = i; onTrackChange(); };
       tl.appendChild(row);
     });
+    const selectedRow = tl.children[sel.track];
+    if (selectedRow && tl.clientHeight) {
+      const top = selectedRow.getBoundingClientRect().top - tl.getBoundingClientRect().top + tl.scrollTop - tl.clientTop;
+      const bottom = top + selectedRow.getBoundingClientRect().height;
+      if (top < tl.scrollTop) tl.scrollTop = top;
+      else if (bottom > tl.scrollTop + tl.clientHeight) tl.scrollTop = bottom - tl.clientHeight;
+    }
     const t = all[sel.track] || TRACKS[0];
     $('#trackDesc').textContent = t.desc || 'Eigene Streck aus dem Klüngel-Baukasten.';
     const routes = outlineCache[t.id + t.segments.length].shortcuts;
-    $('#trackRoutes').textContent = routes.length ? 'GRÜNE ABKÜRZUNGEN: ' + routes.map((r) => `${r.name} (−${Math.round(r.saved)} m)`).join(' · ') + '. Am Schild einordnen; in der schmalen Gasse vom Gas.' : '';
+    const forks = routeGroups(routes).filter((g) => g.routes.length > 1).length;
+    const explored = routePassport(t);
+    $('#trackRoutes').textContent = routes.length ? `VEEDELS-PASS ${explored.size}/${routes.length} · ${forks ? forks + ' DREI-WEGE-GABELUNG' + (forks > 1 ? 'EN' : '') + ' · ' : ''}GRÜN = ABKÜRZUNG · BLAU = PANORAMAROUTE · WEISS = HAUPTSTRECKE. ` + routes.map((r) => `${explored.has(r.id) ? '✓ ' : ''}${r.name} (${routeDelta(r)})`).join(' · ') + '. Vor dem Schild links/rechts einordnen; mittig bleibst du auf der Hauptstrecke.' : '';
     $('#quickTrack').textContent = t.name.toUpperCase();
     $('#langerQuote').textContent = '„' + pick(tuenn.intro) + '“';
     $('#slogan').textContent = tuenn.slogans[Math.floor(Date.now() / 86400000) % tuenn.slogans.length];
@@ -1448,6 +1519,15 @@
   }
   function replayCamera(view, r, dt) {
     if (replay.mode !== 0) { updateCameraFor(view, r, dt, replay.mode); return; }
+    const route = routeFor(r);
+    if (route) {
+      // Scenic streets can sit far outside the main-road TV cameras.
+      const metres = (r.s - route.startS) * route.length / (route.endS - route.startS);
+      const f = window.Shortcuts.frameAt(route, Math.floor(metres / 60) * 60 + 20);
+      camera.position.set(f.p.x + f.B.x * 18, f.p.y + 12, f.p.z + f.B.z * 18);
+      camera.up.set(0, 1, 0); camera.lookAt(r.frame.pos); camera.fov = 60; camera.updateProjectionMatrix();
+      return;
+    }
     // Stunts-style trackside TV: nearest camera the car just passed, looking at the car
     const pos = r.s; let best = replay.camIdx;
     if (best < 0 || replay.cams[best].s > pos + 20 || pos - replay.cams[best].s > 100) { best = 0; for (let i = 0; i < replay.cams.length; i++) if (replay.cams[i].s <= pos + 20) best = i; }
@@ -1639,7 +1719,9 @@
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
-  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage }));
+  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan }));
+  window.STUNTS_FIELD_SETUP = (s, v) => { racers.forEach((r, i) => { r.s = r.isAI ? s - i * 7 : 6; r.v = r.isAI ? v : 0; r.lat = 0; r.shortcut = -1; r.branchPlan = -1; r.branchKey = ''; r.safeS = r.s; r.air = false; r.vy = 0; r.prevRoadVy = 0; r.crashed = 0; r.finished = false; placeRacer(r, 1); }); return window.STUNTS_FIELD(); };
+  window.STUNTS_FIELD_STEPS = (n) => { for (let i = 0; i < Math.min(n, 6000); i++) { raceTime += 1 / 60; for (const r of racers) if (r.isAI && !r.finished) { updateRacer(r, 1 / 60, aiControl(r, 1 / 60)); placeRacer(r, 1 / 60); } for (let a = 0; a < racers.length; a++) for (let b = a + 1; b < racers.length; b++) collide(racers[a], racers[b]); } return window.STUNTS_FIELD(); };
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.shortcut = -1; r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };

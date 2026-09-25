@@ -58,6 +58,9 @@
   // ---------------- TRACKS ----------------
   // All angles: + = left. Distances in metres. Each track closes on itself.
   // A compressed arcade tour of real Veedel, not a street-accurate navigation map.
+  // Branch waypoints are authored in this compressed world's X/Z coordinates.
+  // Each shared fork offers left, the original circuit straight ahead, and right;
+  // narrow green cuts save distance, wider blue streets take a scenic detour.
   // Landmark geography: https://www.koelntourismus.de/kunst-kultur/veedel/detail/altstadt
   // https://www.katholisch-in-koeln.de/export/sites/katholisch-in-koeln/.galleries/dokumente/Uebersicht-romanische-Kirchen-2024-Webversion.pdf
   // https://www.kolumba.de/index.php?cat=90&language=de
@@ -75,8 +78,14 @@
       id: 'dom', name: 'Domblitz 4D', district: 'Dom & Rhein im Morgengrauen', tag: 'MORJENS', order: 2,
       waypoints: ['Dom', 'Kolumba', 'Wallraf & Gürzenich', 'Alter Markt', 'Hohenzollernbrücke', 'Bahnhof Deutz', 'Rheinsprung'],
       diff: 2, laps: 3, scale: 1.45,
-      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei. Über die Hohenzollernbrücke zum Deutzer Bahnhof, mit Rheinsprung und zwei versteckten Veedelswegen. Schäl kennt den Weg, die Tauben kennen dein Dach.',
+      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei. Am ersten Dreiwege-Fork: schmale Domhof-Gasse, Hauptstrecke oder weiter Trankgassen-Bogen. Dazu zwei versteckte Veedelswege und der Rheinsprung. Schäl kennt den Weg, die Tauben kennen dein Dach.',
       shortcuts: [{ id: 'dom-altstadt', name: 'SALZGASSEN-SCHLUPF', seg: 8 }, { id: 'dom-deutz', name: 'DÜXER HINTERHOF', seg: 16 }],
+      branches: [
+        { id: 'dom-domhof', name: 'DOMHOF-GASSE', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 },
+          via: [{ x: 18, z: 187 }, { x: 38, z: 242 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'dom-trankgasse', name: 'TRANKGASSEN-BOGEN', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 },
+          via: [{ x: -20, z: 186 }, { x: -37, z: 259 }, { x: 23, z: 322 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x5a78b8, fog: 0xffc4a0, ground: 0xa99b86, sun: 0xffd4a8, road: [0x6a6a70, 0x5c5c62], night: false, dawn: true, water: 0x5a7fb0, street: 'altstadt',
         streets: ['HOHE STRASSE', 'DOMKLOSTER', 'GLOCKENGASSE', 'OTTOPLATZ', 'AM HOF', 'TRANKGASSE', 'UNTER FETTENHENNEN', 'FRANKENWERFT', 'DEUTZER FREIHEIT', 'ALTER MARKT', 'HEUMARKT'],
         shops: ['BRAUHAUS', 'HALVE HAHN', 'RIEVKOOCHE', 'EAU DE COLOGNE', 'KÖLSCH', 'FC FANSHOP', 'DOM-SOUVENIRS', 'BÄCKEREI JÜPP', 'EAU DE KÖLLE', 'KVK KUNDENCENTER'],
@@ -116,8 +125,11 @@
         { type: 'museum', seg: 0, u: 0.85, side: 1, dist: 42 },
         { type: 'musicaldome', seg: 2, u: 0.3, side: 1, dist: 70 },
         { type: 'kunibert', seg: 1, u: 0.85, side: -1, dist: 175, keep: 74, story: 'St. Kunibert am Rhing. Drei Türme, drei Chancen, sich zu verfahre. Schäl schafft alle.' },
+        { type: 'ursula', seg: 0, u: 0.18, side: 1, dist: 116, keep: 74, story: 'St. Ursula. Die Krone sitzt op dem Turm. Deine Krone liegt noch im Handschuhfach.' },
         { type: 'kolumba', seg: 2, u: 0.25, side: -1, dist: 72, keep: 62, story: 'Kolumba. Kunst hinger graue Backstein. Ding Bremsspur zählt nit als Ausstellung.' },
+        { type: 'makk', seg: 4, u: 0.14, side: -1, dist: 114, keep: 72, story: 'MAKK: Museum für Angewandte Kunst Köln. Dein Spoiler gilt noch nit als Designklassiker.' },
         { type: 'wallraf', seg: 4, u: 0.75, side: -1, dist: 82, keep: 70, story: 'Wallraf-Richartz-Museum. Alte Meister drin, alte Fahrfehler draußen.' },
+        { type: 'overstolzenhaus', seg: 7, u: 0.6, side: -1, dist: 112, keep: 42, story: 'Overstolzenhaus an der Rheingasse. Treppen am Giebel, nit op der Fahrbahn. Schön auseinanderhalte.' },
         { type: 'guerzenich', seg: 5, u: 0.7, side: 1, dist: 132, keep: 82, story: 'Gürzenich. Gute Stube vun Kölle. Bitte vor dem Einparke de Motor aus.' },
         { type: 'mariakapitol', seg: 7, u: 0.2, side: -1, dist: 98, keep: 80 },
         { type: 'stmartin', seg: 5, u: 0.5, side: -1, dist: 48, keep: 70 },
@@ -166,8 +178,14 @@
       id: 'rheinauhafen', name: 'Rheinauhafen 4D', district: 'Kranhäuser to the Limit', tag: 'ABEND', order: 6,
       waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bottmühle', 'Bayenturm', 'Rheinsprung'],
       diff: 3, laps: 3, scale: 1.45,
-      desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Der Zollhafen-Schleichweg spart Zeit. Zu kurz springen spart die Autowäsche.',
+      desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Am Bayenturm teilen sich drei Straßen: Gasse, Hauptkurs oder weiter Südstadt-Bogen. Der Zollhafen-Schleichweg bleibt. Zu kurz springen spart die Autowäsche.',
       shortcuts: [{ id: 'rheinauhafen-zoll', name: 'ZOLLHAFEN-SCHLEICHWEG', seg: 1 }],
+      branches: [
+        { id: 'rheinauhafen-bayenturm', name: 'BAYENTURM-GASSE', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 },
+          via: [{ x: -45, z: -75 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'rheinauhafen-suedstadt', name: 'SÜDSTADT-BOGEN', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 },
+          via: [{ x: -40, z: -120 }, { x: 10, z: -100 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x6a2a8a, fog: 0xff8a9a, ground: 0x8a8890, sun: 0xffb0c0, road: [0x5a5560, 0x4c4852], night: false, sunset: true, miami: true, water: 0x2f6fa8, street: 'modern',
         posters: ['RHEINSTRAND', 'VICE KÖLLE', 'KRANHAUS-PARTY', 'SCHOKOLADE', 'LAMBOGINA'],
         streets: ['RHEINUFERSTR.', 'UBIERRING', 'ANNA-SCHNEIDER-STEIG', 'HARRY-BLUM-PLATZ', 'IM ZOLLHAFEN', 'AGRIPPINAWERFT', 'BAYENSTRASSE', 'HOLZMARKT', 'SEVERINSTRASSE', 'CHLODWIGPLATZ'],
@@ -228,11 +246,11 @@
         { type: 'severinsbruecke', seg: 4, u: 0.9, side: 1, dist: 150, face: false },
         { type: 'billboard', seg: 7, u: 0.5, side: 1, dist: 14, text: 'HALVE HAHN GRILL – SEIT 1928' },
         { type: 'malakoff', seg: 4, u: 0.25, side: 1, dist: 22, keep: 20, story: 'Malakoffturm. Fröher hät der de Hafen bewacht, heut de Schokolad. Beides hann se mir nit anvertraut.' },
-        { type: 'halle', seg: 0, u: 0.65, side: -1, dist: 52, keep: 50, story: 'Lagerhaus Siebengebirge. 1909, hundert Meter Backstein. Hee drin lag mieh Kaffee als in janz Düsseldorf Verstand.' },
+        { type: 'siebengebirge', seg: 0, u: 0.65, side: -1, dist: 66, keep: 88, story: 'Siebengebirge. Neun Giebel, obwohl et sieben heißt. Schäl zählt nach. Seit drei Runden.' },
         { type: 'bayenturm', seg: 16, u: 0.35, side: 1, dist: 24, keep: 28, story: 'Bayenturm. 1262 hann de Kölner hee de Erzbischof rusjeworfe. Der erste Türsteher-Job in Kölle. Ohne mich.' },
         { type: 'bottmuehle', seg: 16, u: 0.72, side: -1, dist: 66, keep: 44, story: 'Bottmühle am Severinswall. Früher Mühle, heute Jugendtreff. De Flügel sin weg, der runde Turm steht noch.' },
         { type: 'severinstor', seg: 9, u: 0.5, side: 1, dist: 30 },
-        { type: 'kirche', seg: 10, u: 0.5, side: -1, dist: 40, h: 45, color: 0xb9a184 },
+        { type: 'severin', seg: 10, u: 0.5, side: -1, dist: 94, keep: 82, story: 'St. Severin in der Südstadt. Drei Türme als Orientierung. Schäl fragt trotzdem dat Navi.' },
         { type: 'row', seg: 12, u: 0.5, side: -1, dist: 24, style: 'gruenderzeit', seed: 12, n: 5 },
         { type: 'tramline', seg: 12, u: 0.5, side: 1, dist: 14, len: 90, face: false },
         { type: 'cafe', seg: 11, u: 0.8, side: 1, dist: 13 },
@@ -289,6 +307,7 @@
         { type: 'flora', seg: 2, u: 0.5, side: -1, dist: 40, keep: 50, story: 'Schäl Sick. De falsche Rheinseite, sagen de Kölner. Ich sag: hee kennt mich keiner. Dat is och wat wert.' },
         { type: 'bastei', seg: 5, u: 0.4, side: -1, dist: 98, keep: 58, story: 'Die Bastei am Rhing. Beste Aussicht. Außer auf ding Einparkversuch.' },
         { type: 'deutzbahnhof', seg: 8, u: 0.25, side: -1, dist: 156, keep: 82 },
+        { type: 'altheribert', seg: 8, u: 0.78, side: 1, dist: 94, keep: 68, story: 'Alt St. Heribert am Deutzer Ufer. Weißes Haus, ruhiger Hof. Lass de Reifen draußen.' },
         { type: 'palladium', seg: 10, u: 0.55, side: -1, dist: 88, keep: 80, story: 'Palladium. Heut spielst du die Vorband. Auf vier Zylinder.' },
         { type: 'ewerk', seg: 12, u: 0.25, side: 1, dist: 102, keep: 80, story: 'E-Werk. Strom för de Verstärker, Nitro för dich. Bitte nit vertausche.' },
         { type: 'fortx', seg: 19, u: 0.5, side: -1, dist: 94, keep: 82, story: 'Fort X am Neusser Wall. Rosen oben, dicke Mauern unten. Beides bitte stehe losse.' },
@@ -383,6 +402,7 @@
         { type: 'row', seg: 4, u: 0.5, side: 1, dist: 48, style: 'gruenderzeit', seed: 84, n: 4 },
         { type: 'platz', seg: 15, u: 0.5, side: -1, dist: 42, seed: 18, keep: 30, story: 'Neptunplatz. Erst e Kölsch, dann Wellness. Oder andersrum. Schäl sucht noch den Bademantel.' },
         { type: 'neptunbad', seg: 15, u: 0.4, side: 1, dist: 72, keep: 64, story: 'Neptunbad. Sauna für Menschen, Motorkühlung für Autos. Bitte nit verwechseln.' },
+        { type: 'butzweilerhof', seg: 20, u: 0.16, side: 1, dist: 154, keep: 94, story: 'Ein Abstecher zum Butzweilerhof in Ossendorf. Alter Flughafen, neue Ausrede für deine Tiefflüge.' },
         { type: 'row', seg: 20, u: 0.35, side: -1, dist: 55, style: 'industrial', seed: 86, n: 5 },
         { type: 'cafe', seg: 20, u: 0.68, side: 1, dist: 27 },
         { type: 'tramline', seg: 0, u: 0.5, side: -1, dist: 14, len: 120, face: false },
@@ -402,8 +422,14 @@
       id: 'kalk', name: 'Chicago am Rhein', district: 'Ringe Nachtfahrt', tag: 'NACHT', order: 1,
       waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Mediapark', 'St. Gereon'],
       diff: 5, laps: 3, scale: 1.45,
-      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Nasse Straßen, Büdchen-Sprung und das große Zehneck von St. Gereon. Durch den Sartory-Hinterhof geht es schneller, aber ohne Garderobenmarke.',
+      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Drei Wege am Ring: enger Aposteln-Hof, Hauptstrecke oder weiter Rudolfplatz-Bogen. Dazu nasse Straßen, Büdchen-Sprung und Sartory-Hinterhof. Garderobenmarke bitte am Ziel abgeben.',
       shortcuts: [{ id: 'kalk-sartory', name: 'SARTORY-HINTERHOF', seg: 5 }, { id: 'kalk-hansa', name: 'HANSARING-SCHLUPF', seg: 9 }],
+      branches: [
+        { id: 'kalk-aposteln', name: 'APOSTELN-HOF', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 },
+          via: [{ x: 18, z: 115 }, { x: 35, z: 170 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'kalk-rudolfplatz', name: 'RUDOLFPLATZ-BOGEN', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 },
+          via: [{ x: -20, z: 114 }, { x: -37, z: 193 }, { x: 13, z: 260 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true,
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'MEDIAPARK'],
         shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO', 'KLÜNGELKASSE KÖLN', 'KVK'],
@@ -460,6 +486,8 @@
         { type: 'aposteln', seg: 2, u: 0.5, side: -1, dist: 92, keep: 80, story: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens dat Radio runter.' },
         { type: 'richmodisturm', seg: 2, u: 0.15, side: 1, dist: 78, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.' },
         { type: 'oper', seg: 4, u: 0.15, side: 1, dist: 124, keep: 98, story: 'Die Oper am Offenbachplatz. Wenn dä Motor so singt, kriss de vielleicht e Engagement.' },
+        { type: 'makk', seg: 4, u: 0.85, side: -1, dist: 110, keep: 72 },
+        { type: 'ulrepforte', seg: 12, u: 0.5, side: -1, dist: 96, keep: 58, story: 'Ulrepforte mit Mühlenturm. Die Funken halten Wache. Du hältst hoffentlich die Spur.' },
         { type: 'kunibert', seg: 13, u: 0.4, side: -1, dist: 96, keep: 76 },
         { type: 'agnes', seg: 13, u: 0.68, side: 1, dist: 116, keep: 84 },
         { type: 'fortx', seg: 14, u: 0.75, side: 1, dist: 104, keep: 82 },
@@ -533,7 +561,8 @@
         { type: 'tribuene', seg: 9, u: 0.3, side: -1, dist: 12, keep: 30 },
         { type: 'zochwagen', seg: 13, u: 0.6, side: 1, dist: 13 },
         { type: 'tribuene', seg: 17, u: 0.5, side: -1, dist: 12, keep: 30 },
-        { type: 'kirche', seg: 8, u: 0.5, side: 1, dist: 45, h: 40 },
+        { type: 'severin', seg: 8, u: 0.5, side: 1, dist: 90, keep: 82 },
+        { type: 'makk', seg: 13, u: 0.8, side: -1, dist: 116, keep: 72 },
         { type: 'bunting', seg: 0, u: 0.4, side: 0, dist: 0 },
         { type: 'billboard', seg: 0, u: 0.6, side: -1, dist: 14, text: 'KÖLLE ALAAF – KAMELLE!' },
         { type: 'haltestelle', seg: 0, u: 0.8, side: 1, dist: 10 },
@@ -574,8 +603,14 @@
       id: 'poller', name: 'Poller Wiesen Stunt-Park', district: 'Nachts op de Poller Wiesen', tag: 'NACHT', order: 7,
       waypoints: ['Poller Wiesen', 'Deutzer Arena', 'Bahnhof Deutz', 'KölnTriangle', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
       diff: 5, laps: 3, scale: 1.45,
-      desc: 'Die Poller Wiesen als Stunt-Arena, mit Deutzer Bahnhof, KölnTriangle und Hyatt am Rand der Runde. Drei Loopings, Korkenzieher, Brauhaus-Sprung und zwei Schleichwege durchs Grün. Vom anderen Ufer gucken die Kranhäuser zu. Bewertet wird Haltung, nicht Blech.',
+      desc: 'Die Poller Wiesen als Stunt-Arena, mit Deutzer Bahnhof, KölnTriangle und Hyatt am Rand der Runde. Am langen Dreiwege-Kurs: enger Schütte-Durchstich, Tunnel-Hauptstrecke oder weiter Wiesenbogen. Dazu drei Loopings, Korkenzieher und Brauhaus-Sprung. Vom anderen Ufer gucken die Kranhäuser zu. Bewertet wird Haltung, nicht Blech.',
       shortcuts: [{ id: 'poller-werft', name: 'DEUTZER WERFTWEG', seg: 7 }, { id: 'poller-wiese', name: 'POLLER WIESENPFAD', seg: 19 }],
+      branches: [
+        { id: 'poller-schuette', name: 'SCHÜTTE-DURCHSTICH', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 },
+          via: [{ x: 374, z: -34 }, { x: 363, z: -120 }, { x: 342, z: -205 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'poller-wiesenbogen', name: 'WEITER WIESENBOGEN', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 },
+          via: [{ x: 390, z: 30 }, { x: 420, z: -34 }, { x: 420, z: -196 }, { x: 369, z: -267 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x070a24, fog: 0x1e1a3a, ground: 0x28402a, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, water: 0x102040, street: 'park', arena: true,
         streets: ['POLLER WIESEN', 'ROLSHOVER STR.', 'POLLER KIRCHWEG', 'ALFRED-SCHÜTTE-ALLEE', 'DEUTZER WERFT', 'AM RHEINPARK', 'ARENASTRASSE'],
         posters: ['STUNT-NACHT', 'LOOPING-CUP', 'KÖLSCH-FEST', 'LAMBOGINA', 'FC HEIMSPIEL'],
@@ -618,6 +653,8 @@
         { type: 'deutzbahnhof', seg: 2, u: 0.5, side: -1, dist: 108, keep: 82 },
         { type: 'triangle', seg: 4, u: 0.5, side: -1, dist: 106, keep: 62 },
         { type: 'hyatt', seg: 6, u: 0.5, side: 1, dist: 98, keep: 62 },
+        { type: 'altheribert', seg: 6, u: 0.8, side: -1, dist: 118, keep: 68 },
+        { type: 'siebengebirge', seg: 6, u: 0.12, side: 1, dist: 172, keep: 88 },
         { type: 'row', seg: 16, u: 0.5, side: 1, dist: 50, style: 'industrial', seed: 92, n: 5 },
         { type: 'crowd', seg: 2, u: 0.5, side: -1, dist: 10 },
         { type: 'tribuene', seg: 4, u: 0.3, side: 1, dist: 14, story: 'Looping. Einmol rund wie ne Zocker-Abend: oben bes de König, unten fällt et Kölsch us der Täsch.' },
@@ -694,6 +731,8 @@
         { type: 'kunibert', seg: 2, u: 0.4, side: 1, dist: 86, keep: 76, story: 'St. Kunibert. Wer hee läutet, bestellt keine Fluchthilfe. Schäl versucht et trotzdem.' },
         { type: 'fortx', seg: 6, u: 0.5, side: -1, dist: 90, keep: 82 },
         { type: 'agnes', seg: 4, u: 0.88, side: -1, dist: 120, keep: 84 },
+        { type: 'ursula', seg: 2, u: 0.3, side: 1, dist: 106, keep: 74 },
+        { type: 'overstolzenhaus', seg: 18, u: 0.7, side: -1, dist: 94, keep: 42 },
         { type: 'bastei', seg: 8, u: 0.55, side: 1, dist: 90, keep: 58 },
         { type: 'deutzbahnhof', seg: 15, u: 0.35, side: -1, dist: 92, keep: 82, story: 'Deutzer Bahnhof. Mit dem Domschatz steigste besser nit in de falsche Zug.' },
         { type: 'gangster', seg: 4, u: 0.3, side: -1, dist: 9 },
@@ -725,8 +764,14 @@
       id: 'zuelpicher', name: 'Zülpicher 11.11.', district: 'Kwartier Latäng um 11 Uhr 11', tag: 'TAG', order: 9,
       waypoints: ['Zülpicher Platz', 'Synagoge Roonstraße', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'Melaten', 'St. Aposteln', 'Richmodisturm', 'Wasserturm'],
       diff: 2, laps: 3, scale: 1.35,
-      desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann zum Aachener Weiher und Melatens historischem Tor. Am Neumarkt schauen die Pferde vom Richmodisturm zu. Die Rathenau-Gasse kürzt die Runde ab. Das Studium dauert trotzdem länger.',
+      desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann drei Wege zum Weiher: Mensa-Durchstich, Hauptkurs oder breite Weiher-Runde. Melaten und Richmodisturm gucken zu. Rathenau-Gasse und Ring-Hinterhof kürzen weiter ab. Das Studium dauert trotzdem länger.',
       shortcuts: [{ id: 'zuelpicher-rathenau', name: 'RATHENAU-GASSE', seg: 1 }, { id: 'zuelpicher-ring', name: 'RING-HINTERHOF', seg: 16 }],
+      branches: [
+        { id: 'zuelpicher-mensa', name: 'MENSA-DURCHSTICH', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 },
+          via: [{ x: 281, z: 29 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'zuelpicher-weiher', name: 'WEIHER-RUNDE', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 },
+          via: [{ x: 363, z: 17 }, { x: 292, z: -59 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xa9a49c, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
         shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP', 'BÄCKEREI JÜPP', 'KIOSK · KÖLSCH 1,50'],
@@ -771,6 +816,7 @@
         { type: 'zochwagen', seg: 4, u: 0.7, side: -1, dist: 13 },
         { type: 'halle', seg: 5, u: 0.5, side: 1, dist: 60, keep: 60, story: 'Die Uni. Hee lernt mer, wie mer Kölsch bestellt, op Latein. Un wie mer et nit bezahlt, op Kölsch.' },
         { type: 'unikoeln', seg: 6, u: 0.4, side: 1, dist: 118, keep: 90, story: 'Hauptgebäude der Uni. Für diese Runde gibt es leider keine Leistungspunkte.' },
+        { type: 'ulrepforte', seg: 2, u: 0.35, side: -1, dist: 98, keep: 58 },
         { type: 'kirche', seg: 6, u: 0.5, side: -1, dist: 48, h: 30 },
         { type: 'tribuene', seg: 8, u: 0.4, side: 1, dist: 12, keep: 30, story: 'Mensa-Looping. Einmol rund, wie de Schlang an der Essensausgab. Nur schneller un ohne Erbsesupp.' },
         { type: 'koelsch', seg: 8, u: 0.7, side: -1, dist: 18 },
@@ -797,8 +843,14 @@
       id: 'rodenkirchen', name: 'Rodenkirchen Rheinbad', district: 'Sommer am Rhing, Südbrücke bis Weiß', tag: 'TAG', order: 10,
       waypoints: ['Rheinuferweg', 'Alt St. Maternus', 'Rodenkirchener Brücke', 'Weiß', 'Rheinstrand', 'Sürther Bootshaus'],
       diff: 3, laps: 3, scale: 1.5,
-      desc: 'Sommer in Rodenkirchen: an Alt St. Maternus und den Rheinterrassen vorbei nach Weiß, mit Strand-Looping und Bootshaus-Korkenzieher. Ufergasse und Bootshausweg sparen den Umweg. Wer zu kurz springt, badet. Wer zu weit springt, badet in Weiß.',
+      desc: 'Sommer in Rodenkirchen: an Alt St. Maternus und den Rheinterrassen vorbei nach Weiß, mit Strand-Looping und Bootshaus-Korkenzieher. Vor der Brücke: Weißer Schlupf, Hauptkurs oder breiter Rheinterrassen-Bogen. Ufergasse und Bootshausweg bleiben. Wer zu kurz springt, badet. Wer zu weit springt, badet in Weiß.',
       shortcuts: [{ id: 'rodenkirchen-ufer', name: 'RODENKIRCHENER UFERGASSE', seg: 3 }, { id: 'rodenkirchen-boot', name: 'BOOTSHAUSWEG', seg: 16 }],
+      branches: [
+        { id: 'rodenkirchen-weiss', name: 'WEISSER SCHLUPF', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 },
+          via: [{ x: -251, z: 357 }, { x: -330, z: 345 }], halfWidth: 3.4, style: 'shortcut' },
+        { id: 'rodenkirchen-terrassen', name: 'RHEINTERRASSEN-BOGEN', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 },
+          via: [{ x: -251, z: 397 }, { x: -332, z: 422 }, { x: -416, z: 378 }], halfWidth: 4.7, style: 'scenic' }
+      ],
       theme: { sky: 0x5fa8ff, fog: 0xd8ecff, ground: 0x5e9a4a, sun: 0xffffff, road: [0x585858, 0x4a4a4a], night: false, water: 0x3f8fc8, street: 'park',
         streets: ['RHEINUFERWEG', 'UFERSTRASSE', 'HAUPTSTRASSE', 'WEISSER STRASSE', 'SÜRTHER STRASSE', 'AM RHEINSTRAND', 'MAINSTRASSE'],
         shops: ['BOOTSHAUS', 'EISCAFÉ', 'KÖLSCH', 'STRANDBAR', 'FISCHBRÖTCHEN', 'YACHTCLUB', 'FÄHRE'],
@@ -1033,7 +1085,9 @@
       { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', stat: 'daily', need: 5, color: 'g' },
       { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' },
       { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', stat: 'boten', need: 3, color: 'o' },
-      { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' }
+      { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' },
+      { id: 'veedelskenner', name: 'VEEDELSKENNER', desc: '10 verschiedene Nebenwege entdeckt', stat: 'streetsFound', need: 10, color: 'g' },
+      { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: 'Alle 29 Nebenwege entdeckt', stat: 'streetsFound', need: 29, color: 'b' }
     ],
     ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
     // the daily track: a random Veedel and a name for it

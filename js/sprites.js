@@ -453,11 +453,11 @@
   }
 
   // ---------------- track outline ----------------
-  function outline(samples, canvas, w, h, color, marks) {
+  function outline(samples, canvas, w, h, color, marks, extraBounds) {
     canvas.width = w; canvas.height = h;
     const x = canvas.getContext('2d'); x.clearRect(0, 0, w, h);
     let minx = 1e9, maxx = -1e9, minz = 1e9, maxz = -1e9;
-    for (const s of samples) { minx = Math.min(minx, s.p.x); maxx = Math.max(maxx, s.p.x); minz = Math.min(minz, s.p.z); maxz = Math.max(maxz, s.p.z); }
+    for (const s of samples.concat(extraBounds || [])) { minx = Math.min(minx, s.p.x); maxx = Math.max(maxx, s.p.x); minz = Math.min(minz, s.p.z); maxz = Math.max(maxz, s.p.z); }
     const pad = 6, sc = Math.min((w - pad * 2) / (maxx - minx + 1), (h - pad * 2) / (maxz - minz + 1));
     const ox = pad + (w - pad * 2 - (maxx - minx) * sc) / 2, oz = pad + (h - pad * 2 - (maxz - minz) * sc) / 2;
     const px = (s) => w - (ox + (s.p.x - minx) * sc), pz = (s) => h - (oz + (s.p.z - minz) * sc);

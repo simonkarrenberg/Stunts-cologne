@@ -493,7 +493,189 @@ body.mobile #hudPrompt { bottom: 130px; font-size: 10px; padding: 10px 14px; } b
 #quickTrack { font-size: 9px; color: #83e7b3; }
 #quickStartBtn { border: 2px solid #ffdf66; background: #c1121f; color: white; padding: 12px 20px; font-size: 11px; }
 #hudShortcut { position: absolute; left: 50%; top: 76px; transform: translateX(-50%); max-width: 46vw; padding: 8px 12px; border: 2px solid #83e7b3; background: #071c18e8; color: #baffd8; font-size: 10px; text-align: center; line-height: 1.7; }
+#hudShortcut.alternate { border-color: #6ccfff; background: #071a2be8; color: #bceaff; }
 body.mobile #hudShortcut { top: 70px; max-width: 48vw; font-size: 7px; padding: 5px 8px; }
 body.mobile #quickTrack { font-size: 7px; max-width: 50vw; }
 body.mobile #quickStartBtn { font-size: 8px; padding: 9px 12px; }
 body.demo #hudShortcut, body.replaying #hudShortcut { display: none !important; }
+
+/* ---------- KÖLLE 4D upright cabinet: glass display, moulded controls, coin door ---------- */
+#menu { padding: 20px 26px 90px; background: radial-gradient(ellipse at 50% 12%, #241832, #080a12 65%); scrollbar-color: #7c609d #0b0d17; }
+#menu::before { opacity: .55; }
+#menu::after { box-shadow: inset 0 0 100px #0007; }
+#menu .arcadeCabinet { max-width: 1460px; margin: 0 auto; padding: 0 12px 10px; border: 3px solid #050508; border-radius: 19px 19px 6px 6px; background: linear-gradient(90deg, #161521 0, #4c3153 3px, #170f21 8px, #100d19 14px, #100d19 calc(100% - 14px), #1d1327 calc(100% - 8px), #725272 calc(100% - 3px), #17141e 100%); box-shadow: 0 0 0 2px #785476, 0 0 0 6px #080810, 0 0 0 8px #8b283d, 0 15px 50px #000, -12px 0 25px #ff2a6530, 12px 0 25px #4fd6ff20; }
+.cabinetCrown { min-height: 35px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 8px 20px; color: #c1afb9; font-size: 7px; letter-spacing: .18em; text-align: center; }
+.cabinetCrown b { color: var(--red); margin: 0 10px; }
+.speakerGrille { width: 116px; height: 12px; flex: none; border: 1px solid #000; border-radius: 7px; background: repeating-linear-gradient(90deg, #030308 0 3px, #403443 3px 5px); box-shadow: 0 1px 0 #685160; }
+#menu .banner { height: 166px; margin: 0 3px; border: 3px solid #070509; border-radius: 9px 9px 3px 3px; box-shadow: 0 0 0 2px #57414d, inset 0 0 25px #000; }
+#menu .banner::before { border-width: 5px; border-image: none; border-color: #ffd261; box-shadow: inset 0 0 18px #ffcb4a33, 0 0 14px #ffa94466; animation: none; }
+#menu .banner::after { inset: 5px; height: auto; background: linear-gradient(115deg, #fff0 12%, #fff1 12.3%, #fff0 36%, #fff0 66%, #fff1 66.2%, #fff0 83%); box-shadow: inset 0 0 22px #000b; pointer-events: none; }
+#menu #logo { left: 22px; top: 18px; width: 520px; height: 130px; }
+#menu .hiScore { top: 14px; right: 22px; left: auto; transform: none; gap: 22px; font-size: 8px; }
+#menu .hiScore span:first-child { animation: none; }
+#menu .bannerQuote { right: 22px; top: 43px; }
+#menu .bannerQuote .q { font-size: 9px; color: #fff3d0; }
+#menu #langerFace { width: 64px; height: 80px; border-color: #191420; box-shadow: 0 0 0 1px #ffa94466; }
+.selectionRail { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 15px 18px 12px; color: #898293; font-size: 6px; letter-spacing: .08em; }
+.selectionRail > span:first-child { color: #96e8b8; white-space: nowrap; }
+.selectionRail b { color: #dac8a5; font-size: 8px; font-weight: normal; }
+.selectionRail i { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #80f6ad; box-shadow: 0 0 8px #4dff8d; }
+#menu .menuGrid { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); grid-template-areas: "drivers tracks" "cars tracks" "langer tracks" "start start"; gap: 12px; padding: 0 12px 12px; align-items: start; }
+#menu .panel { min-width: 0; border: 2px solid #302c3d; border-radius: 5px; padding: 12px; background: radial-gradient(ellipse at 50% 0, #14253455, transparent 80%), #080c15; box-shadow: 0 0 0 2px #030408, 0 0 0 3px #514551, inset 0 0 25px #0009, 0 4px 0 #000; }
+#menu .panel h2 { display: flex; align-items: center; justify-content: flex-start; gap: 10px; min-height: 24px; margin: 0 0 12px; padding-bottom: 9px; border-bottom: 1px solid #37434d; color: #d9f5f4; font-size: 11px; letter-spacing: .08em; text-shadow: 0 0 10px #4fd6ff55; }
+#menu .panel h2::before, #menu .panel h2::after { content: none; }
+.panelNumber { display: inline-grid; place-items: center; min-width: 25px; height: 22px; padding: 3px; border: 1px solid #b78846; color: #ffe198; background: #40331e; font-size: 9px; text-shadow: none; box-shadow: inset 0 0 0 2px #141517; }
+.panelHint { margin-left: auto; color: #acb3b8; font-size: 6px; font-weight: normal; letter-spacing: 0; white-space: nowrap; }
+#menu .tracks { align-self: stretch; }
+#menu .trackList { max-height: 430px; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #e3b655 #121d29; padding: 3px 7px 8px 3px; gap: 8px; }
+#menu .trackList::-webkit-scrollbar { width: 8px; }
+#menu .trackList::-webkit-scrollbar-track { background: #121d29; }
+#menu .trackList::-webkit-scrollbar-thumb { background: #b39450; border: 2px solid #121d29; }
+#menu .card, #menu .trackRow { background: linear-gradient(150deg, #192331, #0b101a 65%); border: 2px solid #344152; box-shadow: inset 0 1px 0 #52607544, 0 2px 0 #000; transition: border-color .12s, background-color .12s; }
+#menu .card:hover, #menu .trackRow:hover { border-color: #89d1d4; background: #1b2936; box-shadow: inset 0 0 14px #4fd6ff15; }
+#menu .card.active, #menu .trackRow.active { background: linear-gradient(150deg, #443720, #1c211c 65%); border-color: #f1c65d; box-shadow: 0 0 0 1px #f1c65d, inset 0 0 18px #ffca4516, 0 0 12px #ffca4528; }
+#menu .card.active::after { border: 0; animation: none; }
+#menu .card.active > b, #menu .trackRow.active .info b { color: #ffe395; text-shadow: 0 1px 0 #000; }
+#menu .card { gap: 3px; }
+#menu .card > b { font-size: 9px; border: 0; border-top: 1px solid #3b4753; padding: 6px 2px 2px; background: transparent; }
+#menu .card canvas { width: 64px; height: 80px; max-width: 100%; object-fit: contain; }
+#menu #driverCards .card > b { min-height: 29px; }
+#menu #driverCards .card small { font-size: 6px; min-height: 28px; }
+#menu .card .diff { font-size: 7px; margin: 3px 0 1px; }
+#menu #carCards .card canvas { width: 96px; height: 33px; }
+#menu #carCards .card > b { min-height: 33px; }
+#menu .stat { grid-template-columns: 46px 1fr; font-size: 6px; gap: 3px; }
+#menu .stat i { gap: 2px; }
+#menu .stat i b { width: 8px; height: 7px; }
+#menu .trackRow { grid-template-columns: 126px minmax(0, 1fr) 75px; gap: 10px; padding: 9px 7px 9px 24px; min-height: 96px; }
+#menu .trackRow .thumb { width: 126px; height: 48px; }
+#menu .trackRow .outline { width: 74px; height: 45px; }
+#menu .trackRow .info b { font-size: 10px; line-height: 1.45; color: #e6e9e6; }
+#menu .trackRow .info .sub { font-size: 7px; line-height: 1.6; color: #c1cad3; }
+#menu .trackRow .info .wp { font-size: 6px; line-height: 1.65; color: #8ec4ce; }
+#menu .trackRow .km, #menu .trackRow .best { font-size: 7px; }
+#menu .trackRow .pips b { width: 6px; height: 7px; }
+#menu .p1 { background: #f1c65d; padding: 2px 3px; font-size: 7px; }
+#menu .desc { padding: 8px 10px; margin-top: 12px; border-left: 2px solid #e3b655; background: #111923; color: #d3d5d2; box-shadow: none; font-size: 8px; }
+#menu .routeLegend { padding: 0 3px; font-size: 7px; }
+#menu .langer { border-color: #463644; background: linear-gradient(90deg, #201423, #100f1a); }
+#menu .langer h2 { color: #eabdcf; border-color: #4c3245; font-size: 9px; margin-bottom: 8px; }
+#menu .langer .panelNumber { color: #f5b9d4; border-color: #a25d7c; background: #452d3e; }
+#menu #langerFace2 { width: 40px; height: 50px; border: 2px solid #75516a; }
+#menu #langerQuote { font-size: 8px; line-height: 1.8; text-shadow: none; }
+#menu .startRow { position: relative; margin: 4px -3px 0; padding: 20px 28px 18px; gap: 14px; border: 2px solid #08080d; border-top: 5px solid #938991; border-radius: 8px 8px 4px 4px; background: radial-gradient(circle at 13px 12px, #b2a5aa 0 2px, #2a252b 3px 5px, transparent 6px), radial-gradient(circle at calc(100% - 13px) 12px, #b2a5aa 0 2px, #2a252b 3px 5px, transparent 6px), repeating-linear-gradient(135deg, #ffffff03 0 1px, transparent 1px 4px), linear-gradient(180deg, #39353f, #161620 100px); box-shadow: 0 -2px 0 #09060c, 0 6px 0 #08080c, inset 0 1px 0 #d4ccd2; }
+.deckPlate { display: flex; width: 100%; justify-content: space-between; gap: 12px; border-bottom: 1px solid #7a6266; padding: 0 0 8px; color: #bcb0b8; font-size: 7px; letter-spacing: .12em; }
+.deckPlate span:first-child { color: #ffce6c; }
+#menu .coinLine { font-size: 7px; letter-spacing: .1em; color: #a8ced3; text-shadow: none; }
+#menu .coinLine span { animation: none; }
+#menu .pressStart { font-size: 9px; margin-top: -3px; animation: cabinetReady 2.4s steps(2, end) infinite; }
+@keyframes cabinetReady { 50% { opacity: .6; } }
+#menu #startBtn { min-height: 52px; font-size: 14px; padding: 13px 28px; border: 3px solid #f2bd5c; border-radius: 9px; background: linear-gradient(#ff5245 0%, #cf252e 45%, #a11724 49%, #b9202d 100%); animation: none; box-shadow: inset 0 2px 0 #ffb397, 0 0 0 3px #090a10, 0 7px 0 #591a27, 0 8px 0 3px #08090e, 0 0 22px #ff303a35; }
+#menu #startBtn:hover { background: linear-gradient(#ff7562, #d12f36 50%, #c52b36); transform: translateY(2px); }
+#menu #startBtn:active { transform: translateY(5px); box-shadow: inset 0 2px 4px #611524, 0 0 0 3px #090a10, 0 2px 0 #591a27, 0 3px 0 3px #08090e; }
+#menu .startCab canvas { width: 48px; height: 48px; filter: drop-shadow(0 3px 0 #000); }
+#menu .modeRow { gap: 12px; }
+#menu .modeRow button, #menu .clubEntry, #menu .subBtns button { min-height: 40px; border: 2px solid #776d82; border-radius: 5px; background: linear-gradient(#414454, #272735 55%, #222231); color: #e6e2e7; box-shadow: inset 0 1px 0 #bfb5c433, 0 3px 0 #06070b; text-shadow: 1px 1px 0 #000; font-size: 8px; padding: 10px 12px; }
+#menu .modeRow button { border-color: #ba9a60; color: #ffda85; background: linear-gradient(#4d4351, #302839); }
+#menu .clubEntry { border-color: #68a484; color: #c2efcf; background: linear-gradient(#334e48, #23372f); width: 100%; max-width: 740px; }
+#menu .subBtns { justify-content: center; width: 100%; gap: 8px; padding-top: 6px; }
+#menu .subBtns button:hover, #menu .modeRow button:hover, #menu .clubEntry:hover { border-color: #e4cf97; color: #ffe7aa; transform: translateY(-1px); box-shadow: inset 0 1px 0 #fff3, 0 4px 0 #06070b; }
+#menu button:focus-visible, #menu a:focus-visible, #menu .trackList:focus-visible, #menu .trackRow:focus-visible, #menu .card:focus-visible { outline: 3px solid #fff6bf; outline-offset: 4px; }
+.coinReturn { display: flex; width: 100%; align-items: center; justify-content: center; gap: 12px; color: #a5979d; font-size: 6px; padding-top: 8px; }
+.coinReturn i { width: 54px; height: 21px; border: 3px solid #4d4850; border-radius: 2px; background: #080a10; box-shadow: 0 1px 0 #958990, inset 0 3px 0 #000; }
+.coinReturn small { font-size: 6px; }
+#menu .menuFooter { margin: 4px 12px 0; padding: 15px 9px 9px; justify-content: center; text-align: center; gap: 12px 22px; background: transparent; border-top: 0; color: #9a929d; font-size: 7px; }
+#menu .menuFooter .slogan { color: #ceafa1; text-shadow: none; font-size: 8px; }
+#menu .menuFooter .tipp { font-size: 7px; color: #d6bc87; text-shadow: none; }
+#menu .menuFooter .copy { font-size: 6px; line-height: 2; color: #8e828f; }
+#menu > .quickStart { border-top: 3px solid #7a6266; background: linear-gradient(#30303b, #121520 7px); box-shadow: 0 -6px 20px #0009; gap: 24px; padding: 10px 20px max(12px, env(safe-area-inset-bottom)); }
+#menu > .quickStart::before { content: "● READY"; color: #8cd5b5; font-size: 7px; letter-spacing: .12em; }
+#menu #quickTrack { color: #e0d5ba; font-size: 8px; }
+#menu #quickStartBtn { border: 2px solid #f2bd5c; border-radius: 5px; min-height: 42px; background: linear-gradient(#e94340, #a91b2a); box-shadow: inset 0 1px 0 #ffaf97, 0 3px 0 #521422, 0 0 0 2px #06070b; padding: 11px 20px; font-size: 9px; }
+#menu #quickStartBtn:active { transform: translateY(2px); }
+@media (min-width: 1600px) { #menu .trackList { max-height: 460px; } #menu .card canvas { width: 72px; height: 90px; } }
+@media (max-width: 1200px) {
+  #menu { padding: 12px 16px 85px; }
+  #menu .arcadeCabinet { padding-left: 8px; padding-right: 8px; }
+  #menu .menuGrid { gap: 11px; padding-left: 8px; padding-right: 8px; }
+  #menu .panel { padding: 10px; }
+  #menu .panel h2 { font-size: 10px; }
+  #menu .trackRow { grid-template-columns: 80px minmax(0, 1fr) 61px; gap: 7px; }
+  #menu .trackRow .thumb { width: 80px; height: 30px; }
+  #menu .trackRow .outline { width: 60px; height: 40px; }
+  #menu .trackRow .info b { font-size: 9px; }
+  #menu .card > b { font-size: 8px; }
+  #menu .stat { grid-template-columns: 40px 1fr; font-size: 5px; gap: 1px; }
+  #menu .stat i b { width: 6px; height: 6px; }
+  .selectionRail > span:last-child { display: none; }
+}
+@media (max-width: 1000px) {
+  #menu .menuGrid { grid-template-columns: 1fr; grid-template-areas: "drivers" "cars" "tracks" "langer" "start"; }
+  #menu .trackList { max-height: 365px; }
+  #menu .trackRow { grid-template-columns: 126px minmax(0, 1fr) 85px; }
+  #menu .trackRow .thumb { width: 126px; height: 48px; }
+  #menu .trackRow .outline { width: 80px; height: 44px; }
+  #menu .trackRow .info b { font-size: 10px; }
+  #menu .card > b { font-size: 9px; }
+  #menu .stat { grid-template-columns: 46px 1fr; font-size: 6px; }
+  #menu .stat i b { width: 8px; height: 7px; }
+  #menu .bannerQuote .q { display: none; }
+}
+@media (max-width: 650px) {
+  #menu { padding: 8px 10px 88px; }
+  .cabinetCrown { padding: 8px 3px; font-size: 5px; gap: 8px; }
+  .cabinetCrown b { margin: 0 3px; }
+  .speakerGrille { width: 34px; height: 10px; }
+  #menu .banner { height: 130px; }
+  #menu #logo { left: 10px; top: 16px; width: 380px; height: 95px; max-width: 85%; }
+  #menu .bannerQuote { display: none; }
+  .selectionRail { padding: 12px 8px; font-size: 5px; }
+  .selectionRail b { font-size: 6px; line-height: 1.8; text-align: right; }
+  #menu .menuGrid { padding-left: 4px; padding-right: 4px; }
+  #menu #driverCards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #menu #carCards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #menu .trackRow { grid-template-columns: 66px minmax(0, 1fr) 49px; padding-left: 19px; gap: 6px; }
+  #menu .trackRow .thumb { width: 66px; height: 25px; }
+  #menu .trackRow .outline { width: 48px; height: 36px; }
+  #menu .trackRow .info b { font-size: 8px; }
+  #menu .trackRow .info .wp { display: none; }
+  #menu .trackRow .km, #menu .trackRow .best { font-size: 5px; }
+  #menu .startRow { padding: 18px 12px; gap: 13px; }
+  .deckPlate { font-size: 5px; }
+  #menu .coinLine { font-size: 5px; gap: 6px; }
+  #menu .pressStart { font-size: 7px; }
+  #menu #startBtn { font-size: 10px; padding: 12px; }
+  #menu .startCab { gap: 10px; }
+  #menu .startCab canvas { width: 32px; height: 32px; }
+  #menu .modeRow button, #menu .clubEntry, #menu .subBtns button { font-size: 7px; line-height: 1.8; padding: 8px; }
+  #menu .menuFooter .keys { display: none; }
+  .coinReturn { flex-wrap: wrap; gap: 8px; }
+  #menu > .quickStart { gap: 12px; padding-left: 12px; padding-right: 12px; }
+  #menu > .quickStart::before { content: none; }
+  #menu #quickTrack { max-width: 45%; font-size: 6px; }
+  #menu #quickStartBtn { font-size: 7px; padding: 9px 12px; }
+}
+body.mobile #menu { padding-top: 8px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+body.mobile #menu .cabinetCrown { min-height: 24px; padding: 5px 12px; font-size: 5px; }
+body.mobile #menu .speakerGrille { width: 75px; height: 8px; }
+body.mobile #menu .banner { height: 104px; }
+body.mobile #menu #logo { width: 340px; height: 85px; top: 8px; left: 14px; }
+body.mobile #menu .bannerQuote { top: 15px; }
+body.mobile #menu #langerFace { width: 48px; height: 60px; }
+body.mobile #menu .selectionRail { padding: 10px 12px; }
+body.mobile #menu .selectionRail b { font-size: 6px; }
+body.mobile #menu .card canvas { width: 48px; height: 60px; }
+body.mobile #menu #carCards .card canvas { width: 96px; height: 33px; }
+body.mobile #menu .trackList { max-height: min(340px, 70vh); }
+body.mobile #menu .trackRow { min-height: 75px; }
+body.mobile #menu .startRow { padding-top: 18px; }
+body.mobile #menu #quickStartBtn { min-height: 36px; font-size: 8px; }
+body.mobile #menu > .quickStart { padding-top: 7px; padding-bottom: max(9px, env(safe-area-inset-bottom)); }
+@media (min-width: 650px) and (orientation: landscape) {
+  body.mobile #menu #driverCards { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  body.mobile #menu #carCards { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #menu .pressStart, #menu .banner::before, #menu .coinLine span, #menu .hiScore span, #menu #startBtn, #menu .card.active::after { animation: none; }
+  #menu .card, #menu .trackRow { transition: none; }
+}
