@@ -1,10 +1,11 @@
 /* Press Start 2P, SIL Open Font License 1.1 (fonts/OFL.txt), self-hosted so no visitor data leaves this site for a font */
 @font-face { font-family: "Press Start 2P"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/press-start-2p-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: "Press Start 2P"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/press-start-2p-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Koelle Symbols"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/koelle-symbols.woff2") format("woff2"); unicode-range: U+2190, U+2192, U+2197, U+21BB, U+2212, U+23E9, U+23EF, U+25A0, U+25AA, U+25B2, U+25B6, U+25C0, U+260E, U+2630, U+2660, U+2663, U+2665-2666, U+266A, U+2680-2685, U+2713, U+2715, U+2717, U+275A; } /* own pixel arrows, notes, suits and dice for the glyphs the arcade font lacks */
 :root {
   --bg: #0b0d1a; --panel: #10132a; --line: #2a2f55; --line2: #3d4477; --ink: #14121c;
   --red: #ff2a2a; --red2: #c1121f; --yellow: #ffd23f; --cyan: #4fd6ff; --pink: #ff3fa0; --green: #3adf3a; --cream: #f4efe6;
-  --px: "Press Start 2P", "Courier New", monospace;
+  --px: "Press Start 2P", "Koelle Symbols", "Courier New", monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--cream); font-family: var(--px); font-size: 11px; line-height: 1.6; }
@@ -444,7 +445,7 @@ body.mobile .ordenGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 
 .bankRow { display: flex; flex-direction: column; align-items: center; gap: 4px; } .bankRow i { font-style: normal; font-size: 9px; color: var(--yellow); }
 #clubHand { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 4px; padding: 6px 10px 8px; min-height: 84px; }
 #clubHand .total { font-size: 11px; color: var(--yellow); margin-left: 10px; text-shadow: 2px 2px 0 #000; }
-.ccard { position: relative; width: 46px; height: 64px; background: #f6f1e4; border: 2px solid #111; border-radius: 4px; box-shadow: 2px 2px 0 #000; color: #111; cursor: pointer; flex: none; user-select: none; font-family: "Press Start 2P", monospace; transition: transform .12s; }
+.ccard { position: relative; width: 46px; height: 64px; background: #f6f1e4; border: 2px solid #111; border-radius: 4px; box-shadow: 2px 2px 0 #000; color: #111; cursor: pointer; flex: none; user-select: none; font-family: "Press Start 2P", "Koelle Symbols", monospace; transition: transform .12s; }
 .ccard .r { position: absolute; left: 4px; top: 4px; font-size: 9px; } .ccard .s { position: absolute; left: 4px; top: 16px; font-size: 10px; } .ccard .c { position: absolute; right: 5px; bottom: 4px; font-size: 22px; }
 .ccard.red { color: #c1121f; } .ccard.sel { transform: translateY(-10px); border-color: var(--yellow); box-shadow: 0 0 0 2px var(--yellow), 2px 2px 0 #000; } .ccard.dim { opacity: .4; cursor: default; }
 .ccard.back { background: #1c3f95 repeating-linear-gradient(45deg, rgba(255,255,255,.12) 0 4px, transparent 4px 8px); border-color: #fff; cursor: pointer; }

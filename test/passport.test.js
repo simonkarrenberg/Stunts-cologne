@@ -2,6 +2,8 @@
 // sessions, and use the existing records/save-code buttons (no new controls).
 const assert = require('assert');
 const { serve, launch, waitFor } = require('./helpers');
+const { GameData: DATA } = require('../js/data.js');
+const DOM = DATA.TRACKS.find((d) => d.id === 'dom'), DOM_ROADS = (DOM.shortcuts || []).length + (DOM.branches || []).length; // Veedels-Pass total for the Dom track
 
 module.exports = async function () {
   const server = serve(0), browser = await launch(), errors = [], lines = [];
@@ -19,7 +21,7 @@ module.exports = async function () {
       localStorage.setItem('stuntskoelle.routes.dom', '{"not":"an array"}');
       document.querySelectorAll('.trackRow')[1].click();
     });
-    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 0/4'), 'malformed saved passport must not break menu');
+    assert((await page.locator('#trackRoutes').textContent()).includes(`VEEDELS-PASS 0/${DOM_ROADS}`), 'malformed saved passport must not break menu');
     await page.locator('#startBtn').click();
     assert(await waitFor(page, () => STUNTS_DEBUG().phase === 'race', 120000), 'race must start');
     await page.evaluate(() => { STUNTS_MANUAL_STEP = true; });
@@ -68,7 +70,7 @@ module.exports = async function () {
     await page.locator('#saveImport').click();
     await page.reload();
     await page.waitForFunction(() => window.STUNTS_ROUTES);
-    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 2/4'), 'passport must survive export/import and reload');
+    assert((await page.locator('#trackRoutes').textContent()).includes(`VEEDELS-PASS 2/${DOM_ROADS}`), 'passport must survive export/import and reload');
     lines.push('Existing record buttons export/import stamps; reload restores menu progress');
 
     // Seed nine valid discoveries as a saved-game fixture, then earn the
@@ -96,11 +98,11 @@ module.exports = async function () {
       localStorage.setItem('stuntskoelle.veedel', JSON.stringify([id, id, 'unknown-route', null]));
     }, cut.id);
     await page.keyboard.press('Escape');
-    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 1/4'), 'older shared Veedel saves must migrate without duplicate or unknown stamps');
+    assert((await page.locator('#trackRoutes').textContent()).includes(`VEEDELS-PASS 1/${DOM_ROADS}`), 'older shared Veedel saves must migrate without duplicate or unknown stamps');
     await page.evaluate(() => localStorage.setItem('stuntskoelle.veedel', '{"invalid":true}'));
     await page.reload();
     await page.waitForFunction(() => window.STUNTS_ROUTES);
-    assert((await page.locator('#trackRoutes').textContent()).includes('VEEDELS-PASS 0/4'), 'malformed older Veedel saves must not break the menu');
+    assert((await page.locator('#trackRoutes').textContent()).includes(`VEEDELS-PASS 0/${DOM_ROADS}`), 'malformed older Veedel saves must not break the menu');
     lines.push('Legacy Veedel discoveries migrate safely; malformed, duplicate and unknown IDs are ignored');
     assert.deepStrictEqual(errors, [], 'no browser errors');
     return { name: 'passport', ok: true, lines };

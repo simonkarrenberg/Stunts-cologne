@@ -64,8 +64,12 @@ module.exports = async function () {
       }
       routeSigns += audit.signs.length; forkSigns += audit.forks.length;
     }
-    assert.strictEqual(routeSigns, 29, 'all 29 playable routes are signed');
-    assert.strictEqual(forkSigns, 6, 'all six three-way junctions are signed');
+    // the totals come from the track data, so adding or renaming real streets keeps this check honest
+    const { GameData: D } = require('../js/data.js');
+    const totalRoutes = D.TRACKS.reduce((n, d) => n + (d.shortcuts || []).length + (d.branches || []).length, 0);
+    const totalForks = new Set(D.TRACKS.flatMap((d) => (d.branches || []).map((b) => d.id + ':' + b.fork))).size;
+    assert.strictEqual(routeSigns, totalRoutes, `all ${totalRoutes} playable routes are signed`);
+    assert.strictEqual(forkSigns, totalForks, `all ${totalForks} three-way junctions are signed`);
     assert.deepStrictEqual(result.mixed.surfaces.map((s) => s.type).sort(), ['asphalt', 'cobble']);
     assert.deepStrictEqual(result.mixed.keepouts, result.before.keepouts, 'rebuilding the same track resets sign reservations');
     const quads = (a) => a.surfaces.reduce((n, s) => n + s.quads, 0);

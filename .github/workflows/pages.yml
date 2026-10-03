@@ -17,10 +17,16 @@ concurrency:
 
 jobs:
   test:
+    # The browser suites drive every track; together they need longer than one job should take,
+    # so they run as parallel jobs. Deploy waits for all of them.
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ['map-routes', 'race', 'passport,mission', 'cop-routes,bass-recharge', 'landmarks,menu-links,shortcuts,streets']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,7 +34,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
-      - run: npm test
+      - run: node test/run.js "${{ matrix.suite }}"
   deploy:
     needs: test
     if: github.event_name != 'pull_request'

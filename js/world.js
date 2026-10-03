@@ -188,7 +188,7 @@
     if (opts.border) { x.fillStyle = opts.border; x.fillRect(0, 0, c.width, 8); x.fillRect(0, c.height - 8, c.width, 8); x.fillRect(0, 0, 8, c.height); x.fillRect(c.width - 8, 0, 8, c.height); }
     x.fillStyle = fg;
     let size = Math.round(c.height * (opts.sizeK || 0.55));
-    const setFont = () => { x.font = `bold ${size}px "Press Start 2P", Impact, "Arial Black", sans-serif`; };
+    const setFont = () => { x.font = `bold ${size}px "Press Start 2P", "Koelle Symbols", Impact, "Arial Black", sans-serif`; };
     setFont();
     x.textAlign = 'center'; x.textBaseline = 'middle';
     while (x.measureText(text).width > c.width * 0.9 && size > 6) { size -= 1; setFont(); }

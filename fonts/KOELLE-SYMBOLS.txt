@@ -1,0 +1,9 @@
+koelle-symbols.woff2 – "Koelle Symbols"
+
+Original 8×8 pixel glyphs drawn for KÖLLE 4D (2026) for the characters the arcade
+font Press Start 2P does not contain: arrows ← → ↗ ↻, minus sign, ▪ ■ ▶ ◀ ▲, ♪, ✓ ✗ ✕,
+❚, ☰, ☎, card suits ♠ ♣ ♥ ♦, ⏩ ⏯ and the dice faces ⚀–⚅.
+It is a separate font (not a modified version of Press Start 2P) and is released under
+the SIL Open Font License, Version 1.1 (see OFL.txt for the licence text), with no
+Reserved Font Name. The pages list it after Press Start 2P, so the browser only takes
+these characters from it.

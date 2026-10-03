@@ -2,6 +2,10 @@
 // the car on the main road before a gate; route selection is never injected.
 const assert = require('assert');
 const { serve, launch, waitFor } = require('./helpers');
+const { GameData: DATA } = require('../js/data.js');
+// expected totals from the track data: every side street and fork arm, and every shared fork
+const TOTAL_ROUTES = DATA.TRACKS.reduce((n, d) => n + (d.shortcuts || []).length + (d.branches || []).length, 0);
+const TOTAL_FORKS = new Set(DATA.TRACKS.flatMap((d) => (d.branches || []).map((b) => d.id + ':' + b.fork))).size;
 
 module.exports = async function () {
   // Static placement-only rechecks are useful after scenery/sign edits.
@@ -394,10 +398,10 @@ module.exports = async function () {
     if (!process.env.TRACKS && !auditOnly) {
       assert(forkChecks >= 6, 'the maps must include at least six shared left/main/right junctions');
       assert(alternateChecks >= 6, 'each new fork must include a genuinely longer alternative road');
-      assert(resetChecks >= 29, 'all original shortcuts and twelve new branching streets must remain drivable');
+      assert(resetChecks >= TOTAL_ROUTES, `all ${TOTAL_ROUTES} side streets and fork arms must remain drivable`);
       assert.strictEqual(aiForkChecks, forkChecks, 'rival route choices must be tested at every shared fork');
     }
-    if (!process.env.TRACKS) assert(routeAuditCount >= 29 && wayfinderTotal >= 35, 'all roads and their route/fork warning reservations must be audited');
+    if (!process.env.TRACKS) assert(routeAuditCount >= TOTAL_ROUTES && wayfinderTotal >= TOTAL_ROUTES + TOTAL_FORKS, 'all roads and their route/fork warning reservations must be audited');
     assert.strictEqual(replayChecks, resetChecks, 'every driven route must preserve ghost and replay positions');
     lines.push(landmarks.size + ' distinct Cologne landmarks in ' + landmarkPlacements + ' separate placements; ' + clearanceTotal + ' branch, ' + supportClearanceTotal + ' support, ' + streetClearanceTotal + ' street-furniture and ' + mainRoadClearanceTotal + ' main-road clear car-height probes' + (auditOnly ? '' : '; ' + resetChecks + ' stable branch resets; ' + replayChecks + ' saved ghost routes and recorded replays; ' + forkChecks + ' left/main/right forks; ' + shortcutChecks + ' shortcuts and ' + alternateChecks + ' longer alternatives'));
     assert.deepStrictEqual(errors, [], 'no browser exceptions');

@@ -370,7 +370,7 @@
     const x = canvas.getContext('2d');
     x.clearRect(0, 0, w, h);
     const big = Math.round(h * 0.46);
-    x.font = `bold ${big}px "Press Start 2P", Impact, "Arial Black", sans-serif`;
+    x.font = `bold ${big}px "Press Start 2P", "Koelle Symbols", Impact, "Arial Black", sans-serif`;
     x.textBaseline = 'top';
     x.setTransform(1, 0, -0.18, 1, 0, 0); // italic skew
     const text1 = 'KÖLLE', text2 = '4D';
@@ -387,7 +387,7 @@
     drawChrome(text1, 24, '#ff9a9a', '#ff2a2a', '#8a0a0a');
     drawChrome(text2, 24 + w1 + big * 0.35, '#bfe4ff', '#3aa0ff', '#0a3a8a');
     x.setTransform(1, 0, 0, 1, 0, 0);
-    x.font = `bold ${Math.round(h * 0.16)}px "Press Start 2P", Impact, sans-serif`;
+    x.font = `bold ${Math.round(h * 0.16)}px "Press Start 2P", "Koelle Symbols", Impact, sans-serif`;
     x.fillStyle = '#000'; x.fillText('CHICAGO AM RHEIN', 28, 24 + big + 12);
     x.fillStyle = '#ffd400'; x.fillText('CHICAGO AM RHEIN', 26, 22 + big + 12);
     return canvas;
@@ -492,7 +492,7 @@
     needle(gx - gr * 2.6, gy, Math.min(1, st.speed / 280)); needle(gx + gr * 2.6, gy, Math.min(1, st.rpm));
     // digital speed + turbo/damage bars in the centre
     R(gx - S * 30, gy - S * 12, S * 60, S * 22, '#050508');
-    x.font = `${S * 8}px "Press Start 2P", monospace`; x.fillStyle = '#7fff00'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.font = `${S * 8}px "Press Start 2P", "Koelle Symbols", monospace`; x.fillStyle = '#7fff00'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText(String(Math.round(st.speed)).padStart(3, '0'), gx, gy - S * 4);
     for (let i = 0; i < 10; i++) { R(gx - S * 26 + i * S * 5.4, gy + S * 3, S * 4, S * 3, i / 10 < st.turbo ? '#3adf3a' : '#1a2a1a'); R(gx - S * 26 + i * S * 5.4, gy + S * 7, S * 4, S * 2, i / 10 < st.damage ? (i > 6 ? '#ff2a2a' : '#ffd400') : '#2a1a1a'); }
     // steering wheel

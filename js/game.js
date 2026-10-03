@@ -102,7 +102,7 @@
   }
   function musicPlay() { music.wanted = true; if (music.muted) return; if (music.el) { const p = music.el.play(); if (p && p.catch) p.catch(() => {}); chipStop(); } else chipStart(); }
   function musicStop() { music.wanted = false; if (music.el) music.el.pause(); chipStop(); }
-  function updateMusicUI() { const t = music.el ? '♪ ' + music.title : '♪ Chiptune (eigenen Song laden)'; $('#musicTitle').textContent = t; }
+  function updateMusicUI() { const t = music.el ? '♪ ' + music.title : '♪ Chiptune (eigenen Song laden)'; $('#musicTitle').textContent = t; try { updateJuke(); } catch (e) { /* the menu is not built yet */ } } // the jukebox label follows the loaded song
   function chipStart() {
     if (!audio.ctx || music.chip || music.muted) return;
     const ctx = audio.ctx, g = ctx.createGain(); g.gain.value = 0.05; g.connect(ctx.destination);
