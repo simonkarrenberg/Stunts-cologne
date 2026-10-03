@@ -9,7 +9,7 @@ module.exports = async function () {
   const which = process.env.TRACKS ? process.env.TRACKS.split(',').map(Number) : [...Array(n).keys()]; // TRACKS=0,3 for a quick run
   for (const t of which) {
     await page.evaluate((i) => { document.querySelectorAll('.trackRow')[i].click(); window.STUNTS_AUTOPILOT = true; window.STUNTS_SIMSTEPS = 4; document.getElementById('startBtn').click(); }, t);
-    const raced = await waitFor(page, () => { const d = window.STUNTS_DEBUG(); return d.phase === 'race' && d.player.s > 120; }, 120000);
+    const raced = await waitFor(page, () => { const d = window.STUNTS_DEBUG(); return d.phase === 'race' && d.player.s > 120; }, 240000); // the first track also compiles every shader
     await page.evaluate(() => window.STUNTS_FINISH());
     const done = await waitFor(page, () => !document.getElementById('results').hidden, 30000);
     const name = await page.evaluate(() => document.getElementById('hudTrack').textContent);

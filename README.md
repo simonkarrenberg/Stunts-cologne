@@ -198,9 +198,27 @@ Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 - **Kölsch-Cup:** Alle zehn Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
 
-## Musik
+## Musik: LamboGina
 
-Beim Rennen läuft ein Song in Schleife. Drei Wege:
+Der Titelsong **LamboGina** (`music/lamborghina.mp3`) gibt der Stadt den Takt. Das Spiel kennt
+seine Struktur: 130 BPM, gerader Bass-Kick, Tonart um C, Strophen mit hartem Kick, ein voller
+Refrain, zwei Steigerungen und von 2:24 bis 2:55 ein langer, dunkler Bass-Teil. Diese Karte wurde
+aus der Audiodatei gemessen (Kick-Stärke für jeden der 483 Schläge, Abschnittsgrenzen in Sekunden)
+und liegt in `js/lambogina.js`.
+
+- **Menü-Jukebox:** Nach dem ersten Klick läuft der Song auch im Menü (Knopf rechts im Banner:
+  an/aus, merkt sich die Wahl). Das Logo pumpt auf dem Kick, die Fenster der Skyline blitzen, ein
+  Equalizer tanzt auf dem Rhein, und im Refrain und im Bass-Teil rast der weiße Keil über die
+  Hohenzollernbrücke. Der Knopf zeigt den Abschnitt: STROPH, REFRAIN, JLEICH KÜTT ET …, DÄ BASS!
+- **Auf den Strecken:** Neonschilder, ihr Leuchten und ihre Lichter pumpen mit dem Kick. Hinter dem
+  Start stehen zwei Suchscheinwerfer, die im Refrain und im Bass-Teil über den Himmel fahren;
+  im Bass-Teil gehen die Kölner Lichter los. Ein LamboGina-Plakat steht an mancher Straße.
+- **Im Rennen:** Dä Lange kündigt Refrain, Steigerung und Bass an. Solange der Bass-Teil läuft,
+  lädt dein Turbo doppelt so schnell (nur für dich, nur wenn der Song wirklich spielt). Fünf
+  Bass-Teile im Rennen bringen den Orden „LAMBOGINA“.
+- Ein eigener Song (siehe unten) bekommt einen schlichten 128-BPM-Puls ohne Abschnitte.
+
+Einen eigenen Song laden – drei Wege:
 
 1. Im Menü **🎵 Musik laden** tippen und die Datei auswählen. Auf dem iPhone öffnet sich die
    Dateien-App, dort **iCloud Drive** wählen und z.B. *Lamborghina* antippen. Der Song wird im
@@ -305,7 +323,10 @@ unter Einstellungen → Bedienungshilfen → Gesprochene Inhalte eine zusätzlic
 **Chicago am Rhein mit Miami-Vice-Touch:** Neonkanten an den Dächern, Palmen und der
 Rheinstrand km 689 am Rheinauhafen, Speedboote, Riesenrad, Kölner Lichter über dem Rhein,
 der Kölsch-Zeppelin, Polizei Köln mit Blaulicht. Dazu **Blitzer** (ab 120 km/h gibt es ein
-Knöllchen, Klüngel Tom regelt dat), ab und zu eine „Dä Schnelle“-Schlagzeile oder ein Paragraph
+Knöllchen, Klüngel Tom regelt dat) und **Ampeln**, die an jedem Zebrastreifen wirklich schalten
+(8 s grün, 2 s gelb, 6 s rot, 1 s rot-gelb): Wer bei Rot über die Haltelinie fährt, löst den
+Rotlichtblitzer aus und kassiert ebenfalls ein Knöllchen; bei Gelb gibt es nur einen Spruch
+(„Kirschgrün! Jrad noch.“). Ab und zu eine „Dä Schnelle“-Schlagzeile oder ein Paragraph
 aus dem Kölschen Grundgesetz, zufällige Ereignisse (Taube, Köbes mit Kölsch = Turbo-Bonus)
 und der Tipp des Tages vom Türsteher.
 
@@ -359,6 +380,10 @@ dort geladen – die Seite baut beim Spielen keine Verbindung zu Google Fonts od
 `rechtliches.html` (verlinkt im Menü-Fuß) enthält Impressum und Datenschutzerklärung.
 Alle Marken, Läden, Zeitungen, Autos und Personen im Spiel sind erfunden; die Kölner Orte und
 Wahrzeichen sind echt. Die Musik ist eine eigene Aufnahme.
+Die Schrift „Press Start 2P“ liegt mit ihrer OFL-Lizenz in `fonts/`. Zeichen, die ihr fehlen
+(Pfeile ← → ↗ ↻, Minus, ▶ ◀ ▲ ■, ♪, ✓ ✗, Kartenfarben, Würfel), kommen aus „Koelle Symbols“
+(`fonts/koelle-symbols.woff2`): eigene 8×8-Pixelzeichen, ebenfalls unter der OFL, ohne
+reservierten Namen (siehe `fonts/KOELLE-SYMBOLS.txt`).
 
 ## Tests
 
@@ -366,6 +391,9 @@ Wahrzeichen sind echt. Die Musik ist eine eigene Aufnahme.
 dann erzwungenes Ziel, Ergebnis muss erscheinen) und einen kompletten Botengang (Abholring, aussteigen,
 Paket zu Fuß, einsteigen, Kripo da, abliefern). `CHROME=/pfad/zu/chromium npm test` nimmt einen
 eigenen Browser. Die Skripte liegen in `test/`, jede Datei liefert `{ ok, lines }` zurück.
+`node test/run.js map-routes,streets` startet nur die Dateien mit diesen Namensanfängen. In GitHub
+Actions laufen die langsamen Browser-Prüfungen als fünf parallele Jobs; Pages wird erst
+veröffentlicht, wenn alle grün sind.
 
 ## Debug
 
