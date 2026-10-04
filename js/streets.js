@@ -134,7 +134,7 @@
       // Search nearby verges without blocking any main or sibling lane.
       // After a stunt, the first flat approach can be shorter than 34 metres.
       // In that case keep the warning near the actual fork, never under a loop.
-      for (const position of [s, s - 10, s - 22, s + 8, startS - 24, startS - 18, startS - 12]) {
+      for (const position of [s, s - 10, s - 22, s + 8, startS - 24, startS - 18, startS - 12, startS - 8, startS - 5, startS - 45, startS - 60, startS - 72]) {
         const f = root.TrackBuilder.frameAt(track, position);
         if (f.p.y > 1.5 || Math.abs(f.T.y) > 0.08 || f.N.y < 0.95) continue;
         for (const signSide of [side, -side]) for (const away of [10.5, 13, 16, 19]) {

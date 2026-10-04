@@ -59,7 +59,7 @@ module.exports = async function () {
     assert.strictEqual(saved.stats.streetsFound, 2, 'repeat traversal must not increase discovery count');
     lines.push('Actual cut/scenic traversals: two unique stamps; no entry/reset stamp or repeat/fork reward farming');
 
-    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); // Esc pauses a race, Esc again leaves it
     await page.locator('#recordsBtn').click();
     await page.locator('#saveExport').click();
     const code = await page.locator('#saveCode').inputValue();

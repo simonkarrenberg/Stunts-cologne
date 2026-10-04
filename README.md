@@ -8,13 +8,13 @@ Der zweite Ausbau ergänzt St. Agnes mit ihrem Turm ohne Spitze, das große Zehn
 
 Neu dabei sind unter anderem Overstolzenhaus, St. Ursula, MAKK, Alt St. Heribert und das gelbe Siebengebirge im Rheinauhafen. Der Butzweilerhof bekommt einen ausdrücklich als Ossendorfer Gastauftritt gekennzeichneten Platz. Dazu kommen Kreuzblume, Stapelhaus, Kölner Pegel, Römerturm, Gereonsmühle, Ulrepforte, St. Severin, St. Maria in Lyskirchen, St. Clemens, Oberlandesgericht, Staatenhaus, Herkulesberg und Rheinboulevard. Ulrepforte und St. Severin haben jeweils ein gemeinsames, eindeutiges Modell statt doppelter Varianten.
 
-Auf allen zehn Strecken gibt es zusammen **29 fahrbare Nebenwege**: Die ursprünglichen 17 Abkürzungen bleiben erhalten, dazu kommen zwölf Straßen an **sechs Drei-Wege-Gabelungen** – am Dom, an den Ringen, im Rheinauhafen, auf den Poller Wiesen, rund um die Zülpicher Straße und in Rodenkirchen. Jede Gabelung bietet die Hauptstrecke, eine engere Abkürzung und eine breitere Panoramaroute; alle drei treffen sich wieder. Der Poller Wiesenschnitt fährt etwa 288 statt 350 Meter, während der Wiesenbogen mehr Platz und eine längere Runde ums Viertel bietet.
+Auf allen zehn Strecken gibt es zusammen **52 fahrbare Nebenwege**, und jeder ist eine **echte Kölner Straße**: 40 Abkürzungen, Parallelstraßen und Umgehungen (zum Beispiel Friesenwall-Gereonswall-Von-Werth-Straße an den Ringen, Salzgasse und Bechergasse in der Altstadt, Machabäerstraße und Thürmchenswall beim Domschatz-Raub, Kyffhäuserstraße und Mittelstraße am Zülpicher Platz, Severinswall und Roonstraße beim Zoch) und zwölf Straßen an **sechs Drei-Wege-Gabelungen** – am Dom (Am Domhof / Trankgasse), an den Ringen (Friesenwall / Flandrische Straße), im Rheinauhafen (Bayenwerft / Am Bayenturm), auf den Poller Wiesen (Siegburger Straße / Alfred-Schütte-Allee), an der Zülpicher Straße (Zülpicher Wall / Dürener Straße) und in Rodenkirchen (Auenweg / Weißer Straße). Jede Straße wurde auf Namen, Schreibweise, Stadtteil und Lage zu den Orten der Strecke geprüft; erfundene Gassennamen gibt es nicht mehr. Jede Gabelung bietet die Hauptstrecke, eine engere Abkürzung und eine breitere Panoramaroute; alle drei treffen sich wieder. Die Hauptstraßen-Schilder am Rand nennen für jeden Abschnitt die echte Straße (`signs` in `js/data.js`).
 
 **Grün** markiert Abkürzungen, **Blau** die breiteren Alternativen und **Weiß** die Hauptstrecke – in der Streckenvorschau und Minikarte, mit passenden Hinweisschildern vor den Gabelungen. Die Fahrbahnen bleiben richtige Straßen mit Asphalt oder Kopfsteinpflaster, Bordsteinen und Straßenlaternen. Die Schilder nennen ehrlich die gesparten oder zusätzlichen Meter. Vor der Einfahrt links oder rechts einordnen; mittig bleibst du auf der Hauptstrecke. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie bisher. In engen Gassen vom Gas gehen! Rivalen wählen ebenfalls unterschiedliche Wege und ändern ihre Entscheidung pro Runde. Einmal pro Gabelung und Runde gibt es einen Deckel-Strich, auch fürs Erkunden einer längeren Route: „Dä Köbes nennt dat Sightseeing.“
 
-Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 29 „DAT NAVI BIN ICH“. Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
+Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 52 „DAT NAVI BIN ICH“. Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
 
-Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten, keine Teleports. Runden, Platzierung, Geister, Replays und TV-Kameras berücksichtigen den gewählten Weg; alte Geister behalten ihre ursprünglichen Routen. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude, Schilderstützen und Wasser werden von den Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Nebenwege sind Spielstrecken, keine realen Verkehrswege.
+Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten, keine Teleports. Runden, Platzierung, Geister, Replays und TV-Kameras berücksichtigen den gewählten Weg; Geister speichern die Straßen-IDs und finden ihre Straße auch nach Änderungen am Straßenkatalog wieder. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude, Schilderstützen und Wasser werden von den Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Nebenwege sind Spielstrecken, keine realen Verkehrswege.
 
 **JETZ FAHREN** bleibt im Menü auf Rechner und Handy erreichbar. Die 3D-Stadt wird erst beim Rennstart gebaut; Streckenwechsel im Menü laden nur die Vorschau. Geteilte Baukasten-Strecken unterstützen auch Haus-Sprünge und Korkenzieher.
 
@@ -71,6 +71,17 @@ erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jeder
 
 ### Steuerung
 
+**Für alle Augen und Daumen:** „SCHRIFT: JROSS“ im Menü macht Menü, Nachrichten, Anzeige, Schilder und Ergebnis
+deutlich größer. In den ersten drei Rennen zeigt eine Karte während des Countdowns die Tasten. Die Anzeige
+oben rechts zeigt nur Zeit, Runde und Platz; Knöllchen, Kripo, Wette, Auftrag und Telefon erscheinen erst,
+wenn sie etwas zu sagen haben. Wer zweimal in einer halben Minute von der Straße fliegt, bekommt von Dä Lange
+einen echten Tipp, und das Ergebnis sagt in zwei, drei Sätzen „woröm“ (Platz, wo man meist abgeflogen ist,
+ein Tipp). Karriere-Kapitel 1 kommt ohne Kripo und ohne Klüngel-Aufträge aus. Rekorde stehen jetzt oben,
+Orden darunter, der Spielstand-Code ganz unten. NOCHMAL springt direkt in den Countdown; ein Tipp aufs Bild
+überspringt den Kameraflug. Auf dem Handy bleiben NOCHMAL/TEILEN unten im Griff, die Anzeige wird schlanker,
+Gabelungsschilder kürzer, und Dä Lange redet seltener. Das Titelbild der Zeitung zeigt den weitesten Sprung
+des Rennens.
+
 | Taste | Funktion |
 |---|---|
 | ↑ / W | Gas |
@@ -78,11 +89,12 @@ erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jeder
 | Shift / N / X | Turbo (Nitro) |
 | ← / → / A / D | Lenken |
 | C | Kamera (Verfolger, Motorhaube, weit, TV-Kamera) |
-| P | Grafik: HD (Standard, mit Schatten) oder Pixel-Modus in drei Stufen |
+| P | **Pause** (die Welt steht still; Enter oder P = weiter, Esc = Rennen aufgeben). Auch ☰ und das Wechseln in eine andere App pausieren |
+| F | Grafik: HD (Standard, mit Schatten) oder Pixel-Modus in drei Stufen (im Menü auch P) |
 | R | Auto zurücksetzen |
 | M | Ton an/aus |
 | Enter | Rennen starten / nochmal |
-| Esc | Menü |
+| Esc | im Rennen Pause, nochmal Esc = Menü |
 
 ## Der Türsteher und Chicago am Rhein
 

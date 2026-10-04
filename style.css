@@ -704,3 +704,48 @@ body.bassrun #turboBar, body.bassrun #turboBar2 { box-shadow: 0 0 calc(6px + var
 .nameEntry .neCol span.on { border-color: var(--pink); color: var(--pink); }
 .nameEntry .neCol button { font-size: 9px; padding: 2px 8px; }
 .nameEntry small { color: #999; font-size: 7px; }
+.card.car .tease { display: block; font-size: 7px; line-height: 1.5; color: var(--yellow); margin-top: 4px; }
+.card.car.shake { animation: carShake 0.4s; }
+@keyframes carShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+body.mobile .nameEntry { padding: 4px 8px; margin-bottom: 6px; }
+body.mobile .nameEntry .neRow { margin: 2px 0; gap: 6px; }
+body.mobile .nameEntry .neCol span { font-size: 16px; }
+body.mobile .nameEntry .neCol button { padding: 4px 12px; font-size: 10px; }
+/* phone: NOCHMAL / REPLAY / TEILEN / MENÜ always within thumb reach at the bottom of the results card */
+body.mobile .resBtns { position: sticky; bottom: 0; z-index: 3; background: var(--panel, #1a1a2e); padding: 6px 0 max(6px, env(safe-area-inset-bottom)); margin-top: 6px; box-shadow: 0 -6px 10px rgba(0,0,0,.5); }
+.hudStats div.quiet { display: none; }
+.record.orden { opacity: 1; filter: none; } /* a new Orden is a reward, not a greyed-out medal */
+/* replay on a phone: the race toolbar and the HUD table step aside for the replay controls */
+body.mobile.replaying .hudBtns, body.mobile.replaying .hudStats, body.mobile.replaying #msg { display: none !important; }
+/* pause */
+#pause { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 10, 26, 0.72); color: #fff; text-align: center; padding: 20px; }
+#pause[hidden] { display: none; }
+#pause > b { font-size: 28px; color: var(--yellow); letter-spacing: 4px; text-shadow: 4px 4px 0 #000; }
+#pause p { font-size: 12px; line-height: 1.7; max-width: 560px; margin: 0; }
+#pause .pauseBtns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+#pause button { background: var(--red2); color: #fff; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 14px 18px; font-size: 11px; }
+#pause #pauseQuit { background: #2a2f55; }
+#pause small { font-size: 9px; color: #bbb; line-height: 1.8; }
+body.mobile #pause small { display: none; }
+#controlsCard { position: fixed; left: 50%; top: 58%; transform: translate(-50%, 0); z-index: 12; background: rgba(8, 10, 26, 0.88); border: 3px solid var(--yellow); box-shadow: 5px 5px 0 #000; padding: 12px 20px; text-align: center; color: #fff; pointer-events: none; }
+#controlsCard[hidden] { display: none; }
+#controlsCard b { color: var(--yellow); font-size: 12px; } #controlsCard p { font-size: 13px; line-height: 2; margin: 6px 0 0; }
+body.mobile #controlsCard { top: 30%; padding: 8px 12px; } body.mobile #controlsCard p { font-size: 10px; }
+/* JROSSE SCHRIFT */
+body.bigtext .arcadeCabinet { zoom: 1.3; }
+body.bigtext #msg { zoom: 1.45; max-width: min(560px, 64vw); }
+body.bigtext .hudStats, body.bigtext .hudTitle { zoom: 1.35; }
+body.bigtext #hudShortcut { zoom: 1.35; max-width: min(46vw, 520px); }
+body.bigtext .modal { zoom: 1.3; max-height: calc(90vh / 1.3); }
+body.bigtext #results { overflow: auto; align-items: flex-start; }
+body.bigtext .resInner { zoom: 1.22; margin: 8px auto; }
+body.bigtext #pause, body.bigtext #controlsCard { zoom: 1.3; }
+body.mobile.bigtext .arcadeCabinet { zoom: 1.15; } body.mobile.bigtext #msg { zoom: 1.2; max-width: 80vw; }
+body.mobile.bigtext .hudStats, body.mobile.bigtext #hudShortcut, body.mobile.bigtext .resInner, body.mobile.bigtext .modal { zoom: 1.15; }
+.resWhy { background: #fff6d0; color: #111; border: 3px solid #000; padding: 6px 10px; margin: 0 0 10px; font-size: 10px; line-height: 1.7; }
+.resWhy span { display: block; }
+body.mobile .resWhy { font-size: 8px; padding: 4px 8px; margin-bottom: 6px; }
+/* results on a 1366×768 laptop: the card scrolls instead of being cut off, and the buttons stay in reach */
+#results { overflow: auto; align-items: flex-start; padding: 8px 0; box-sizing: border-box; }
+.resInner { margin: auto; }
+.resBtns { position: sticky; bottom: 0; z-index: 3; background: var(--panel); padding: 8px 0; }

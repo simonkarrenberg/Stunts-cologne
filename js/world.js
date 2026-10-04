@@ -517,6 +517,12 @@
     for (let x = -72; x <= 72; x += 16) {
       const arch = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 8.4, 10, 1, false, 0, Math.PI), mat(0x1c1a20)); arch.rotation.z = Math.PI / 2; arch.rotation.y = Math.PI / 2; arch.position.set(x, 0, 0); g.add(arch);
       const art = textPlane(['KÖLLE', 'EHRENFELD', 'ALAAF', 'LANGE', 'FC', 'JECK'][((x + 72) / 16) % 6], ['#ff2d95', '#ffd400', '#00e5ff', '#7fff00'][((x + 72) / 16) % 4], '#2a2a35', 8, 4, false); art.position.set(x + 8, 2.5, 4.05); g.add(art);
+      const k = (x + 72) / 16;
+      if (k % 3 === 1) { // a bar or a club in the arch: warm light in the door, a sign, people queueing
+        const door = box(4.2, 3.4, 0.2, 0xffc870, x, 1.7, 4.3); door.material = bmat(0xffc870); g.add(door);
+        const sg = textPlane(['BAR · BOGEN 7', 'CLUB · HÜCK OP', 'KIOSK 24/7', 'KONZERT · KRACHKELLER'][Math.floor(k / 3) % 4], '#ffffff', '#ff2d95', 4.6, 0.8, true, { border: '#ffd400', sizeK: 0.5 }); sg.position.set(x, 4.1, 4.4); g.add(sg);
+        for (let q = 0; q < 4; q++) { const f = human({ h: 1.62 + (q % 3) * 0.1, lite: true, shirt: [0x1a1a1a, 0xff2d95, 0x2d6a4f, 0x3a4a6a][q], hat: q === 2 ? 'cap' : 'none', koelsch: q === 1 }); f.position.set(x + 3 + q * 0.9, 0, 5.4 + (q % 2) * 0.3); f.rotation.y = -Math.PI / 2 + (q % 2 ? 0.3 : -0.2); g.add(f); }
+      }
     }
     g.add(box(160, 0.5, 8.5, 0x555555, 0, 9.25, 0));
     const tram = box(28, 3.4, 2.6, 0xe30613, 20, 11.2, 0); g.add(tram); g.add(box(28, 1, 2.7, 0xffffff, 20, 11.6, 0));
@@ -680,6 +686,14 @@
     { shirt: 0xc1121f, scarf: 0xc1121f }, { shirt: 0xffffff, scarf: 0xc1121f, koelsch: true }, { shirt: 0x1c3f95, koelsch: true }, { shirt: 0xff5fa2, hat: 'tricorn', hatColor: 0xff5fa2 }, { shirt: 0x2d6a4f, hat: 'cap' },
     { shirt: 0xffd400, hat: 'gnome', hatColor: 0xffd400 }, { shirt: 0x8a5a2a, koelsch: true }, { shirt: 0x3a3a5a, hat: 'fedora' }, { shirt: 0xff8800, dress: 0xff8800 }, { shirt: 0x7fbf7f, koelsch: true, hat: 'cap', hatColor: 0xc1121f }
   ];
+  // Jecken: Funken in red and white with tricorn, cowboys, clowns, unicorns, pirates, bees, nuns, ladybirds
+  const JECK_OUTFITS = [
+    { shirt: 0xc1121f, pants: 0xffffff, hat: 'tricorn', hatColor: 0xc1121f }, { shirt: 0x1c3f95, pants: 0xffffff, hat: 'tricorn', hatColor: 0x1c3f95 },
+    { shirt: 0x8a5a2a, pants: 0x3a4a6a, hat: 'fedora', hatColor: 0xb07a3a, scarf: 0xc1121f }, { shirt: 0xffd400, pants: 0x1a1a1a, hat: 'gnome', hatColor: 0x1a1a1a },
+    { shirt: 0xffffff, dress: 0xff9ad0, hat: 'gnome', hatColor: 0xffd0ec }, { shirt: 0xff5fa2, pants: 0x00a0ff, hat: 'gnome', hatColor: 0x7fff00, koelsch: true },
+    { shirt: 0x1a1a1a, pants: 0x1a1a1a, hat: 'tricorn', hatColor: 0x1a1a1a, scarf: 0xc1121f }, { shirt: 0xd21f2b, dress: 0xd21f2b, scarf: 0x111111 },
+    { shirt: 0xf4f4f2, pants: 0xc1121f, koelsch: true, hat: 'cap', hatColor: 0xc1121f }, { shirt: 0x2a2a2a, dress: 0x2a2a2a, scarf: 0xffffff }
+  ];
   P.figure = (h, coat, hat, skin) => human({ h: 1.75 * (h || 0.55) / 0.55 * 0.55, shirt: coat, pants: coat === 0x1a1a1a ? 0x1a1a1a : 0x2a2a34, hat: hat ? 'fedora' : 'none', hatColor: hat, skin: skin });
   P.human = human;
   P.tuenn = () => { const g = human({ h: 2.1, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true, shades: true, koelsch: true, wave: true, coat: true, age: 1, moustache: 0x2a2a2a, tie: 0x8a1a1a, heavy: true, smile: 0.5 }); g.userData.wave = true; animated.push(g);
@@ -728,7 +742,8 @@
     const g = new THREE.Group();
     const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800];
     const r = mulberry(31);
-    for (let i = 0; i < 10; i++) { const f = human(Object.assign({ h: 1.6 + r() * 0.3, lite: true }, CROWD_OUTFITS[Math.floor(r() * CROWD_OUTFITS.length)])); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.rotation.y = (r() - 0.5) * 0.6; g.add(f); }
+    const outfits = THEME.confetti ? CROWD_OUTFITS.concat(JECK_OUTFITS, JECK_OUTFITS) : CROWD_OUTFITS; // on carnival tracks most people are in costume
+    for (let i = 0; i < 10; i++) { const f = human(Object.assign({ h: 1.6 + r() * 0.3, lite: true }, outfits[Math.floor(r() * outfits.length)])); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.rotation.y = (r() - 0.5) * 0.6; g.add(f); }
     g.add(box(14, 0.8, 0.3, 0x8a5a2a, 0, 0.4, 1.4)); // barrier
     mergeVertexColored(g);
     g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
@@ -1108,7 +1123,26 @@
     const shop = pub ? PUBS[Math.floor(r() * PUBS.length)] : r() < 0.45 ? shops[Math.floor(r() * shops.length)] : null;
     const opts = { shop, brauhaus: pub, signBg: pub ? ['#7a1a1a', '#1c3f95', '#2d6a4f', '#111111'][Math.floor(r() * 4)] : null, balconies: st === 'gruenderzeit' && r() < 0.7, night: THEME.night, awning: [0xc1121f, 0x1c3f95, 0x2d6a4f, 0xffd400][Math.floor(r() * 4)] };
     const g = building(w, h, d, st, cols[Math.floor(r() * cols.length)], st === 'altstadt' ? (r() < 0.5 ? 'stepped' : 'gable') : st === 'gruenderzeit' ? 'hip' : st === 'brick' ? (r() < 0.5 ? 'gable' : 'flat') : st === 'wiederaufbau' ? (r() < 0.6 ? 'hip' : 'flat') : 'flat', Math.floor(r() * 1000), opts);
+    if (THEME.murals && r() < 0.3) for (const sx of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(d * 0.86, h * 0.82), muralMat(Math.floor(r() * 8))); m.position.set(sx * (w / 2 + 0.06), h * 0.45, 0); m.rotation.y = sx * Math.PI / 2; g.add(m); } // Ehrenfeld: murals on the firewalls
     g.userData.w = w; g.userData.d = d; g.userData.pub = pub; return g; };
+  // big pixel murals for firewalls (all invented motifs: faces, a goat, a heart, the Dom, waves, stripes)
+  const muralMats = [];
+  function muralMat(k) {
+    if (muralMats[k]) return muralMats[k];
+    const c = document.createElement('canvas'); c.width = 48; c.height = 64; const x = c.getContext('2d'), R = mulberry(77 + k * 13);
+    const PAL = [['#1b1b3a', '#ff2d95', '#ffd400', '#00e5ff'], ['#f2e8d0', '#c1121f', '#1c3f95', '#111111'], ['#0d6b5e', '#ffd400', '#ff8a00', '#ffffff'], ['#5a2a7a', '#7fff00', '#ff2d95', '#ffffff'],
+      ['#ffd400', '#111111', '#c1121f', '#ffffff'], ['#00a0ff', '#ffffff', '#ff2d95', '#1b1b3a'], ['#2a2a35', '#ff5f1f', '#00e5ff', '#ffd400'], ['#e8e0f0', '#5a2a7a', '#00a070', '#ff2d95']][k % 8];
+    x.fillStyle = PAL[0]; x.fillRect(0, 0, 48, 64);
+    for (let i = 0; i < 6; i++) { x.fillStyle = PAL[1 + i % 3]; x.fillRect(0, 6 + i * 10 + Math.floor(R() * 4), 48, 2); } // background stripes
+    x.fillStyle = PAL[1]; const motif = k % 4;
+    if (motif === 0) { x.fillRect(12, 14, 24, 28); x.fillStyle = PAL[0]; x.fillRect(17, 22, 5, 5); x.fillRect(27, 22, 5, 5); x.fillRect(19, 33, 10, 3); x.fillStyle = PAL[2]; x.fillRect(10, 8, 28, 7); } // a face with a cap
+    else if (motif === 1) { for (let y = 0; y < 14; y++) { const ww = y < 4 ? 8 + y * 4 : 24 - (y - 4) * 2.4; x.fillRect(24 - ww / 2 - (y < 4 ? 6 : 0), 18 + y * 2, ww, 2); } x.fillRect(12, 16, 10, 6); x.fillRect(26, 16, 10, 6); } // a heart
+    else if (motif === 2) { x.fillRect(14, 20, 4, 30); x.fillRect(30, 20, 4, 30); x.fillRect(15, 10, 2, 10); x.fillRect(31, 10, 2, 10); x.fillRect(18, 30, 12, 20); x.fillStyle = PAL[2]; x.fillRect(22, 24, 4, 6); } // two spires: the Dom
+    else { x.fillRect(10, 26, 26, 14); x.fillRect(34, 20, 8, 8); x.fillStyle = PAL[2]; x.fillRect(38, 14, 2, 6); x.fillRect(42, 14, 2, 6); x.fillStyle = PAL[1]; for (const lx of [12, 18, 28, 33]) x.fillRect(lx, 40, 3, 8); } // a goat
+    x.fillStyle = PAL[3]; x.fillRect(4, 56, 40, 4); x.fillStyle = PAL[0]; for (let i = 0; i < 5; i++) x.fillRect(6 + i * 8, 57, 4, 2); // a tag line
+    const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
+    return (muralMats[k] = new THREE.MeshLambertMaterial({ map: t }));
+  }
 
   P.park = (o) => { // a Veedel park: lawn with hedge, plane trees, benches, a lamp, people, sometimes a playground or a fountain
     o = o || {}; const r = mulberry(o.seed || 7); const w = o.w || 44, d = o.d || 44; const g = new THREE.Group();

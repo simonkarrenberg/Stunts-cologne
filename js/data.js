@@ -79,13 +79,15 @@
       signs: [[0, 'RONCALLIPLATZ'], [1, 'TRANKGASSE'], [2, 'AM HOF'], [4, 'OBENMARSPFORTEN'], [5, 'ALTER MARKT'], [6, 'HEUMARKT'], [8, 'MARKMANNSGASSE'], [9, 'FRANKENWERFT'], [10, 'HEINRICH-BÖLL-PLATZ'], [11, 'HOHENZOLLERNBRÜCKE'], [12, 'KENNEDY-UFER'], [13, 'OTTOPLATZ'], [15, 'KENNEDY-UFER'], [17, 'RHEINBOULEVARD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Dom', 'Kolumba', 'Wallraf & Gürzenich', 'Alter Markt', 'Hohenzollernbrücke', 'Bahnhof Deutz', 'Rheinsprung'],
       diff: 2, laps: 3, scale: 1.45,
-      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei. Am ersten Dreiwege-Fork: schmale Domhof-Gasse, Hauptstrecke oder weiter Trankgassen-Bogen. Dazu zwei versteckte Veedelswege und der Rheinsprung. Schäl kennt den Weg, die Tauben kennen dein Dach.',
-      shortcuts: [{ id: 'dom-altstadt', name: 'SALZGASSEN-SCHLUPF', seg: 8 }, { id: 'dom-deutz', name: 'DÜXER HINTERHOF', seg: 16 }],
+      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei; am Dreiwege-Fork wählst du die schmale Straße Am Domhof unter der Domplatte, die Hauptstrecke oder die weite Trankgasse. Dazu die Bechergasse am Looping vorbei, die Salzgasse zum Rhein, der Auenweg hinter der Messe und der Rheinsprung: Schäl kennt den Weg, die Tauben kennen dein Dach.',
+      shortcuts: [
+        { id: 'dom-bechergasse', street: 'Bechergasse', type: 'bypass', from: { seg: 2, u: 0.95 }, to: { seg: 5, u: 0.8 }, side: 1, offset: 44, radius: 16, angle: 70, halfWidth: 3.4, surface: 'cobble', toward: 'ALTER MARKT', perks: ['koelsch'], note: 'Bechergass: vum Heinzelmännche stracks op dä Aldermaat. Dä Looping es för Touriste, Jung.' },
+        { id: 'dom-salzgasse', street: 'Salzgasse', type: 'cut', from: { seg: 7, u: 0.4 }, to: { seg: 9, u: 0.2 }, halfWidth: 3.4, surface: 'cobble', toward: 'FRANKENWERFT', perks: ['koelsch', 'brauhaus', 'shakeKripo'], note: 'Salzgass, vum Heumaat an dä Rhing. Zwei Kneipe en ener Gass, do verlööf sich och de Kripo.' },
+        { id: 'dom-auenweg', street: 'Auenweg', type: 'parallel', from: { seg: 15, u: 0.78 }, to: { seg: 17, u: 0.4 }, side: 1, offset: 40, radius: 16, angle: 55, halfWidth: 4.6, surface: 'asphalt', toward: 'RHEINPARK', perks: ['trees', 'parked'], note: 'Auenweg, en Stroß hinger dem Ufer. Duurt länger, ävver do blitzt keiner.' }
+      ],
       branches: [
-        { id: 'dom-domhof', name: 'DOMHOF-GASSE', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 },
-          via: [{ x: 18, z: 187 }, { x: 38, z: 242 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'dom-trankgasse', name: 'TRANKGASSEN-BOGEN', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 },
-          via: [{ x: -20, z: 186 }, { x: -37, z: 259 }, { x: 23, z: 322 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'dom-domhof', name: 'AM DOMHOF', street: 'Am Domhof', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 }, via: [{ x: 18, z: 187 }, { x: 38, z: 242 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'AM HOF', perks: [], note: 'Am Domhof, unger de Domplatte dörch. Kein Ampel, kein Tourist, nur dä Dom drövver.' },
+        { id: 'dom-trankgasse', name: 'TRANKGASSE', street: 'Trankgasse', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 }, via: [{ x: -20, z: 186 }, { x: -37, z: 259 }, { x: 23, z: 322 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'AM HOF', perks: ['brauhaus', 'koelsch'], note: 'Trankgass: wigger eröm, ävver em Brauhaus am Eck steiht et Kölsch ald parat.' }
       ],
       theme: { sky: 0x5a78b8, fog: 0xffc4a0, ground: 0xa99b86, sun: 0xffd4a8, road: [0x6a6a70, 0x5c5c62], night: false, dawn: true, water: 0x5a7fb0, street: 'altstadt',
         streets: ['HOHE STRASSE', 'DOMKLOSTER', 'GLOCKENGASSE', 'OTTOPLATZ', 'AM HOF', 'TRANKGASSE', 'UNTER FETTENHENNEN', 'FRANKENWERFT', 'DEUTZER FREIHEIT', 'ALTER MARKT', 'HEUMARKT'],
@@ -175,7 +177,14 @@
         { type: 'flag', seg: 17, u: 0.6, side: 1, dist: 9 },
         { type: 'kreuzblume', seg: 0, u: 0.45, side: 1, dist: 16, story: 'De Kreuzblum vum Dom, in Orijinaljröß. Do bovve op 157 Meter süht se winzich us. Wie ming Chance op ne Parkplatz.' },
         { type: 'stapelhaus', seg: 7, u: 0.15, side: 1, dist: 32, story: 'Stapelhaus. Fröher musst jedes Schiff sing Fesch hee dreii Daach feilbeede. Stapelrääch. Hück säht mer Klüngel.' },
-        { type: 'pegel', seg: 9, u: 0.8, side: -1, dist: 14, story: 'Kölner Pegel. Kleine Zeijer Meter, jroße Zeijer Dezimeter. Över zehn Meter nemme mer et Boot, nit et Auto.' }
+        { type: 'pegel', seg: 9, u: 0.8, side: -1, dist: 14, story: 'Kölner Pegel. Kleine Zeijer Meter, jroße Zeijer Dezimeter. Över zehn Meter nemme mer et Boot, nit et Auto.' },
+        { type: 'koebes', seg: 2, u: 0.7, side: 1, dist: 10, story: 'Dä Köbes. Hä bringk Kölsch, bes de dä Deckel drop läjs. Wer dat nit weiß, fährt hück nit mieh.' },
+        { type: 'haltestelle', seg: 7, u: 0.3, side: 1, dist: 11 },
+        { type: 'greenstrip', seg: 9, u: 0.5, side: -1, dist: 13 },
+        { type: 'reiter', seg: 10, u: 0.9, side: 1, dist: 12, story: 'Op dä Hohenzollernbröck stonn vier Kaiser un Künnije op Pääd. Övver hundert Johr am Parke, nie e Knöllche.' },
+        { type: 'reiter', seg: 12, u: 0.08, side: 1, dist: 12 },
+        { type: 'grove', seg: 15, u: 0.7, side: -1, dist: 40, story: 'Rheinpark. Hee lieje de Kölsche em Jras un luure op dä Dom. Sightseeing för Fuule.' },
+        { type: 'barge', seg: 17, u: 0.45, side: -1, dist: 85 }
       ]
     },
     {
@@ -183,13 +192,15 @@
       signs: [[0, 'IM ZOLLHAFEN'], [2, 'AGRIPPINAWERFT'], [4, 'AM SCHOKOLADENMUSEUM'], [5, 'RHEINUFERSTRASSE'], [8, 'SEVERINSTRASSE'], [9, 'CHLODWIGPLATZ'], [10, 'KARTÄUSERWALL'], [11, 'KAYGASSE'], [12, 'AM PANTALEONSBERG'], [14, 'SEVERINSWALL'], [16, 'BAYENSTRASSE'], [17, 'HARRY-BLUM-PLATZ'], [18, 'ANTWERPENER WERFT']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bottmühle', 'Bayenturm', 'Rheinsprung'],
       diff: 3, laps: 3, scale: 1.45,
-      desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Am Bayenturm teilen sich drei Straßen: Gasse, Hauptkurs oder weiter Südstadt-Bogen. Der Zollhafen-Schleichweg bleibt. Zu kurz springen spart die Autowäsche.',
-      shortcuts: [{ id: 'rheinauhafen-zoll', name: 'ZOLLHAFEN-SCHLEICHWEG', seg: 1 }],
+      desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Wer will, nimmt die Bayenstraße hinter den Kranhäusern, rollt über die Severinstraße zum Chlodwigplatz und über den Karolingerring Richtung Ulrepforte; am Bayenturm teilen sich drei Wege: über die Bayenwerft, den Hauptkurs oder den weiten Bogen über die Straße Am Bayenturm. Zu kurz springen spart die Autowäsche.',
+      shortcuts: [
+        { id: 'rheinauhafen-bayenstrasse', street: 'Bayenstraße', type: 'parallel', from: { seg: 0, u: 0.22 }, to: { seg: 0, u: 0.72 }, side: -1, offset: 36, radius: 16, angle: 55, halfWidth: 4.8, surface: 'asphalt', toward: 'HOLZMARKT', perks: [], note: 'Bayenstroß, hinger de Kranhäuser un am Siebengebirge vorbei. E bessje länger, ävver kei Touriste vör der Hoot.' },
+        { id: 'rheinauhafen-severinstrasse', street: 'Severinstraße', type: 'bypass', from: { seg: 4, u: 0.3 }, to: { seg: 8, u: 0.2 }, side: -1, offset: 44, radius: 16, angle: 55, halfWidth: 4, surface: 'asphalt', toward: 'CHLODWIGPLATZ', perks: ['brauhaus', 'koelsch', 'kiosk'], note: 'De Vringsstroß! Kei Looping, nur Veedel. Hee kennt jeder jeden – un bahl och ding Nummernschild.' },
+        { id: 'rheinauhafen-karolingerring', street: 'Karolingerring', type: 'bypass', from: { seg: 8, u: 0.8 }, to: { seg: 12, u: 0.6 }, side: -1, offset: 40, radius: 35, angle: 45, halfWidth: 4.2, surface: 'asphalt', toward: 'ULREPFORTE', perks: ['tram', 'parked'], note: 'Vum Chlodwigplatz üvver der Karolingerring, de Ring met de Bahn, bes an de Ulrepooz. De Kartäuser hann jeschwiege – mach et wie die un fahr öm der Berg eröm.' }
+      ],
       branches: [
-        { id: 'rheinauhafen-bayenturm', name: 'BAYENTURM-GASSE', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 },
-          via: [{ x: -45, z: -75 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'rheinauhafen-suedstadt', name: 'SÜDSTADT-BOGEN', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 },
-          via: [{ x: -40, z: -120 }, { x: 10, z: -100 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'rheinauhafen-bayenturm', name: 'BAYENWERFT', street: 'Bayenwerft', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 }, via: [{ x: -45, z: -75 }], halfWidth: 3.4, style: 'shortcut', surface: 'cobble', toward: 'KRANHÄUSER', note: 'Am Bayenturm eravv op de Werft, üvver et Hafepflaster. Schmal, holprich, flöck.' },
+        { id: 'rheinauhafen-suedstadt', name: 'AM BAYENTURM', street: 'Am Bayenturm', fork: 'rheinauhafen-dreiwege', from: { seg: 16, u: 0.68 }, to: { seg: 18, u: 0 }, via: [{ x: -40, z: -120 }, { x: 10, z: -100 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'UBIERRING', note: 'Am Bayenturm, de breide Stroß an der Ampel vum Ubierring. Wä Zick hät, nimmp der Bogen.' }
       ],
       theme: { sky: 0x6a2a8a, fog: 0xff8a9a, ground: 0x8a8890, sun: 0xffb0c0, road: [0x5a5560, 0x4c4852], night: false, sunset: true, miami: true, water: 0x2f6fa8, street: 'modern',
         posters: ['RHEINSTRAND', 'VICE KÖLLE', 'KRANHAUS-PARTY', 'SCHOKOLADE', 'LAMBOGINA'],
@@ -267,7 +278,13 @@
         { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 },
         { type: 'ulrepforte', seg: 13, u: 0.5, side: -1, dist: 70, story: 'Ulrepforte. Hee sitze de Rote Funke. Die verteidije Kölle zick 1823 – vör allem jäje de Nüchternheit.' },
         { type: 'stseverin', seg: 6, u: 0.5, side: -1, dist: 110, story: 'St. Severin, dat Hätz vum Vringsveedel. Wä dä Turm nit mieh sieht, es ze wick jefahre – oder en Düsseldorf.' },
-        { type: 'lyskirchen', seg: 2, u: 0.5, side: -1, dist: 70, story: 'Lyskirchen, de Kirch vun de Rheinschiffer. Die bedde zor Schiffermadonna. Ich bedde, dat dä Blitzer kapott es.' }
+        { type: 'lyskirchen', seg: 2, u: 0.5, side: -1, dist: 70, story: 'Lyskirchen, de Kirch vun de Rheinschiffer. Die bedde zor Schiffermadonna. Ich bedde, dat dä Blitzer kapott es.' },
+        { type: 'hafenkran', seg: 2, u: 0.5, side: 1, dist: 32, story: 'Die ahle Hafenkräne stonn noch am Kai. Die hann mieh jehove als der Stadtrat je Verantwortung.' },
+        { type: 'haltestelle', seg: 10, u: 0.25, side: 1, dist: 12 },
+        { type: 'koebes', seg: 9, u: 0.85, side: 1, dist: 13, story: 'Dä Köbes am Chlodwigplatz zällt de Autos. Wä ze flöck es, kritt kei Kölsch. Wä ze lahm es, och nit.' },
+        { type: 'zochwagen', seg: 14, u: 0.15, side: -1, dist: 13, story: 'Zochwagen em Vringsveedel. Hee es Fastelovend kei Datum, dat es en Lebenseinstellung.' },
+        { type: 'lastenrad', seg: 16, u: 0.1, side: -1, dist: 12 },
+        { type: 'boat', seg: 16, u: 0.5, side: 1, dist: 60 }
       ]
     },
     {
@@ -275,8 +292,14 @@
       signs: [[0, 'RIEHLER STRASSE'], [2, 'AM BOTANISCHEN GARTEN'], [5, 'KONRAD-ADENAUER-UFER'], [6, 'ZOOBRÜCKE'], [7, 'AUENWEG'], [8, 'MESSEPLATZ'], [9, 'DEUTZ-MÜLHEIMER STRASSE'], [10, 'SCHANZENSTRASSE'], [12, 'MÜLHEIMER UFER'], [13, 'MÜLHEIMER BRÜCKE'], [15, 'NIEHLER DAMM'], [17, 'NEUSSER STRASSE'], [19, 'NEUSSER WALL'], [20, 'RIEHLER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zoo & Flora', 'Bastei', 'Zoobrücke', 'Bahnhof Deutz', 'Rheinpark', 'E-Werk & Palladium', 'Mülheimer Hafen'],
       diff: 4, laps: 3, scale: 1.45,
-      desc: 'Vom Zoo und der Flora über die Zoobrücke nach Deutz, dann zu E-Werk und Palladium im Mülheimer Industrieviertel. Bastei, Rheinpark und Fort X säumen die Runde. Wer den Flora-Schleichweg nimmt, hört die Elefanten lachen.',
-      shortcuts: [{ id: 'zoo-flora', name: 'FLORA-SCHLEICHWEG', seg: 1 }],
+      desc: 'Vom Zoo und der Flora über die Zoobrücke nach Deutz, dann zu E-Werk und Palladium im Mülheimer Industrieviertel. Bastei, Rheinpark und Fort X säumen die Runde. Abkürzen geht über den Alten Stammheimer Weg, das Konrad-Adenauer-Ufer, den Auenweg und den Neusser Wall; wer Zeit hat, nimmt die Amsterdamer Straße an den Gleisen der Linie 16 entlang. Die Elefanten lachen trotzdem.',
+      shortcuts: [
+        { id: 'zoo-amsterdamer-strasse', street: 'Amsterdamer Straße', type: 'parallel', from: { seg: 0, u: 0.18 }, to: { seg: 0, u: 0.62 }, side: -1, offset: 45, radius: 16, angle: 55, halfWidth: 4.6, surface: 'asphalt', toward: 'NIEHL', perks: ['tram', 'parked'], note: 'Amsterdamer Stroß, ene Block wigger wie de Riehler. De Sechzehn rappelt nevvenher, un de Elefante sinn dich nit.' },
+        { id: 'zoo-alter-stammheimer-weg', street: 'Alter Stammheimer Weg', type: 'cut', from: { seg: 0, u: 0.88 }, to: { seg: 2, u: 0.25 }, halfWidth: 3.6, surface: 'asphalt', toward: 'FLORA', perks: ['parked'], note: 'Alter Stammheimer Wäch: vum Zoo-Engang tirek an et Flora-Tor. Hinger dir tröt d\'r Elefant, vür dir blöht et.' },
+        { id: 'zoo-konrad-adenauer-ufer', street: 'Konrad-Adenauer-Ufer', type: 'bypass', from: { seg: 2, u: 0.78 }, to: { seg: 5, u: 0.33 }, side: -1, offset: 45, radius: 20, angle: 60, halfWidth: 4.6, surface: 'asphalt', toward: 'BASTEI', perks: ['trees'], note: 'Am Rhing lans, unger de Zoobröck dörch. Kei Looping, kei Korkezieher, nur Möwe un de Bastei.' },
+        { id: 'zoo-auenweg', street: 'Auenweg', type: 'cut', from: { seg: 8, u: 0.8 }, to: { seg: 12, u: 0.2 }, halfWidth: 4, surface: 'asphalt', toward: 'MÜLHEIMER HAFEN', perks: ['trees', 'parked'], note: 'Dä Auenweg: am Rheinpark lans bes an d\'r Mülheimer Hafe. Flach wie ene Bierdeckel, dä Berg am Palladium looße mer lijje.' },
+        { id: 'zoo-neusser-wall', street: 'Neusser Wall', type: 'cut', from: { seg: 15, u: 0.9 }, to: { seg: 20, u: 0.3 }, halfWidth: 3.8, surface: 'asphalt', toward: 'REICHENSPERGERPLATZ', perks: ['trees', 'parked'], note: 'Neusser Wall, op d\'r ahl preußische Festungslinie: am Fort X vörbei bes an d\'r Reichenspergerplatz. Et Büdche an d\'r Eck süht dich hück nit.' }
+      ],
       theme: { sky: 0x5fa8ff, fog: 0xcfe6ff, ground: 0x5e9a4a, sun: 0xffffff, road: [0x585858, 0x4a4a4a], night: false, water: 0x3f7fc0, street: 'park',
         streets: ['RIEHLER STRASSE', 'ZOOBRÜCKE', 'DEUTZ-MÜLHEIMER STR.', 'MESSEPLATZ', 'AM RHEINPARK', 'AUENWEG', 'MÜLHEIMER FREIHEIT', 'AM BOTANISCHEN GARTEN'],
         far: [{ type: 'dom', angle: 230, dist: 140 }, { type: 'colonius', angle: 260, dist: 220 }, { type: 'triangle', angle: 210, dist: 80 }, { type: 'flatbridge', angle: 180, dist: 60 }] },
@@ -350,7 +373,14 @@
         { type: 'crowd', seg: 20, u: 0.5, side: 1, dist: 10 },
         { type: 'stclemens', seg: 12, u: 0.5, side: -1, dist: 45, story: 'St. Clemens in Mülheim steiht met de Föß fass im Rhing. Bei Huhwasser kütt dä Pastor met dem Boot.' },
         { type: 'oberlandesgericht', seg: 20, u: 0.5, side: 1, dist: 75, story: 'Oberlandesgericht am Reichenspergerplatz. Hee weed jeurteilt. Ding Fahrstil kütt en de nächste Instanz.' },
-        { type: 'staatenhaus', seg: 7, u: 0.5, side: -1, dist: 70, story: 'Staatenhaus am Rheinpark. Fröher Messe, hück Oper. Drinne weed jesunge, drusse quietsche ding Reife.' }
+        { type: 'staatenhaus', seg: 7, u: 0.5, side: -1, dist: 70, story: 'Staatenhaus am Rheinpark. Fröher Messe, hück Oper. Drinne weed jesunge, drusse quietsche ding Reife.' },
+        { type: 'haltestelle', seg: 0, u: 0.14, side: 1, dist: 11, story: 'Zoo/Flora. Hee stijje de Pänz us, un de Elefante luure, wer lauter tröt: die oder ding Hup.' },
+        { type: 'flowerbed', seg: 2, u: 0.5, side: 1, dist: 20 },
+        { type: 'grove', seg: 9, u: 0.5, side: 1, dist: 40, story: 'Rheinpark. Hee litt Kölle op d\'r Wiss un luurt op d\'r Dom. Dä schönste Blick op Kölle hät nun ens de Schäl Sick.' },
+        { type: 'halle', seg: 11, u: 0.6, side: 1, dist: 55, keep: 50, text: 'CARLSWERK', story: 'Et Carlswerk an d\'r Schanzestroß. Fröher Kabel för de halve Welt, hück Bühn. Dä Klüngel-Draht hält immer noch.' },
+        { type: 'moewen', seg: 13, u: 0.6, side: -1, dist: 40 },
+        { type: 'litfass', seg: 18, u: 0.5, side: 1, dist: 11 },
+        { type: 'platz', seg: 20, u: 0.55, side: -1, dist: 42, keep: 30 }
       ]
     },
     {
@@ -358,9 +388,13 @@
       signs: [[0, 'VENLOER STRASSE'], [1, 'PIUSSTRASSE'], [3, 'LEOSTRASSE'], [5, 'GUTENBERGSTRASSE'], [7, 'INNERE KANALSTRASSE'], [9, 'SUBBELRATHER STRASSE'], [10, 'HORNSTRASSE'], [11, 'LIEBIGSTRASSE'], [12, 'HÜTTENSTRASSE'], [13, 'EHRENFELDGÜRTEL'], [14, 'KÖRNERSTRASSE'], [15, 'NEPTUNPLATZ'], [17, 'BARTHOLOMÄUS-SCHINK-STRASSE'], [18, 'HELIOSSTRASSE'], [20, 'VENLOER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Venloer Straße', 'Moschee', 'Odonien', 'Bahnbögen', 'Neptunplatz', 'Helios-Turm', 'Vulkan'],
       diff: 2, laps: 3, scale: 1.45,
-      desc: 'Vom Colonius durch Venloer Straße und Odonien, an Moschee, Neptunbad, Bahnbögen und Helios-Turm vorbei. Mehr Fabrikhöfe und Backstein. Die Abkürzung durch den Bahnbogen-Hof kennt angeblich jeder. Nur keiner bremst rechtzeitig.',
-      shortcuts: [{ id: 'ehrenfeld-bogen', name: 'BAHNBOGEN-HOF', seg: 11 }],
-      theme: { sky: 0x1c2a5a, fog: 0xd88a68, ground: 0x4a4a52, sun: 0xffb080, road: [0x3e3e46, 0x35353c], night: true, dusk: true, water: 0x243a60, street: 'gruenderzeit', catenary: true,
+      desc: 'Vom Colonius durch Venloer Straße und Odonien, an Moschee, Neptunbad, Bahnbögen und Helios-Turm vorbei, mehr Fabrikhöfe und Backstein. Abkürzen über die Liebigstraße zu den Bahnbögen, statt übers Helios-Haus zu springen durch die Schönsteinstraße zum Bahnhof Ehrenfeld, danach die Stammstraße: kennt angeblich jeder, nur keiner bremst rechtzeitig.',
+      shortcuts: [
+        { id: 'ehrenfeld-liebigstrasse', street: 'Liebigstraße', type: 'cut', from: { seg: 10, u: 0.4 }, to: { seg: 12, u: 0.15 }, halfWidth: 3.8, surface: 'asphalt', toward: 'SUBBELRATHER STRASSE', perks: ['parked'], note: 'Liebigstroß. Vun Odoniens Schrottkunst flöck an de Bahnböge. Wer de Eck kennt, spart sich de Kurv.' },
+        { id: 'ehrenfeld-schoensteinstrasse', street: 'Schönsteinstraße', type: 'bypass', from: { seg: 18, u: 0.87 }, to: { seg: 20, u: 0.14 }, side: -1, offset: 32, radius: 16, angle: 75, halfWidth: 3.8, surface: 'asphalt', toward: 'BAHNHOF EHRENFELD', perks: ['parked'], note: 'Schönsteinstroß, unger de Bahn dörch, an de Edelweißpirate vorbei. Wer nit üvver et Helios-Huus springe well, nimmp dä Wääch. Un denk dran, wat hee 1944 passeet es.' },
+        { id: 'ehrenfeld-stammstrasse', street: 'Stammstraße', type: 'parallel', from: { seg: 20, u: 0.36 }, to: { seg: 20, u: 0.99 }, side: -1, offset: 30, radius: 14, angle: 70, halfWidth: 3.8, surface: 'asphalt', toward: 'KÖRNERSTRASSE', perks: ['parked'], note: 'Stammstroß, vum Bahnhoff ene Block hinger dä Venloer. Duurt e besje länger, ävver do steiht keiner em Stau. Dä Name verpflichtet: Stammdesch.' }
+      ],
+      theme: { murals: true, sky: 0x1c2a5a, fog: 0xd88a68, ground: 0x4a4a52, sun: 0xffb080, road: [0x3e3e46, 0x35353c], night: true, dusk: true, water: 0x243a60, street: 'gruenderzeit', catenary: true,
         streets: ['VENLOER STRASSE', 'LICHTSTRASSE', 'HORNSTRASSE', 'NEPTUNPLATZ', 'KÖRNERSTRASSE', 'SUBBELRATHER STR.', 'VOGELSANGER STR.', 'EHRENFELDGÜRTEL', 'HELIOSSTRASSE', 'LEYENDECKERSTR.'],
         shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE', 'BÄCKEREI JÜPP', 'RIEVE MARKT'],
         far: [{ type: 'dom', angle: 30, dist: 200 }, { type: 'triangle', angle: 15, dist: 300 }, { type: 'stadion', angle: 160, dist: 320 }] },
@@ -430,7 +464,13 @@
         { type: 'crowd', seg: 22, u: 0.5, side: 1, dist: 10 },
         { type: 'hochbunker', seg: 12, u: 0.5, side: -1, dist: 50, story: 'Hochbunker Körnerstroß. Wo bes 1938 de Synagog stund. Hück Kunst un Erinnerung. Dä Beton bliev, et Verjesse nit.' },
         { type: 'herkuleshochhaus', seg: 10, u: 0.5, side: -1, dist: 90, story: 'Herkules-Hochhaus, et Papageiehuus. Bunt wie ne Karnevalsorden un 31 Etasche huh. Aufzoch kaputt? Dann is et Sport.' },
-        { type: 'herkulesberg', seg: 9, u: 0.5, side: -1, dist: 110, story: 'Herkulesberg. Us Trümmer vum Kreech jebaut, jetzt jrön. Kölle schmieß nix fott. Mer mäht drus ne Berg.' }
+        { type: 'herkulesberg', seg: 9, u: 0.5, side: -1, dist: 110, story: 'Herkulesberg. Us Trümmer vum Kreech jebaut, jetzt jrön. Kölle schmieß nix fott. Mer mäht drus ne Berg.' },
+        { type: 'koelnturm', seg: 8, u: 0.8, side: -1, dist: 140, keep: 80, story: 'KölnTurm am Mediapark. Oben sitze de Anzüch, unge sitz ich. Im Auto. Is schöner.' },
+        { type: 'park', seg: 8, u: 0.4, side: -1, dist: 45, seed: 24, w: 40, d: 40, keep: 30 },
+        { type: 'marktstand', seg: 15, u: 0.8, side: -1, dist: 14 },
+        { type: 'graffiti', seg: 19, u: 0.6, side: -1, dist: 44, text: 'EDELWEISSPIRATEN', story: 'Edelweißpiraten. Ehrenfelder Pänz, die nit mitjemaht han. Hee am Bahnhof hät mer se 1944 jehängt. Nie verjesse.' },
+        { type: 'neon', seg: 12, u: 0.75, side: 1, dist: 14, text: 'CLUB IM BAHNBOGEN' },
+        { type: 'litfass', seg: 12, u: 0.05, side: -1, dist: 12 }
       ]
     },
     {
@@ -438,13 +478,16 @@
       signs: [[0, 'KAISER-WILHELM-RING'], [1, 'HOHENZOLLERNRING'], [2, 'RUDOLFPLATZ'], [3, 'HOHENZOLLERNRING'], [4, 'FRIESENSTRASSE'], [5, 'FRIESENPLATZ'], [6, 'KAISER-WILHELM-RING'], [8, 'HANSARING'], [11, 'EBERTPLATZ'], [13, 'NEUSSER STRASSE'], [14, 'EIGELSTEIN'], [15, 'MAYBACHSTRASSE'], [18, 'GEREONSWALL'], [19, 'GEREONSDRIESCH'], [20, 'CHRISTOPHSTRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Güterbahnhof Gereon', 'St. Gereon'],
       diff: 5, laps: 3, scale: 1.45,
-      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Drei Wege am Ring: enger Aposteln-Hof, Hauptstrecke oder weiter Rudolfplatz-Bogen. Dazu nasse Straßen, Büdchen-Sprung und Sartory-Hinterhof. Garderobenmarke bitte am Ziel abgeben.',
-      shortcuts: [{ id: 'kalk-sartory', name: 'SARTORY-HINTERHOF', seg: 5 }, { id: 'kalk-hansa', name: 'HANSARING-SCHLUPF', seg: 9 }],
+      desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Drei Wege zum Rudolfplatz: enger Friesenwall, Ring oder Flandrische Straße. Dazu nasse Straßen, Büdchen-Sprung oder Von-Werth-Straße, Gereonswall, Krefelder Straße und Gereonshof. Garderobenmarke bitte am Ziel abgeben.',
+      shortcuts: [
+        { id: 'kalk-von-werth-strasse', street: 'Von-Werth-Straße', type: 'bypass', from: { seg: 6, u: 0.05 }, to: { seg: 8, u: 0.15 }, side: 1, offset: 44, radius: 16, angle: 55, halfWidth: 4.2, surface: 'asphalt', toward: 'HANSARING', perks: ['parked'], note: 'Von-Werth-Stroß, ene Block hinger dem Ring. Övver de Christophstroß kütt mer och ohne Sprung bes an d\'r Hansaring.' },
+        { id: 'kalk-gereonswall', street: 'Gereonswall', type: 'cut', from: { seg: 8, u: 0.53 }, to: { seg: 10, u: 0.3 }, halfWidth: 3.8, surface: 'asphalt', toward: 'EIGELSTEINTOR', perks: ['trees', 'parked'], note: 'Gereonswall, lans de ahl Stadtmuur un de Gereonsmühl. Hinger dem Ring es et koot, un de Kripo süht dich nit.' },
+        { id: 'kalk-krefelder-strasse', street: 'Krefelder Straße', type: 'bypass', from: { seg: 10, u: 0.8 }, to: { seg: 13, u: 0.6 }, side: 1, offset: 34, radius: 20, angle: 55, halfWidth: 4.4, surface: 'asphalt', toward: 'AGNESVIERTEL', perks: ['kiosk', 'parked'], note: 'Krefelder Stroß, am Bahndamm lans. Am Büdche e Kölsch, un dä Ebertplatz looße mer links lijje.' },
+        { id: 'kalk-gereonshof', street: 'Gereonshof', type: 'bypass', from: { seg: 18, u: 0.8 }, to: { seg: 20, u: 0.12 }, side: -1, offset: 34, radius: 18, angle: 65, halfWidth: 3.8, surface: 'asphalt', toward: 'KAISER-WILHELM-RING', perks: ['parked'], note: 'Gereonshof, am Gerling-Hochhuus vorbei. Wer keine Korkenzieher fahre well, nimmp dä Wääch öm St. Gereon.' }
+      ],
       branches: [
-        { id: 'kalk-aposteln', name: 'APOSTELN-HOF', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 },
-          via: [{ x: 18, z: 115 }, { x: 35, z: 170 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'kalk-rudolfplatz', name: 'RUDOLFPLATZ-BOGEN', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 },
-          via: [{ x: -20, z: 114 }, { x: -37, z: 193 }, { x: 13, z: 260 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'kalk-aposteln', name: 'FRIESENWALL', street: 'Friesenwall', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 }, via: [{ x: 18, z: 115 }, { x: 35, z: 170 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'RUDOLFPLATZ', perks: ['koelsch'], note: 'Dä Friesenwall: eng, ävver koot. Vum Klapperhof bes an d\'r Rudolfplatz, un an d\'r Friesenstroß winke de Weetschafte.' },
+        { id: 'kalk-rudolfplatz', name: 'FLANDRISCHE STRASSE', street: 'Flandrische Straße', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 }, via: [{ x: -20, z: 114 }, { x: -37, z: 193 }, { x: 13, z: 260 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'AACHENER STRASSE', perks: ['parked'], note: 'Flandrische Stroß, hinger de Hüüser vum Ring durch et Belgische Veedel. Dauert länger, ävver do kennt dich keiner.' }
       ],
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true, era: 1968, canyon: true,
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'GEREONSWALL'],
@@ -531,6 +574,11 @@
         { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 },
         { type: 'roemerturm', seg: 4, u: 0.5, side: -1, dist: 68, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.' },
         { type: 'gereonsmuehle', seg: 10, u: 0.5, side: 1, dist: 30, story: 'De Gereonsmühl. Fröher hät se hee Mähl jemahle. Hück mahlt nur noch dä Verkehr op dem Hansaring.' },
+        { type: 'park', seg: 8, u: 0.3, side: 1, dist: 72, keep: 30, story: 'Klingelpütz. Do henge steiht dä Knast noch – ävver nit mieh lang, dann weed do ene Park. Ming Kumpels kenne dä Blick vun hinger Jitter.' },
+        { type: 'haltestelle', seg: 6, u: 0.15, side: -1, dist: 11 },
+        { type: 'haltestelle', seg: 8, u: 0.3, side: -1, dist: 11 },
+        { type: 'koelsch', seg: 4, u: 0.12, side: 1, dist: 18, story: 'Friesenstroß: Hee weed et Kölsch noch em eigene Huus jebraut. Dä Köbes frog nit – dä stellt hin.' },
+        { type: 'schild', seg: 13, u: 0.85, side: -1, dist: 12, text: 'NEUSSER STRASSE' }
       ]
     },
     {
@@ -538,8 +586,14 @@
       signs: [[0, 'UBIERRING'], [1, 'CHLODWIGPLATZ'], [2, 'SEVERINSTRASSE'], [4, 'WAIDMARKT'], [5, 'MÜHLENBACH'], [6, 'HEUMARKT'], [7, 'GÜRZENICHSTRASSE'], [8, 'QUATERMARKT'], [9, 'ALTER MARKT'], [11, 'HOHE STRASSE'], [12, 'SCHILDERGASSE'], [13, 'NEUMARKT'], [14, 'APOSTELNSTRASSE'], [16, 'MITTELSTRASSE'], [17, 'HABSBURGERRING'], [18, 'HOHENSTAUFENRING'], [19, 'SACHSENRING'], [20, 'KAROLINGERRING']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Chlodwigplatz', 'Bottmühle', 'Severinstor', 'St. Maria im Kapitol', 'Gürzenich', 'Wallraf & Rathaus', 'Richmodisturm', 'St. Aposteln', 'Rudolfplatz'],
       diff: 3, laps: 3, scale: 1.45,
-      desc: 'Der Zochweg als Rennstrecke: durchs Severinstor zu St. Maria im Kapitol, Gürzenich, Wallraf und Rathaus, dann über den Neumarkt an St. Aposteln vorbei. Zwei Gassen durch den Kamelleregen. Selbst die Gebäude tragen heute gute Laune.',
-      shortcuts: [{ id: 'zoch-heumarkt', name: 'KAMELLE-GASSE', seg: 8 }, { id: 'zoch-neumarkt', name: 'NEUMARKT-SCHLUPF', seg: 12 }],
+      desc: 'Der Zochweg als Rennstrecke: durchs Severinstor zu St. Maria im Kapitol, Gürzenich, Wallraf und Rathaus, dann über den Neumarkt an St. Aposteln vorbei. Raus aus dem Kamelleregen: Severinswall an der Bottmühle, Weberstraße wie der echte Zoch, Martinstraße am Gürzenich und Cäcilienstraße. Um den Looping am Zülpicher Platz führt die Roonstraße. Selbst die Gebäude tragen heute gute Laune.',
+      shortcuts: [
+        { id: 'zoch-severinswall', street: 'Severinswall', type: 'parallel', from: { seg: 0, u: 0.25 }, to: { seg: 0, u: 0.8 }, side: -1, offset: 40, radius: 16, angle: 70, halfWidth: 4.4, surface: 'asphalt', toward: 'BAYENTURM', perks: ['trees', 'parked'], note: 'Severinswall: an d\'r ahl Stadtmuur lans un an d\'r Bottmühle vörbei. Hee kütt kei Zoch, nur Bäum un Ruh.' },
+        { id: 'zoch-weberstrasse', street: 'Weberstraße', type: 'bypass', from: { seg: 3, u: 0.72 }, to: { seg: 5, u: 0.42 }, side: 1, offset: 40, radius: 16, angle: 70, halfWidth: 3.8, surface: 'asphalt', toward: 'MÜHLENBACH', perks: ['parked', 'shakeKripo'], note: 'Weberstroß: Hee bieg och dä Rosenmontagszoch av, üvver Löwengass un Follerstroß. Wat för dä Zoch jood is, is för dich jood jenoch.' },
+        { id: 'zoch-martinstrasse', street: 'Martinstraße', type: 'cut', from: { seg: 8, u: 0 }, to: { seg: 9, u: 0.48 }, halfWidth: 3.6, surface: 'asphalt', toward: 'RATHAUS', perks: [], note: 'Martinstroß: vun d\'r Gürzenichstroß am Gürzenich vörbei bes op dä Alter Maat. Fußjängerzon, also Jas wääch un Kopp erus.' },
+        { id: 'zoch-caecilienstrasse', street: 'Cäcilienstraße', type: 'cut', from: { seg: 12, u: 0 }, to: { seg: 13, u: 0.4 }, halfWidth: 5, surface: 'asphalt', toward: 'NEUMARKT', perks: ['tram'], note: 'Cäcilienstroß: de Schiene vun d\'r Linie 1 lans, an St. Cäcilien vörbei. Op d\'r Schildergass weed jeschubst, hee rappelt nur de Bahn.' },
+        { id: 'zoch-roonstrasse', street: 'Roonstraße', type: 'bypass', from: { seg: 17, u: 0.75 }, to: { seg: 20, u: 0.25 }, side: 1, offset: 44, radius: 16, angle: 55, halfWidth: 4.6, surface: 'asphalt', toward: 'BARBAROSSAPLATZ', perks: ['koelsch', 'brauhaus', 'parked'], note: 'Roonstroß, ene Block hinger dem Ring: an d\'r Synagog vörbei un quer üvver de Zülpicher bes an d\'r Barbarossaplatz. Kei Looping, dofür e Brauhuus.' }
+      ],
       theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xb5ada0, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true,
         streets: ['SEVERINSTRASSE', 'CHLODWIGPLATZ', 'HOHE PFORTE', 'WAIDMARKT', 'ALTER MARKT', 'HEUMARKT', 'NEUMARKT', 'SCHILDERGASSE', 'HOHE STRASSE', 'RUDOLFPLATZ', 'ZOCHWEG'],
         shops: ['KAMELLE', 'KOSTÜME', 'STRÜSSJER', 'KÖLSCH', 'BÜTZJE-BAR', 'FUNKENMARIECHEN', 'ALAAF-SHOP', 'BRAUHAUS'],
@@ -613,7 +667,13 @@
         { type: 'crowd', seg: 17, u: 0.8, side: 1, dist: 10 },
         { type: 'crowd', seg: 20, u: 0.5, side: -1, dist: 10 },
         { type: 'bunting', seg: 20, u: 0.4, side: 0, dist: 0 },
-        { type: 'janvonwerth', seg: 10, u: 0.5, side: 1, dist: 14, story: 'Jan un Griet. Hä kom als Jeneral zeröck, sei stundt met Obs am Severinstor. Wer et hätt jewoss! Zo spät, Griet.' }
+        { type: 'janvonwerth', seg: 10, u: 0.5, side: 1, dist: 14, story: 'Jan un Griet. Hä kom als Jeneral zeröck, sei stundt met Obs am Severinstor. Wer et hätt jewoss! Zo spät, Griet.' },
+        { type: 'denkmal', seg: 9, u: 0.9, side: 1, dist: 12, story: 'Tünnes un Schäl am Brigittegässche. Dem Tünnes sing Nas is blank jerevve, dat bringk Jlöck. Mir bes jetz nur Knöllche.' },
+        { type: 'koebes', seg: 5, u: 0.85, side: -1, dist: 12, story: 'Dä Köbes am Heumarkt. Bestellt häs de nix, un trotzdem steiht e Kölsch vür dir. Dat is Kölsche Jastfründschaff.' },
+        { type: 'haltestelle', seg: 13, u: 0.8, side: -1, dist: 11 },
+        { type: 'haltestelle', seg: 20, u: 0.15, side: -1, dist: 11 },
+        { type: 'schild', seg: 17, u: 0.95, side: -1, dist: 12, text: 'ZÜLPICHER PLATZ' },
+        { type: 'ulrepforte', seg: 20, u: 0.5, side: -1, dist: 62, keep: 40, story: 'Ülepooz am Sachsenring. Eets Stadttor, dann Windmüll, hück wonnt hee de Funke. Die stonn stramm, bes de Musik kütt.' }
       ]
     },
     {
@@ -621,13 +681,16 @@
       signs: [[0, 'POLLER WIESEN'], [1, 'DEUTZER FREIHEIT'], [2, 'OTTOPLATZ'], [6, 'KENNEDY-UFER'], [8, 'DEUTZER WERFT'], [10, 'SIEGBURGER STRASSE'], [11, 'AM DEUTZER HAFEN'], [14, 'POLLER KIRCHWEG'], [16, 'WEIDENWEG'], [18, 'AUENWEG'], [23, 'RHEINPARKWEG'], [24, 'POLLER WIESEN']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Poller Wiesen', 'Deutzer Arena', 'Bahnhof Deutz', 'KölnTriangle', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
       diff: 5, laps: 3, scale: 1.45,
-      desc: 'Die Poller Wiesen als Stunt-Arena, mit Deutzer Bahnhof, KölnTriangle und Hyatt am Rand der Runde. Am langen Dreiwege-Kurs: enger Schütte-Durchstich, Tunnel-Hauptstrecke oder weiter Wiesenbogen. Dazu drei Loopings, Korkenzieher und Brauhaus-Sprung. Vom anderen Ufer gucken die Kranhäuser zu. Bewertet wird Haltung, nicht Blech.',
-      shortcuts: [{ id: 'poller-werft', name: 'DEUTZER WERFTWEG', seg: 7 }, { id: 'poller-wiese', name: 'POLLER WIESENPFAD', seg: 19 }],
+      desc: 'Die Poller Wiesen als Stunt-Arena, mit Deutzer Bahnhof, KölnTriangle und Hyatt am Rand der Runde. An der Drehbrücke der Dreiwege-Kurs: Siegburger Straße mit der Linie 7, Tunnel-Hauptstrecke oder die weite Alfred-Schütte-Allee an den Wiesen entlang. Wer Loopings scheut, nimmt Kennedy-Ufer, Im Hasental, Müllergasse oder Auenweg. Dazu drei Loopings, Korkenzieher und Brauhaus-Sprung. Vom anderen Ufer gucken die Kranhäuser zu. Bewertet wird Haltung, nicht Blech.',
+      shortcuts: [
+        { id: 'poller-kennedy-ufer', street: 'Kennedy-Ufer', type: 'bypass', from: { seg: 0, u: 0.65 }, to: { seg: 4, u: 0.85 }, side: 1, offset: 45, radius: 22, angle: 65, halfWidth: 4.4, surface: 'asphalt', toward: 'MESSE', perks: ['trees'], note: 'Am Ufer lans, am Hyatt un an de Trappe vum Rheinboulevard vorbei. Kei Looping am Ottoplatz, dofür winke se dir all.' },
+        { id: 'poller-im-hasental', street: 'Im Hasental', type: 'cut', from: { seg: 9, u: 0.1 }, to: { seg: 12, u: 0 }, halfWidth: 3.8, surface: 'asphalt', toward: 'DREHBRÜCKE', perks: [], note: 'Im Hasental, an der Realschull vorbei bes an de Ampel an der Drehbröck. Dä Looping am Hafe looße mer links lijje.' },
+        { id: 'poller-muellergasse', street: 'Müllergasse', type: 'bypass', from: { seg: 16, u: 0.6 }, to: { seg: 18, u: 0.35 }, side: -1, offset: 40, angle: 55, halfWidth: 3.6, surface: 'asphalt', toward: 'POLL', perks: ['koelsch'], note: 'Müllergass, mitten em ahle Fischerdörp Poll. Üvver et Brauhaus springk mer nit, mer jeiht en de ahl Weetschaff e Kölsch drinke.' },
+        { id: 'poller-auenweg', street: 'Auenweg', type: 'bypass', from: { seg: 18, u: 0.75 }, to: { seg: 23, u: 0.6 }, side: 1, offset: 45, angle: 55, halfWidth: 4.4, surface: 'asphalt', toward: 'ZOOBRÜCKE', perks: ['trees', 'parked'], note: 'Auenweg, zwesche Rheinpark un Messe. Kei Korkenzieher, kei Looping, nur Parkplätz bes an de Zoobröck. Su fährt mer, wann de Mam metfährt.' }
+      ],
       branches: [
-        { id: 'poller-schuette', name: 'SCHÜTTE-DURCHSTICH', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 },
-          via: [{ x: 374, z: -34 }, { x: 363, z: -120 }, { x: 342, z: -205 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'poller-wiesenbogen', name: 'WEITER WIESENBOGEN', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 },
-          via: [{ x: 390, z: 30 }, { x: 420, z: -34 }, { x: 420, z: -196 }, { x: 369, z: -267 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'poller-schuette', name: 'SIEGBURGER STRASSE', street: 'Siegburger Straße', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 }, via: [{ x: 374, z: -34 }, { x: 363, z: -120 }, { x: 342, z: -205 }], halfWidth: 4.2, style: 'shortcut', surface: 'asphalt', toward: 'POLL', perks: ['tram'], note: 'Siegburger Stroß, ab der Drehbröck schnurjrad noh Poll. Nevven dir de Schiene vun der Siebener. Die hät Vörfahrt. Immer.' },
+        { id: 'poller-wiesenbogen', name: 'ALFRED-SCHÜTTE-ALLEE', street: 'Alfred-Schütte-Allee', fork: 'poller-dreiwege', from: { seg: 13, u: 0 }, to: { seg: 16, u: 0.35 }, via: [{ x: 390, z: 30 }, { x: 420, z: -34 }, { x: 420, z: -196 }, { x: 369, z: -267 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'SÜDBRÜCKE', perks: ['trees'], note: 'Üvver de Drehbröck un dann de Alfred-Schütte-Allee an de Poller Wiese lans, de Rhing nevvendran. Wigger, ävver schöner.' }
       ],
       theme: { sky: 0x070a24, fog: 0x1e1a3a, ground: 0x28402a, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, water: 0x102040, street: 'park', arena: true,
         streets: ['POLLER WIESEN', 'ROLSHOVER STR.', 'POLLER KIRCHWEG', 'ALFRED-SCHÜTTE-ALLEE', 'DEUTZER WERFT', 'AM RHEINPARK', 'ARENASTRASSE'],
@@ -702,7 +765,14 @@
         { type: 'tribuene', seg: 24, u: 0.8, side: 1, dist: 14 },
         { type: 'drehbruecke', seg: 13, u: 0.5, side: 1, dist: 70, story: 'Drehbröck am Deutzer Hafen. Sit 1908 dreiht se sich för jedes Scheff. Ich dreih mich nur för e Kölsch.' },
         { type: 'pollerkoepfe', seg: 16, u: 0.5, side: 1, dist: 80, story: 'Poller Köpfe. Sit 1560 hale die Stein der Rhing en Reih, dat hä nit durch Poll avhaut. Türsteher us Basalt, wie ich.' },
-        { type: 'rheinboulevard', seg: 4, u: 0.5, side: 1, dist: 80, story: 'Rheinboulevard. Hee sitze se all op de Trappe un luure noh em Dom. Dä luurt nit zeröck. Dä hät dat nit nüdig.' }
+        { type: 'rheinboulevard', seg: 4, u: 0.5, side: 1, dist: 80, story: 'Rheinboulevard. Hee sitze se all op de Trappe un luure noh em Dom. Dä luurt nit zeröck. Dä hät dat nit nüdig.' },
+        { type: 'messeturm', seg: 23, u: 0.3, side: 1, dist: 120, keep: 80, story: 'Messeturm. 1928 för de Pressa jebaut, do kom de janze Welt noh Düx. Ich hann jede Kaat kontrolleet.' },
+        { type: 'beach', seg: 20, u: 0.5, side: -1, dist: 70 },
+        { type: 'kirche', seg: 9, u: 0.5, side: -1, dist: 60, keep: 50, story: 'St. Heribert, dä Düxer Dom. Zwei Türm, domet mer vun drüvve och jet süht. Mer sin jo nit neidisch.' },
+        { type: 'grove', seg: 24, u: 0.4, side: 1, dist: 40 },
+        { type: 'buedchen', seg: 10, u: 0.5, side: -1, dist: 13 },
+        { type: 'bank', seg: 24, u: 0.25, side: 1, dist: 12 },
+        { type: 'moewen', seg: 16, u: 0.8, side: 1, dist: 22 }
       ]
     }
     ,{
@@ -710,8 +780,14 @@
       signs: [[0, 'TRANKGASSE'], [2, 'KUNIBERTSKLOSTERGASSE'], [4, 'EIGELSTEIN'], [5, 'EBERTPLATZ'], [6, 'NEUSSER WALL'], [7, 'THEODOR-HEUSS-RING'], [9, 'KONRAD-ADENAUER-UFER'], [10, 'ZOOBRÜCKE'], [11, 'AUENWEG'], [14, 'MESSEPLATZ'], [15, 'OTTOPLATZ'], [16, 'HOHENZOLLERNBRÜCKE'], [17, 'BISCHOFSGARTENSTRASSE'], [18, 'TRANKGASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Domschatzkammer', 'Hauptbahnhof', 'St. Kunibert', 'Eigelstein', 'St. Agnes', 'Fort X', 'Bastei', 'Bahnhof Deutz', 'Hohenzollernbrücke'],
       diff: 4, laps: 3, scale: 1.4,
-      desc: 'Domschatz im Kofferraum, Kripo im Rückspiegel. An St. Kunibert und Fort X vorbei, von der Bastei über die Zoobrücke nach Deutz und über die Hohenzollernbrücke zurück. Zwei Fluchtgassen, ein viel zu auffälliges Auto. 1975. Nix für Ehrliche.',
-      shortcuts: [{ id: 'heist-eigelstein', name: 'EIGELSTEIN-FLUCHTGASSE', seg: 3 }, { id: 'heist-messe', name: 'MESSEHOF-FLUCHTWEG', seg: 14 }],
+      desc: 'Domschatz im Kofferraum, Kripo im Rückspiegel. An St. Kunibert und Fort X vorbei, von der Bastei über die Zoobrücke nach Deutz und über die Hohenzollernbrücke zurück. Wer sich auskennt, nimmt die Machabäerstraße zum Eigelstein, den Thürmchenswall an Ebertplatz und Fort X vorbei, die Deutz-Mülheimer Straße hinterm Rheinpark, das Kennedy-Ufer an der Messe vorbei und die Trankgassenwerft zurück zur Trankgasse. Ein viel zu auffälliges Auto. 1975. Nix für Ehrliche.',
+      shortcuts: [
+        { id: 'heist-machabaeerstrasse', street: 'Machabäerstraße', type: 'cut', from: { seg: 2, u: 0.5 }, to: { seg: 4, u: 0.2 }, halfWidth: 3.6, surface: 'asphalt', toward: 'EIGELSTEIN', perks: ['parked', 'kiosk'], note: 'Machabäerstroß. Vum Kunibertsveedel quer op der Eigelstein. Hee kennt jeder jeden. Dich kennt keiner.' },
+        { id: 'heist-thuermchenswall', street: 'Thürmchenswall', type: 'bypass', from: { seg: 4, u: 0.85 }, to: { seg: 8, u: 0.55 }, side: -1, offset: 44, radius: 20, surface: 'asphalt', toward: 'BASTEI', perks: ['brauhaus', 'parked'], note: 'Thürmchenswall, immer an der ahl Stadtmuur lans. Ebertplatz un Fort X spare mer uns. Bastei, mer kumme!' },
+        { id: 'heist-deutz-muelheimer-strasse', street: 'Deutz-Mülheimer Straße', type: 'bypass', from: { seg: 10, u: 0.96 }, to: { seg: 13, u: 0.1 }, side: -1, offset: 40, radius: 28, surface: 'asphalt', toward: 'MESSE', perks: ['parked'], note: 'Vun der Zoobrück eraf op de Deutz-Mülheimer Stroß, an der KHD vorbei. Hinger der Bahn kütt kein Kripo dich sinn. Dä Korkezieher em Rheinpark fährt die allein.' },
+        { id: 'heist-kennedy-ufer', street: 'Kennedy-Ufer', type: 'cut', from: { seg: 13, u: 0.65 }, to: { seg: 15, u: 0.6 }, surface: 'asphalt', toward: 'HOHENZOLLERNBRÜCKE', perks: ['trees'], note: 'Am Düxer Ufer lans, der Dom luurt vun drüvve. De Kripo fährt öm de Mess. Loss se fahre.' },
+        { id: 'heist-trankgassenwerft', street: 'Trankgassenwerft', type: 'cut', from: { seg: 16, u: 0.94 }, to: { seg: 18, u: 0.15 }, surface: 'asphalt', toward: 'TRANKGASSE', note: 'Trankgassenwerft. Vun der Brück direk an et Ufer un zeröck op de Trankgass. De Scheffer winke. De Kripo nit.' }
+      ],
       theme: { sky: 0x05071c, fog: 0x1e1638, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x0e1e3e, street: 'gruenderzeit', catenary: true, heist: true, era: 1975,
         streets: ['TRANKGASSE', 'BRESLAUER PLATZ', 'EIGELSTEIN', 'EBERTPLATZ', 'THEODOR-HEUSS-RING', 'ZOOBRÜCKE', 'AM RHEINPARK', 'MESSEPLATZ', 'HEINRICH-BÖLL-PLATZ'],
         shops: ['JUWELIER', 'PFANDLEIHE', 'AN- UND VERKAUF', 'NACHTCAFÉ', 'TRINKHALLE', 'BILLARD', 'HEHLER & SÖHNE', 'KÖLSCH', 'TRESORBAU', 'DOM-SOUVENIRS'],
@@ -777,7 +853,14 @@
         { type: 'rain', seg: 0, u: 0.5, side: 0, dist: 0, face: false },
         { type: 'zeppelin', seg: 7, u: 0.5, side: 1, dist: 60, face: false },
         { type: 'crowd', seg: 18, u: 0.6, side: 1, dist: 10 },
-        { type: 'neon', seg: 18, u: 0.4, side: -1, dist: 14, text: 'DOM-SOUVENIRS · ORIGINAL', color: '#4da3ff' }
+        { type: 'neon', seg: 18, u: 0.4, side: -1, dist: 14, text: 'DOM-SOUVENIRS · ORIGINAL', color: '#4da3ff' },
+        { type: 'haltestelle', seg: 0, u: 0.33, side: -1, dist: 11 },
+        { type: 'telefonzelle', seg: 2, u: 0.25, side: -1, dist: 12, story: 'Telefonzell am Kunibert. 1975 hät hee einer de Kripo aanjerofe. Keiner weiß wä. Ich wor et nit. Ich hatt kein Jroschen.' },
+        { type: 'koebes', seg: 4, u: 0.4, side: 1, dist: 12 },
+        { type: 'pond', seg: 8, u: 0.25, side: 1, dist: 30, keep: 26, story: 'Dä Weiher am Ring. Fröher wor hee ne Hafe för de Scheffe. Hück versinke hee nur Ände. Un e paar Beweise.' },
+        { type: 'haltestelle', seg: 15, u: 0.15, side: -1, dist: 11 },
+        { type: 'reiter', seg: 15, u: 0.92, side: 1, dist: 16, story: 'Dä iesere Reiter am Brückekopp. Hät 1975 alles jesinn. Hä säht nix. Et Pääd och nit.' },
+        { type: 'reiter', seg: 17, u: 0.08, side: -1, dist: 16 }
       ]
     },
     {
@@ -785,13 +868,15 @@
       signs: [[0, 'ZÜLPICHER STRASSE'], [1, 'ROONSTRASSE'], [2, 'BARBAROSSAPLATZ'], [3, 'ZÜLPICHER STRASSE'], [4, 'LUXEMBURGER STRASSE'], [5, 'UNIVERSITÄTSSTRASSE'], [6, 'ALBERTUS-MAGNUS-PLATZ'], [7, 'UNIVERSITÄTSSTRASSE'], [9, 'AACHENER STRASSE'], [13, 'RUDOLFPLATZ'], [14, 'HAHNENSTRASSE'], [15, 'NEUMARKT'], [17, 'MAURITIUSSTEINWEG']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zülpicher Platz', 'Synagoge Roonstraße', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'Melaten', 'St. Aposteln', 'Richmodisturm', 'Wasserturm'],
       diff: 2, laps: 3, scale: 1.35,
-      desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann drei Wege zum Weiher: Mensa-Durchstich, Hauptkurs oder breite Weiher-Runde. Melaten und Richmodisturm gucken zu. Rathenau-Gasse und Ring-Hinterhof kürzen weiter ab. Das Studium dauert trotzdem länger.',
-      shortcuts: [{ id: 'zuelpicher-rathenau', name: 'RATHENAU-GASSE', seg: 1 }, { id: 'zuelpicher-ring', name: 'RING-HINTERHOF', seg: 16 }],
+      desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann drei Wege zum Aachener Weiher: schmaler Zülpicher Wall, Hauptkurs oder die breite Dürener Straße Richtung Lindenthal. Heinsbergstraße und Mittelstraße kürzen ab, die Kyffhäuserstraße führt um den Büdchen-Sprung. Melaten und Richmodisturm gucken zu. Das Studium dauert trotzdem länger.',
+      shortcuts: [
+        { id: 'zuelpicher-heinsbergstrasse', street: 'Heinsbergstraße', type: 'cut', from: { seg: 0, u: 0.82 }, to: { seg: 2, u: 0.2 }, halfWidth: 3.6, surface: 'asphalt', toward: 'BARBAROSSAPLATZ', perks: ['parked'], note: 'Heinsbergstroß: vun der Zülpicher quer durch et Veedel, övver de Kyffhäuser nohm Barbarossaplatz. Wer de Roonstroß fährt, hät Zick.' },
+        { id: 'zuelpicher-kyffhaeuserstrasse', street: 'Kyffhäuserstraße', type: 'bypass', from: { seg: 2, u: 0.55 }, to: { seg: 4, u: 0.3 }, side: -1, offset: 40, angle: 55, halfWidth: 3.6, surface: 'asphalt', toward: 'MOSELSTRASSE', perks: ['koelsch', 'parked'], note: 'Kyffhäuserstroß, dä Zwilling vun der Zülpicher. Kei Büdche zom Drüvverspringe, nur Kölsch em Wäch.' },
+        { id: 'zuelpicher-mittelstrasse', street: 'Mittelstraße', type: 'cut', from: { seg: 12, u: 0.5 }, to: { seg: 15, u: 0.6 }, halfWidth: 3.8, surface: 'asphalt', toward: 'NEUMARKT', perks: ['parked'], note: 'Mittelstroß: Vum Rudolfplatz bes nohm Neumarkt, ohne Kuhl. Hee koss e Paar Schohn mieh wie ding Karre.' }
+      ],
       branches: [
-        { id: 'zuelpicher-mensa', name: 'MENSA-DURCHSTICH', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 },
-          via: [{ x: 281, z: 29 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'zuelpicher-weiher', name: 'WEIHER-RUNDE', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 },
-          via: [{ x: 363, z: 17 }, { x: 292, z: -59 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'zuelpicher-mensa', name: 'ZÜLPICHER WALL', street: 'Zülpicher Wall', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 }, via: [{ x: 281, z: 29 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'BACHEMER STRASSE', perks: ['parked'], note: 'Zülpicher Wall: hinger der Mensa an der Bahn langs. Schmal, ävver de Schlang an der Essensausgab steiht he nit.' },
+        { id: 'zuelpicher-weiher', name: 'DÜRENER STRASSE', street: 'Dürener Straße', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 }, via: [{ x: 363, z: 17 }, { x: 292, z: -59 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'LINDENTHAL', perks: ['trees'], note: 'Dürener Stroß: an der Uni links av Richtung Lindenthal, dann öm de Weiher eröm. Breit, Bäum – un de Konkurrenz es längs fott.' }
       ],
       theme: { sky: 0xb4bcc8, fog: 0xd8d4d8, ground: 0xa9a49c, sun: 0xfff4e0, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x5a7a98, confetti: true, autumn: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
@@ -833,6 +918,8 @@
         { type: 'pantaleon', seg: 2, u: 0.65, side: -1, dist: 100, keep: 80, story: 'St. Pantaleon. Hier war schon Ruhe, als du noch keinen Führerschein hattest.' },
         { type: 'neon', seg: 2, u: 0.6, side: 1, dist: 14, text: 'BÜTZJE-BAR · KOSTÜM-PFLICHT', color: '#ff2d95', light: false },
         { type: 'crowd', seg: 2, u: 0.85, side: -1, dist: 10 },
+        { type: 'crowd', seg: 3, u: 0.3, side: 1, dist: 10 }, { type: 'crowd', seg: 3, u: 0.7, side: -1, dist: 10 }, { type: 'crowd', seg: 4, u: 0.5, side: 1, dist: 10 },
+        { type: 'crowd', seg: 13, u: 0.4, side: 1, dist: 10 }, { type: 'crowd', seg: 16, u: 0.5, side: -1, dist: 10 },
         { type: 'buedchen', seg: 4, u: 0.4, side: 1, dist: 11 },
         { type: 'zochwagen', seg: 4, u: 0.7, side: -1, dist: 13 },
         { type: 'halle', seg: 5, u: 0.5, side: 1, dist: 60, keep: 60, story: 'Die Uni. Hee lernt mer, wie mer Kölsch bestellt, op Latein. Un wie mer et nit bezahlt, op Kölsch.' },
@@ -858,7 +945,13 @@
         { type: 'tram', seg: 17, u: 0.6, side: 1, dist: 12 },
         { type: 'crowd', seg: 17, u: 0.8, side: -1, dist: 10 },
         { type: 'billboard', seg: 17, u: 0.5, side: -1, dist: 14, text: 'KÖLLE ALAAF – ELF UHR ELF' },
-        { type: 'zeppelin', seg: 9, u: 0.5, side: 1, dist: 60, face: false }
+        { type: 'zeppelin', seg: 9, u: 0.5, side: 1, dist: 60, face: false },
+        { type: 'hahnentor', seg: 13, u: 0.2, side: 1, dist: 60, keep: 40, story: 'Hahnentor am Rudolfplatz. Hee fängk de Mittelstroß aan: Wer shoppe well, bieg av. Wer jewenne well, nit.' },
+        { type: 'kirche', seg: 17, u: 0.75, side: -1, dist: 34, story: 'St. Mauritius. De Nüng fährt öm de Kirch eröm, dä Pastor winkt. Beichte kanns do späder, jetz es Rennen.' },
+        { type: 'cafe', seg: 10, u: 0.25, side: 1, dist: 15, story: 'Biergarten am Aachener Weiher. Em Sommer litt halv Kölle hee op der Wiss. Hück litt nur dinge Konkurrent em Jraben.' },
+        { type: 'haltestelle', seg: 2, u: 0.4, side: 1, dist: 11 },
+        { type: 'tram', seg: 2, u: 0.22, side: 1, dist: 13 },
+        { type: 'buedchen', seg: 16, u: 0.5, side: 1, dist: 13 }
       ]
     },
     {
@@ -866,13 +959,17 @@
       signs: [[0, 'RODENKIRCHENER LEINPFAD'], [2, 'KIRCHSTRASSE'], [4, 'UFERSTRASSE'], [7, 'MAIGLERSTRASSE'], [9, 'WEISSER LEINPFAD'], [10, 'WEISSER HAUPTSTRASSE'], [11, 'WEISSER LEINPFAD'], [12, 'SÜRTHER LEINPFAD'], [16, 'MÜHLENGASSE'], [17, 'SÜRTHER HAUPTSTRASSE'], [19, 'RODENKIRCHENER LEINPFAD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Rheinuferweg', 'Alt St. Maternus', 'Rodenkirchener Brücke', 'Weiß', 'Rheinstrand', 'Sürther Bootshaus'],
       diff: 3, laps: 3, scale: 1.5,
-      desc: 'Sommer in Rodenkirchen: an Alt St. Maternus und den Rheinterrassen vorbei nach Weiß, mit Strand-Looping und Bootshaus-Korkenzieher. Vor der Brücke: Weißer Schlupf, Hauptkurs oder breiter Rheinterrassen-Bogen. Ufergasse und Bootshausweg bleiben. Wer zu kurz springt, badet. Wer zu weit springt, badet in Weiß.',
-      shortcuts: [{ id: 'rodenkirchen-ufer', name: 'RODENKIRCHENER UFERGASSE', seg: 3 }, { id: 'rodenkirchen-boot', name: 'BOOTSHAUSWEG', seg: 16 }],
+      desc: 'Sommer in Rodenkirchen: vom Leinpfad am Kapellchen vorbei über die Uferstraße nach Weiß und Sürth, mit Strand-Looping und Bootshaus-Korkenzieher; vor der Brücke wählst du Auenweg, Hauptkurs oder die breite Weißer Straße. Abkürzen über Hauptstraße am Brauhaus Quetsch, Steinstraße am Kapellchen, Barbarastraße um den Looping, Alte Rheinstraße in Weiß und Falderstraße zurück aus Sürth – wer zu kurz springt, badet.',
+      shortcuts: [
+        { id: 'rodenkirchen-hauptstrasse', street: 'Hauptstraße', type: 'parallel', from: { seg: 0, u: 0.2 }, to: { seg: 0, u: 0.84 }, side: -1, offset: 42, radius: 18, angle: 70, halfWidth: 4.4, surface: 'asphalt', toward: 'MATERNUSPLATZ', perks: ['parked', 'kiosk', 'koelsch', 'brauhaus'], note: 'Hauptstroß, de Einkaufsstroß vun Rodenkirche. Vürre am Rhing et Brauhaus Quetsch, dann Eis, Kölsch un Rentner em Wääch. Länger, ävver sieht jot us.' },
+        { id: 'rodenkirchen-steinstrasse', street: 'Steinstraße', type: 'cut', from: { seg: 2, u: 0.5 }, to: { seg: 4, u: 0.08 }, halfWidth: 3.2, surface: 'asphalt', toward: 'ALT ST. MATERNUS', perks: ['koelsch', 'shakeKripo'], note: 'Steinstroß, dat Jässje hinger dem Kapellche. Am Yachtclub vorbei, öm de Eck am Treppche e Kölsch, un de Kripo steiht noch am Leinpfad.' },
+        { id: 'rodenkirchen-barbarastrasse', street: 'Barbarastraße', type: 'bypass', from: { seg: 4, u: 0.32 }, to: { seg: 6, u: 0.05 }, side: -1, offset: 30, halfWidth: 4, surface: 'asphalt', toward: 'KÖLSCHE RIVIERA', perks: ['parked', 'trees'], note: 'Barbarastroß am Ruderverein vorbei. Kei Looping, kei Sand em Jetriebe, nur Ruderer, die dich üvverholle.' },
+        { id: 'rodenkirchen-alterheinstrasse', street: 'Alte Rheinstraße', type: 'cut', from: { seg: 9, u: 0.08 }, to: { seg: 10, u: 0.7 }, halfWidth: 3.2, surface: 'asphalt', toward: 'WEISSER HAUPTSTRASSE', perks: ['shakeKripo', 'trees'], note: 'Ahl Rhingstroß en Wiess. Fachwerk links, Fachwerk rächs, un mittendrin du met 80 Sache.' },
+        { id: 'rodenkirchen-falderstrasse', street: 'Falderstraße', type: 'cut', from: { seg: 18, u: 0 }, to: { seg: 19, u: 0.22 }, halfWidth: 4, surface: 'asphalt', toward: 'RODENKIRCHEN', perks: ['parked'], note: 'Falderstroß, vun Sürth zeröck noh Rodenkirche. Am Falderhoff vorbei, un keiner merk et.' }
+      ],
       branches: [
-        { id: 'rodenkirchen-weiss', name: 'WEISSER SCHLUPF', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 },
-          via: [{ x: -251, z: 357 }, { x: -330, z: 345 }], halfWidth: 3.4, style: 'shortcut' },
-        { id: 'rodenkirchen-terrassen', name: 'RHEINTERRASSEN-BOGEN', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 },
-          via: [{ x: -251, z: 397 }, { x: -332, z: 422 }, { x: -416, z: 378 }], halfWidth: 4.7, style: 'scenic' }
+        { id: 'rodenkirchen-weiss', name: 'AUENWEG', street: 'Auenweg', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 }, via: [{ x: -251, z: 357 }, { x: -330, z: 345 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'WEISSER RHEINBOGEN', perks: ['trees', 'shakeKripo'], note: 'Auenweg, schmal un jrön, an der Rheinaue entlang. Kürzer, un de Kripo verlööf sich en de Wigge.' },
+        { id: 'rodenkirchen-terrassen', name: 'WEISSER STRASSE', street: 'Weißer Straße', fork: 'rodenkirchen-dreiwege', from: { seg: 6, u: 0.25 }, to: { seg: 7, u: 0.96 }, via: [{ x: -251, z: 397 }, { x: -332, z: 422 }, { x: -416, z: 378 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'WEISS', perks: ['parked', 'trees'], note: 'Weißer Stroß, de breite Verbindung noh Wiess. Wigger, ävver met Fahrradwääch un Parkbuchte.' }
       ],
       theme: { sky: 0x5fa8ff, fog: 0xd8ecff, ground: 0x5e9a4a, sun: 0xffffff, road: [0x585858, 0x4a4a4a], night: false, water: 0x3f8fc8, street: 'park',
         streets: ['RHEINUFERWEG', 'UFERSTRASSE', 'HAUPTSTRASSE', 'WEISSER STRASSE', 'SÜRTHER STRASSE', 'AM RHEINSTRAND', 'MAINSTRASSE'],
@@ -935,7 +1032,13 @@
         { type: 'riesenrad', seg: 17, u: 0.5, side: 1, dist: 50, keep: 50 },
         { type: 'crowd', seg: 19, u: 0.5, side: 1, dist: 10 },
         { type: 'billboard', seg: 19, u: 0.3, side: -1, dist: 14, text: 'RHEINBAD RODENKIRCHEN – NUR MIT BADEHOSE' },
-        { type: 'moewen', seg: 8, u: 0.5, side: -1, dist: 40, face: false }
+        { type: 'moewen', seg: 8, u: 0.5, side: -1, dist: 40, face: false },
+        { type: 'bank', seg: 0, u: 0.3, side: 1, dist: 12, story: 'Bank am Leinpfad. Hee sitze de Rentner un zälle de Schiffe. Un dich, wann de ze flöck bes.' },
+        { type: 'fahrradstaender', seg: 2, u: 0.3, side: -1, dist: 13 },
+        { type: 'awb', seg: 4, u: 0.5, side: 1, dist: 13, story: 'Sonndagovend an der Riviera: mih Kölschfläsche wie Sand. Dann kütt de Müllabfuhr un fäg dä Sommer weg.' },
+        { type: 'grove', seg: 9, u: 0.5, side: -1, dist: 60, keep: 30, story: 'Weißer Rheinbogen. Wiss, Weide, Rhing. Hee is et esu ruhig, do hööt mer ding Motor bes Porz.' },
+        { type: 'flag', seg: 15, u: 0.25, side: 1, dist: 12 },
+        { type: 'haltestelle', seg: 19, u: 0.6, side: -1, dist: 13 }
       ]
     }
   ];
@@ -1111,7 +1214,7 @@
     },
     daytime: {
       night: ['Et is {h} Uhr, Jung. Um die Zick stonn ich normal an der Tür. Heut stonn ich am Streckenrand.', '{h} Uhr nachts. Chicago am Rhein wach op. Du och.'],
-      morning: ['{h} Uhr morjens? Ich bin noch jar nit im Bett jewese. Fahr leise.', 'Fröh op, Jung. Der Bäcker hät noch zo. Der Rennen nit.'],
+      morning: ['{h} Uhr morjens? Ich bin noch jar nit im Bett jewese. Fahr leise.', 'Fröh op, Jung. Dä Bäcker hät noch zo. Dat Rennen nit.'],
       day: ['{h} Uhr. Tagsüber fahre nur Touriste un Taxi Willi. Un du.', 'Mittags op de Ringe. Die Zocker schlofe noch. Du hass de Stroß för dich.'],
       evening: ['{h} Uhr. Jetz jeht de Nacht los. Un ming Schicht.', 'Feierabend för de andere. För uns fängt et an.']
     },
@@ -1149,7 +1252,7 @@
       { id: 'bass', name: 'LAMBOGINA', desc: '5× dä Bass vum Titelleed im Rennen', stat: 'bassRuns', need: 5, color: 'w' },
       { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', stat: 'boten', need: 3, color: 'o' },
       { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' },
-      { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: 'Alle 29 Nebenwege entdeckt', stat: 'streetsFound', need: 29, color: 'b' }
+      { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: 'Alle 52 Nebenwege entdeckt', stat: 'streetsFound', need: 52, color: 'b' }
     ],
     ordenLine: ['Neuer Orden op dä Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
     // the daily track: a random Veedel and a name for it
@@ -1223,6 +1326,8 @@
     razziaEnd: ['Razzia vorbei. Die Zocker kumme wieder us de Löcher.', 'Kripo is weg. Ich hann jesaht, ich kenn keine.'],
     // five Kölsch in one lap: the Kölsch-Kurve
     promille: ['Jung, dat wor dat fünfte in einer Rund. Fahr jerade. Oder versuch et.', 'Fünf Kölsch, eine Rund. Jetz fährt dat Auto Schlangenlinie. Wie ich nach der Sitzung.', 'Kölsch-Kurve! Der Köbes hät dich jut versorgt. Zo jut.'],
+    help: ['Langsam, Jung. Vür dä Kurv brems, dann widder Jas.', 'Nit su hektisch. Vür de Jabelung jeradeus blieve – dann bliev de op dä Hauptstroß.', 'Fooß vum Jas en dä Kurv, dann kütt dä Wage och eröm. Dat lern ich jedem Neue.', 'Et es keine Schand, ze bremse. Schand es, en dr Hecke ze lande.'],
+    pause: ['Paus. Dä Lange drink e Kölsch. Mer waade op dich.', 'Telefon? Jank ran. Kölle läuf nit fott.', 'Paus. Dä Köbes bring ene Halve Hahn. Dat dauert.', 'De Uhr steiht. Su wie dä Verkehr am Ebertplatz.'],
     promilleEnd: ['Wieder nüchtern. Sagt der Türsteher. Also nit janz.'],
     // Kripo Kölle: the Streifewage that shows up after three Knöllchen
     kripo: {

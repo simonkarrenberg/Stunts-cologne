@@ -14,7 +14,7 @@ module.exports = async function () {
     const done = await waitFor(page, () => !document.getElementById('results').hidden, 30000);
     const name = await page.evaluate(() => document.getElementById('hudTrack').textContent);
     results.push(`${name}: ${raced && done ? 'ok' : 'FAILED'}`); console.log('   ' + results[results.length - 1]); if (!(raced && done)) errors.push('track ' + t + ' did not finish');
-    await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+    await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); // Esc pauses a race, Esc again leaves it await page.waitForTimeout(400);
   }
   await browser.close(); srv.close();
   return { name: 'race', ok: !errors.length, lines: results.concat(errors) };

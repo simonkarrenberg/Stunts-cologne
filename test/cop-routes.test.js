@@ -9,7 +9,7 @@ const { serve, launch, waitFor } = require('./helpers');
 
 const hook = `
   window.STUNTS_COP_ROUTE_TEST = (scenario, gap) => {
-    const q = track.shortcuts.find((route) => route.kind === 'alternate');
+    const q = track.shortcuts.filter((route) => route.kind === 'alternate').sort((a, b) => a.startS - b.startS)[0]; // the earliest: room to rubber-band 300 m past it
     if (!q) throw new Error('test track needs a longer authored branch');
     mission = null;
     if (kripo) { scene.remove(kripo.mesh); kripo = null; }

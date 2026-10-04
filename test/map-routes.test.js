@@ -244,7 +244,7 @@ module.exports = async function () {
       if (auditOnly) {
         lines.push(track.name + ': ' + audit.placements + ' retained landmark placements; ' + routes.length + ' roads clear of scenery/supports/furniture; ' + audit.wayfinderCount + ' readable sign reservations');
         console.log('   ' + lines[lines.length - 1]);
-        await page.keyboard.press('Escape');
+        await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); // Esc pauses a race, Esc again leaves it
         assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'menu', 10000), 'return to menu after placement audit');
         continue;
       }
@@ -391,7 +391,7 @@ module.exports = async function () {
       }
       lines.push(track.name + ': ' + routes.length + ' keyboard entries, complete traversals, rejoins and replays; ' + audit.placements + ' retained landmark placements; ' + audit.clearanceProbes + ' branch, ' + structural.clearanceProbes + ' support, ' + streets.clearanceProbes + ' street-furniture and ' + audit.mainRoadClearanceProbes + ' main-road clear car-height probes');
       console.log('   ' + lines[lines.length - 1]);
-      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); // Esc pauses a race, Esc again leaves it
       assert(await waitFor(page, () => window.STUNTS_DEBUG().phase === 'menu', 10000), 'return to menu');
     }
     if (!process.env.TRACKS) assert.deepStrictEqual([...landmarks].sort(), authoredIds, 'every authored landmark model must remain present across the maps');

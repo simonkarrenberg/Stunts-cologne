@@ -35,12 +35,12 @@
   let deckel = 0, pickups = [], kripo = null, kripoT = 0, kripoHitCool = 0, sirenT = 0, wette = null, crashes = 0, waterCrashes = 0, kripoCaught = false, kripoSeen = false, lastLapSeen = 1, pickT = 0;
   const cup = { on: false, i: 0, pts: {} }; const CUP_PTS = [12, 10, 8, 6, 5, 4, 3, 2, 1, 1];
   const KRIPO = { name: 'Kripo Kölle', emoji: '🚓' };
-  let razzia = 0, razziaBlink = 0, promille = 0, koelschLap = 0, lastHeadline = '', lastPlace = 0;
+  let razzia = 0, razziaBlink = 0, promille = 0, promilleDone = false, koelschLap = 0, lastHeadline = '', lastPlace = 0;
   // Klüngel-Auftrag (courier job for dä Lange), the DÄ SCHNELLE front page photo and the arcade attract mode
   let demoPrevCam = 0, daily = null, introT = 0, hornCool = 0, newOrden = [];
   // Botengang missions (on foot and back in the car with the Kripo behind) and the Karriere (Nachtschicht)
   let mission = null, missionMode = false, missionDef = null, careerChapter = null, walkT = 0;
-  let auftrag = null, auftragT = 40, auftragDone = 0, auftragFail = 0, shotWanted = false, lastShot = null, demo = false, demoT = 0, idleT = 0;
+  let auftrag = null, auftragT = 40, auftragDone = 0, auftragFail = 0, shotWanted = false, lastShot = null, airShot = null, airBest = 0, airNow = 0, airShotT = -9, demo = false, demoT = 0, idleT = 0;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
   const input2 = { gas: 0, brake: 0, steer: 0, turbo: 0 };
   const rec = { frames: [], t: [], acc: 0, on: false };          // replay recorder
@@ -140,14 +140,14 @@
   const SECTION_KOELSCH = { a: 'STROPH', b: 'REFRAIN', rise: 'JLEICH KÜTT ET …', drop: 'DÄ BASS!', end: 'US' };
   // in the race the song is part of the drive: dä Lange calls the hook and the riser, and in the long bass run
   // the player's turbo recharges twice as fast (only while the song really plays)
-  let bassRun = false, hookSaid = 0;
+  let bassRun = false, hookSaid = 0, dropSaid = -99, riseSaid = -99, lamboLines = 0; // the song talks at most four times a race, never twice in a minute
   if (window.LamboBeat) window.LamboBeat.onSection((sec) => {
     bassRun = sec === 'drop' && phase === 'race';
     if (phase !== 'race' || !tuenn.lambo) return;
-    if (sec === 'drop') { sayMust(tuenn, pick(tuenn.lambo.drop), 3200); document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
+    if (sec === 'drop') { if (raceTime - dropSaid > 60 && lamboLines < 4) { dropSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.drop), 3200); } document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
     else document.body.classList.remove('bassrun');
-    if (sec === 'rise') say(tuenn, pick(tuenn.lambo.rise), 2600);
-    if (sec === 'b' && raceTime - hookSaid > 60) { hookSaid = raceTime; say(tuenn, pick(tuenn.lambo.hook), 2400); }
+    if (sec === 'rise' && raceTime - riseSaid > 60 && lamboLines < 4) { riseSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.rise), 2600); }
+    if (sec === 'b' && raceTime - hookSaid > 60 && lamboLines < 4) { hookSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.hook), 2400); }
   });
   function jukeStart() { if (!juke.on || phase !== 'menu' || music.muted || demo) return; juke.started = true; musicPlay(); updateJuke(); }
   function jukeToggle() {
@@ -274,7 +274,7 @@
   function sayMust(who, text, ms) { return say(who, text, ms, true); }
   function say(who, text, ms, must) {
     if (phase === 'race' && !must && (msgTimer > 0 || quiet > 0)) return false;
-    if (phase === 'race') quiet = 12;
+    if (phase === 'race') quiet = isMobile ? 18 : 12; // on a phone the box covers the road: fewer lines
     if (phase === 'race' || phase === 'countdown' || phase === 'intro' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
     $('#msgWho').textContent = `${who.emoji || '🏁'} ${who.name}`;
     $('#msgText').textContent = text;
@@ -388,10 +388,11 @@
     };
   }
   function respawn(r) { r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
+  let crashLog = [], crashAt = [], helpSaid = -99; // two crashes in half a minute: Dä Lange gives a real tip
   function crash(r, kind) {
     if (r === player && auftrag && auftrag.stage === 'carry') failAuftrag('lost');
     if (r.crashed > 0) return;
-    r.lastCrash = kind; if (r === player) { crashes++; if (kind === 'water') { waterCrashes++; bumpStat('water'); } if (kind === 'roof') bumpStat('roofs'); }
+    r.lastCrash = kind; if (r === player) { crashes++; crashLog.push(raceTime); crashAt.push(r.s); while (crashLog.length && raceTime - crashLog[0] > 30) crashLog.shift(); if (crashLog.length >= 2 && raceTime - helpSaid > 25) { helpSaid = raceTime; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(tuenn.help) + (isMobile ? '' : ' R = zeröck op de Stroß.'), 4200); }, 1200); } if (kind === 'water') { waterCrashes++; bumpStat('water'); } if (kind === 'roof') bumpStat('roofs'); }
     r.crashed = 2.2; r.v = 0; r.air = false; r.turboOn = false;
     r.damage = Math.min(1, r.damage + 0.25);
     if (!r.isAI) {
@@ -435,7 +436,7 @@
       const need = f.curv * r.v * Math.abs(r.v);
       const centrifugal = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
       r.slide = centrifugal;
-      const steerV = (ctl.steer + (r === player && promille > 0 ? Math.sin(raceTime * 4.5) * 0.45 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
+      const steerV = (ctl.steer + (r === player && promille > 0 ? Math.sin(raceTime * 4.5) * (isMobile ? 0.2 : 0.45) : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
       r.lat += (steerV + centrifugal) * dt;
       if (Math.abs(r.lat) > roadWidth) {
         if (r.isAI) { r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); r.v *= 0.6; }
@@ -484,7 +485,7 @@
       if (r.bestLap == null || lapTime < r.bestLap) r.bestLap = lapTime;
       r.lap++;
       if (r.lap > trackDef.laps) { r.finished = true; r.finishTime = raceTime; r.lap = trackDef.laps; }
-      else if (!r.isAI) { sayMust(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === trackDef.laps ? 1 : 0))], 2500); if (r === player) { telefon.ready = true; $('#hudTel').textContent = 'K = ANRUFEN'; } }
+      else if (!r.isAI) { sayMust(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === trackDef.laps ? 1 : 0))], 2500); if (r === player) { telefon.ready = true; $('#hudTel').textContent = telLabel(); } }
     }
     r.steerVis += (ctl.steer - r.steerVis) * Math.min(1, dt * 10);
   }
@@ -664,13 +665,22 @@
   // ---------------- HUD ----------------
   function progress(r) { return (r.finished ? 1e6 - r.finishTime : 0) + r.lap * track.length + r.s; }
   function standings() { return racers.slice().sort((a, b) => progress(b) - progress(a)); }
+  // phones: the HUD table shows only rows with something to say (no '–' rows, no keyboard hints)
+  let hudRows = null, hudQuietT = 0;
+  function hudQuiet() {
+    hudQuietT = 0.5; // desktop too: ZEIT, RUNDE, POS always; the rest only while it has something to say
+    if (!hudRows) hudRows = Array.from(document.querySelectorAll('.hudStats > div')).map((d) => ({ d, b: d.querySelector('b') }));
+    for (const r of hudRows) { const t = r.b.textContent.trim(); r.d.classList.toggle('quiet', t === '–' || t === '' || /^--/.test(t) || r.b.id === 'hudTel' && t === telLabel() && !kripo || r.b.id === 'hudBeste' && isMobile); }
+  }
   function updateHUD() {
+    if ((hudQuietT -= 0.016) <= 0) hudQuiet();
     const activeRoute = routeFor(player);
-    const aheadFork = !activeRoute && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < 100);
-    const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = !activeRoute && (!aheadFork || (mission && mission.onFoot));
+    const here = track.samples[Math.floor(((player.s % track.length) + track.length) % track.length / track.ds) % track.samples.length]; // no 'einordnen' while upside down in a loop
+    const aheadFork = !activeRoute && !(here && here.kind === 'loop') && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < 100);
+    const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = phase === 'intro' || !activeRoute && (!aheadFork || (mission && mission.onFoot));
     shortcutHint.classList.toggle('alternate', !!activeRoute && activeRoute.kind === 'alternate');
     if (activeRoute) shortcutHint.textContent = `${routeLabel(activeRoute)} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M${routePerks(activeRoute) ? ' · ' + routePerks(activeRoute) : ''}`;
-    else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`;
+    else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + (isMobile ? '' : ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`);
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
     $('#hudRunde').textContent = `${player.lap} / ${trackDef.laps}`;
     $('#hudZeit').textContent = fmtTime(raceTime);
@@ -681,7 +691,7 @@
     $('#hudDeckel').textContent = deckel ? strokes(deckel) : '–';
     $('#hudWette').textContent = wette ? (wette.done ? (wette.won ? 'JEWONNE' : 'VERLORE') : `${wette.n}🍺 › ${wette.rival.name.toUpperCase().split(' ').pop()}`) : '–';
     if (mission) $('#hudAuftrag').textContent = missionHud(); else $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
-    if (kripo) $('#hudKripo').textContent = 'HINTER DIR!'; else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZ…' : '–';
+    if (kripo) $('#hudKripo').textContent = 'HINTER DIR!'; else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZER!' : '–';
     if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${trackDef.laps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
       const ais = racers.filter((r) => r.isAI && !r.isCop); if (!ais.length) return; const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
@@ -758,8 +768,8 @@
     knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
     $('#hudTrack').textContent = careerChapter != null ? `KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ${missionMode ? 'BOTENGANG' : 'ZIEL: ' + goalText(tuenn.career[careerChapter].goal)}` : missionMode ? `BOTENGANG · ${trackDef.name.toUpperCase()}` : `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
-    deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
-    endAuftrag(); auftragT = window.STUNTS_AUFTRAG ? 6 : 30 + Math.random() * 25; auftragDone = 0; auftragFail = 0; lastShot = null;
+    deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; promilleDone = false; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
+    endAuftrag(); auftragT = window.STUNTS_AUFTRAG ? 6 : 30 + Math.random() * 25; auftragDone = 0; auftragFail = 0; lastShot = null; airShot = null; airBest = 0; airNow = 0; airShotT = -9;
   }
   function bestKey() { return `stuntskoelle.best.${trackDef.id}`; }
   function getBest(def) { try { const v = localStorage.getItem(`stuntskoelle.best.${(def || trackDef).id}`); return v ? parseFloat(v) : null; } catch (e) { return null; } }
@@ -776,14 +786,26 @@
       Promise.resolve(fs).catch(() => {}).then(() => { if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape'); }).catch(() => {});
     } catch (e) { /* iOS: no lock API, the rotate overlay does the job */ }
   }
+  const telLabel = () => document.body.classList.contains('mobile') || isMobile ? '☎ TIPPEN' : 'K = ANRUFEN';
   function startRace(def, after) { // the scenery build blocks for a moment: show the doorman first, then build
     audioInit(); if (phase === 'loading') return; phase = 'loading';
     const ov = $('#loading'); ov.hidden = false; $('#loadingText').textContent = pick(tuenn.loading || ['Dä Lange kuckt dich an…']); $('#menu').hidden = true; $('#results').hidden = true;
     requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { try { startRaceNow(def); if (after) after(); } finally { ov.hidden = true; } }, 20)));
   }
+  let quickAgain = false;
+  // the first three races: a big card with the controls during the countdown (after that it is in the pause panel)
+  function showControlsCard() {
+    let n = 0; try { n = parseInt(localStorage.getItem('stuntskoelle.controlsSeen') || '0') || 0; localStorage.setItem('stuntskoelle.controlsSeen', String(n + 1)); } catch (e) { /* ignore */ }
+    if (n >= 3 || demo || window.STUNTS_SIMSTEPS) return;
+    $('#controlsText').innerHTML = isMobile ? '▲ JAS · ■ BREMS<br>◀ ▶ LENKE · N TURBO<br>☰ PAUS' : '↑ JAS · ↓ BREMS · ← → LENKE<br>SHIFT TURBO · R ZERÖCK OP DE STROSS<br>P PAUS · ESC MENÜ';
+    $('#controlsCard').hidden = false;
+  }
+  // a tap anywhere outside the buttons skips the flyover, like Enter or Space
+  document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
   function startRaceNow(def) {
     buildScene(def);
-    raceTime = 0; countdown = 4.2; phase = 'intro'; introT = 0; hornCool = 0; newOrden = []; perf.frames = 0;
+    hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; crashLog = []; crashAt = []; helpSaid = -99;
+    raceTime = 0; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
@@ -793,7 +815,7 @@
     if (theme.intro) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(theme.intro), 4200); }, 7000);
     else if (sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
     sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
-    $('#hudTel').textContent = 'K = ANRUFEN';
+    $('#hudTel').textContent = telLabel();
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     if (isMobile) { camMode = 0; tvCam = null; }
     setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
@@ -810,6 +832,7 @@
     if (player2 || def.daily || !getRecords(def).some((r) => r.date === entry.date)) return; // only when the time made the top five
     const saved = savedInitials(); if (saved.length === 3) nameEntry.letters = saved.split('');
     nameEntry.on = true; nameEntry.cur = 0; nameEntry.def = def; nameEntry.date = entry.date; box.hidden = false; neRender();
+    box.querySelector('small').textContent = isMobile ? '▲▼ tippe, dann OK' : '▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch';
   }
   function neStep(i, d) { const k = NE_ABC.indexOf(nameEntry.letters[i]); nameEntry.letters[i] = NE_ABC[(Math.max(0, k) + d + NE_ABC.length) % NE_ABC.length]; nameEntry.cur = i; neRender(); }
   function neDone() {
@@ -821,6 +844,16 @@
   document.querySelectorAll('#nameEntry .neCol button').forEach((b) => b.addEventListener('click', () => neStep(+b.dataset.i, +b.dataset.d)));
   document.querySelectorAll('#nameEntry .neCol span').forEach((el) => el.addEventListener('click', () => neStep(+el.dataset.i, 1)));
   $('#neOk').addEventListener('click', neDone);
+  // 'Woröm?': two or three plain sentences on the results – why this place, where it went wrong, one tip
+  function streetAt(sPos) { const seg = (track.samples[Math.floor(((sPos % track.length) + track.length) % track.length / track.ds) % track.samples.length] || {}).seg; let name = null; for (const [sg, nm] of (trackDef.signs || [])) if (sg <= seg) name = nm; return name; }
+  function whyLines(place, won) {
+    const out = [], g = careerChapter != null && tuenn.career[careerChapter] && tuenn.career[careerChapter].goal;
+    if (g && g.place && place > g.place) out.push(`Du wors ${place}. – för et Kapitel bruchs de Platz ${g.place} oder besser.`);
+    if (crashes >= 3) { const cnt = {}; for (const s0 of crashAt) { const nm = streetAt(s0); if (nm) cnt[nm] = (cnt[nm] || 0) + 1; } const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+      out.push(`Du bes ${crashes}× vun dä Stroß avjekumme${top && top[1] >= 2 ? ', meist op dä ' + top[0].replace(/STRASSE$/, 'STROSS') : ''}.`); out.push('Tipp: Vür dä Kurv dä Fooß vum Jas' + (isMobile ? '.' : ' – un R brängk dich zeröck op de Stroß.')); }
+    else if (!won && place > 3) out.push('Tipp: SHIFT jitt Turbo – un dä lädt sich em Drift widder op.');
+    return out;
+  }
   function finishRace() {
     phase = 'finished';
     // project finishing times for cars still out on the track
@@ -843,6 +876,7 @@
     if (cup.on) { order.forEach((r, i) => { cup.pts[r.name] = (cup.pts[r.name] || 0) + (CUP_PTS[i] || 0); }); cup.i++; try { localStorage.setItem('stuntskoelle.cup', JSON.stringify(cup)); } catch (e) { /* ignore */ } }
     setTimeout(() => {
       if (phase === 'menu') return; // the attract mode went back to the menu meanwhile
+      { const w = player2 ? [] : whyLines(place, won); $('#resWhy').hidden = !w.length; $('#resWhy').innerHTML = w.map((x) => `<span>${x}</span>`).join(''); }
       $('#resTitle').textContent = player2 ? (order.indexOf(player) < order.indexOf(player2) ? `P1 SCHLÄGT P2! PLATZ ${place} GEGEN ${order.indexOf(player2) + 1}.` : `P2 SCHLÄGT P1! PLATZ ${order.indexOf(player2) + 1} GEGEN ${place}.`) : won ? (theme.heist ? 'JEWONNE! ICH HANN NIX JESINN.' : theme.era ? 'JEWONNE! DÄ RING JEHÖRT DIR.' : 'JEWONNE! KÖLLE ALAAF!') : place === 2 ? 'ZWEITER. FAST, JUNG.' : `PLATZ ${place}. ET KÜTT WIE ET KÜTT.`;
       const tb = $('#resTable'); tb.innerHTML = '';
       order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
@@ -861,8 +895,15 @@
       $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1200);
   }
+  // ---------------- pause: P, Esc or ☰ while racing; the world stands still until WIGGER ----------------
+  let paused = false;
+  const racing = () => phase === 'race' || phase === 'countdown' || phase === 'intro';
+  function setPause(on) {
+    paused = !!on && racing(); $('#pause').hidden = !paused; document.body.classList.toggle('paused', paused);
+    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); $('#pauseLine').textContent = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']); }
+  }
   function toMenu() {
-    if (phase === 'loading') return; $('#loading').hidden = true;
+    if (phase === 'loading') return; $('#loading').hidden = true; $('#controlsCard').hidden = true; setPause(false);
     if (window.Club) window.Club.close(); clearMission(); missionMode = false; careerChapter = null; $('#hudPrompt').hidden = true;
     phase = 'menu'; if (demo) { camMode = demoPrevCam; tvCam = null; } demo = false; idleT = 0; $('#demo').hidden = true; document.body.classList.remove('demo');
     $('#menu').hidden = false; $('#hud').hidden = true; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = true; $('#records').hidden = true; $('#replayUI').hidden = true;
@@ -895,28 +936,30 @@
     if (phase === 'menu' || phase === 'editor') { tick(dt); if (phase === 'menu') menuFx(t); return; }
     if (!scene || phase === 'club') return;
     const steps = window.STUNTS_SIMSTEPS && (phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
-    if (!window.STUNTS_MANUAL_STEP) for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
-    if (scenery) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
+    if (!window.STUNTS_MANUAL_STEP && !paused) for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
+    if (scenery && !paused) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
     if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
     updateCamera(dt);
     const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
     if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
-    if (shotWanted) { shotWanted = false; try { lastShot = renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { lastShot = null; } }
+    // the paper's photo: the player's longest flight of the race (a jump or a loop), else the finish
+    if (phase === 'race' && player && !player2) { if (player.air) { airNow += dt; if (airNow > Math.max(0.7, airBest + 0.25) && raceTime - airShotT > 1.5) { airBest = airNow; airShotT = raceTime; try { airShot = renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { /* ignore */ } } } else airNow = 0; }
+    if (shotWanted) { shotWanted = false; try { lastShot = airShot || renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { lastShot = null; } }
   }
 
   // one simulation step (physics, AI, commentary); the frame loop may run several per render for headless testing
   function tick(dt) {
     if (phase === 'intro') {
       introT += dt; for (const r of racers) placeRacer(r, dt); updateHUD();
-      if (introT > 3.8) { phase = 'countdown'; $('#introCard').hidden = true; }
+      if (introT > 3.8) { phase = 'countdown'; $('#introCard').hidden = true; showControlsCard(); }
     } else if (phase === 'countdown') {
       countdown -= window.STUNTS_SIMSTEPS ? dt : Math.min(0.25, lastDtReal); // real time, so a slow phone does not stretch the countdown
       const idx = 3 - Math.ceil(countdown - 0.2); const cd = $('#countdown');
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
+      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -941,7 +984,7 @@
           else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pickNew(tuenn.grundgesetz), 3500); }
         // Dä Lange's place stories: one is told whenever the box is free and the place is just ahead or just
         // passed (also from a side street running beside it). A story missed now comes back next lap.
-        if (storyCool <= 0 && msgTimer <= 0) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -12 && ds < 60) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5500)) { st.told = true; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
+        if (storyCool <= 0 && msgTimer <= 0 && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -40 && ds < 70) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 6500)) { st.told = true; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pick(tuenn.razziaEnd), 2500); } }
         else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); }
@@ -1042,7 +1085,7 @@
       if (e.code === 'Enter' && e.target.closest && e.target.closest('button, a')) return;
       if (e.code === 'Enter') e.preventDefault();
       if (e.code === 'Enter') startRace();
-      if (e.code === 'KeyP') cyclePixel();
+      if (e.code === 'KeyP' || e.code === 'KeyF') cyclePixel();
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { sel.car = (sel.car + (e.code === 'ArrowRight' ? 1 : -1) + D.CARS.length) % D.CARS.length; renderMenu(); }
       if (e.code === 'ArrowUp' || e.code === 'ArrowDown') { const n = allTracks().length; sel.track = (sel.track + (e.code === 'ArrowDown' ? 1 : -1) + n) % n; onTrackChange(); }
       if (/^Digit[1-9]$/.test(e.code) && parseInt(e.code.slice(-1)) <= PLAYABLE.length) { sel.driver = parseInt(e.code.slice(-1)) - 1; renderMenu(); }
@@ -1063,12 +1106,14 @@
       else if (e.code === 'Escape') { neDone(); toMenu(); }
       return;
     }
+    if (paused) { if (e.code === 'Escape') toMenu(); else if (e.code === 'Enter' || e.code === 'KeyP' || e.code === 'Space') setPause(false); return; }
+    if ((e.code === 'KeyP' || e.code === 'Escape') && racing()) { setPause(true); return; }
     if (player2) { readKeys2(); if (e.code === 'KeyV') views[1].mode = (views[1].mode + 1) % 3; }
     if (phase === 'intro' && (e.code === 'Enter' || e.code === 'Space')) introT = 99;
     if (e.code === 'KeyH' && phase === 'race') horn();
     if (e.code === 'KeyE' && phase === 'race' && mission) missionAction();
     if (e.code === 'KeyC') { camMode = (camMode + 1) % 4; tvCam = null; }
-    if (e.code === 'KeyP') cyclePixel();
+    if (e.code === 'KeyF') cyclePixel();
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; }
     if (e.code === 'KeyK' && phase === 'race') tuennsTelefon();
@@ -1117,7 +1162,7 @@
       const stat = (label, v) => `<div class="stat"><span>${label}</span><i>${[1, 2, 3, 4, 5].map((k) => `<b class="${k <= v ? (k >= 5 ? 'hi' : 'on') : ''}"></b>`).join('')}</i></div>`;
       card.innerHTML = `<span class="p1">${sel.car === i ? 'P1' : ''}</span><canvas></canvas><b>${c.name.toUpperCase()}</b>${stat('TEMPO', c.stats[0])}${stat('BESCHL.', c.stats[1])}${stat('HANDLING', c.stats[2])}${stat('NITRO', c.stats[3])}`;
       SP.carSide(c, card.querySelector('canvas'), 4);
-      if (carLocked(i)) { card.classList.add('locked'); card.querySelector('b').textContent = '🔒 ' + c.name.toUpperCase(); card.onclick = () => { $('#tipp').textContent = pick(tuenn.careerLines.locked); }; } else card.onclick = () => { sel.car = i; renderMenu(); };
+      if (carLocked(i)) { card.classList.add('locked'); card.querySelector('b').textContent = '🔒 ' + c.name.toUpperCase(); card.onclick = () => { const line = pick(tuenn.careerLines.locked); $('#tipp').textContent = line; let t = card.querySelector('.tease'); if (!t) { t = document.createElement('small'); t.className = 'tease'; card.appendChild(t); } t.textContent = line + ' (KARRIERE)'; card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }; } else card.onclick = () => { sel.car = i; renderMenu(); };
       cl.appendChild(card);
     });
     // tracks
@@ -1157,6 +1202,12 @@
   }
   function onTrackChange() { renderMenu(); }
 
+  // a story is only told where it can be read: no loop, jump or fork within the next 120 m
+  function calmRoad() {
+    const S = track.samples, n = S.length, i0 = Math.floor(((player.s % track.length) + track.length) % track.length / track.ds);
+    for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap') return false; }
+    return !track.routeGroups.some((g) => g.startS - player.s > -10 && g.startS - player.s < 90);
+  }
   // every story Dä Lange has told, per track, to be read again under REKORDE
   function heardStories() { try { return JSON.parse(localStorage.getItem('stuntskoelle.verzaellcher') || '{}') || {}; } catch (e) { return {}; } }
   function rememberStory(text) {
@@ -1166,15 +1217,15 @@
   // ---------------- records ----------------
   function showRecords() {
     const box = $('#recordsList'); box.innerHTML = '';
-    { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
-      grid.innerHTML = '<b class="ordenHead">ORDEN OP DÄ DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${o.name}</b><small>${o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
-      grid.querySelectorAll('.orden canvas').forEach((c, i) => medalIcon(c, tuenn.orden[i].color, 3)); box.appendChild(grid); }
     TRACKS.concat(daily ? [daily] : []).forEach((t, i) => {
       const recs = getRecords(t);
       const div = document.createElement('div'); div.className = 'recTrack';
       div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (recs.length ? '<ol>' + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>' : '<p>Noch keine Zeit. Dä Lange wartet.</p>');
       box.appendChild(div);
     });
+    { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
+      grid.innerHTML = '<b class="ordenHead">ORDEN OP DÄ DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${o.name}</b><small>${o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
+      grid.querySelectorAll('.orden canvas').forEach((c, i) => medalIcon(c, tuenn.orden[i].color, 3)); box.appendChild(grid); }
     { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
       v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an dä Plätze vorbei – dä Lange verzällt jet.</p>');
       box.appendChild(v); }
@@ -1476,7 +1527,7 @@
   function updateAuftrag(dt) {
     const L = track.length;
     if (!auftrag) {
-      if (player.finished || kripo || razzia > 0 || (trackDef && trackDef.theme && trackDef.theme.heist)) return; // the Domschatz-Raub has enough in the boot already
+      if (player.finished || kripo || razzia > 0 || careerChapter === 0 || (trackDef && trackDef.theme && trackDef.theme.heist)) return; // the Domschatz-Raub has enough in the boot already
       auftragT -= dt; if (auftragT <= 0 && msgTimer <= 0 && auftragDone + auftragFail < 3) startAuftrag();
       return;
     }
@@ -1549,7 +1600,7 @@
     telefon.ready = false; telefon.active = 6; telefon.used++;
     if (kripo) { endKripo('off'); sayMust(tuenn, pick(tuenn.kripo.off), 3500); } else sayMust(tuenn, pick(tuenn.tuennsTelefon), 3500);
     beep(660, 0.12, 'triangle', 0.15); setTimeout(() => beep(880, 0.12, 'triangle', 0.15), 150);
-    $('#hudTel').textContent = 'BESETZT'; setTimeout(() => { $('#hudTel').textContent = telefon.ready ? 'K = ANRUFEN' : 'NÄCHSTE RUND'; }, 6000);
+    $('#hudTel').textContent = 'BESETZT'; setTimeout(() => { $('#hudTel').textContent = telefon.ready ? telLabel() : 'NÄCHSTE RUND'; }, 6000);
   }
   // ---------------- Chicago am Rhein extras ----------------
   function strokes(n) { let out = ''; for (let i = 0; i < n; i++) out += (i % 5 === 4) ? '/ ' : '|'; return out.trim(); }
@@ -1585,7 +1636,7 @@
   function updatePickups(dt) {
     pickT += dt;
     if (player.lap !== lastLapSeen) { lastLapSeen = player.lap; koelschLap = 0; for (const p of pickups) { p.taken = false; p.mesh.visible = true; } }
-    if (promille > 0) { promille -= dt; if (promille <= 0) sayMust(tuenn, pick(tuenn.promilleEnd), 2200); }
+    if (promille > 0) { promille -= dt; if (promille <= 0) say(tuenn, pick(tuenn.promilleEnd), 2200); }
     const L = track.length;
     for (const p of pickups) {
       if (p.taken) continue;
@@ -1595,13 +1646,14 @@
       else { ds = player.s - p.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; onIt = !routeFor(player); }
       if (onIt && Math.abs(ds) < 3.6 && Math.abs(player.lat - p.lat) < 2.0 && !player.air && player.crashed <= 0) {
         p.taken = true; p.mesh.visible = false; koelsch++; koelschLap++; addDeckel(1); player.turbo = Math.min(1, player.turbo + 0.3);
-        if (koelschLap >= 5 && promille <= 0) { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); }
+        if (koelschLap >= 5 && promille <= 0 && !promilleDone) { promilleDone = true; promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); }
         beep(1180, 0.07, 'square', 0.1); setTimeout(() => beep(1580, 0.1, 'square', 0.1), 70);
         if (msgTimer <= 0.4) say(D.DRIVERS.find((d) => d.id === 'koebes'), pick(tuenn.koelschPick), 1600);
       }
     }
   }
   function startKripo() {
+    if (careerChapter === 0 && !mission && !theme.heist) return; // chapter 1 is for learning to drive, not for police chases
     kripoSeen = true; kripoT = 0; kripoHitCool = 3;
     const base = D.CARS.find((c) => c.id === 'special') || D.CARS[0];
     const cdef = Object.assign({}, base, { name: 'Streifewage', color: 0xf4f4f0, stripe: 0x2d6a3a, shape: 'sedan', plate: 'K-3110', top: Math.max(base.top, player.car.top) * 1.08, accel: base.accel * 1.25, grip: Math.max(base.grip, player.car.grip) * 1.15 });
@@ -1760,6 +1812,13 @@
   function loadGhost() {
     ghostData = null; if (ghost) { scene.remove(ghost); ghost = null; }
     try { const g = JSON.parse(localStorage.getItem(ghostKey()) || 'null'); if (g && g.t && g.t.length > 10) ghostData = g; } catch (e) { /* ignore */ }
+    // side streets are stored by number: remap them by their id, so a ghost survives a changed street catalogue;
+    // an old ghost without ids that used a side street cannot be trusted any more and is dropped
+    if (ghostData && (ghostData.routes || []).some((r) => r != null && r >= 0)) {
+      const now = (track.shortcuts || []).map((r) => r.id);
+      if (!ghostData.routeIds) ghostData = null;
+      else ghostData.routes = ghostData.routes.map((r) => r != null && r >= 0 ? now.indexOf(ghostData.routeIds[r]) : r);
+    }
     if (!ghostData) return;
     ghost = W.buildCar(Object.assign({}, D.CARS[0], { color: 0xdde6ff, plate: 'GEIST' }), false);
     ghost.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; const cl = ms.map((m) => { const c = m.clone(); c.transparent = true; c.opacity = 0.35; c.depthWrite = false; return c; }); o.material = Array.isArray(o.material) ? cl : cl[0]; } });
@@ -1784,7 +1843,7 @@
     const end = start + player.bestLap; const t = [], sArr = [], l = [], routes = [];
     for (let i = 0; i < rec.frames.length; i++) { const tt = rec.t[i]; if (tt < start || tt > end) continue; const f = rec.frames[i]; t.push(Math.round((tt - start) * 100) / 100); sArr.push(Math.round((f[0] % track.length) * 10) / 10); l.push(Math.round(f[1] * 10) / 10); routes.push(f[5]); }
     if (t.length < 10) return;
-    try { localStorage.setItem(ghostKey(), JSON.stringify({ time: player.bestLap, t, s: sArr, l, routes })); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(ghostKey(), JSON.stringify({ time: player.bestLap, t, s: sArr, l, routes, routeIds: (track.shortcuts || []).map((r) => r.id) })); } catch (e) { /* ignore */ }
   }
 
   // ---------------- share links for Baukasten tracks ----------------
@@ -1856,7 +1915,8 @@
     renderMenu();
     $('#startBtn').onclick = () => { cup.on = false; careerChapter = null; missionMode = false; lockLandscape(); startRace(); };
     $('#quickStartBtn').onclick = () => $('#startBtn').click();
-    $('#againBtn').onclick = () => { if (careerChapter != null) { startCareer(); return; } if (missionMode) { startMission(missionDef); return; } if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
+    if (isMobile) { $('#againBtn').textContent = 'NOCHMAL'; $('#menuBtn').textContent = 'MENÜ'; $('#pauseGo').textContent = 'WIGGER'; $('#pauseQuit').textContent = 'RENNEN OPJEVVE'; } // no keyboard hints on a phone
+    $('#againBtn').onclick = () => { quickAgain = true; if (careerChapter != null) { startCareer(); return; } if (missionMode) { startMission(missionDef); return; } if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
     $('#missionBtn').onclick = () => { careerChapter = null; cup.on = false; lockLandscape(); startMission(activeTrackDef()); }; $('#careerBtn').onclick = () => { cup.on = false; lockLandscape(); startCareer(); }; $('#hudPrompt').onclick = () => missionAction();
     $('#cupBtn').onclick = () => { cup.on = true; careerChapter = null; missionMode = false; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
     $('#menuBtn').onclick = toMenu;
@@ -1869,7 +1929,9 @@
     };
     $('#camBtn').onclick = () => { camMode = (camMode + 1) % 4; tvCam = null; };
     $('#muteBtn').onclick = toggleMute;
-    $('#escBtn').onclick = toMenu;
+    $('#escBtn').onclick = () => { if (racing()) setPause(!paused); else toMenu(); };
+    $('#pauseGo').onclick = () => setPause(false); $('#pauseQuit').onclick = toMenu;
+    document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'race' && !window.STUNTS_SIMSTEPS) setPause(true); }); // phone call, app switch
     $('#pixBtn').onclick = cyclePixel;
     $('#editorBtn').onclick = openEditor;
     $('#recordsBtn').onclick = showRecords;
@@ -1887,6 +1949,10 @@
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice; $('#voicePickBtn').onclick = nextVoice;
+    // JROSSE SCHRIFT: everything you read gets bigger (menu, messages, HUD, signs, results), for older eyes
+    const applyFont = (on) => { document.body.classList.toggle('bigtext', on); labelBtn($('#fontBtn'), on ? 'SCHRIFT: JROSS' : 'SCHRIFT: NORMAL'); };
+    { let on = false; try { on = localStorage.getItem('stuntskoelle.bigtext') === '1'; } catch (e) { /* ignore */ } applyFont(on);
+      $('#fontBtn').onclick = () => { on = !on; try { localStorage.setItem('stuntskoelle.bigtext', on ? '1' : '0'); } catch (e) { /* ignore */ } applyFont(on); }; }
     $('#tiltBtn').onclick = toggleTilt; updateTiltUI(); if (!isMobile) $('#tiltBtn').hidden = true;
     voiceInit();
     for (const id of ['turboBar2']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
