@@ -64,7 +64,12 @@ das Handy zu drehen (auf Android wird die Ausrichtung beim Start zusätzlich ver
 Den Link einfach per WhatsApp weiterschicken; das Vorschaubild kommt aus `og.png`.
 Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Telefon. Mit **NEIGEN: AN** im Menü lenkst du
 durch Kippen des Handys wie mit einem Lenkrad (iPhone fragt einmal nach Erlaubnis); die Haltung beim
-Start gilt als geradeaus, ein weiterer Tipp dreht die Richtung um. Falls beim ersten Start kein
+Start gilt als geradeaus, ein weiterer Tipp dreht die Richtung um. Der Daumen darf rutschen: von ◀ auf ▶
+(oder von ▲ auf ■) wechselt sofort, ohne abzuheben. ☰ oben links pausiert (LOSS JONN, NEU STARTE, MENÜ).
+Jedes Kästchen hat auf dem Handy seinen festen Platz: Dä Langes Spruch läuft als eine Zeile unter dem
+Streckennamen (antippen = ganz lesen), Gabelungsschild und die Tastenkarte (nur vor dem ersten Rennen)
+darunter, die Minikarte ist eingeklappt (antippen = groß), und das Auto bleibt immer über den Knöpfen.
+Falls beim ersten Start kein
 Ton kommt: einmal auf den Bildschirm tippen (Autoplay-Regel von iOS/Android).
 Läuft das Handy zu langsam (unter 24 Bildern pro Sekunde), regelt Heinzel die Grafik selbst herunter:
 erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jederzeit zurück.
@@ -80,13 +85,15 @@ Schadensbalken ist ein Totalschaden mit Ansage statt stiller 100 %. Vor jedem Ka
 Karte Titel, Ziel und Auftrag.
 
 **Für alle Augen und Daumen:** „SCHRIFT: JROSS“ im Menü macht Menü, Nachrichten, Anzeige, Schilder und Ergebnis
-deutlich größer. In den ersten drei Rennen zeigt eine Karte während des Countdowns die Tasten. Die Anzeige
+deutlich größer. In den ersten drei Rennen (auf dem Handy im ersten) zeigt eine Karte während des Countdowns die Tasten. Die Anzeige
 oben rechts zeigt nur Zeit, Runde und Platz; Knöllchen, Kripo, Wette, Auftrag und Telefon erscheinen erst,
 wenn sie etwas zu sagen haben. Wer zweimal in einer halben Minute von der Straße fliegt, bekommt von Dä Lange
 einen echten Tipp, und das Ergebnis sagt in zwei, drei Sätzen „woröm“ (Platz, wo man meist abgeflogen ist,
 ein Tipp). Karriere-Kapitel 1 kommt ohne Kripo und ohne Klüngel-Aufträge aus. Rekorde stehen jetzt oben,
 Orden darunter, der Spielstand-Code ganz unten. NOCHMAL springt direkt in den Countdown; ein Tipp aufs Bild
-überspringt den Kameraflug. Auf dem Handy bleiben NOCHMAL/TEILEN unten im Griff, die Anzeige wird schlanker,
+überspringt den Kameraflug. Auf dem Handy und auf 720p-Laptops passt das Ergebnis ohne Scrollen: Titel, die ersten drei, deine Zeile und
+die Knöpfe; ▶ ALLE klappt die Tabelle auf, die Zeile mit Statistik und Bierdeckel öffnet sich per Tipp.
+Die Initialen vom letzten Mal stehen schon da, ein Tipp auf OK trägt den Rekord ein. Auf dem Handy bleiben NOCHMAL/TEILEN unten im Griff, die Anzeige wird schlanker,
 Gabelungsschilder kürzer, und Dä Lange redet seltener. Das Titelbild der Zeitung zeigt den weitesten Sprung
 des Rennens.
 
@@ -97,7 +104,8 @@ des Rennens.
 | Shift / N / X | Turbo (Nitro) |
 | ← / → / A / D | Lenken |
 | C | Kamera (Verfolger, Motorhaube, weit, TV-Kamera) |
-| P | **Pause** (die Welt steht still; Enter oder P = weiter, Esc = Rennen aufgeben). Auch ☰ und das Wechseln in eine andere App pausieren |
+| P | **Pause** (die Welt und der Ton stehen still; LOSS JONN = weiter, NEU STARTE, MENÜ; Enter oder P = weiter, Backspace = neu starten, Esc = Menü). Auch ☰ und das Wechseln in eine andere App (Anruf) pausieren, auch im Kameraflug und im Countdown |
+| Backspace | Rennen sofort neu starten (wie NOCHMAL, ohne Kameraflug) |
 | F | Grafik: HD (Standard, mit Schatten) oder Pixel-Modus in drei Stufen (im Menü auch P) |
 | R | Auto zurücksetzen |
 | M | Ton an/aus |

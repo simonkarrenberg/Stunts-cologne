@@ -753,3 +753,73 @@ body.mobile .resWhy { font-size: 8px; padding: 4px 8px; margin-bottom: 6px; }
 body.alaaf #flash { opacity: 1 !important; background: repeating-linear-gradient(45deg, rgba(255,95,162,.35) 0 20px, rgba(255,212,0,.35) 20px 40px, rgba(0,160,255,.3) 40px 60px) !important; animation: alaafFlash .6s steps(3) 4; }
 @keyframes alaafFlash { 50% { opacity: .2; } }
 #controlsCard small { display: block; font-size: 10px; line-height: 1.6; max-width: 520px; color: #ddd; margin-top: 4px; }
+/* ---------- pause panel: clickable on every device, above the touch buttons; three big buttons with a plain-German gloss ---------- */
+#pause { pointer-events: auto; }
+body.paused #hud { z-index: 25; } body.paused #touch { display: none !important; }
+body.paused #controlsCard, body.paused #countdown, body.paused #msg, body.paused #hudShortcut, body.paused #wrongway { visibility: hidden; } /* nothing shines through the pause panel */
+#pause button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 190px; min-height: 56px; }
+#pause button i { font-style: normal; font-size: 8px; color: #ffe9a8; letter-spacing: .5px; }
+#pause #pauseRestart { background: #6a3fa0; }
+#pause small kbd { font-size: 8px; padding: 0 4px; }
+body.mobile #pause { gap: 8px; padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); }
+body.mobile #pause > b { font-size: 20px; } body.mobile #pause p { font-size: 9px; }
+body.mobile #pause button { min-width: 150px; min-height: 56px; padding: 8px 12px; font-size: 11px; }
+/* ---------- phone HUD: every box has its own slot ----------
+   left column: ☰ (44 px, top left), camera/sound/pixel, the folded map; top row: track title, then dä Lange's one-line
+   ticker, then the controls card (left half) and the street sign at a fork (right half); stats and speed on the right;
+   the touch row at the very bottom, so the car is always drawn above it */
+body.mobile { --hl: calc(max(8px, env(safe-area-inset-left)) + 52px); --sw: 176px; --hr: calc(max(12px, env(safe-area-inset-right)) + var(--sw) + 8px); --half: calc((100vw - var(--hl) - var(--hr)) / 2 - 4px); --ht: max(8px, env(safe-area-inset-top)); }
+body.mobile .hudTitle { left: var(--hl); top: var(--ht); max-width: calc(100vw - var(--hl) - var(--hr)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.mobile .hudStats { width: var(--sw); min-width: 0; top: var(--ht); }
+body.mobile .hudStats div { gap: 6px; min-width: 0; } body.mobile .hudStats span { flex: none; }
+body.mobile .hudStats b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mobile .hudStats span[data-m] { font-size: 0; } body.mobile .hudStats span[data-m]::after { content: attr(data-m); font-size: 7px; }
+body.mobile #msg { top: calc(var(--ht) + 32px); bottom: auto; left: var(--hl); right: var(--hr); max-width: none; transform: none; padding: 4px 8px; display: flex; align-items: baseline; gap: 6px; border-width: 3px; box-shadow: 3px 3px 0 #000; }
+body.mobile #msg.show { transform: none; pointer-events: auto; cursor: pointer; }
+body.mobile #msgWho { flex: none; max-width: 40%; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mobile #msgText { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.mobile #msg.open { z-index: 14; flex-wrap: wrap; } body.mobile #msg.open #msgWho { max-width: none; } body.mobile #msg.open #msgText { white-space: normal; flex-basis: 100%; }
+body.mobile #hudShortcut { top: calc(var(--ht) + 64px); left: auto; right: var(--hr); transform: none; max-width: var(--half); font-size: 7px; padding: 4px 6px; }
+body.mobile #controlsCard { top: calc(var(--ht) + 64px); left: var(--hl); transform: none; max-width: var(--half); padding: 6px 10px; text-align: left; }
+body.mobile #controlsCard b { font-size: 9px; } body.mobile #controlsCard p { font-size: 8px; line-height: 1.8; margin-top: 4px; } body.mobile #controlsCard small { font-size: 7px; line-height: 1.5; }
+body.mobile .hudBtns { top: calc(var(--ht) + 52px); bottom: auto; left: max(8px, env(safe-area-inset-left)); right: auto; transform: none; flex-direction: column; gap: 6px; pointer-events: none; }
+body.mobile .hudBtns button { width: 44px; height: 36px; font-size: 12px; pointer-events: auto; }
+body.mobile #hornBtn { display: none; } /* the big 📯 in the touch row is the only horn */
+body.mobile #pauseBtn { position: fixed; top: var(--ht); left: max(8px, env(safe-area-inset-left)); width: 44px; height: 44px; font-size: 18px; opacity: 1; }
+body.mobile .hudMini { top: calc(var(--ht) + 178px); bottom: auto; left: max(8px, env(safe-area-inset-left)); padding: 2px; pointer-events: auto; cursor: pointer; }
+body.mobile #minimap { width: 34px; height: 34px; } body.mobile .hudMini.open #minimap { width: 96px; height: 96px; }
+body.mobile #touch { bottom: max(12px, env(safe-area-inset-bottom)); }
+body.mobile #hudPrompt { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 72px); }
+/* ---------- results that fit a phone and a 720p laptop: title, your row and the buttons without scrolling ---------- */
+#results.compact, body.mobile #results.compact { scroll-padding-bottom: 72px; padding-bottom: 0; }
+#results.compact .resLeft { display: flex; flex-direction: column; }
+#results.compact .resLeft > * { order: 3; }
+#results.compact .resLeft > h2, #results.compact #resTitle { order: 0; }
+#results.compact #resRecord, #results.compact #nameEntry { order: 1; }
+#results.compact .resLeft > table { order: 2; }
+#results.compact #resCup { order: 4; } #results.compact #resFacts { order: 5; } #results.compact .resBtns { order: 6; }
+#results.compact #resTable tr.rest { display: none; } #results.compact #resTable.all tr.rest { display: table-row; }
+#resTable tr.allRow td { border-bottom: 0; padding-top: 4px; }
+#resTable tr.allRow button { background: none; color: var(--cyan); border: 2px dashed var(--line2); padding: 4px 10px; font-size: 8px; }
+.resFacts { scroll-margin-bottom: 72px; }
+#results.compact .resFacts:not(.open) { display: flex; gap: 10px; cursor: pointer; white-space: nowrap; overflow: hidden; }
+#results.compact .resFacts:not(.open)::before { content: '▶'; flex: none; color: var(--yellow); font-size: 8px; margin-top: 8px; }
+#results.compact .resFacts:not(.open) p { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#results.compact .resFacts:not(.open) #resDeckel { order: -1; }
+#results.compact .resFacts { cursor: pointer; } .resFacts b { pointer-events: none; }
+body.mobile #results.compact .resFacts:not(.open)::before { margin-top: 5px; font-size: 7px; }
+body.mobile .resBtns { flex-wrap: nowrap; } body.mobile .resBtns button { flex: 1 1 0; min-width: 0; padding: 10px 4px; font-size: 8px; line-height: 1.4; }
+body.mobile .nameEntry .neRow { gap: 8px; flex-wrap: wrap; margin: 4px 0; }
+body.mobile .nameEntry .neCol { flex-direction: row; gap: 4px; }
+body.mobile .nameEntry .neCol button { width: 48px; height: 48px; padding: 0; font-size: 14px; }
+body.mobile .nameEntry .neCol span { width: 26px; font-size: 18px; }
+body.mobile #neOk { min-width: 56px; height: 48px; font-size: 12px; }
+body.mobile .nameEntry small { font-size: 7px; }
+.resLeft, .resRight { min-width: 0; } /* a folded one-line stats row must not stretch the card */
+/* phone + large text: no zoom (it would push the boxes out of their slots); bigger letters in the same slots instead */
+body.mobile.bigtext { --sw: 204px; }
+body.mobile.bigtext .hudTitle, body.mobile.bigtext #msg, body.mobile.bigtext #hudShortcut, body.mobile.bigtext #controlsCard, body.mobile.bigtext .hudStats { zoom: 1; }
+body.mobile.bigtext .hudTitle { font-size: 10px; } body.mobile.bigtext .hudStats div { font-size: 9px; } body.mobile.bigtext .hudStats span[data-m]::after { font-size: 9px; }
+body.mobile.bigtext #msg { top: calc(var(--ht) + 36px); max-width: none; } body.mobile.bigtext #msgWho { font-size: 8px; } body.mobile.bigtext #msgText { font-size: 10px; }
+body.mobile.bigtext #hudShortcut, body.mobile.bigtext #controlsCard { top: calc(var(--ht) + 74px); } body.mobile.bigtext #hudShortcut { font-size: 9px; }
+body.mobile.bigtext #controlsCard b { font-size: 10px; } body.mobile.bigtext #controlsCard p { font-size: 10px; }

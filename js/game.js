@@ -119,7 +119,7 @@
     const tick = () => { const c = chords[Math.floor(step / 8) % 4]; const n = c[step % 3]; const oct = step % 2 ? 2 : 1;
       bass.frequency.setValueAtTime(root * Math.pow(2, c[0] / 12) * (step % 4 < 2 ? 1 : 0.5), ctx.currentTime);
       lead.frequency.setValueAtTime(root * 2 * Math.pow(2, n / 12) * oct, ctx.currentTime); step++; };
-    music.chip = { timer: setInterval(tick, 150), stop: () => { bass.stop(); lead.stop(); g.disconnect(); } };
+    music.chip = { g, timer: setInterval(tick, 150), stop: () => { bass.stop(); lead.stop(); g.disconnect(); } };
   }
   function chipStop() { if (music.chip) { clearInterval(music.chip.timer); music.chip.stop(); music.chip = null; } }
   function musicInit() {
@@ -251,7 +251,7 @@
     return t;
   }
   function speak(text, pitch, rate, force, who) {
-    if (!voice.on || !voice.ready || audio.muted) return;
+    if (!voice.on || !voice.ready || audio.muted || paused) return; // the pause is silent, also for lines a timer had already queued
     try {
       if (speechSynthesis.speaking && !force) return;
       if (force) speechSynthesis.cancel();
@@ -285,7 +285,7 @@
     if (phase === 'race' || phase === 'countdown' || phase === 'intro' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
     $('#msgWho').textContent = `${who.emoji || '🏁'} ${who.name}`;
     $('#msgText').textContent = text;
-    $('#msg').classList.add('show');
+    $('#msg').classList.remove('open'); $('#msg').classList.add('show');
     msgTimer = (ms || 3500) / 1000;
     return true;
   }
@@ -604,7 +604,7 @@
       if (here.kind === 'loop' || back.kind === 'loop') { // inside a loop or cork screw: follow the ribbon, a straight tangent would put the camera through the loop's skin
         target = new THREE.Vector3(back.p.x, back.p.y, back.p.z).addScaledVector(new THREE.Vector3(back.N.x, back.N.y, back.N.z), h * 0.8);
       } else target = fr.pos.clone().addScaledVector(T, -dist).addScaledVector(N, h);
-      look = fr.pos.clone().addScaledVector(T, 6).addScaledVector(N, 1); up = N;
+      look = fr.pos.clone().addScaledVector(T, mode === 2 && isMobile ? 12 : 6).addScaledVector(N, 1); up = N; // phone, high camera: more road ahead, the car stays above the touch row
     } else if (mode === 1) {
       target = fr.pos.clone().addScaledVector(T, -0.2).addScaledVector(N, 1.45);
       look = fr.pos.clone().addScaledVector(T, 30).addScaledVector(N, 1.0); up = N;
@@ -622,6 +622,10 @@
     if (shake > 0 && r === player) { shake -= dt * 2; view.pos.x += (Math.random() - 0.5) * shake; view.pos.y += (Math.random() - 0.5) * shake; }
     cam.position.copy(view.pos); cam.up.copy(view.up); cam.lookAt(view.look);
     if (cam.fov !== (isMobile ? 76 : 70)) { cam.fov = isMobile ? 76 : 70; cam.updateProjectionMatrix(); }
+    if (isMobile && (mode === 0 || mode === 2) && r.mesh) { // phone: downhill or in a dip the chase camera would draw the car behind the touch row; tip it down until the car sits in the upper 70 %
+      cam.updateMatrixWorld(); const v = r.mesh.position.clone().project(cam), lim = -0.42, tf = Math.tan(cam.fov * Math.PI / 360);
+      if (v.z < 1 && v.y < lim) cam.rotateX(Math.atan(v.y * tf) - Math.atan(lim * tf));
+    }
   }
   function updateCamera(dt) {
     if (window.STUNTS_FREECAM) { const fc = window.STUNTS_FREECAM; camera.position.set(fc.pos[0], fc.pos[1], fc.pos[2]); camera.up.set(0, 1, 0); camera.lookAt(fc.look[0], fc.look[1], fc.look[2]); return; }
@@ -822,12 +826,12 @@
     }
     $('#controlsCard').querySelector('b').textContent = 'SU FÄHRS DE';
     let n = 0; try { n = parseInt(localStorage.getItem('stuntskoelle.controlsSeen') || '0') || 0; localStorage.setItem('stuntskoelle.controlsSeen', String(n + 1)); } catch (e) { /* ignore */ }
-    if (n >= 3 || demo || window.STUNTS_SIMSTEPS) return;
+    if (n >= (isMobile ? 1 : 3) || demo || window.STUNTS_SIMSTEPS) return; // a phone shows it once, as a small card in the top third
     $('#controlsText').innerHTML = isMobile ? '▲ JAS · ■ BREMS<br>◀ ▶ LENKE · N TURBO<br>☰ PAUS' : '↑ JAS · ↓ BREMS · ← → LENKE<br>SHIFT TURBO · R ZERÖCK OP DE STROSS<br>P PAUS · ESC MENÜ';
     $('#controlsCard').hidden = false;
   }
   // a tap anywhere outside the buttons skips the flyover, like Enter or Space
-  document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
+  document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !paused && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
   function startRaceNow(def) {
     buildScene(def);
     raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear();
@@ -847,6 +851,7 @@
     setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
+    if (introT >= 99) { for (const r of racers) placeRacer(r, 1 / 60); updateCamera(1 / 60); tick(1 / 60); } // NOCHMAL: no flyover, the camera sits behind the car and the countdown runs at once
   }
   // arcade name entry: three letters on the record table, like on every cabinet in 1989
   const NE_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ-. ';
@@ -858,7 +863,7 @@
     if (player2 || def.daily || !getRecords(def).some((r) => r.date === entry.date)) return; // only when the time made the top five
     const saved = savedInitials(); if (saved.length === 3) nameEntry.letters = saved.split('');
     nameEntry.on = true; nameEntry.cur = 0; nameEntry.def = def; nameEntry.date = entry.date; box.hidden = false; neRender();
-    box.querySelector('small').textContent = isMobile ? '▲▼ tippe, dann OK' : '▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch';
+    box.querySelector('small').textContent = isTouch || isMobile ? '▲▼ Buchstabe · OK' : '▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch';
   }
   function neStep(i, d) { const k = NE_ABC.indexOf(nameEntry.letters[i]); nameEntry.letters[i] = NE_ABC[(Math.max(0, k) + d + NE_ABC.length) % NE_ABC.length]; nameEntry.cur = i; neRender(); }
   function neDone() {
@@ -919,15 +924,44 @@
       if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.stunts ? raceStunts >= g.stunts : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true); }
       const rd = order[won ? 1 : 0].driver;
       $('#resRival').textContent = `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“`;
-      $('#results').hidden = false; document.body.classList.add('resultsOpen');
+      resLayout(); $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1200);
   }
-  // ---------------- pause: P, Esc or ☰ while racing; the world stands still until WIGGER ----------------
+  // results on a phone or a 720p laptop: the title, your row and the buttons fit without scrolling. The table shows the
+  // top three and you (▸ ALLE opens the rest), the stats and the Deckel fold into one line above the buttons.
+  function resLayout() {
+    const compact = isMobile || window.innerHeight < 800, tb = $('#resTable'); $('#results').classList.toggle('compact', compact); $('#results').scrollTop = 0;
+    tb.classList.remove('all'); const old = tb.querySelector('tr.allRow'); if (old) old.remove();
+    const rows = [...tb.children]; let rest = 0; rows.forEach((tr, i) => { const hide = compact && i >= 3 && !tr.classList.contains('me'); tr.classList.toggle('rest', hide); if (hide) rest++; });
+    if (rest) { const tr = document.createElement('tr'); tr.className = 'allRow'; tr.innerHTML = `<td colspan="4"><button type="button">▶ ALLE ${rows.length}</button></td>`; const b = tr.querySelector('button'); b.onclick = () => { const on = tb.classList.toggle('all'); b.textContent = on ? '▲ NUR DE SPETZ' : `▶ ALLE ${rows.length}`; }; tb.appendChild(tr); }
+    $('#resFacts').classList.toggle('open', !compact);
+  }
+  // ---------------- pause: P, Esc or ☰ while racing (also in the flyover and the countdown); the world and the sound stand still until LOSS JONN ----------------
   let paused = false;
   const racing = () => phase === 'race' || phase === 'countdown' || phase === 'intro';
   function setPause(on) {
-    paused = !!on && racing(); $('#pause').hidden = !paused; document.body.classList.toggle('paused', paused);
-    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); $('#pauseLine').textContent = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']); }
+    const was = paused; paused = !!on && racing(); $('#pause').hidden = !paused; document.body.classList.toggle('paused', paused);
+    if (paused !== was) pauseAudio(paused);
+    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); fingers.clear(); mouseKey = null; touchSync(); $('#pauseLine').textContent = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']); }
+  }
+  // a phone call or the pause: engine, chiptune and song fall silent and the audio clock stops; LOSS JONN (a tap or a key, as iOS wants) brings them back
+  function pauseAudio(on) {
+    if (music.el) { if (on) { music.held = !music.el.paused; music.el.pause(); } else if (music.held) { music.held = false; if (music.wanted && !music.muted) musicPlay(); } }
+    if (!audio.ctx) return; const t = audio.ctx.currentTime;
+    if (on) {
+      audio.gain.gain.cancelScheduledValues(t); audio.gain.gain.setValueAtTime(audio.gain.gain.value, t); audio.gain.gain.linearRampToValueAtTime(0, t + 0.04);
+      if (music.chip) { music.chip.g.gain.cancelScheduledValues(t); music.chip.g.gain.setValueAtTime(music.chip.g.gain.value, t); music.chip.g.gain.linearRampToValueAtTime(0, t + 0.04); }
+      setTimeout(() => { if (paused && audio.ctx.state === 'running') audio.ctx.suspend().catch(() => {}); }, 80);
+    } else {
+      if (music.chip) { music.chip.g.gain.cancelScheduledValues(t); music.chip.g.gain.setValueAtTime(0.05, t); }
+      if (audio.ctx.state !== 'running' && audio.ctx.state !== 'closed') audio.ctx.resume().catch(() => {}); // iOS reports 'interrupted' after a phone call
+    }
+  }
+  // NEU STARTE in the pause and Backspace: the same race again, straight to the countdown like NOCHMAL
+  function quickRestart() {
+    if (!racing() || demo || phase === 'loading') return;
+    setPause(false); quickAgain = true; $('#controlsCard').hidden = true; $('#countdown').hidden = true; $('#hudPrompt').hidden = true;
+    if (careerChapter != null) startCareer(); else if (missionMode) startMission(missionDef); else startRace(trackDef);
   }
   function toMenu() {
     if (phase === 'loading') return; $('#loading').hidden = true; $('#controlsCard').hidden = true; setPause(false);
@@ -966,7 +1000,7 @@
     if (!window.STUNTS_MANUAL_STEP && !paused) for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
     if (scenery && !paused) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
-    if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show'); }
+    if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show', 'open'); }
     updateCamera(dt);
     const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
     if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
@@ -1064,6 +1098,9 @@
   const isTouch = ('ontouchstart' in window) && matchMedia('(pointer: coarse)').matches;
   const isMobile = isTouch || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
   const touch = { left: false, right: false, gas: false, brake: false, turbo: false };
+  // button labels: the key in brackets only where there is a keyboard (a phone shows NOCHMAL, not NOCHMAL (ENTER))
+  function keyLabel(sel, txt, key) { const el = $(sel); if (!el) return; (el.querySelector('span') || el).textContent = isTouch || isMobile ? txt : `${txt} (${key})`; }
+  const againLabel = (txt) => keyLabel('#againBtn', txt, 'ENTER');
   // tilt steering: the phone's gravity vector along its long axis tells how far it is turned like a wheel
   const tilt = { mode: 0, raw: 0, zero: 0, val: 0, listening: false, lastCal: 0 }; // mode 0 off, 1 on, 2 on + inverted
   try { tilt.mode = parseInt(localStorage.getItem('stuntskoelle.tilt') || '0') || 0; } catch (e) { /* ignore */ }
@@ -1134,6 +1171,7 @@
       else if (e.code === 'Escape') { neDone(); toMenu(); }
       return;
     }
+    if (e.code === 'Backspace' && racing()) { e.preventDefault(); quickRestart(); return; }
     if (paused) { if (e.code === 'Escape') toMenu(); else if (e.code === 'Enter' || e.code === 'KeyP' || e.code === 'Space') setPause(false); return; }
     if ((e.code === 'KeyP' || e.code === 'Escape') && racing()) { setPause(true); return; }
     if (player2) { readKeys2(); if (e.code === 'KeyV') views[1].mode = (views[1].mode + 1) % 3; }
@@ -1149,12 +1187,21 @@
     if (e.code === 'Enter' && phase === 'finished') $('#againBtn').onclick();
   });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; readKeys(); if (player2) readKeys2(); });
-  for (const [id, key] of [['tLeft', 'left'], ['tRight', 'right'], ['tGas', 'gas'], ['tBrake', 'brake'], ['tNitro', 'turbo']]) {
+  // touch buttons follow the thumb: every finger is tracked by its identifier, and a finger sliding from ◀ onto ▶
+  // (or from ▲ onto ■) switches over without being lifted
+  const TKEYS = { tLeft: 'left', tRight: 'right', tGas: 'gas', tBrake: 'brake', tNitro: 'turbo' };
+  const fingers = new Map(); let mouseKey = null;
+  function touchSync() { for (const k of Object.values(TKEYS)) touch[k] = false; for (const k of fingers.values()) if (k) touch[k] = true; if (mouseKey) touch[mouseKey] = true; readKeys(); }
+  const keyAt = (x, y) => { const el = document.elementFromPoint(x, y); const b = el && el.closest && el.closest('#touch button'); return (b && TKEYS[b.id]) || null; };
+  { const pad = $('#touch');
+    pad.addEventListener('touchstart', (e) => { let mine = false; for (const t of e.changedTouches) { const k = TKEYS[t.target.id] || keyAt(t.clientX, t.clientY); if (k) { fingers.set(t.identifier, k); mine = true; } } if (mine) { e.preventDefault(); touchSync(); } }, { passive: false });
+    pad.addEventListener('touchmove', (e) => { e.preventDefault(); let moved = false; for (const t of e.changedTouches) { if (!fingers.has(t.identifier) && !keyAt(t.clientX, t.clientY)) continue; const k = keyAt(t.clientX, t.clientY); if (fingers.get(t.identifier) !== k) { fingers.set(t.identifier, k); moved = true; } } if (moved) touchSync(); }, { passive: false });
+    const lift = (e) => { if (e.cancelable && TKEYS[e.target.id]) e.preventDefault(); for (const t of e.changedTouches) fingers.delete(t.identifier); touchSync(); };
+    pad.addEventListener('touchend', lift, { passive: false }); pad.addEventListener('touchcancel', lift, { passive: false }); }
+  for (const id of Object.keys(TKEYS)) { // mouse (desktop testing): press and hold
     const el = document.getElementById(id);
-    const on = (e) => { e.preventDefault(); touch[key] = true; readKeys(); };
-    const off = (e) => { e.preventDefault(); touch[key] = false; readKeys(); };
-    el.addEventListener('touchstart', on, { passive: false }); el.addEventListener('touchend', off); el.addEventListener('touchcancel', off);
-    el.addEventListener('mousedown', on); el.addEventListener('mouseup', off); el.addEventListener('mouseleave', off);
+    el.addEventListener('mousedown', (e) => { e.preventDefault(); mouseKey = TKEYS[id]; touchSync(); });
+    for (const ev of ['mouseup', 'mouseleave']) el.addEventListener(ev, () => { if (mouseKey === TKEYS[id]) { mouseKey = null; touchSync(); } });
   }
 
   // ---------------- menu ----------------
@@ -1448,11 +1495,11 @@
       $('#resStats').innerHTML = `PAKET: <b>${m.short}</b> (${m.what}) · VON: <b>${m.pickName}</b> · NACH: <b>${m.dropName}</b> · KRIPO: <b>${why === 'caught' ? 'HÄT DICH JEKRIEGT' : ok ? 'ABJEHÄNGT' : 'NOCH DRAN'}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b>`;
       $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, ok ? 1 : 10, [player]);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes > 0 ? '+' : ''}${strokes}</b> Striche · GESAMT: <b>${total}</b> – <b>${deckelRank(total)}</b>`;
-      $('#resCup').hidden = true; $('#againBtn').textContent = careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL (ENTER)' : 'KAPITEL NOCHMAL (ENTER)') : 'NOCHMAL (ENTER)';
+      $('#resCup').hidden = true; againLabel(careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL' : 'KAPITEL NOCHMAL') : 'NOCHMAL');
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
       $('#resTuenn').textContent = placeArticles(pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName)); $('#resRival').textContent = '';
       if (careerChapter != null) applyCareerResult(ok);
-      $('#results').hidden = false; document.body.classList.add('resultsOpen');
+      resLayout(); $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1400);
   }
 
@@ -1486,8 +1533,8 @@
       if (finale) { try { localStorage.setItem('stuntskoelle.countach', '1'); } catch (e) { /* ignore */ } bumpStat('career'); const no = checkOrden(); if (no.length) { newOrden = newOrden.concat(no); const ob = $('#resOrden'); ob.hidden = false; ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((cv, i) => medalIcon(cv, newOrden[i].color, 2)); } }
       $('#resTitle').textContent = (finale ? 'NACHTSCHICHT BEENDET! ' : `KAPITEL ${ch + 1} JESCHAFFT: ${c.title}. `) + $('#resTitle').textContent;
       $('#resTuenn').textContent = c.outro + (finale ? ' Die Contessa steht im Menü, Jung.' : '');
-      $('#againBtn').textContent = finale ? 'NOCHMAL VON VORNE (ENTER)' : 'NÄCHSTES KAPITEL (ENTER)';
-    } else { $('#resTitle').textContent = `KAPITEL ${ch + 1} NIT JESCHAFFT (ZIEL: ${goalText(c.goal)}). ` + $('#resTitle').textContent; $('#resTuenn').textContent = pick(tuenn.careerLines.fail); $('#againBtn').textContent = 'KAPITEL NOCHMAL (ENTER)'; }
+      againLabel(finale ? 'NOCHMAL VON VORNE' : 'NÄCHSTES KAPITEL');
+    } else { $('#resTitle').textContent = `KAPITEL ${ch + 1} NIT JESCHAFFT (ZIEL: ${goalText(c.goal)}). ` + $('#resTitle').textContent; $('#resTuenn').textContent = pick(tuenn.careerLines.fail); againLabel('KAPITEL NOCHMAL'); }
   }
 
   // ---------------- dat Hinterzimmer: the second door, cards and dice for Deckel strokes ----------------
@@ -1764,12 +1811,12 @@
     return fill(E.default);
   }
   function renderCup(order) {
-    const box = $('#resCup'); const again = $('#againBtn');
-    if (!cup.on) { box.hidden = true; again.textContent = 'NOCHMAL (ENTER)'; return; }
+    const box = $('#resCup');
+    if (!cup.on) { box.hidden = true; againLabel('NOCHMAL'); return; }
     const rows = Object.entries(cup.pts).sort((a, b) => b[1] - a[1]); const myPos = rows.findIndex((e) => e[0] === 'DU') + 1; const done = cup.i >= TRACKS.length;
     box.hidden = false;
     box.innerHTML = `<b>🍺 KÖLSCH-CUP · ${done ? 'ENDSTAND' : 'NACH ' + cup.i + ' VON ' + TRACKS.length + ' STRECKEN'}</b><table>` + rows.slice(0, 5).map((e, i) => `<tr class="${e[0] === 'DU' ? 'me' : ''}"><td>${i + 1}.</td><td>${e[0]}</td><td>${e[1]} Pkt.</td></tr>`).join('') + (myPos > 5 ? `<tr class="me"><td>${myPos}.</td><td>DU</td><td>${cup.pts.DU || 0} Pkt.</td></tr>` : '') + '</table>';
-    again.textContent = done ? 'CUP BEENDEN (ENTER)' : `NÄCHSTE STRECKE: ${TRACKS[cup.i].name.toUpperCase()} (ENTER)`;
+    againLabel(done ? 'CUP BEENDEN' : `NÄCHSTE STRECKE: ${TRACKS[cup.i].name.toUpperCase()}`);
     if (done) { // Siegerehrung: the top three on Kölsch crates in front of the Brauhaus
       const pod = document.createElement('div'); pod.className = 'podium';
       [1, 0, 2].forEach((k) => { const e = rows[k]; if (!e) return; const d = e[0] === 'DU' ? PLAYABLE[sel.driver] : D.DRIVERS.find((x) => x.name === e[0]); const el = document.createElement('div'); el.className = 'step s' + k; el.innerHTML = `<canvas></canvas><b>${k + 1}.</b><span>${e[0] === 'DU' ? 'DU' : e[0].toUpperCase()}</span><i>${e[1]} PKT.</i>`; pod.appendChild(el); if (d) SP.portrait(d.id, el.querySelector('canvas'), 3); });
@@ -1951,7 +1998,7 @@
     renderMenu();
     $('#startBtn').onclick = () => { cup.on = false; careerChapter = null; missionMode = false; lockLandscape(); startRace(); };
     $('#quickStartBtn').onclick = () => $('#startBtn').click();
-    if (isMobile) { $('#againBtn').textContent = 'NOCHMAL'; $('#menuBtn').textContent = 'MENÜ'; $('#pauseGo').textContent = 'WIGGER'; $('#pauseQuit').textContent = 'RENNEN OPJEVVE'; } // no keyboard hints on a phone
+    keyLabel('#againBtn', 'NOCHMAL', 'ENTER'); keyLabel('#menuBtn', 'MENÜ', 'ESC'); keyLabel('#pauseGo', 'LOSS JONN', 'ENTER'); keyLabel('#pauseRestart', 'NEU STARTE', 'BACKSPACE'); keyLabel('#pauseQuit', 'MENÜ', 'ESC');
     $('#againBtn').onclick = () => { quickAgain = true; if (careerChapter != null) { startCareer(); return; } if (missionMode) { startMission(missionDef); return; } if (cup.on) { if (cup.i >= TRACKS.length) { cup.on = false; toMenu(); return; } startRace(TRACKS[cup.i]); } else startRace(); };
     $('#missionBtn').onclick = () => { careerChapter = null; cup.on = false; lockLandscape(); startMission(activeTrackDef()); }; $('#careerBtn').onclick = () => { cup.on = false; lockLandscape(); startCareer(); }; $('#hudPrompt').onclick = () => missionAction();
     $('#cupBtn').onclick = () => { cup.on = true; careerChapter = null; missionMode = false; cup.i = 0; cup.pts = {}; startRace(TRACKS[0]); };
@@ -1965,9 +2012,13 @@
     };
     $('#camBtn').onclick = () => { camMode = (camMode + 1) % 4; tvCam = null; };
     $('#muteBtn').onclick = toggleMute;
-    $('#escBtn').onclick = () => { if (racing()) setPause(!paused); else toMenu(); };
-    $('#pauseGo').onclick = () => setPause(false); $('#pauseQuit').onclick = toMenu;
-    document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'race' && !window.STUNTS_SIMSTEPS) setPause(true); }); // phone call, app switch
+    $('#pauseBtn').onclick = () => { if (racing()) setPause(!paused); else toMenu(); };
+    $('#resFacts').onclick = () => { if ($('#results').classList.contains('compact')) $('#resFacts').classList.toggle('open'); };
+    $('#msg').onclick = () => { const m = $('#msg'); if (!document.body.classList.contains('mobile') || !m.classList.contains('show')) return; if (m.classList.toggle('open')) msgTimer = Math.max(msgTimer, 6); }; // phone: the one-line ticker opens on a tap
+    { const mini = document.querySelector('.hudMini'); if (isMobile) mini.title = 'Kaat (tippen: jrößer)'; try { mini.classList.toggle('open', localStorage.getItem('stuntskoelle.minimap') === 'open'); } catch (e) { /* ignore */ } // phone: the map is folded to a thumbnail until tapped
+      mini.onclick = () => { if (!document.body.classList.contains('mobile')) return; const on = mini.classList.toggle('open'); try { localStorage.setItem('stuntskoelle.minimap', on ? 'open' : 'folded'); } catch (e) { /* ignore */ } }; }
+    $('#pauseGo').onclick = () => setPause(false); $('#pauseRestart').onclick = quickRestart; $('#pauseQuit').onclick = toMenu;
+    document.addEventListener('visibilitychange', () => { if (document.hidden && racing() && !demo) setPause(true); }); // phone call, app switch: also in the flyover and the countdown
     $('#pixBtn').onclick = cyclePixel;
     $('#editorBtn').onclick = openEditor;
     $('#recordsBtn').onclick = showRecords;
@@ -2003,7 +2054,7 @@
     $('#saveExport').onclick = () => { const c = exportSave(); $('#saveCode').value = c; $('#saveMsg').textContent = 'Code kopieren un am anderen Jerät einfügen.'; if (navigator.clipboard) navigator.clipboard.writeText(c).then(() => { $('#saveMsg').textContent = 'Code kopiert. Am anderen Jerät einfügen un ÜBERNEHMEN drücken.'; }).catch(() => {}); };
     $('#saveImport').onclick = () => { $('#saveMsg').textContent = importSave($('#saveCode').value); };
     $('#paperBtn').onclick = shareFrontPage; $('#demoBtn').onclick = startDemo; $('#hornBtn').onclick = horn; $('#tHorn').addEventListener('touchstart', (e) => { e.preventDefault(); horn(); }, { passive: false });
-    document.addEventListener('touchstart', () => { if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
+    document.addEventListener('touchstart', () => { if (paused) return; if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); if (phase !== 'menu' && music.wanted && music.el && music.el.paused && !music.muted) musicPlay(); }, { passive: true });
     phase = 'menu';
     juke.fx = $('#lamboFx'); if (juke.fx) { juke.fx.width = 384; juke.fx.height = 48; juke.ctx = juke.fx.getContext('2d'); }
     if ($('#jukeBtn')) $('#jukeBtn').onclick = (e) => { e.stopPropagation(); if (!juke.started && juke.on) jukeStart(); else jukeToggle(); };
@@ -2033,11 +2084,13 @@
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
-  window.STUNTS_DEBUG = () => ({ phase, auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_ROUTES = () => track ? track.shortcuts.map(({ samples, ...r }) => r) : [];
   window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000); i++) { raceTime += 1 / 60; updateRacer(player, 1 / 60, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, 1 / 60) : input)); placeRacer(player, 1 / 60); recordFrame(1 / 60); } updateHUD(); return window.STUNTS_DEBUG(); };
   window.STUNTS_REPLAY_AT = (t) => { startReplay(); replay.time = t; replay.paused = true; replayStep(0); return window.STUNTS_DEBUG(); };
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
+  window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
+  window.STUNTS_CAR_SCREEN = () => { if (!player || !player.mesh || !camera) return null; const v = player.mesh.position.clone().project(camera); return { x: (v.x + 1) / 2 * window.innerWidth, y: (1 - v.y) / 2 * window.innerHeight, mode: camMode }; }; // where the player's car is drawn, in CSS pixels
   window.STUNTS_SCENE = () => scene;
   window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); };
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); };
