@@ -107,6 +107,24 @@ schwarzen Milieu-Benz.
 Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 [Chicago am Rhein (Doku)](https://www.fernsehserien.de/filme/chicago-am-rhein).
 
+**Zeitecht:** „Chicago am Rhein“ spielt 1968, der „Domschatz-Raub“ 1975 (`theme.era`). Auf diesen
+beiden Strecken steht nichts, was später gebaut wurde (kein KölnTurm, Colonius, Triangle, Musical
+Dome, Museum Ludwig, keine Eistüte, kein Mediapark – dort ist noch der Güterbahnhof Gereon), keine
+Palmen und kein Miami-Neon: Leuchtreklame in Rot, Warmweiß, Gelb und Blau („WEINSTUBE“,
+„BAR · DANCING“, „LICHTSPIELE“), der Spielclub hinter einer unbeschrifteten Tür mit Messingschild
+„HERRENCLUB · NUR FÜR MITGLIEDER“. Die Männer vom Ring tragen Lederjacke oder Lammfell, offenen
+Kragen, Goldkettchen und Schnauzbart statt Al-Capone-Hut. Radio- und Zeitungsmeldungen aus späteren
+Jahrzehnten (Oper-Sanierung, LamboGina) laufen dort nicht. Die Domschatz-Anekdote erzählt den echten
+Einbruch vom November 1975 (Gerüst, Lüftungsschacht, sechs Meter am Seil). Der Vorspann im
+Attract-Modus läuft immer über diese beiden Nachtstrecken.
+
+**Verzällcher:** Dä Lange erzählt seine Ortsgeschichten, sobald die Nachrichtenbox frei ist und der
+Ort vor oder gerade hinter dir liegt – auch aus einer Seitenstraße heraus; was in Runde 1 nicht
+passte, kommt in Runde 2 oder 3. Jede gehörte Geschichte landet unter **REKORDE → DÄ LANGE SING
+VERZÄLLCHER**, nach Strecke sortiert zum Nachlesen.
+
+**Geld:** Der Automat ist von 1989, also Mark: Knöllchen 40 DM, Kurzstrecke fünf Mark.
+
 ## Chicago am Rhein: Deckel, Kripo, Wette, Cup
 
 - **Kölsch unterwegs:** Auf jeder Strecke stehen Kölsch-Gläser auf der Straße. Durchfahren gibt
@@ -273,7 +291,7 @@ rund drei Vierteln ihres Könnens und nehmen vorne den Fuß vom Gas, wenn du hin
 EXPERTE fahren sie fast voll und lassen dich kaum ran): **Tünnes** (leicht), **Schäl**
 (mittel), **Heinzel** (schwer), **der Türsteher** (Experte) und die beiden Rocker von den Ringen:
 **Tango** (mittel; dünn, schwarze Mähne, Kajal, Lederjacke, seit 1984 in der ersten Reihe) und
-**Täsch** (schwer; Muskeln, blonde Lockenmähne, Stirnband, Kutte, Türsteher vom Rose Club). Gegen dich
+**Täsch** (schwer; Muskeln, blonde Lockenmähne, Stirnband, Kutte, Türsteher vom Rosekeller). Gegen dich
 fahren neun weitere: Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann und die fünf Fahrer, die du
 nicht genommen hast – ein Feld von zehn.
 
@@ -291,7 +309,7 @@ Steilkurven, Hügel, Senke, Looping, Korkenzieher, Sprung, Sprung übers Haus, B
 Kulisse wählen, speichern, fahren.
 Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel automatisch an.
 
-**Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert.
+**Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert. Wer es in die Top 5 schafft, trägt wie am Automaten drei Buchstaben ein (▲▼ Buchstabe, ◀▶ Stelle, ENTER; auf dem Handy die Pfeiltasten antippen); die Initialen merkt sich das Spiel für das nächste Mal.
 
 **Replay:** nach dem Rennen 📼 REPLAY drücken. Streckenkameras wie im alten Stunts, Leertaste
 Pause, → schneller, ← fünf Sekunden zurück, C für Verfolger/Cockpit, Esc zurück.

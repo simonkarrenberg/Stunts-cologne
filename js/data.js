@@ -42,16 +42,16 @@
       lines: { start: ['Man kennt sich, man hilft sich.', 'Die Pole Position hab ich schon vorm Rennen gewonnen.'], overtake: ['Das wurde im Ausschuss so beschlossen.', 'Nicht persönlich nehmen. Rein geschäftlich.', 'Man kennt sich. Man überholt sich.'], overtaken: ['Dazu gibt es einen Untersuchungsausschuss.', 'Das Protokoll wird angepasst.', 'Das wird noch geprüft. Vom Ausschuss.'], crash: ['Das war ein Bauprojekt. Wie die Oper.', 'Wir kannten das Ergebnis schon vorher.', 'Das ist kein Unfall. Das ist eine Baumaßnahme.'], taunt: ['Das nehmen wir ins Protokoll. Unter Sonstiges.', 'Für den Schaden kenne ich jemanden. Kostet.'], win: ['Wie vereinbart. Danke, Tünn.', 'Ein Sieg für die Stadt. Also für mich.'], lose: ['Wir lassen das Ergebnis prüfen.', 'Die Kosten explodieren übrigens.'] } },
     { id: 'willi', name: 'Taxi Willi', sub: '30 Jahre Nachtschicht am Ring.',
       skill: 0.9, wobble: 0.3, color: 0xf2e6b1, car: 'turbo',
-      lines: { start: ['Zoobrücke gesperrt, ich kenn ne Abkürzung.', 'Taxameter läuft, Kollege.'], overtake: ['Kurzstrecke. Sieben Euro.', 'Nachtzuschlag kommt noch dazu.', 'Taxi! Sie sind zu langsam für Köln.'], overtaken: ['Ich lass dich vor. Trinkgeld?', 'Fahrgast drin, ruhig fahren.', 'Fahrgast, festhalten. Der da vorne ist neu.'], crash: ['Das war der Fahrgast, nicht ich.', 'Kein Problem, Bruder, alles Blech.', 'Das zahlt die Versicherung. Also der Fahrgast.'], taunt: ['Fahrgast! Der da hat’s nicht drauf.', 'Das wäre mit Taxi nicht passiert. Sieben Euro.'], win: ['Ziel erreicht. Zahlen bitte.', 'Sieg. Rückfahrt kostet extra.'], lose: ['Ich hatte noch Fahrgast drin.', 'Nächstes Mal ohne Taxameter.'] } },
+      lines: { start: ['Zoobrücke gesperrt, ich kenn ne Abkürzung.', 'Taxameter läuft, Kollege.'], overtake: ['Kurzstrecke. Fünf Mark.', 'Nachtzuschlag kommt noch dazu.', 'Taxi! Sie sind zu langsam für Köln.'], overtaken: ['Ich lass dich vor. Trinkgeld?', 'Fahrgast drin, ruhig fahren.', 'Fahrgast, festhalten. Der da vorne ist neu.'], crash: ['Das war der Fahrgast, nicht ich.', 'Kein Problem, Bruder, alles Blech.', 'Das zahlt die Versicherung. Also der Fahrgast.'], taunt: ['Fahrgast! Der da hat’s nicht drauf.', 'Das wäre mit Taxi nicht passiert. Sieben Euro.'], win: ['Ziel erreicht. Zahlen bitte.', 'Sieg. Rückfahrt kostet extra.'], lose: ['Ich hatte noch Fahrgast drin.', 'Nächstes Mal ohne Taxameter.'] } },
     { id: 'koebes', name: 'Köbes Hermann', sub: 'Grantig, schnell, bringt ungefragt Nachschub.',
       skill: 0.88, wobble: 0.4, color: 0x3a6ea5, car: 'rocket',
       lines: { start: ['Wat willste? Kölsch oder Pokal?', 'Trink doch ene met. Nach dem Rennen.'], overtake: ['Ich bring dir jleich ene Kranz Rückspiejel.', 'Dat is kein Bier, dat is Beschleunigung.', 'Ene met? Nä, ich fahr vorbei.'], overtaken: ['Do verdiens dir keine Deckel bei mir.', 'Ich hab noch drei Tische. Wart ab.', 'Kein Deckel för dich. Nie mehr.'], crash: ['Einer jeht noch. Einer jeht noch rein.', 'Dat jibt Bierdeckel-Striche för dich.', 'Dat Kölsch is heil. Dat Auto nit.'], taunt: ['Einer jeht noch. Bei dir wohl nit.', 'Dat jibt kein Deckel. Dat jibt ne Rechnung.'], win: ['Der Kellner jewinnt. Trinkgeld optional.', 'Dat macht 23,50. Plus Sieg.'], lose: ['Ich wor nur Deckel holen.', 'Bei mir jab et Stau am Tresen.'] } },
     { id: 'tango', name: 'Tango', diff: 'MITTEL', diffN: 1, quote: 'Verdamp lang her, dat du vorne wors.', sub: 'Dünn, schwarze Mähne, Kajal. Rock op de Ringe, seit 1984.',
       skill: 0.91, wobble: 0.28, color: 0x1a1024, car: 'turbo', aiMul: 0.85,
-      lines: { start: ['Verdamp lang her, dat du vorne wors.', 'Sonic Ballroom hät zo. Also fahre mer.', 'Kajal sitzt, Motor läuft. Rock op de Ringe.'], overtake: ['Dat wor ne Gitarrensolo, Jung. Du wors der Bass.', 'Zo langsam för de erste Reih. Zo langsam för de letzte.', 'Bützje im Vorbeifahre. Nä, doch nit.', 'Ming Haare sin schneller als ding Auto.'], overtaken: ['Falsche Ton. Ich komm zoröck, wie der Refrain.', 'Dat wor nur de Strophe. Wart op der Refrain.', 'Ich hann dich durchjelosse. Aus Stil.'], crash: ['Dat wor Punk. Nit jewollt, ävver ehrlich.', 'Verdamp lang her, dat ich jecrasht bin. Bes jetz.', 'Die Mähne sitzt noch. Der Rest nit.'], taunt: ['Rock’n’Roll, Jung. Du fährs Schlager.', 'Ich seh us wie e Mädche un fahr wie der Düvel. Du siehs us wie e Auto un fährs wie e Mädche. Sorry, Anna.'], win: ['Zugabe? Nä. Kölsch.', 'Erste Reih, wie im Luxor. Un du stehs draußen.'], lose: ['Dat wor der Soundcheck. Jetz kütt et Konzert.', 'Ich hann de falsche Kassett drin jehatt.'] } },
-    { id: 'taesch', name: 'Täsch', diff: 'SCHWER', diffN: 2, quote: 'Hantel, Haarspray, Hätz.', sub: 'Muskeln, blonde Lockenmähne, Kutte. Der Türsteher vum Rose Club.',
+      lines: { start: ['Verdamp lang her, dat du vorne wors.', 'Dä Krachkeller hät zo. Also fahre mer.', 'Kajal sitzt, Motor läuft. Rock op de Ringe.'], overtake: ['Dat wor ne Gitarrensolo, Jung. Du wors der Bass.', 'Zo langsam för de erste Reih. Zo langsam för de letzte.', 'Bützje im Vorbeifahre. Nä, doch nit.', 'Ming Haare sin schneller als ding Auto.'], overtaken: ['Falsche Ton. Ich komm zoröck, wie der Refrain.', 'Dat wor nur de Strophe. Wart op der Refrain.', 'Ich hann dich durchjelosse. Aus Stil.'], crash: ['Dat wor Punk. Nit jewollt, ävver ehrlich.', 'Verdamp lang her, dat ich jecrasht bin. Bes jetz.', 'Die Mähne sitzt noch. Der Rest nit.'], taunt: ['Rock’n’Roll, Jung. Du fährs Schlager.', 'Ich seh us wie e Mädche un fahr wie der Düvel. Du siehs us wie e Auto un fährs wie e Mädche. Sorry, Anna.'], win: ['Zugabe? Nä. Kölsch.', 'Erste Reih, wie im Luxor. Un du stehs draußen.'], lose: ['Dat wor der Soundcheck. Jetz kütt et Konzert.', 'Ich hann de falsche Kassett drin jehatt.'] } },
+    { id: 'taesch', name: 'Täsch', diff: 'SCHWER', diffN: 2, quote: 'Hantel, Haarspray, Hätz.', sub: 'Muskeln, blonde Lockenmähne, Kutte. Dä Türsteher vum Rosekeller.',
       skill: 0.93, wobble: 0.24, color: 0x3a5a8a, car: 'gti', aiMul: 0.9,
-      lines: { start: ['Hantel, Haarspray, Hätz. Loss jonn.', 'Ich hann de Motor met der Hand jehalde. Jetz nit mieh.', 'Rose Club, Nachtschicht. Danach dat hee.'], overtake: ['Dat wor Muskelkraft, Jung. Ohne Nitro.', 'Locke im Wind, du im Rückspiejel.', 'Ich drück dich wie ne Hantel. Weg bes de.', 'Kutte an, Gas drop. Tschö.'], overtaken: ['Kraftraum wor jestern zo. Merkt mer.', 'Locke im Auge. Ich seh nix. Jleich wieder.', 'Dat wor ne Aufwärmsatz.'], crash: ['Dat Auto hät nachjejovve. Ich nit.', 'Ich hann de Wand jedrückt. Die Wand hät jewonne.', 'Haarspray brennt. Merk dir dat.'], taunt: ['Ich hebb dich un ding Auto op einmol. Wells de?', 'Bei mir kütt keiner rein ohne Muckis. Du och nit.'], win: ['Sieg. Un jetz Eiweiß.', 'Wer die Locke hät, hät et Pokal.'], lose: ['Muskelkater. Im Jaspedal.', 'Ich hann der Hantel zo lang jehalde un dat Lenkrad zo kurz.'] } }
+      lines: { start: ['Hantel, Haarspray, Hätz. Loss jonn.', 'Ich hann de Motor met der Hand jehalde. Jetz nit mieh.', 'Rosekeller, Nachtschicht. Donoh dat hee.'], overtake: ['Dat wor Muskelkraft, Jung. Ohne Nitro.', 'Locke im Wind, du im Rückspiejel.', 'Ich drück dich wie ne Hantel. Weg bes de.', 'Kutte an, Gas drop. Tschö.'], overtaken: ['Kraftraum wor jestern zo. Merkt mer.', 'Locke im Auge. Ich seh nix. Jleich wieder.', 'Dat wor ne Aufwärmsatz.'], crash: ['Dat Auto hät nachjejovve. Ich nit.', 'Ich hann de Wand jedrückt. Die Wand hät jewonne.', 'Haarspray brennt. Merk dir dat.'], taunt: ['Ich hebb dich un ding Auto op einmol. Wells de?', 'Bei mir kütt keiner rein ohne Muckis. Du och nit.'], win: ['Sieg. Un jetz Eiweiß.', 'Wer die Locke hät, hät et Pokal.'], lose: ['Muskelkater. Im Jaspedal.', 'Ich hann der Hantel zo lang jehalde un dat Lenkrad zo kurz.'] } }
   ];
   const RIVALS = DRIVERS; // backwards compat
 
@@ -75,7 +75,8 @@
   // https://www.stadt-koeln.de/mediaasset/content/pdf480/tag_des_offenen_denkmals_2013_bfrei.pdf (Bottmühle, p. 62)
   const TRACKS = [
     {
-      id: 'dom', name: 'Domblitz 4D', district: 'Dom & Rhein im Morgengrauen', tag: 'MORJENS', order: 2,
+      id: 'dom', where: 'AM DOM', name: 'Domblitz 4D', district: 'Dom & Rhein im Morgengrauen', tag: 'MORJENS', order: 2,
+      signs: [[0, 'RONCALLIPLATZ'], [1, 'TRANKGASSE'], [2, 'AM HOF'], [4, 'OBENMARSPFORTEN'], [5, 'ALTER MARKT'], [6, 'HEUMARKT'], [8, 'MARKMANNSGASSE'], [9, 'FRANKENWERFT'], [10, 'HEINRICH-BÖLL-PLATZ'], [11, 'HOHENZOLLERNBRÜCKE'], [12, 'KENNEDY-UFER'], [13, 'OTTOPLATZ'], [15, 'KENNEDY-UFER'], [17, 'RHEINBOULEVARD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Dom', 'Kolumba', 'Wallraf & Gürzenich', 'Alter Markt', 'Hohenzollernbrücke', 'Bahnhof Deutz', 'Rheinsprung'],
       diff: 2, laps: 3, scale: 1.45,
       desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei. Am ersten Dreiwege-Fork: schmale Domhof-Gasse, Hauptstrecke oder weiter Trankgassen-Bogen. Dazu zwei versteckte Veedelswege und der Rheinsprung. Schäl kennt den Weg, die Tauben kennen dein Dach.',
@@ -178,7 +179,8 @@
       ]
     },
     {
-      id: 'rheinauhafen', name: 'Rheinauhafen 4D', district: 'Kranhäuser to the Limit', tag: 'ABEND', order: 6,
+      id: 'rheinauhafen', where: 'AM RHEINAUHAFEN', name: 'Rheinauhafen 4D', district: 'Kranhäuser to the Limit', tag: 'ABEND', order: 6,
+      signs: [[0, 'IM ZOLLHAFEN'], [2, 'AGRIPPINAWERFT'], [4, 'AM SCHOKOLADENMUSEUM'], [5, 'RHEINUFERSTRASSE'], [8, 'SEVERINSTRASSE'], [9, 'CHLODWIGPLATZ'], [10, 'KARTÄUSERWALL'], [11, 'KAYGASSE'], [12, 'AM PANTALEONSBERG'], [14, 'SEVERINSWALL'], [16, 'BAYENSTRASSE'], [17, 'HARRY-BLUM-PLATZ'], [18, 'ANTWERPENER WERFT']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bottmühle', 'Bayenturm', 'Rheinsprung'],
       diff: 3, laps: 3, scale: 1.45,
       desc: 'Zwischen Kranhäusern und Schokoladenmuseum übers Hafenbecken, dann durch die Südstadt an St. Maria im Kapitol, Wasserturm und St. Pantaleon vorbei. Am Bayenturm teilen sich drei Straßen: Gasse, Hauptkurs oder weiter Südstadt-Bogen. Der Zollhafen-Schleichweg bleibt. Zu kurz springen spart die Autowäsche.',
@@ -269,7 +271,8 @@
       ]
     },
     {
-      id: 'zoo', name: 'Schäl Sick Schraube', district: 'Deutz & Mülheim', tag: 'TAG', order: 3,
+      id: 'zoo', where: 'OP DÄ SCHÄL SICK', name: 'Schäl Sick Schraube', district: 'Deutz & Mülheim', tag: 'TAG', order: 3,
+      signs: [[0, 'RIEHLER STRASSE'], [2, 'AM BOTANISCHEN GARTEN'], [5, 'KONRAD-ADENAUER-UFER'], [6, 'ZOOBRÜCKE'], [7, 'AUENWEG'], [8, 'MESSEPLATZ'], [9, 'DEUTZ-MÜLHEIMER STRASSE'], [10, 'SCHANZENSTRASSE'], [12, 'MÜLHEIMER UFER'], [13, 'MÜLHEIMER BRÜCKE'], [15, 'NIEHLER DAMM'], [17, 'NEUSSER STRASSE'], [19, 'NEUSSER WALL'], [20, 'RIEHLER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zoo & Flora', 'Bastei', 'Zoobrücke', 'Bahnhof Deutz', 'Rheinpark', 'E-Werk & Palladium', 'Mülheimer Hafen'],
       diff: 4, laps: 3, scale: 1.45,
       desc: 'Vom Zoo und der Flora über die Zoobrücke nach Deutz, dann zu E-Werk und Palladium im Mülheimer Industrieviertel. Bastei, Rheinpark und Fort X säumen die Runde. Wer den Flora-Schleichweg nimmt, hört die Elefanten lachen.',
@@ -351,7 +354,8 @@
       ]
     },
     {
-      id: 'ehrenfeld', name: 'Ehrenfeld Tape Run', district: 'Venloer Straße zur blauen Stunde', tag: 'ABEND', order: 4,
+      id: 'ehrenfeld', where: 'EN EHRENFELD', name: 'Ehrenfeld Tape Run', district: 'Venloer Straße zur blauen Stunde', tag: 'ABEND', order: 4,
+      signs: [[0, 'VENLOER STRASSE'], [1, 'PIUSSTRASSE'], [3, 'LEOSTRASSE'], [5, 'GUTENBERGSTRASSE'], [7, 'INNERE KANALSTRASSE'], [9, 'SUBBELRATHER STRASSE'], [10, 'HORNSTRASSE'], [11, 'LIEBIGSTRASSE'], [12, 'HÜTTENSTRASSE'], [13, 'EHRENFELDGÜRTEL'], [14, 'KÖRNERSTRASSE'], [15, 'NEPTUNPLATZ'], [17, 'BARTHOLOMÄUS-SCHINK-STRASSE'], [18, 'HELIOSSTRASSE'], [20, 'VENLOER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Venloer Straße', 'Moschee', 'Odonien', 'Bahnbögen', 'Neptunplatz', 'Helios-Turm', 'Vulkan'],
       diff: 2, laps: 3, scale: 1.45,
       desc: 'Vom Colonius durch Venloer Straße und Odonien, an Moschee, Neptunbad, Bahnbögen und Helios-Turm vorbei. Mehr Fabrikhöfe und Backstein. Die Abkürzung durch den Bahnbogen-Hof kennt angeblich jeder. Nur keiner bremst rechtzeitig.',
@@ -359,7 +363,7 @@
       theme: { sky: 0x1c2a5a, fog: 0xd88a68, ground: 0x4a4a52, sun: 0xffb080, road: [0x3e3e46, 0x35353c], night: true, dusk: true, water: 0x243a60, street: 'gruenderzeit', catenary: true,
         streets: ['VENLOER STRASSE', 'LICHTSTRASSE', 'HORNSTRASSE', 'NEPTUNPLATZ', 'KÖRNERSTRASSE', 'SUBBELRATHER STR.', 'VOGELSANGER STR.', 'EHRENFELDGÜRTEL', 'HELIOSSTRASSE', 'LEYENDECKERSTR.'],
         shops: ['DÖNER', 'CAFÉ HAFERMILCH', 'PLATTENLADEN', 'BARBIER', 'LASTENRAD-VERLEIH', 'KIOSK', 'FALAFEL', 'TATTOO', 'BÜDCHE', 'BÄCKEREI JÜPP', 'RIEVE MARKT'],
-        far: [{ type: 'dom', angle: 30, dist: 200 }, { type: 'triangle', angle: 15, dist: 300 }] },
+        far: [{ type: 'dom', angle: 30, dist: 200 }, { type: 'triangle', angle: 15, dist: 300 }, { type: 'stadion', angle: 160, dist: 320 }] },
       // 0 str,1 R,2 str,3 L,4 str,5 L,6 str,7 R,8 hill,9 R,10 str,11 R,12 str,13 L,14 str,15 R,16 tunnel,17 R,18 str,19 R,20 str
       segments: [
         { t: 'straight', len: 90 },
@@ -430,8 +434,9 @@
       ]
     },
     {
-      id: 'kalk', name: 'Chicago am Rhein', district: 'Ringe Nachtfahrt', tag: 'NACHT', order: 1,
-      waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Mediapark', 'St. Gereon'],
+      id: 'kalk', where: 'OP DE RINGE', name: 'Chicago am Rhein', district: 'Ringe Nachtfahrt', tag: 'NACHT', order: 1,
+      signs: [[0, 'KAISER-WILHELM-RING'], [1, 'HOHENZOLLERNRING'], [2, 'RUDOLFPLATZ'], [3, 'HOHENZOLLERNRING'], [4, 'FRIESENSTRASSE'], [5, 'FRIESENPLATZ'], [6, 'KAISER-WILHELM-RING'], [8, 'HANSARING'], [11, 'EBERTPLATZ'], [13, 'NEUSSER STRASSE'], [14, 'EIGELSTEIN'], [15, 'MAYBACHSTRASSE'], [18, 'GEREONSWALL'], [19, 'GEREONSDRIESCH'], [20, 'CHRISTOPHSTRASSE']], // the real street at each stretch of the circuit (main-road name signs)
+      waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Güterbahnhof Gereon', 'St. Gereon'],
       diff: 5, laps: 3, scale: 1.45,
       desc: 'Die Nachttour vum Türsteher: Residenz-Kino, St. Aposteln, Richmodisturm und Oper, dann Sartory, Hansaring, St. Agnes und Fort X. Drei Wege am Ring: enger Aposteln-Hof, Hauptstrecke oder weiter Rudolfplatz-Bogen. Dazu nasse Straßen, Büdchen-Sprung und Sartory-Hinterhof. Garderobenmarke bitte am Ziel abgeben.',
       shortcuts: [{ id: 'kalk-sartory', name: 'SARTORY-HINTERHOF', seg: 5 }, { id: 'kalk-hansa', name: 'HANSARING-SCHLUPF', seg: 9 }],
@@ -441,11 +446,11 @@
         { id: 'kalk-rudolfplatz', name: 'RUDOLFPLATZ-BOGEN', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 },
           via: [{ x: -20, z: 114 }, { x: -37, z: 193 }, { x: 13, z: 260 }], halfWidth: 4.7, style: 'scenic' }
       ],
-      theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true,
-        streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'MEDIAPARK'],
-        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'CASINO', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'SPÄTI', 'DISCO', 'KÖLSCH', 'FLAMINGO BAR', 'VICE LOUNGE', 'KLÜNGEL & CO', 'KLÜNGELKASSE KÖLN', 'KVK'],
-        posters: ['BOXKELLER', 'DÄ LANGE LIVE', 'KÖLSCH-NACHT', 'VICE KÖLLE', 'FC HEIMSPIEL'],
-        far: [{ type: 'dom', angle: 20, dist: 160 }, { type: 'colonius', angle: 200, dist: 120 }, { type: 'triangle', angle: 40, dist: 200 }] },
+      theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true, era: 1968, canyon: true,
+        streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'GEREONSWALL'],
+        shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'HERRENCLUB', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'TRINKHALLE', 'BEAT-KELLER', 'KÖLSCH', 'TANZ-BAR', 'BAR · DANCING', 'WEINSTUBE', 'LICHTSPIELE', 'KLÜNGEL & CO', 'KLÜNGELKASSE KÖLN', 'KVK'],
+        posters: ['BOXKELLER', 'DÄ LANGE LIVE', 'KÖLSCH-NACHT', 'HEUTE: WESTERN', 'FC HEIMSPIEL', 'TANZ-TEE 17 UHR'],
+        far: [{ type: 'dom', angle: 20, dist: 160 }] },
       // 0 str,1 L,2 str,3 loop,4 str,5 L,6 str,7 jump,8 str,9 R,10 str,11 L,12 loop,13 str,14 L,15 tunnel,16 L,17 str,18 R,19 str,20 L,21 str
       segments: [
         { t: 'straight', len: 130 },
@@ -474,7 +479,7 @@
       props: [
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'residenz', seg: 0, u: 0.12, side: -1, dist: 24, keep: 40, story: 'Hee fängt ming Tour an: Residenz-Kino, Christophstraße. 1961 stond ich zum erste Mol an ner Tür. Un ich stonn immer noch.' },
-        { type: 'neon', seg: 0, u: 0.1, side: 1, dist: 14, text: 'CHICAGO AM RHEIN', color: '#ff2d95' },
+        { type: 'neon', seg: 0, u: 0.1, side: 1, dist: 14, text: 'CHICAGO AM RHEIN', color: '#ff3b30' },
         { type: 'expresskiosk', seg: 0, u: 0.22, side: 1, dist: 11, text: 'DÄ SCHNELLE: KÖLN – CHICAGO AM RHEIN!' },
         { type: 'kleinkoeln', seg: 4, u: 0.2, side: -1, dist: 24, keep: 40, story: 'Links: Klein Köln, Friesenstraße. Seit 1926 Nachtlizenz. Hee han sich de Boxer jewoge. Un ich mich och, nach dem dritten Kölsch.' },
         { type: 'boxring', seg: 6, u: 0.5, side: -1, dist: 16, keep: 20 },
@@ -491,8 +496,6 @@
         { type: 'zeppelin', seg: 0, u: 0.5, side: 1, dist: 60, face: false },
         { type: 'rain', seg: 0, u: 0.5, side: 0, dist: 0, face: false },
         { type: 'fireworks', seg: 5, u: 0.5, side: 1, dist: 100, face: false },
-        { type: 'palm', seg: 0, u: 0.3, side: -1, dist: 9, h: 8 },
-        { type: 'palm', seg: 0, u: 0.36, side: -1, dist: 9, h: 7 },
         { type: 'hahnentor', seg: 2, u: 0.5, side: 1, dist: 26, keep: 40, story: 'Hahnentor, Rudolfplatz. Da kome früher de Könige durch. Heut de Jecke. Un du, wenn de nit bremst.' },
         { type: 'aposteln', seg: 2, u: 0.5, side: -1, dist: 92, keep: 80, story: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens dat Radio runter.' },
         { type: 'richmodisturm', seg: 2, u: 0.15, side: 1, dist: 78, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.' },
@@ -503,37 +506,36 @@
         { type: 'agnes', seg: 13, u: 0.68, side: 1, dist: 116, keep: 84 },
         { type: 'fortx', seg: 14, u: 0.75, side: 1, dist: 104, keep: 82 },
         { type: 'sartory', seg: 4, u: 0.5, side: 1, dist: 30, keep: 50, story: 'Sartory-Säle. Boxnächte, Prunksitzunge, Schlägereien. Manchmal alles an einem Abend.' },
-        { type: 'neon', seg: 4, u: 0.5, side: -1, dist: 13, text: 'KIOSK', color: '#00e5ff', light: false },
-        { type: 'koelnturm', seg: 17, u: 0.5, side: -1, dist: 90, keep: 60 },
+        { type: 'neon', seg: 4, u: 0.5, side: -1, dist: 13, text: 'KIOSK', color: '#4da3ff', light: false },
         { type: 'gereon', seg: 19, u: 0.5, side: -1, dist: 94, keep: 88, story: 'St. Gereon am Gereonskloster. Das große Zehneck heißt Dekagon und gehört zu den zwölf romanischen Kirchen Kölns.' },
         { type: 'rails', seg: 7, u: 0.55, side: 0, dist: 0 },
         { type: 'loversclub', seg: 8, u: 0.5, side: 1, dist: 24, keep: 40, story: 'Lovers Club. Ming erste Tür, 1961. Reejel Nummer eins: Wer hee nit reinkütt, kütt nirjendwo rein. Du kütts rein. Ausnahmsweise.' },
         { type: 'tram', seg: 8, u: 0.5, side: -1, dist: 14 },
-        { type: 'neon', seg: 8, u: 0.8, side: -1, dist: 14, text: 'KLÜNGEL & SÖHNE – BAU · RAT · ZOCH', color: '#00e5ff' },
-        { type: 'neon', seg: 10, u: 0.5, side: 1, dist: 13, text: 'CASINO', color: '#ffd400' },
+        { type: 'neon', seg: 8, u: 0.8, side: -1, dist: 14, text: 'KLÜNGEL & SÖHNE – BAU · RAT · ZOCH', color: '#4da3ff' },
+        { type: 'neon', seg: 10, u: 0.5, side: 1, dist: 13, text: 'HERRENCLUB', color: '#ffd400' },
         { type: 'blitzer', seg: 10, u: 0.8, side: -1, dist: 8 },
         { type: 'kripo', seg: 11, u: 0.5, side: 1, dist: 10 },
-        { type: 'neon', seg: 13, u: 0.3, side: -1, dist: 13, text: 'VICE · KÖLLE', color: '#00e5ff', small: true },
-        { type: 'neon', seg: 13, u: 0.7, side: 1, dist: 13, text: 'FLAMINGO BAR', color: '#ff2d95', small: true },
+        { type: 'neon', seg: 13, u: 0.3, side: -1, dist: 13, text: 'WEINSTUBE', color: '#ff3b30', small: true },
+        { type: 'neon', seg: 13, u: 0.7, side: 1, dist: 13, text: 'BAR · DANCING', color: '#ffd400', small: true },
         { type: 'koelsch', seg: 13, u: 0.5, side: 1, dist: 20 },
         { type: 'eigelsteintor', seg: 14, u: 0.5, side: -1, dist: 28, keep: 40, story: 'Eigelsteintor. Hee hört de Ring op un de Eigelstein fängt an. Da wor et noch e bessje ehrlicher. Also weniger.' },
         { type: 'expresskiosk', seg: 17, u: 0.2, side: -1, dist: 11, text: 'DÄ SCHNELLE: DOMSCHATZ JEKLAUT – WER WOR ET?' },
-        { type: 'neon', seg: 17, u: 0.3, side: 1, dist: 14, text: 'MAN KENNT SICH · MAN HILFT SICH', color: '#ff2d95' },
-        { type: 'neon', seg: 17, u: 0.7, side: -1, dist: 13, text: 'DISCO', color: '#c04dff', light: false },
+        { type: 'neon', seg: 17, u: 0.3, side: 1, dist: 14, text: 'MAN KENNT SICH · MAN HILFT SICH', color: '#ff3b30' },
+        { type: 'neon', seg: 17, u: 0.7, side: -1, dist: 13, text: 'BEAT-KELLER', color: '#ff3b30', light: false },
         { type: 'buedchen', seg: 17, u: 0.85, side: 1, dist: 11 },
         { type: 'tramline', seg: 17, u: 0.5, side: 1, dist: 14, len: 100, face: false },
         { type: 'gangster', seg: 21, u: 0.6, side: 1, dist: 9 },
         { type: 'blitzer', seg: 21, u: 0.9, side: -1, dist: 8 },
         { type: 'bude', seg: 21, u: 0.2, side: 1, dist: 11, text: 'CURRYWURST BEI JUPP' },
-        { type: 'neon', seg: 21, u: 0.4, side: -1, dist: 14, text: 'ET HÄTT NOCH IMMER JOT JEJANGE', color: '#7fff00', light: false },
+        { type: 'neon', seg: 21, u: 0.4, side: -1, dist: 14, text: 'ET HÄTT NOCH IMMER JOT JEJANGE', color: '#ffe7b0', light: false },
         { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 },
         { type: 'roemerturm', seg: 4, u: 0.5, side: -1, dist: 68, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.' },
         { type: 'gereonsmuehle', seg: 10, u: 0.5, side: 1, dist: 30, story: 'De Gereonsmühl. Fröher hät se hee Mähl jemahle. Hück mahlt nur noch dä Verkehr op dem Hansaring.' },
-        { type: 'eistuete', seg: 2, u: 0.5, side: 1, dist: 72, story: 'De Eistüt op dem Dach am Neumarkt. Einer hät se falle looße – un keiner hät se opjehovve. Typisch Kölle.' }
       ]
     },
     {
-      id: 'zoch', name: 'Karneval Krawall', district: 'Altstadt Rallye', tag: 'TAG', order: 5,
+      id: 'zoch', where: 'EN DÄ ALTSTADT', name: 'Karneval Krawall', district: 'Altstadt Rallye', tag: 'TAG', order: 5,
+      signs: [[0, 'UBIERRING'], [1, 'CHLODWIGPLATZ'], [2, 'SEVERINSTRASSE'], [4, 'WAIDMARKT'], [5, 'MÜHLENBACH'], [6, 'HEUMARKT'], [7, 'GÜRZENICHSTRASSE'], [8, 'QUATERMARKT'], [9, 'ALTER MARKT'], [11, 'HOHE STRASSE'], [12, 'SCHILDERGASSE'], [13, 'NEUMARKT'], [14, 'APOSTELNSTRASSE'], [16, 'MITTELSTRASSE'], [17, 'HABSBURGERRING'], [18, 'HOHENSTAUFENRING'], [19, 'SACHSENRING'], [20, 'KAROLINGERRING']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Chlodwigplatz', 'Bottmühle', 'Severinstor', 'St. Maria im Kapitol', 'Gürzenich', 'Wallraf & Rathaus', 'Richmodisturm', 'St. Aposteln', 'Rudolfplatz'],
       diff: 3, laps: 3, scale: 1.45,
       desc: 'Der Zochweg als Rennstrecke: durchs Severinstor zu St. Maria im Kapitol, Gürzenich, Wallraf und Rathaus, dann über den Neumarkt an St. Aposteln vorbei. Zwei Gassen durch den Kamelleregen. Selbst die Gebäude tragen heute gute Laune.',
@@ -615,7 +617,8 @@
       ]
     },
     {
-      id: 'poller', name: 'Poller Wiesen Stunt-Park', district: 'Nachts op de Poller Wiesen', tag: 'NACHT', order: 7,
+      id: 'poller', where: 'OP DE POLLER WIESE', name: 'Poller Wiesen Stunt-Park', district: 'Nachts op de Poller Wiesen', tag: 'NACHT', order: 7,
+      signs: [[0, 'POLLER WIESEN'], [1, 'DEUTZER FREIHEIT'], [2, 'OTTOPLATZ'], [6, 'KENNEDY-UFER'], [8, 'DEUTZER WERFT'], [10, 'SIEGBURGER STRASSE'], [11, 'AM DEUTZER HAFEN'], [14, 'POLLER KIRCHWEG'], [16, 'WEIDENWEG'], [18, 'AUENWEG'], [23, 'RHEINPARKWEG'], [24, 'POLLER WIESEN']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Poller Wiesen', 'Deutzer Arena', 'Bahnhof Deutz', 'KölnTriangle', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
       diff: 5, laps: 3, scale: 1.45,
       desc: 'Die Poller Wiesen als Stunt-Arena, mit Deutzer Bahnhof, KölnTriangle und Hyatt am Rand der Runde. Am langen Dreiwege-Kurs: enger Schütte-Durchstich, Tunnel-Hauptstrecke oder weiter Wiesenbogen. Dazu drei Loopings, Korkenzieher und Brauhaus-Sprung. Vom anderen Ufer gucken die Kranhäuser zu. Bewertet wird Haltung, nicht Blech.',
@@ -703,16 +706,17 @@
       ]
     }
     ,{
-      id: 'heist', name: 'Domschatz-Raub 1975', district: 'Fluchtfahrt durch Chicago am Rhein', tag: 'NACHT', order: 8,
+      id: 'heist', where: 'ÜVVER DE ZOOBRÜCK', name: 'Domschatz-Raub 1975', district: 'Fluchtfahrt durch Chicago am Rhein', tag: 'NACHT', order: 8,
+      signs: [[0, 'TRANKGASSE'], [2, 'KUNIBERTSKLOSTERGASSE'], [4, 'EIGELSTEIN'], [5, 'EBERTPLATZ'], [6, 'NEUSSER WALL'], [7, 'THEODOR-HEUSS-RING'], [9, 'KONRAD-ADENAUER-UFER'], [10, 'ZOOBRÜCKE'], [11, 'AUENWEG'], [14, 'MESSEPLATZ'], [15, 'OTTOPLATZ'], [16, 'HOHENZOLLERNBRÜCKE'], [17, 'BISCHOFSGARTENSTRASSE'], [18, 'TRANKGASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Domschatzkammer', 'Hauptbahnhof', 'St. Kunibert', 'Eigelstein', 'St. Agnes', 'Fort X', 'Bastei', 'Bahnhof Deutz', 'Hohenzollernbrücke'],
       diff: 4, laps: 3, scale: 1.4,
       desc: 'Domschatz im Kofferraum, Kripo im Rückspiegel. An St. Kunibert und Fort X vorbei, von der Bastei über die Zoobrücke nach Deutz und über die Hohenzollernbrücke zurück. Zwei Fluchtgassen, ein viel zu auffälliges Auto. 1975. Nix für Ehrliche.',
       shortcuts: [{ id: 'heist-eigelstein', name: 'EIGELSTEIN-FLUCHTGASSE', seg: 3 }, { id: 'heist-messe', name: 'MESSEHOF-FLUCHTWEG', seg: 14 }],
-      theme: { sky: 0x05071c, fog: 0x1e1638, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x0e1e3e, street: 'gruenderzeit', catenary: true, heist: true,
+      theme: { sky: 0x05071c, fog: 0x1e1638, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x0e1e3e, street: 'gruenderzeit', catenary: true, heist: true, era: 1975,
         streets: ['TRANKGASSE', 'BRESLAUER PLATZ', 'EIGELSTEIN', 'EBERTPLATZ', 'THEODOR-HEUSS-RING', 'ZOOBRÜCKE', 'AM RHEINPARK', 'MESSEPLATZ', 'HEINRICH-BÖLL-PLATZ'],
-        shops: ['JUWELIER', 'PFANDLEIHE', 'AN- UND VERKAUF', 'NACHTCAFÉ', 'SPÄTI', 'BILLARD', 'HEHLER & SÖHNE', 'KÖLSCH', 'TRESORBAU', 'DOM-SOUVENIRS'],
-        far: [{ type: 'colonius', angle: 220, dist: 220 }, { type: 'stmartin', angle: 150, dist: 100 }, { type: 'flatbridge', angle: 60, dist: 80 }],
-        intro: ['1975, Jung. Domschatzkammer, drei Mann, ne Leiter un e Auto. Du bes et Auto.', 'Der Domschatz im Kofferraum, de Kripo im Nacken. Wer hee anhält, hät verlore. Wer nit anhält, och. Ävver später.', 'Chicago am Rhein, die Nacht vum Domschatz. Ich hann an der Tür jestande un nix jesinn. Ehrlich.'] },
+        shops: ['JUWELIER', 'PFANDLEIHE', 'AN- UND VERKAUF', 'NACHTCAFÉ', 'TRINKHALLE', 'BILLARD', 'HEHLER & SÖHNE', 'KÖLSCH', 'TRESORBAU', 'DOM-SOUVENIRS'],
+        far: [{ type: 'stmartin', angle: 150, dist: 100 }, { type: 'flatbridge', angle: 60, dist: 80 }],
+        intro: ['1975, Jung. Domschatzkammer, drei Mann, e Seil un e Auto. Du bes et Auto.', 'Der Domschatz im Kofferraum, de Kripo im Nacken. Wer hee anhält, hät verlore. Wer nit anhält, och. Ävver später.', 'Chicago am Rhein, die Nacht vum Domschatz. Ich hann an der Tür jestande un nix jesinn. Ehrlich.'] },
       // 0 str,1 jump (Hbf tracks),2 str,3 R,4 str (Eigelstein),5 loop (Ebertplatz),6 str,7 R,8 str,9 L,10 bridge (Zoobrücke),11 R,12 cork (Rheinpark),13 str,14 R,15 str,16 bridge (Hohenzollern),17 R,18 str
       segments: [
         { t: 'straight', len: 120 },
@@ -737,7 +741,7 @@
       ],
       props: [
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
-        { type: 'dom', seg: 0, u: 0.1, side: -1, dist: 80, keep: 120, story: 'Domschatzkammer. 1975 sin se durch et Fenster rin un met dem Schatz rus. Ich hann de Leiter jehalde. Also fast.' },
+        { type: 'dom', seg: 0, u: 0.1, side: -1, dist: 80, keep: 120, story: 'Domschatzkammer, November 1975. Drei Mann, et Jerüss huh, durch dä Lüftungsschaach, sechs Meter am Seil eraf. Ich hann et Seil jehalde. Also fast.' },
         { type: 'kripo', seg: 0, u: 0.25, side: 1, dist: 10, story: 'Kripo Köln. Die han schon jewartet. Die wisse alles. Nur nit, wo de hinfährs.' },
         { type: 'polizei', seg: 0, u: 0.45, side: -1, dist: 10 },
         { type: 'expresskiosk', seg: 0, u: 0.6, side: 1, dist: 11, text: 'DÄ SCHNELLE: DOMSCHATZ JEKLAUT – 1975' },
@@ -756,7 +760,7 @@
         { type: 'gangster', seg: 4, u: 0.3, side: -1, dist: 9 },
         { type: 'gangster', seg: 4, u: 0.34, side: -1, dist: 11 },
         { type: 'zockertisch', seg: 4, u: 0.75, side: -1, dist: 11, story: 'De Zocker vum Eigelstein. Die han op dich jewettet. Op de Kripo och. Die jewinne immer.' },
-        { type: 'neon', seg: 6, u: 0.5, side: 1, dist: 14, text: 'HEHLER & SÖHNE', color: '#ff2d95' },
+        { type: 'neon', seg: 6, u: 0.5, side: 1, dist: 14, text: 'HEHLER & SÖHNE', color: '#ff3b30' },
         { type: 'kripo', seg: 8, u: 0.5, side: -1, dist: 10 },
         { type: 'rhine', seg: 10, u: 0.5, side: 0, dist: 0 },
         { type: 'zoobruecke', seg: 10, u: 0.5, side: -1, dist: 44, face: false, story: 'Zoobrück. Unger dir der Rhing, üvver dir de Seilbahn, hinger dir de Kripo. Vor dir: nix. Jas.' },
@@ -770,16 +774,15 @@
         { type: 'rhine', seg: 16, u: 0.5, side: 0, dist: 0 },
         { type: 'hbarch', seg: 16, u: 0.5, side: 0, dist: 0, story: 'Hohenzollernbrück. Die Zöch fahre, de Kripo fährt, du fährs. Nur der Schatz liegt still.' },
         { type: 'boat', seg: 16, u: 0.3, side: 1, dist: 60 },
-        { type: 'museum', seg: 17, u: 0.5, side: -1, dist: 42, keep: 50 },
-        { type: 'musicaldome', seg: 17, u: 0.2, side: 1, dist: 60 },
         { type: 'rain', seg: 0, u: 0.5, side: 0, dist: 0, face: false },
         { type: 'zeppelin', seg: 7, u: 0.5, side: 1, dist: 60, face: false },
         { type: 'crowd', seg: 18, u: 0.6, side: 1, dist: 10 },
-        { type: 'neon', seg: 18, u: 0.4, side: -1, dist: 14, text: 'DOM-SOUVENIRS · ORIGINAL', color: '#00e5ff' }
+        { type: 'neon', seg: 18, u: 0.4, side: -1, dist: 14, text: 'DOM-SOUVENIRS · ORIGINAL', color: '#4da3ff' }
       ]
     },
     {
-      id: 'zuelpicher', name: 'Zülpicher 11.11.', district: 'Kwartier Latäng um 11 Uhr 11', tag: 'TAG', order: 9,
+      id: 'zuelpicher', where: 'OP DÄ ZÜLPICHER', name: 'Zülpicher 11.11.', district: 'Kwartier Latäng um 11 Uhr 11', tag: 'TAG', order: 9,
+      signs: [[0, 'ZÜLPICHER STRASSE'], [1, 'ROONSTRASSE'], [2, 'BARBAROSSAPLATZ'], [3, 'ZÜLPICHER STRASSE'], [4, 'LUXEMBURGER STRASSE'], [5, 'UNIVERSITÄTSSTRASSE'], [6, 'ALBERTUS-MAGNUS-PLATZ'], [7, 'UNIVERSITÄTSSTRASSE'], [9, 'AACHENER STRASSE'], [13, 'RUDOLFPLATZ'], [14, 'HAHNENSTRASSE'], [15, 'NEUMARKT'], [17, 'MAURITIUSSTEINWEG']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zülpicher Platz', 'Synagoge Roonstraße', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'Melaten', 'St. Aposteln', 'Richmodisturm', 'Wasserturm'],
       diff: 2, laps: 3, scale: 1.35,
       desc: 'Elfter im Elften im Kwartier Latäng. Vorbei an der Synagoge Roonstraße, St. Pantaleon und der Uni, dann drei Wege zum Weiher: Mensa-Durchstich, Hauptkurs oder breite Weiher-Runde. Melaten und Richmodisturm gucken zu. Rathenau-Gasse und Ring-Hinterhof kürzen weiter ab. Das Studium dauert trotzdem länger.',
@@ -790,10 +793,10 @@
         { id: 'zuelpicher-weiher', name: 'WEIHER-RUNDE', fork: 'zuelpicher-dreiwege', from: { seg: 8, u: 0.35 }, to: { seg: 10, u: 0.75 },
           via: [{ x: 363, z: 17 }, { x: 292, z: -59 }], halfWidth: 4.7, style: 'scenic' }
       ],
-      theme: { sky: 0x8fc0ff, fog: 0xffe6f5, ground: 0xa9a49c, sun: 0xfff0ff, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x3f7fc0, confetti: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
+      theme: { sky: 0xb4bcc8, fog: 0xd8d4d8, ground: 0xa9a49c, sun: 0xfff4e0, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x5a7a98, confetti: true, autumn: true, street: 'gruenderzeit', catenary: true, koelschRich: true,
         streets: ['ZÜLPICHER STRASSE', 'ZÜLPICHER PLATZ', 'BARBAROSSAPLATZ', 'LUXEMBURGER STR.', 'ZÜLPICHER WALL', 'UNIVERSITÄTSSTR.', 'HOHENSTAUFENRING', 'RATHENAUPLATZ'],
         shops: ['KÖLSCH', 'KOSTÜME', 'STUDENTENFUTTER', 'MENSA', 'COPYSHOP', 'BÜTZJE-BAR', 'KAMELLE', 'DÖNER', 'PLATTENLADEN', 'ALAAF-SHOP', 'BÄCKEREI JÜPP', 'KIOSK · KÖLSCH 1,50'],
-        far: [{ type: 'dom', angle: 40, dist: 180 }, { type: 'colonius', angle: 320, dist: 160 }],
+        far: [{ type: 'dom', angle: 40, dist: 180 }, { type: 'colonius', angle: 320, dist: 160 }, { type: 'stadion', angle: 262, dist: 300 }],
         intro: ['Elfter im Elften, elf Uhr elf. Die Studente han seit sechs Uhr Kölsch im Blut un noch keine Abschluss.', 'Zülpicher Stroß. Hee bruchs de kein Ausweis, nur e Kostüm. Un e Auto, dat jeradeaus fährt.', 'Kwartier Latäng. Latein kann hee keiner, ävver alle kenne dat Wort Kölsch.'] },
       // 0 str,1 L,2 str,3 jump (Kneipen),4 str,5 L,6 hill,7 loop (Mensa),8 str,9 L,10 str (Aachener Weiher),11 R,12 str,13 L,14 dip,15 str,16 L,17 str
       segments: [
@@ -838,8 +841,9 @@
         { type: 'kirche', seg: 6, u: 0.5, side: -1, dist: 48, h: 30 },
         { type: 'tribuene', seg: 8, u: 0.4, side: 1, dist: 12, keep: 30, story: 'Mensa-Looping. Einmol rund, wie de Schlang an der Essensausgab. Nur schneller un ohne Erbsesupp.' },
         { type: 'koelsch', seg: 8, u: 0.7, side: -1, dist: 18 },
-        { type: 'pond', seg: 10, u: 0.5, side: 1, dist: 40, seed: 3, keep: 30, story: 'Aachener Weiher. An Wieverfastelovend schwemme hee de Krawatte. An 11.11. de Studente.' },
+        { type: 'pond', seg: 10, u: 0.5, side: 1, dist: 46, seed: 3, scale: 1.8, lawn: true, keep: 46, story: 'Aachener Weiher. An Wieverfastelovend schwemme hee de Krawatte. An 11.11. de Studente.' },
         { type: 'park', seg: 10, u: 0.3, side: -1, dist: 44, seed: 6, w: 40, d: 40, keep: 30 },
+        { type: 'billboard', seg: 9, u: 0.55, side: -1, dist: 14, text: 'HEIMSPILL · ANSTOSS 15:30', story: 'Do henge litt Müngersdorf. Vier Türm, fuffzigdausend Hätze. Do stonn ich nit an dr Dür – do stonn ich en dr Kurv.' },
         { type: 'melaten', seg: 10, u: 0.74, side: -1, dist: 140, keep: 74, story: 'Melaten. Das historische Tor an der Aachener Straße führt zu einem grünen Ort der Erinnerung. Die Rennstrecke bleibt draußen.' },
         { type: 'crowd', seg: 10, u: 0.8, side: 1, dist: 10 },
         { type: 'polizei', seg: 12, u: 0.5, side: 1, dist: 10 },
@@ -858,7 +862,8 @@
       ]
     },
     {
-      id: 'rodenkirchen', name: 'Rodenkirchen Rheinbad', district: 'Sommer am Rhing, Südbrücke bis Weiß', tag: 'TAG', order: 10,
+      id: 'rodenkirchen', where: 'EN RODENKIRCHE', name: 'Rodenkirchen Rheinbad', district: 'Sommer am Rhing, Südbrücke bis Weiß', tag: 'TAG', order: 10,
+      signs: [[0, 'RODENKIRCHENER LEINPFAD'], [2, 'KIRCHSTRASSE'], [4, 'UFERSTRASSE'], [7, 'MAIGLERSTRASSE'], [9, 'WEISSER LEINPFAD'], [10, 'WEISSER HAUPTSTRASSE'], [11, 'WEISSER LEINPFAD'], [12, 'SÜRTHER LEINPFAD'], [16, 'MÜHLENGASSE'], [17, 'SÜRTHER HAUPTSTRASSE'], [19, 'RODENKIRCHENER LEINPFAD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Rheinuferweg', 'Alt St. Maternus', 'Rodenkirchener Brücke', 'Weiß', 'Rheinstrand', 'Sürther Bootshaus'],
       diff: 3, laps: 3, scale: 1.5,
       desc: 'Sommer in Rodenkirchen: an Alt St. Maternus und den Rheinterrassen vorbei nach Weiß, mit Strand-Looping und Bootshaus-Korkenzieher. Vor der Brücke: Weißer Schlupf, Hauptkurs oder breiter Rheinterrassen-Bogen. Ufergasse und Bootshausweg bleiben. Wer zu kurz springt, badet. Wer zu weit springt, badet in Weiß.',
@@ -918,7 +923,7 @@
         { type: 'tribuene', seg: 6, u: 0.4, side: -1, dist: 14, story: 'Strand-Looping. Oben der Himmel, unten der Rhing, dazwische du. Un e Kölsch, dat rausfällt.' },
         { type: 'kirche', seg: 7, u: 0.5, side: -1, dist: 50, h: 30, color: 0xc4ad8c },
         { type: 'rhine', seg: 8, u: 0.5, side: 0, dist: 0 },
-        { type: 'suspension', seg: 8, u: 0.5, side: 1, dist: 60, face: false, story: 'Rodenkirchener Brück. Autobahn nach Bonn. Da wollt noch nie einer hin. Dat is Klüngel op Bundesebene.' },
+        { type: 'suspension', seg: 8, u: 0.5, side: 1, dist: 60, face: false, story: 'Rodenkirchener Brück. Do drüvver jeit de A4 – vun Aachen bes noh Olpe. Hängebröck, wie en Kölle sich dat jehürt.' },
         { type: 'boat', seg: 8, u: 0.3, side: -1, dist: 55 }, { type: 'barge', seg: 8, u: 0.7, side: 1, dist: 70 },
         { type: 'row', seg: 10, u: 0.5, side: -1, dist: 24, style: 'wiederaufbau', seed: 3, n: 4, story: 'Weiß. Villa an Villa. Hee wohnt der Klüngel, wenn er in Rente is.' },
         { type: 'kirche', seg: 10, u: 0.8, side: -1, dist: 44, h: 26 },
@@ -939,7 +944,7 @@
   const TUENN = {
     name: 'Dä Lange', emoji: '🎩',
     intro: [
-      'He, wor et wirklich gefährlich es, da wächsste über dich hinaus. Also: Gas, Hätz un Verstand.',
+      'Wo et brenzlich weed, do wähß de üvver dich erus. Also: Jas, Hätz un Verstand.',
       'Willkomme in Chicago am Rhein, Jung. Hee jilt nur eins: schneller sin als ich.',
       'Ich bin dä Lange. Zwei Meter zehn an der Tür. Mir jehört die Streck, der Asphalt un dat Kölsch danach.',
       'Kölle is keine Stadt. Kölle is e Jeföhl. Un heut Nacht is et schnell.'
@@ -949,22 +954,22 @@
       'Jung, dat wor nix.',
       'Do fährs wie ne Kamellebüggel im Wind.',
       'Ich kenn ne juten Blechschmied. Ming Schwager. Kost extra.',
-      'Et hätz schlecht, ävver et kütt! Weiter, Jung.',
+      'Et kütt wie et kütt. Wigger, Jung.',
       'Mer nennt dat Klüngel-Kurve: alle wissen et, keiner fährt se richtig.',
       'Schäl hätt dat besser jemaat. Un der sieht doppelt.'
     ],
-    heist: ['Domschatz im Kofferraum, Kripo im Rückspiejel. Jetz jeht et lös, Jung. Un zwar schnell.', 'Kripo Kölle, direkt vum Start. Die han op dich jewartet. Zeig ihne de Zoobrück.', 'Der Kommissar hät en Zigarett an un et Blaulicht. Beides brennt för dich.'],
+    heist: ['Domschatz im Kofferraum, Kripo im Rückspiejel. Jetz jeit et loss, Jung. Un zwar schnell.', 'Kripo Kölle, direkt vum Start. Die han op dich jewartet. Zeig ihne de Zoobrück.', 'Der Kommissar hät en Zigarett an un et Blaulicht. Beides brennt för dich.'],
     roof: ['Dat wor et Dach, Jung. Der Schornsteinfeger schickt de Rechnung.', 'Zo kurz jesprunge. Jetz wohns de im Dachjeschoss. Ohne Miete.', 'Durch et Dach in de Stuff. Die Lück han jrad jejesse. Sag wenigstens Mahlzeit.', 'Wer üvver et Haus will, bruch Anlauf. Wer durch et Haus will, bruch ne Anwalt.'],
     water: ['Un plumps in der Rhing. Der Schokoladenmuseum-Kapitän fischt dich raus.', 'Dat wor kein Sprung, dat wor ne Taufe.', 'Du solls über de Rhing, nit in de Rhing, Jung!'],
     loopFall: ['Vom Looping jefalle wie ne Kamellebüggel. Jas jeben, Jung!', 'Im Looping bremst mer nit. Dat is wie Kölsch ohne Deckel.', 'Die Elefanten im Zoo han jelacht. Beide.'],
     loopOk: ['Sauber durch de Looping! Dat kriegt en Deckelstrich.', 'Alaaf! Kopfüber un trotzdem jerade.'],
     jumpOk: ['Dat wor ne Sprung! Chicago am Rhein hat en neuen Stuntman.', 'Üvver et Dach! Die Lück drin han et nit mol jemerkt. Die kucke Fernsehen.', 'Jesprunge wie ne Jeck vum Balkon an Wieverfastelovend. Nur jelandet.', 'Jeflogen wie ne Taube vum Dom. Nur mit mieh Stil.'],
     lap: ['Noch en Rund, Jung. Kölsch is kalt jestellt.', 'Rund vorbei. Der Köbes zählt mit.', 'Letzte Rund! Fott domet!'],
-    win: ['Jewonne! Do bes jetz offiziell en Kölsche Jung. Oder Mädche. Ejal, Kölsch is för alle.', 'Ne Sieg in Chicago am Rhein. Ich hätt mich fast jefreut.', 'Alaaf, Jung! Dat kütt in de Express. Un ich kassier de Wette.'],
-    lose: ['Verlore. Aber et hätt noch immer jot jejange. Meistens.', 'Et hätz schlecht, ävver et kütt! Nächstes Mol.', 'Nächstes Mol, Jung. Ming Streck läuft nit fott.'],
+    win: ['Jewonne! Do bes jetz offiziell en Kölsche Jung. Oder Mädche. Ejal, Kölsch is för alle.', 'Ne Sieg in Chicago am Rhein. Ich hätt mich fast jefreut.', 'Alaaf, Jung! Dat kütt en Dä Schnelle. Un ich kassier de Wette.'],
+    lose: ['Verlore. Aber et hätt noch immer jot jejange. Meistens.', 'Et kütt wie et kütt. Nächs Mol.', 'Nächstes Mol, Jung. Ming Streck läuft nit fott.'],
     overtake: ['Do bes vorbei! Jetz nit einschlofe.', 'Überholt wie de KVK am Ebertplatz.'],
     overtaken: ['Un fott is er. Wie ming Steuererklärung.', 'Der zieht an dir vorbei wie de Rhing bei Hochwasser.'],
-    record: ['NEUE BESTZEIT! Dat schreib ich uff de Deckel.', 'Streckenrekord! Ich lass dich uff ne Bierdeckel drucke.'],
+    record: ['NEUE BESTZEIT! Dat schriev ich op dä Deckel.', 'Streckerekord! Ich loss dich op ne Bierdeckel drucke.'],
     turbo: ['Turbo! Jetz brennt de Asphalt.', 'Nitro, Jung! Dat riecht nach Kölsch un Benzin.'],
     // real side streets: what dä Lange says when you come out at the other end ({street}, {m} metres)
     routes: {
@@ -979,7 +984,7 @@
       rise: ['Et baut sich op … wie de Oper. Nur schneller.', 'Jleich kütt et. Janz ruhig. Nä – janz schnell!', 'Hörs de dat? Do kütt jet Jroßes. Wie Rosenmontag, nur lauter.'],
       hook: ['LamboGina! Ganz Kölle singk mit.', 'Refrain! Dä Dom wippt, dat han ich jesinn.', 'Dat Leed. Dä Keil. Dä Ring. Mieh bruch keiner.']
     },
-    damage: ['Totalschaden. Heinzel schraubt dich nachts wieder zesamme.', 'Dat Auto is fott. Dat nächste is uff Deckel.'],
+    damage: ['Totalschaden. Heinzel schraubt dich nachts wieder zesamme.', 'Dat Auto es fott. Dat nächste es op Deckel.'],
     events: [
       'Ne Taube op der Windschutzscheibe. Typisch Domplatte.',
       'Der Köbes reicht dir im Vorbeifahre e Kölsch. Deckelstrich!',
@@ -995,11 +1000,12 @@
       'Ne Kranz Kölsch fliegt vum Balkon. Der Köbes hät jezielt.',
       'Der Nachtwächter vum Dom kuckt op de Uhr. Er hät keine. Er kuckt trotzdem.'
     ],
-    door: ['Du kütts hee nit rein! ... Ausnahmsweise doch.', 'Krawatte? Nä. Kölsch? Jo. Dann kütts de rein.', 'Ich hab 40 Johr an der Tür jestande. Ich kenn dich. Rein.', 'Turnschuh, Jung? Ejal. Heut Nacht is Rennen.'],
+    door: ['Du kütts hee nit rein! ... Ausnahmsweise doch.', 'Krawatte? Nä. Kölsch? Jo. Dann kütts de rein.', 'Ich hann mi janz Levve an dr Dür jestande. Ich kenn dich. Rein.', 'Turnschuh, Jung? Ejal. Heut Nacht is Rennen.'],
     tuennsTelefon: ['Man kennt sich, man hilft sich. Ming Türsteher stonn jetz op der Streck. Die andere kumme hee nit durch.', 'Ich hab telefoniert. Sechs Sekunde Ruhe vor dä Jecke. Kost dich e Kölsch.', 'Klüngel, Jung. De Ampeln sin jrün, nur för dich.'],
     express: [
       'DÄ SCHNELLE: KÖLN – CHICAGO AM RHEIN! 50.000 Straftaten, e Drittel jeklärt.',
       'DÄ SCHNELLE: Domschatz jeklaut! Dä Lange hät e Alibi: Kölsch.',
+      'DÄ SCHNELLE: MONSTRANZ FOTT – STEINE TAUCHEN WIEDER OP. Dä Lange: „Ich hann nix jesinn.“',
       'DÄ SCHNELLE: Banküberfall am Dom! Geiseln, Kripo, Kamelle.',
       'DÄ SCHNELLE: Zocker verliert Villa in Marienburg. Jewinnt se an der Tür zurück.',
       'DÄ SCHNELLE: Boxnacht im Sartory – Sieger: dä Köbes met dem Kranz.',
@@ -1024,6 +1030,8 @@
       'RADIO KÖLLE: Stau am Ebertplatz. Wie immer. Seit 1974.',
       'RADIO KÖLLE: Blitzer op der Zoobrücke. Dä Lange vum Ring hät ihn selbst opjestellt.',
       'RADIO KÖLLE: Der FC hät jewonne. Nä, Spaß. Weiter im Programm.',
+      'RADIO KÖLLE: Dä FC hät jewonne. Kein Spaß. Dä Dom hät jeläut.',
+      'RADIO KÖLLE: Samsdach, halv vier: Müngersdorf singk, un ganz Kölle hürt zo. Rut un wieß.',
       'RADIO KÖLLE: Die Oper is fertig! Ha, ha. Verkehrsmeldung: nä.',
       'RADIO KÖLLE: KVK-Streik. Die Bahn steht, die Jecke laufe.',
       'RADIO KÖLLE: Tauben op der Domplatte. Fahrt bitte vorsichtig durch de Kamelle.',
@@ -1040,8 +1048,8 @@
     rotlicht: ['Rot jefahre! Dat Foto kütt per Post, mit Jrooß vum Ordnungsamt.', 'Dat wor rut. Nit Kirschrut – Knöllchen-Rut.', 'Ampel rut, Foß schwer. Dä Rotlichtblitzer freut sich.', 'Rut is och en Farv, Jung. En düür Farv.'],
     gelb: ['Dat wor noch jelb. Dunkeljelb.', 'Kirschgrün! Jrad noch.', 'Jelb heiß: Jas. Steht su in keiner Fahrschul.'],
     blitzer: [
-      'BLITZ! Dat Foto kütt an de Bierdeckel. Knöllchen: 60 Euro.',
-      'BLITZ! Klüngel Tom regelt dat. Für 40 Euro un e Kölsch.',
+      'BLITZ! Dat Foto kütt an dä Bierdeckel. Knöllchen: 40 Mark.',
+      'BLITZ! Klüngel Tom regelt dat. För 20 Mark un e Kölsch.',
       'BLITZ! Lächel, Jung. Dat Bild hängt bald am Dom.',
       'BLITZ! De Stadt bedankt sich. Die Oper muss ja bezahlt werde.'
     ],
@@ -1072,18 +1080,19 @@
       strassenband: ['Kölsche Tön op dr Stroß. Wer do nit mitsingk, es nit vun hee.', 'Die Tuba es älter als dä Musiker. Un leuter.'],
       jga: ['Junggesellinnenabschied. Die kumme us Bielefeld un jonn als Kölsche heim.', 'Team Braut. Dä Bräutijam es bestemmp och in dr Stadt. Im andere Veedel. Zom Glück.'],
       rievkoochebud: ['Rievkooche met Appelkruut. Dat es kein Snack, dat es e Jrundrääch.', 'Drei Stöck, un dann nochens drei. Dä Magen vergiss dat nit.'],
+      fanmarsch: ['„Rut un wieß, et Hätz vun Kölle – mer jonn noh Müngersdorf!“ Samsdachs singk dat janze Veedel.', 'Dä Jeißbock es dä einzije, dä bei mir ohne Kaat erenkütt.', 'Heimspill. Fuffzigdausend Hätze, eine Farv. Do stonn ich nit an dr Dür – do stonn ich en dr Kurv.'],
       autohausgina: ['Autohaus Gina. Do steiht dä weiße Keil. Dä Poster wor fröher övver mingem Bett.', 'LamboGina. Lurens, wie dä sich drieht. Wie ich, wenn dä Bass kütt.'],
       lamboposter: ['LamboGina op dem Plakat. Dä weiße Keil vun Kölle, hundertdressisch BPM.', 'Dat Plakat hing fröher in jedem Jugendzemmer. Jetz hängk et am Ring.'],
       brauhaus: ['Brauhaus. Der Köbes bringt Kölsch, bis de ne Deckel op et Glas lächs. Ich hann noch nie ne Deckel jebruch.', 'Hee drin hann ich mieh Lück rausjeschmisse als reinjelosse. Wor e jutes Jeschäft.', 'Kölsch is dat einzije Bier, dat mer och versteht, wenn mer et nit trinkt.', 'Der Wirt schuldet mir noch e Kölsch vun 1974. Ich wart. Ich hann Zick.', 'Die stonn vor der Tür, weil se drinne nit mieh stonn künne.'],
       buedchen: ['Büdchen. Dat Kölner Wohnzimmer. Kölsch, Zigaretten, Klüngel. Alles zum Mitnehmen.', 'Am Büdchen hann ich mieh jelernt als op der Schull. Vor allem rechne. Met Deckel.', 'Der Büdchen-Mann kennt jeden. Ich kenn ihn. Also kenn ich jeden.'],
       blitzer: ['Blitzer. Der einzije in Kölle, der pünktlich is.', 'Dat Ding hät mieh Fotos vun mir als ming Mutter.', 'Blitzer? Hee? Dat hät mir keiner jesaht. Ich kenn jemand, der dat wegmacht.'],
-      polizei: ['Kripo. Die kenne mich, ich kenn die. Mer nicke sich zo. Mieh nit.', 'Peterwagen. Jrön-wieß wie de Ampel: erst jrön, dann wieß mer nix mieh.', 'Die Polizei is ming Freund un Helfer. Meistens Helfer. Beim Rausjonn.'],
+      polizei: ['Kripo. Die kenne mich, ich kenn die. Mer nicke sich zo. Mieh nit.', 'Streifewage. Jrön-wieß wie de Ampel: erst jrön, dann wieß mer nix mieh.', 'Die Polizei is ming Freund un Helfer. Meistens Helfer. Beim Rausjonn.'],
       kirche: ['Kirch. Do jeht mer sonntags rein, wenn mer samstags nit reinjekumme is.', 'Zwölf romanische Kirche hät Kölle. Ich hann an elf Türe jestanden. Die zwölfte hät ne Pastor.', 'Der Pastor un ich hann dat selbe Jeschäft: mer entscheide, wer reinkütt.'],
-      haltestelle: ['KVK. Kütt, wann se will. Wie de Schäl.', 'Die Bahn steht, die Lück laufe. Kölle funktioniert trotzdem. Irjendwie.', 'Linie 1 nach Weiden West. Do wollt noch nie einer hin. Fährt trotzdem.'],
+      haltestelle: ['KVK. Kütt, wann se will. Wie de Schäl.', 'Die Bahn steht, die Lück laufe. Kölle funktioniert trotzdem. Irjendwie.', 'Linie 1 noh Weiden West. Samsdachs es se voll bes unger et Daach – alles rut un wieß, unterwegs noh Müngersdorf.'],
       park: ['Jrön in Kölle. Hee lieje sonntags de Lück, die samstags bei mir nit reinjekumme sin.', 'Bäume. Die stonn och de janze Nacht. Ohne Kölsch. Respekt.', 'Park. Hee wor mol e Spielcasino. Nä, Spaß. Ävver et hät sich so anjefühlt.'],
       taxi: ['Taxi. Der Fahrer kennt de Stadt un ding Jeheimnisse. Beides fährt er nach Hus.', 'Hellelfenbein, dat Taxi. Wie ming Zähn nach dreißig Johr Zigarre.'],
       platz: ['Ne Platz in Kölle: Marktstand, Kölsch-Stand, Büdchen. Un e Denkmal, dat keiner kennt.', 'Op dem Platz hann se mich mol jefragt, ob ich der Bürjermeister bin. Ich hann nä jesaht. Wor jelogen.'],
-      tram: ['Die Bahn. Wieß-rut wie der FC. Un jenau so pünktlich.'],
+      tram: ['Die Bahn. Rut un wieß wie dä FC. Un jenau esu treu.', 'Rut un wieß, dat sin de Farve vun Kölle. Op dä Bahn un en dä Kurv.'],
       tunnel: ['Tunnel. Dunkel, eng, laut. Wie der Boxkeller om Samstag.'],
       loop: ['Looping. Einmol rund, wie ne Zocker-Abend: oben bes de König, unten fällt et Kölsch us der Täsch.', 'Kopp unge, Jas oben. Dat es dat einzije, wat ich in der Schull jelernt hann.'],
       cork: ['Korkenzieher. Einmol um de eijene Achs, wie ich nach dem zwölfte Kölsch. Nur schneller.', 'Der Korkenzieher. Links Himmel, rechts Kölle, oben Stroß. Dat is Stunts, Jung, nit de KVK.', 'Hee dreht sich de Stroß, nit dinge Kopp. Meistens.'],
@@ -1162,7 +1171,7 @@
       caught: ['Erwischt. Dat Paket is jetz bei der Kripo. Un du och. Klüngel Tom regelt dat. Irjendwann.', 'Die Kripo hät dich. Ich hab nix jesinn, ich wor an der Tür.'],
       far: ['Nit so weit, Jung. Dat Auto steht do hinge.', 'Wo willste hin? Der Wagen wartet.'],
       headlineDone: 'DÄ SCHNELLE: KURIER LIEFERT PAKET – INHALT UNBEKANNT, KRIPO SPRACHLOS',
-      headlineCaught: 'DÄ SCHNELLE: KRIPO STOPPT KURIER OP DE RINGE – PAKET WOR „KAMELLE“',
+      headlineCaught: 'DÄ SCHNELLE: KRIPO STOPPT KURIER {where} – PAKET WOR „KAMELLE“',
       headlineLate: 'DÄ SCHNELLE: KURIER ZU SPÄT – PAKET JETZ BEIM FUNDBÜRO'
     },
     // Karriere: the Nachtschicht, twelve chapters from the new kid at the door to the white wedge
@@ -1188,7 +1197,7 @@
       lose: ['Striche weg. Der Köbes streicht se durch. Mit Jenuss.', 'Verlore. Dä Lange schreibt et op. Er vergisst nix.', 'Dat kost. Nächstes Mol bring Jeld statt Hätz.', 'Der Tisch hät jewonne. Der Tisch jewinnt immer. Frag Tom.'],
       tomLose: ['Dat hät nix mit Können zu dun. Nix.', 'Ich hab dich jewinne lasse. Man kennt sich.', 'Noch e Spiel. Ich hab jrad ming Brille jeputzt.', 'Glück, Jung. Reines Glück. Un e bissche Klüngel.'],
       tomWin: ['Man kennt sich, man hilft sich. Mir selbst zuerst.', 'Dat wor jar nix. Noch eins? Ich hab Zeit, du häs Striche.', 'Danke. Die Striche jonn an de Bauverein.'],
-      langerWin: ['Die Bank jewinnt. Die Bank bin ich. Kölsch?', 'Ich hab 40 Johr an der Tür jestande. Ich seh, wenn einer blufft.', 'Dat Spiel is älter als du. Un ich och.'],
+      langerWin: ['Die Bank jewinnt. Die Bank bin ich. Kölsch?', 'Ich hann mi janz Levve an dr Dür jestande. Ich sinn, wann einer blöff.', 'Dat Spiel is älter als du. Un ich och.'],
       trick: ['Meiner.', 'Dat nehm ich mit, danke.', 'Schmier, Schäl, schmier!', 'Zehn Augen, Jung. Die fehlen dir nachher.'],
       trickLost: ['Jo, jo. Nimm en. Kütt noch wat.', 'Pff. Der Stich wor nix wert.', 'Tom, wat wor dat?'],
       rommeStart: ['Rommé. Dreißig Punkte zum Rauskumme, dann anlegen. Kein Joker, der Türsteher traut keinem.', 'Karten sin jemischt. Vum Köbes. Also vielleicht.', 'Ohne Joker, Jung. Joker sin für Zauberer.'],
@@ -1215,14 +1224,14 @@
     // five Kölsch in one lap: the Kölsch-Kurve
     promille: ['Jung, dat wor dat fünfte in einer Rund. Fahr jerade. Oder versuch et.', 'Fünf Kölsch, eine Rund. Jetz fährt dat Auto Schlangenlinie. Wie ich nach der Sitzung.', 'Kölsch-Kurve! Der Köbes hät dich jut versorgt. Zo jut.'],
     promilleEnd: ['Wieder nüchtern. Sagt der Türsteher. Also nit janz.'],
-    // Kripo Kölle: the Peterwagen that shows up after three Knöllchen
+    // Kripo Kölle: the Streifewage that shows up after three Knöllchen
     kripo: {
-      start: ['Kripo Kölle! Drei Knöllchen, Jung. Jetz kütt der Peterwagen.', 'Hier spricht die Polizei Köln. Rechts ranfahren. Oder schneller werden, wie de wells.', 'Dat is die Kripo. Dä Lange hät nix jesaht. Noch nit.'],
-      hit: ['Rammstoß! Dat jibt Punkte in Flensburg. Un ne Beule.', 'Der Peterwagen küsst dich. Ohne Bützje.', 'Kripo: „Anhalten!“ Du: „Später.“'],
-      off: ['Ich hab met dem Kommissar telefoniert. Mer kenne uns vum Kegeln. Die Kripo dreht ab.', 'Klüngel, Jung. Der Peterwagen hät plötzlich Feierabend.', 'Dat wor der Hauptkommissar. Ich hann ihm 1974 an der Tür jeholfe. Erledigt.'],
-      giveup: ['Kripo: „Schichtwechsel.“ Der Peterwagen dreht ab. Dat wor knapp.', 'Die Kripo hät dich verlore. Oder Hunger. Beides jut för dich.'],
+      start: ['Kripo Kölle! Drei Knöllchen, Jung. Jetz kütt dä Streifewage.', 'Hier spricht die Polizei Köln. Rechts ranfahren. Oder schneller werden, wie de wells.', 'Dat is die Kripo. Dä Lange hät nix jesaht. Noch nit.'],
+      hit: ['Rammstoß! Dat jibt Punkte in Flensburg. Un ne Beule.', 'Dä Streifewage bütz dich. Met Blech.', 'Kripo: „Anhalten!“ Du: „Später.“'],
+      off: ['Ich hab met dem Kommissar telefoniert. Mer kenne uns vum Kegeln. Die Kripo dreht ab.', 'Klüngel, Jung. Dä Streifewage hät plötzlich Feierovend.', 'Dat wor der Hauptkommissar. Ich hann ihm 1974 an der Tür jeholfe. Erledigt.'],
+      giveup: ['Kripo: „Schichtwechsel.“ Dä Streifewage dreiht av. Dat wor knapp.', 'Die Kripo hät dich verlore. Oder Hunger. Beides jut för dich.'],
       lost: ['Wo es dä hin? Dä es en de Seitenstroß verschwunde!', 'Funkspruch: Verdächtijer im Veedel verloore. Schon widder.', 'Mer han en verloore. Dat Veedel hät zo vill Jasse.'],
-      follows: ['Die Kripo kütt hinger dir her en de Seitenstroß!', 'Blaulich im Rückspiejel – die fahre mit en et Veedel!', 'Dä Peterwagen biegt och av. Jas!'],
+      follows: ['Die Kripo kütt hinger dir her en de Seitenstroß!', 'Blaulich im Rückspiejel – die fahre mit en et Veedel!', 'Dä Streifewage biegt och av. Jas!'],
       caught: ['Die Kripo hät dich zerlegt. Der Blechschmied freut sich. Ming Schwager.']
     },
     // the doorman's bet before the race
@@ -1246,8 +1255,8 @@
     express2: {
       record: 'DÄ SCHNELLE: NEUER STRECKENREKORD {track}! DÄ LANGE: „MING SCHULD.“',
       win: 'DÄ SCHNELLE: UNBEKANNTER RASER JEWINNT – KLÜNGEL TOM FORDERT UNTERSUCHUNGSAUSSCHUSS',
-      kripoCaught: 'DÄ SCHNELLE: KRIPO STOPPT {car} OP DE RINGE – „ET WOR NOTWEHR“',
-      kripo: 'DÄ SCHNELLE: VERFOLGUNGSJAGD OP DE RINGE – PETERWAGEN VERLIERT {car} IM VEEDEL',
+      kripoCaught: 'DÄ SCHNELLE: KRIPO STOPPT {car} {where} – „ET WOR NOTWEHR“',
+      kripo: 'DÄ SCHNELLE: VERFOLGUNGSJAGD {where} – STREIFEWAGE VERLIERT {car} IM VEEDEL',
       knoellchen: 'DÄ SCHNELLE: {n} KNÖLLCHEN IN DREI RUNDE – STADTKASSE SANIERT, OPER BEZAHLT',
       water: 'DÄ SCHNELLE: {car} BADET IM RHING – TAUCHER SUCHE NOCH DE DECKEL',
       crashes: 'DÄ SCHNELLE: BLECHSCHMIED MELDET REKORDUMSATZ – „MING SCHWAGER“, SAGT DÄ LANGE',
@@ -1256,7 +1265,7 @@
       podium: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
       default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
     },
-    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DÄ POSTER HING ÖVVER DÄM BETT. JETZ HÄNGT HÄ OP DÄM RING.']
+    slogans: ['KÖLLE IST KEINE STADT. KÖLLE IST EIN GEFÜHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTT NOCH EMMER JOT JEJANGE!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DU KÜTTS HEE NIT REIN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DÄ POSTER HING ÖVVER DÄM BETT. JETZ HÄNGT HÄ OP DÄM RING.']
   };
 
   root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN };

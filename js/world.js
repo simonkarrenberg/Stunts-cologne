@@ -198,6 +198,20 @@
     textTexCache.set(tkey, t);
     return t;
   }
+  // the German pedestrian crossing sign (Zeichen 350): blue square, white triangle, a walker on the stripes, as pixel art
+  let zebraSignMat = null;
+  function zebraSign() {
+    if (!zebraSignMat) {
+      const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d');
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, 32, 32); x.fillStyle = '#1c4fa8'; x.fillRect(1, 1, 30, 30);
+      x.fillStyle = '#ffffff'; x.beginPath(); x.moveTo(16, 4); x.lineTo(29, 27); x.lineTo(3, 27); x.closePath(); x.fill();
+      x.fillStyle = '#111111'; for (let k = 0; k < 4; k++) x.fillRect(8 + k * 4, 24, 2, 2); // the stripes
+      x.fillRect(15, 10, 3, 3); x.fillRect(14, 13, 4, 6); x.fillRect(13, 18, 2, 5); x.fillRect(17, 18, 2, 4); x.fillRect(19, 21, 2, 2); x.fillRect(12, 14, 2, 4); x.fillRect(18, 14, 2, 3);
+      const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter;
+      zebraSignMat = new THREE.MeshLambertMaterial({ map: t, side: THREE.DoubleSide });
+    }
+    return new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), zebraSignMat);
+  }
   function textPlane(text, fg, bg, w, h, emissive, opts) {
     const t = textTexture(text, fg, bg, w, h, opts);
     const key = 'tp' + t.uuid + (emissive ? 'e' : 'l');
@@ -604,7 +618,9 @@
     if (suit && !o.bronze) {
       const zf = 0.13 * heavy;
       part(new THREE.BoxGeometry(0.11, 0.3, 0.012), o.shirtC || 0xf4f4f0, 0, 1.24, zf + 0.005).rotation.x = -0.12;
-      part(new THREE.BoxGeometry(0.035, 0.28, 0.012), o.tie || (o.hat === 'fedora' ? 0x8a1a1a : 0x1c3f95), 0, 1.16, zf + 0.012).rotation.x = -0.12;
+      if (o.tie !== false) part(new THREE.BoxGeometry(0.035, 0.28, 0.012), o.tie || (o.hat === 'fedora' ? 0x8a1a1a : 0x1c3f95), 0, 1.16, zf + 0.012).rotation.x = -0.12;
+      else part(new THREE.BoxGeometry(0.07, 0.07, 0.012), skin, 0, 1.36, zf + 0.008).rotation.x = -0.12; // open collar
+      if (o.chain) { const ch = part(new THREE.TorusGeometry(0.06, 0.008, 4, 12), 0xd8b040, 0, 1.33, zf + 0.012); ch.scale.set(1, 1.3, 1); }
       for (const sx of [-1, 1]) { const lap = part(new THREE.BoxGeometry(0.06, 0.3, 0.012), PX.shade(shirt, 0.8), sx * 0.075, 1.24, zf + 0.01); lap.rotation.z = sx * 0.28; lap.rotation.x = -0.12; }
       part(new THREE.SphereGeometry(0.008, 6, 6), 0x222222, 0.045, 1.02, zf + 0.01);
     } else if (!o.dress && !o.bronze) { part(new THREE.BoxGeometry(0.012, 0.36, 0.01), PX.shade(shirt, 0.75), 0, 1.16, 0.135 * heavy); }
@@ -646,6 +662,7 @@
     if (o.hat === 'tricorn') { part(new THREE.CylinderGeometry(0.21, 0.21, 0.05, 3), o.hatColor || 0xc1121f, 0, 1.75, 0); part(new THREE.SphereGeometry(0.125, lite ? 6 : 10, lite ? 4 : 8, 0, Math.PI * 2, 0, Math.PI * 0.5), o.hatColor || 0xc1121f, 0, 1.73, 0); part(new THREE.SphereGeometry(0.035, 6, 6), 0xffffff, 0, 1.92, 0); }
     if (o.hat === 'helmet') { part(new THREE.SphereGeometry(0.135, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), o.hatColor || 0x1c3f95, 0, 1.665, 0); part(new THREE.BoxGeometry(0.12, 0.02, 0.1), 0x111111, 0, 1.64, 0.14); }
     if (o.hat === 'polizei') { part(new THREE.CylinderGeometry(0.125, 0.12, 0.09, 16), o.hatColor || 0x2d5a3a, 0, 1.75, 0); part(new THREE.CylinderGeometry(0.13, 0.13, 0.02, 16), 0x111111, 0, 1.705, 0); part(new THREE.BoxGeometry(0.14, 0.015, 0.09), 0x111111, 0, 1.7, 0.14); part(new THREE.SphereGeometry(0.02, 6, 6), 0xffd400, 0, 1.75, 0.125); }
+    if (o.moustache) part(new THREE.BoxGeometry(0.075, 0.018, 0.02), o.moustache, 0, 1.585, 0.11);
     if (o.beard) { const b = part(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), o.beard, 0, 1.62, 0.03); b.scale.set(1.08, 1.5, 1.05); }
     if (o.glasses) { for (const sx of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.005, 6, 14), M(0x111111)); r.position.set(sx * 0.048, 1.664, 0.112); g.add(r); const lens = new THREE.Mesh(new THREE.CircleGeometry(0.03, 12), o.shades ? M(0x101018) : mat(0x99bbdd, { transparent: true, opacity: 0.35 })); lens.position.set(sx * 0.048, 1.664, 0.113); g.add(lens); } part(new THREE.BoxGeometry(0.035, 0.005, 0.005), 0x111111, 0, 1.667, 0.115); }
     if (o.cigar) { part(new THREE.CylinderGeometry(0.01, 0.01, 0.13, 8), 0x6a3a1a, 0.04, 1.6, 0.17).rotation.x = Math.PI / 2 + 0.2; const tip = new THREE.Mesh(new THREE.SphereGeometry(0.013, 6, 6), bmat(0xff6a00)); tip.position.set(0.04, 1.615, 0.235); g.add(tip); }
@@ -672,7 +689,8 @@
   P.heinzel = () => human({ h: 1.2, skin: 0xffdbac, shirt: 0x2d6a4f, pants: 0x5a3a20, hat: 'gnome', beard: 0xf4f4f4, wrench: true, smile: 1, apron: 0x8a5a2a });
   P.koebes = () => human({ h: 1.78, skin: 0xe0ac69, shirt: 0x1c3f95, pants: 0x14141a, hat: 'none', hair: 0x4a4a4a, kranz: true, apron: 0x1c3f95, moustache: 0x4a4a4a, smile: -0.3, age: 1 });
   P.anna = () => human({ h: 1.68, skin: 0xffdbac, shirt: 0xc1121f, dress: 0xffffff, pants: 0xffffff, hat: 'tricorn', hatColor: 0xc1121f, hair: 0xd9a24a, lips: true, smile: 1, eyes: '#4a8a5a' });
-  P.gangster = () => human({ h: 1.8, shirt: 0x2a2a30, pants: 0x2a2a30, hat: 'fedora', hatColor: 0x1a1a1a, cigar: Math.random() < 0.5, skin: 0xe0ac69, suit: true, glasses: Math.random() < 0.5, shades: true, smile: -0.6, tie: 0x8a1a1a });
+  // a man of the Ring around 1968: leather or sheepskin coat, open collar, gold chain, moustache (not 1920s Chicago with fedora)
+  P.gangster = () => { const r = Math.random(); return human({ h: 1.8, shirt: [0x4a2e1c, 0x6a4a2a, 0x2a2a30][Math.floor(r * 3)], pants: 0x2a2a30, coat: true, suit: true, tie: false, chain: true, shirtC: 0xe8d8b0, moustache: 0x3a2a1a, hair: 0x2a1a10, cigar: r < 0.3, skin: 0xe0ac69, shades: r > 0.75, smile: -0.4 }); };
   P.polizist = () => human({ h: 1.78, shirt: 0x2d5a3a, pants: 0x9a8a6a, hat: 'polizei', hatColor: 0x2d5a3a, moustache: 0x3a2a1a, smile: -0.4 });
   P.denkmal = () => { // Tünnes & Schäl bronze statue by Groß St. Martin
     const g = new THREE.Group(); g.add(box(3.2, 0.8, 2.2, 0x6a6a70, 0, 0.4, 0));
@@ -687,17 +705,25 @@
     const w = human({ h: 1.65, bronze: true, hat: 'none', dress: 0x6a4a2a }); w.position.set(0, 3.4, -1.4); g.add(w);
     const s = textPlane('HEINZELMÄNNCHENBRUNNEN', '#f0e0c0', '#3a3a40', 5, 0.6, false, { sizeK: 0.45 }); s.position.set(0, 1.0, 2.05); g.add(s);
     return g; };
-  P.stadion = () => { // RheinEnergieStadion, Müngersdorf: bowl with four pylons (far landmark)
-    const g = new THREE.Group(); const bowl = new THREE.Mesh(new THREE.CylinderGeometry(70, 60, 22, 24, 1, true), mat(0x9aa0aa, { side: THREE.DoubleSide })); bowl.position.y = 11; g.add(bowl);
-    addm(g, new THREE.Mesh(new THREE.TorusGeometry(72, 3, 8, 24), mat(0xdddddd))).position.y = 22; g.children[1].rotation.x = Math.PI / 2;
-    for (const [x, z] of [[-60, -40], [60, -40], [-60, 40], [60, 40]]) { g.add(box(4, 70, 4, 0xd0d0d0, x, 35, z)); addm(g, new THREE.Mesh(new THREE.SphereGeometry(3, 8, 8), bmat(0xff3333))).position.set(x, 71, z); }
-    const s = textPlane('RHEINENERGIESTADION · MÜNGERSDORF', '#c1121f', '#ffffff', 60, 6); s.position.set(0, 26, 62); g.add(s);
-    return g; };
-  P.rain = () => { // drizzle for Chicago-am-Rhein nights, follows the camera
-    const N = 900; const pos = new Float32Array(N * 3); for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 80; pos[i * 3 + 1] = Math.random() * 40; pos[i * 3 + 2] = (Math.random() - 0.5) * 80; }
+  P.stadion = (fl, th) => { // dä Stadion in Müngersdorf (far landmark): the bowl, red seats, a roof ring and the four corner towers with their floodlights
+    const night = !!(th && (th.night || th.dusk)); const g = new THREE.Group();
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(70, 60, 22, 24, 1, true), mat(0x9aa0aa, { side: THREE.DoubleSide })); bowl.position.y = 11; g.add(bowl);
+    const seats = new THREE.Mesh(new THREE.CylinderGeometry(66, 52, 16, 24, 1, true), mat(0xc1121f, { side: THREE.BackSide })); seats.position.y = 13; g.add(seats);
+    const roof = new THREE.Mesh(new THREE.TorusGeometry(72, 3, 8, 24), mat(0xdddddd)); roof.rotation.x = Math.PI / 2; roof.position.y = 22; g.add(roof);
+    g.add(box(96, 0.3, 62, 0x3f8a3a, 0, 0.2, 0)); g.add(box(0.6, 0.32, 62, 0xf4f4f4, 0, 0.21, 0)); for (const x of [-46, 46]) g.add(box(0.6, 0.32, 62, 0xf4f4f4, x, 0.21, 0)); // the pitch
+    for (const [x, z] of [[-60, -40], [60, -40], [-60, 40], [60, 40]]) {
+      g.add(box(4, 70, 4, 0xd0d0d0, x, 35, z));
+      const head = box(9, 5, 2, night ? 0xfff6d0 : 0xe8e8e8, x, 70, z); if (night) head.material = bmat(0xfff6d0); g.add(head);
+      addm(g, new THREE.Mesh(new THREE.SphereGeometry(3, 8, 8), bmat(0xff3333))).position.set(x, 74, z);
+    }
+    const s = textPlane('MÜNGERSDORFER STADION', '#c1121f', '#ffffff', 60, 6, night); s.position.set(0, 26, 62); g.add(s);
+    g.userData.kind = 'prop:stadion'; return g; };
+  P.rain = () => { // drizzle for Chicago-am-Rhein nights, follows the camera: thin slanted streaks, not snowflakes
+    const N = 1100, LEN = 0.9; const pos = new Float32Array(N * 6);
+    for (let i = 0; i < N; i++) { const x = (Math.random() - 0.5) * 80, y = Math.random() * 40, z = (Math.random() - 0.5) * 80; pos.set([x, y, z, x + 0.08, y + LEN, z + 0.05], i * 6); }
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xaab4d0, size: 0.35, transparent: true, opacity: 0.55, depthWrite: false }));
-    pts.userData.rain = true; pts.userData.keep = true; pts.frustumCulled = false; animated.push(pts); return pts; };
+    const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xb8c4e0, transparent: true, opacity: 0.38, depthWrite: false }));
+    lines.userData.rain = true; lines.userData.streaks = true; lines.userData.keep = true; lines.frustumCulled = false; animated.push(lines); return lines; };
   P.crowd = () => {
     const g = new THREE.Group();
     const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800];
@@ -709,7 +735,7 @@
     return g;
   };
   P.lastenrad = () => { const g = new THREE.Group(); g.add(box(2.4, 0.8, 1.2, 0x9b5de5, 0, 0.9, 0)); for (const x of [-1.6, 1.6]) { const w = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.1, 6, 10), mat(0x222222)); w.position.set(x, 0.5, 0); w.rotation.y = Math.PI / 2; g.add(w); } return g; };
-  P.boat = () => { const g = new THREE.Group(); g.add(box(26, 2.5, 6, 0xf4f4f4, 0, 0.9, 0)); g.add(box(16, 2, 5, 0x1c3f95, 0, 3, 0)); g.add(box(1, 3, 1, 0x333333, -4, 5.5, 0)); const s = textPlane('KD RHEINSCHIFF', '#1c3f95', '#ffffff', 12, 1.4); s.position.set(0, 1.4, 3.05); g.add(s); g.userData.boat = true; animated.push(g); return g; };
+  P.boat = () => { const g = new THREE.Group(); g.add(box(26, 2.5, 6, 0xf4f4f4, 0, 0.9, 0)); g.add(box(16, 2, 5, 0x1c3f95, 0, 3, 0)); g.add(box(1, 3, 1, 0x333333, -4, 5.5, 0)); const s = textPlane('RHEIN-FLOTTE', '#1c3f95', '#ffffff', 12, 1.4); s.position.set(0, 1.4, 3.05); g.add(s); g.userData.boat = true; animated.push(g); return g; };
   P.barge = () => { const g = new THREE.Group(); g.add(box(60, 2, 9, 0x4a4a52, 0, 0.8, 0)); g.add(box(50, 1.2, 8, 0x2f2f36, 0, 2.2, 0)); g.add(box(6, 4, 6, 0xf0f0f0, -25, 3.8, 0)); g.userData.boat = true; animated.push(g); return g; };
   function water(w, l) {
     const tex = T.water(THEME.water).clone(); tex.needsUpdate = true; tex.repeat.set(w / 16, l / 8);
@@ -772,7 +798,8 @@
     return g; };
   P.tree = (seed) => { const g = new THREE.Group(); const s = 1 + ((seed || 0) % 3) * 0.3; g.add(cyl(0.25 * s, 0.4 * s, 2.6 * s, 0x5a3a1a, 0, 1.3 * s, 0, 7));
     const crown = (r, y, dx, dz, col) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col)); m.position.set(dx, y, dz); g.add(m); };
-    crown(1.9 * s, 3.8 * s, 0, 0, 0x2f7a3a); crown(1.4 * s, 4.9 * s, 0.6 * s, 0.3 * s, 0x3f9a48); crown(1.3 * s, 4.4 * s, -0.8 * s, -0.4 * s, 0x2a6e34); crown(1.1 * s, 3.4 * s, 0.9 * s, -0.7 * s, 0x358a40);
+    const C = THEME && THEME.autumn ? [0xb8642a, 0xd8a03a, 0x9a4a22, 0xc7882e] : [0x2f7a3a, 0x3f9a48, 0x2a6e34, 0x358a40]; // November on the 11.11.: orange-brown leaves
+    crown(1.9 * s, 3.8 * s, 0, 0, C[0]); crown(1.4 * s, 4.9 * s, 0.6 * s, 0.3 * s, C[1]); crown(1.3 * s, 4.4 * s, -0.8 * s, -0.4 * s, C[2]); crown(1.1 * s, 3.4 * s, 0.9 * s, -0.7 * s, C[3]);
     return g; };
   P.tram = (o) => { // KVK Stadtbahn: white with the red band, black window strip, pantograph, line number
     const g = new THREE.Group(); const line = (o && o.line) || ['1 WEIDEN WEST', '7 ZÜNDORF', '9 KÖNIGSFORST', '12 MERKENICH', '15 CHORWEILER', '16 NIEHL', '18 THIELENBRUCH'][Math.floor(Math.random() * 7)];
@@ -872,7 +899,7 @@
     return c < 8 ? 'green' : c < 10 ? 'yellow' : c < 16 ? 'red' : 'redyellow';
   }
   P.schild = (o) => { const g = new THREE.Group(); g.add(cyl(0.06, 0.08, 3, 0x777777, 0, 1.5, 0, 6)); const s = textPlane((o && o.text) || 'HOHE STRASSE', '#ffffff', '#1c3f95', 2.6, 0.5, false, { border: '#ffffff', sizeK: 0.5 }); s.position.set(0.9, 2.7, 0); g.add(s); return g; };
-  P.parkedcar = (o) => { o = o || {}; const c = o.taxi ? 0xf1e2b0 : (o.color || 0x888888);
+  P.parkedcar = (o) => { o = o || {}; const c = o.taxi ? (THEME.era && THEME.era < 1971 ? 0x141414 : 0xf1e2b0) : (o.color || 0x888888); // taxis were black until the ivory rule of 1971
     if (!window.Cars) { const g = new THREE.Group(); g.add(box(1.8, 0.6, 4.0, c, 0, 0.7, 0)); g.add(box(1.6, 0.55, 2.0, c, 0, 1.25, -0.2)); g.add(box(1.62, 0.3, 1.8, 0x223344, 0, 1.3, -0.2)); for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z)); return g; }
     const shapes = ['hatch', 'sedan', 'coupe', 'limo', 'coupe2']; const shape = o.shape || (o.taxi ? 'sedan' : shapes[Math.floor(Math.random() * shapes.length)]);
     const g = window.Cars.build({ color: c, shape, plate: o.plate || ['K-LT 1961', 'K-CH 1926', 'K-AL 4711', 'K-ÖL 1248', 'K-SW 1978', 'K-FC 1948'][Math.floor(Math.random() * 6)] }, false, { textPlane, mat }, { lite: true });
@@ -1036,7 +1063,7 @@
     return g; };
   P.spielclub = () => { // Zocker den
     const g = new THREE.Group(); g.add(clubFront(14, 12, 12, 0x2a2a34, 'concrete', 15));
-    const sign = textPlane('SPIEL-CLUB · ROULETTE · POKER · 24 H', '#00e5ff', '#0a0a18', 12, 1.4, THEME.night, { border: '#00e5ff' }); sign.position.set(0, 5, 6.1); g.add(sign);
+    const sign = textPlane('HERRENCLUB · NUR FÜR MITGLIEDER', '#ffe7b0', '#14100a', 12, 1.4, THEME.night, { border: '#b8862e' }); sign.position.set(0, 5, 6.1); g.add(sign);
     const dice = box(0.9, 0.9, 0.9, 0xffffff, -6, 7.5, 6.2); dice.rotation.set(0.4, 0.6, 0.2); g.add(dice); for (let k = 0; k < 3; k++) g.add(box(0.15, 0.15, 0.1, 0x111111, -6.3 + k * 0.3, 7.5 + (k % 2) * 0.3, 6.7));
     const z = human({ h: 1.75, shirt: 0x8a1a1a, pants: 0x2a2a2a, hat: 'fedora', hatColor: 0x8a1a1a, cigar: true }); z.position.set(3, 0, 7.5); z.rotation.y = -0.4; g.add(z);
     if (THEME.night) g.add(glow(14, 8, 0x00e5ff, 0, 8));
@@ -1127,7 +1154,14 @@
     for (let i = 0; i < 2; i++) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set(Math.cos(i * 2.5) * 7.5, 0, Math.sin(i * 2.5) * 7.5); f.rotation.y = r() * Math.PI * 2; g.add(f); }
     return g; };
   P.pond = (o) => { // a park pond with reeds, ducks and a willow
-    const r = mulberry((o && o.seed) || 44); const g = new THREE.Group(); const w = 18 + r() * 10, d = 12 + r() * 8;
+    const r = mulberry((o && o.seed) || 44); const g = new THREE.Group(); const k = (o && o.scale) || 1, w = (18 + r() * 10) * k, d = (12 + r() * 8) * k;
+    if (o && o.lawn) { // a big park lawn round the water (Aachener Weiher): Veedel people grilling, sitting, playing
+      const lawn = new THREE.Mesh(new THREE.CircleGeometry(1, 28), mat(0x5f8a3e)); lawn.rotation.x = -Math.PI / 2; lawn.scale.set(w / 2 + 9, d / 2 + 9, 1); lawn.position.y = 0.03; g.add(lawn);
+      for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2 + r() * 0.4, rx = w / 2 + 3 + r() * 4, rz = d / 2 + 3 + r() * 4, x = Math.cos(a) * rx, z = Math.sin(a) * rz;
+        if (i % 3 === 0) { g.add(box(0.7, 0.5, 0.45, 0x222222, x, 0.25, z)); g.add(box(0.75, 0.04, 0.5, 0x888888, x, 0.52, z)); } // Einweggrill
+        const f = human({ h: 1.6 + r() * 0.25, lite: true, shirt: [0xc1121f, 0xffffff, 0x2d6a4f, 0x1c3f95, 0xffd400][i % 5] }); f.position.set(x + 0.9, 0, z); f.rotation.y = Math.atan2(-x, -z); g.add(f);
+        if (i % 2) { const blanket = box(1.6, 0.03, 1.2, [0xc1121f, 0x3a6ab0, 0xe8c040][i % 3], x - 1.2, 0.05, z + 0.6); g.add(blanket); } }
+    }
     const bank = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.3, 20), mat(0x8a7a5a)); bank.scale.set(w / 2 + 1.2, 1, d / 2 + 1.2); bank.position.y = 0.05; g.add(bank);
     const wtr = new THREE.Mesh(new THREE.CircleGeometry(1, 20), tmat(T.water(0x3f7fc0), 0xffffff)); wtr.rotation.x = -Math.PI / 2; wtr.scale.set(w / 2, d / 2, 1); wtr.position.y = 0.22; g.add(wtr);
     for (let i = 0; i < 10; i++) { const a = r() * Math.PI * 2; g.add(cyl(0.05, 0.08, 1.2 + r() * 0.6, 0x4a7a2a, Math.cos(a) * (w / 2 + 0.4), 0.6, Math.sin(a) * (d / 2 + 0.4), 5)); }
@@ -1354,6 +1388,9 @@
     beatFx.mats.clear(); beatFx.glows.clear(); beatFx.lights.length = 0;
     THEME = theme;
     const g = new THREE.Group();
+    // the real street at each segment of the circuit (track.def.signs: [[seg, 'NAME'], ...], valid from that segment on)
+    const signList = ((track.def && track.def.signs) || []).slice().sort((a, b) => a[0] - b[0]);
+    const signAt = (seg) => { let name = null; for (const [sg, nm] of signList) if (sg <= seg) name = nm; return name; };
     const S = track.samples, n = S.length, L = track.length;
     // Reserve both the circuit and every alley before placing or batching the city.
     // A branch street reserves its carriageway, parking lane and sidewalks (buildings stand behind them).
@@ -1706,7 +1743,7 @@
         if (!trackFree(x, z, 4, zi)) continue;
         const a = P.ampel(); a.position.set(x, GROUND_Y, z); a.lookAt(s.p.x - s.T.x * 9, GROUND_Y, s.p.z - s.T.z * 9); a.userData.kind = 'ampel'; g.add(a); a.userData.lampGroup.userData.signal = sig; animated.push(a.userData.lampGroup);
         const sg = S[zi + 5]; const sx = sg.p.x + sg.B.x / bl * side * (ROAD_W + 2.4), sz = sg.p.z + sg.B.z / bl * side * (ROAD_W + 2.4);
-        const sign = new THREE.Group(); sign.add(cyl(0.05, 0.06, 2.6, 0x777777, 0, 1.3, 0, 6)); const face = textPlane('ZEBRA', '#ffffff', '#1c3f95', 0.7, 0.7, false, { border: '#ffffff', sizeK: 0.45 }); face.position.set(0, 2.5, 0); sign.add(face);
+        const sign = new THREE.Group(); sign.add(cyl(0.05, 0.06, 2.6, 0x777777, 0, 1.3, 0, 6)); const face = zebraSign(); face.position.set(0, 2.5, 0); sign.add(face);
         sign.position.set(sx, GROUND_Y, sz); sign.lookAt(sg.p.x - sg.T.x * 9, GROUND_Y, sg.p.z - sg.T.z * 9); sign.userData.kind = 'zebrasign'; g.add(sign);
         if (rnd() < 0.7) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const ps = S[zi + 1]; f.position.set(ps.p.x + ps.B.x / bl * side * (ROAD_W + 2.2), GROUND_Y, ps.p.z + ps.B.z / bl * side * (ROAD_W + 2.2)); f.lookAt(ps.p.x, GROUND_Y, ps.p.z); g.add(f); }
         if (side === -1) { // one or two Kölner actually crossing: they walk over the zebra and hop back to the curb when a car comes too fast
@@ -1746,7 +1783,8 @@
         if (park) return ['strasse', 'lambogina'].includes(m.kind) && m.d <= 3.2 ? 1 : m.kind === 'karneval' && carnival ? 1 : 0;
         return m.kind === 'karneval' ? (carnival ? 4 : 0.6) : m.kind === 'chicago' ? (night || /kalk|heist/.test(track.def.id) ? 2.5 : 0.8) : m.kind === 'lambogina' ? 1 : 1.4;
       };
-      const pool = ids.map((id) => ({ id, m: cat[id], w: weight(cat[id]) })).filter((q) => q.w > 0);
+      // a scene can belong to some tracks (m.tracks): much more likely there, rare elsewhere
+      const pool = ids.map((id) => { const m = cat[id]; return { id, m, w: weight(m) * (m.tracks ? (m.tracks.includes(track.def.id) ? 4 : 0.25) : 1) }; }).filter((q) => q.w > 0);
       if (!pool.length) return;
       const mouth = mouthSets(track), zebras = zebraSamples(track, theme), routes = track.shortcuts || [];
       const count = Math.max(3, Math.min(14, Math.round(L / 120))), used = {}; let lambo = 0, veedelMiss = 0, veedelPlaced = 0;
@@ -1801,7 +1839,7 @@
           const x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
           if (!freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { // the whole footprint must clear every other part of the circuit
             const gx = s.p.x + bx / bl * side * (ROAD_W + 9), gz = s.p.z + bz / bl * side * (ROAD_W + 9);
-            if (trackFree(gx, gz, 7, i) && !nearScene(gx, gz, 7) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
+            if (!theme.canyon && trackFree(gx, gz, 7, i) && !nearScene(gx, gz, 7) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
             continue;
           }
           house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); house.userData.kind = 'house'; g.add(house); count++; houses++; sinceGap++; houseBoxes.push(obbOf(house));
@@ -1936,7 +1974,7 @@
           const l = theme.confetti && rnd() < 0.5 ? P.flag({ a: [0xff5fa2, 0xffd400, 0x00a0ff][i % 3], b: 0xffffff }) : rnd() < 0.15 ? P.flag() : P.lamp();
           put(l, side, ROAD_W + 3.4, true);
         }
-        if (k % 7 === 3 && theme.streets) put(P.schild({ text: theme.streets[Math.floor(k / 7) % theme.streets.length] }), k % 2 ? 1 : -1, ROAD_W + 3.9, true);
+        if (k % 7 === 3 && theme.streets) put(P.schild({ text: signAt(s.seg) || theme.streets[Math.floor(k / 7) % theme.streets.length] }), k % 2 ? 1 : -1, ROAD_W + 3.9, true);
         if (Math.abs(s.curv || 0) > 0.02 && k % 5 === 0) put(P.ampel(), 1, ROAD_W + 2.0, true);
         if (rnd() < 0.32) { const taxi = rnd() < 0.22; put(P.parkedcar(taxi ? { taxi: true } : { color: [0x8a8a90, 0xdddddd, 0x223355, 0x7a1a1a, 0x2d6a4f, 0x111111, 0xd9a24a, 0xe0b060, 0x4a6a8a][Math.floor(rnd() * 9)] }), rnd() < 0.5 ? 1 : -1, ROAD_W + 2.4, false); if (taxi) story('taxi', i * track.ds); }
         for (let pp = 0; pp < 2; pp++) if (rnd() < 0.45) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2.2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x + s.T.x * (rnd() - 0.5) * 8, GROUND_Y, z + s.T.z * (rnd() - 0.5) * 8); f.rotation.y = rnd() * Math.PI * 2; if (!nearScene(f.position.x, f.position.z, 0.5)) g.add(f); }
@@ -1960,6 +1998,8 @@
       }
     }
     // the blocks behind the street walls: courtyards, back houses and the odd church tower, so the city has depth
+    let rivers = null; const findRivers = () => { rivers = []; g.traverse((m) => { if (m.userData && m.userData.water && m.isMesh) { m.updateMatrixWorld(true); const d = m.userData.waterGrid || m.geometry.parameters; if (d && Number.isFinite(d.width)) rivers.push({ inv: new THREE.Matrix4().copy(m.matrixWorld).invert(), w: d.width, l: d.height }); } }); };
+    const rv = new THREE.Vector3(), inRiver = (x, z, pad) => (rivers || (findRivers(), rivers)).some((wt) => { rv.set(x, GROUND_Y, z).applyMatrix4(wt.inv); return Math.abs(rv.x) < wt.w / 2 + pad && Math.abs(rv.y) < wt.l / 2 + pad; });
     if (true) {
       let cx0 = 0, cz0 = 0; for (const s of S) { cx0 += s.p.x; cz0 += s.p.z; } cx0 /= n; cz0 /= n;
       let rmax = 0; for (const s of S) rmax = Math.max(rmax, Math.hypot(s.p.x - cx0, s.p.z - cz0));
@@ -1969,6 +2009,7 @@
         let dmin = 1e9; for (let i = 0; i < n; i += 4) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < dmin) dmin = d2; }
         dmin = Math.sqrt(dmin); if (dmin < (street === 'park' ? 26 : 40) || dmin > (street === 'park' ? 240 : 300)) continue;
         let ok = true; for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < (k.r + 12) * (k.r + 12)) { ok = false; break; } } if (!ok) continue;
+        if (inRiver(x, z, 16)) continue; // no blocks, parks or ponds in the Rhine
         let b;
         if (street === 'park') { // Rheinpark / Poller Wiesen: groves, flower beds, ponds, the odd kiosk, Deutz blocks only far out
           const pr = rnd();
@@ -1979,7 +2020,7 @@
           else if (pr < 0.78) { b = rnd() < 0.5 ? P.buedchen() : P.bude({ text: ['KÖLSCH · 2 DM', 'RIEVKOOCHE', 'EIS', 'HALVE HAHN'][placed % 4] }); }
           else b = P.grove({ seed: placed + 7 });
         }
-        else if (rnd() < 0.28 && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
+        else if (rnd() < (theme.canyon ? 0.04 : 0.28) && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
         else if (rnd() < 0.06) b = P.kirche({ h: 26 + rnd() * 20, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][placed % 3] });
         else { const styles = street === 'altstadt' ? ['altstadt', 'wiederaufbau', 'gruenderzeit'] : street === 'industrial' ? ['brick', 'industrial', 'concrete'] : street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'wiederaufbau', 'brick', 'concrete']; const st = styles[Math.floor(rnd() * styles.length)];
           const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : st === 'industrial' ? INDUSTRIAL : CONCRETE;
@@ -2042,6 +2083,13 @@
     // road on purpose (gates, bridges, gantries, rails, the Dom with its Domplatte) are left alone.
     clearTheStreets(g);
     settleOnSidewalks(g);
+    { // small things (trees, benches, people) that ended up in the middle of the Rhine, far from any road or bridge, go
+      const near = (x, z, r) => streetSamples.some((q) => (q.p.x - x) ** 2 + (q.p.z - z) ** 2 < r * r); const bb = new THREE.Box3(), sz = new THREE.Vector3(); let wet = 0;
+      for (const ch of g.children.slice()) { const u = ch.userData; if (u.keep || u.water || u.sky || u.boat || u.story || (u.kind && !/^(house)?$/.test(u.kind) && u.kind !== 'streetTree')) continue;
+        if (!inRiver(ch.position.x, ch.position.z, -3)) continue; bb.setFromObject(ch).getSize(sz); if (Math.max(sz.x, sz.z) > 12) continue;
+        if (near(ch.position.x, ch.position.z, ROAD_W + 8)) continue; g.remove(ch); wet++; }
+      if (root.STUNTS_AUDIT && wet) console.log('dried up:', wet);
+    }
     if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
     mergeStatic(g, new Set(animated));
@@ -2077,7 +2125,7 @@
       if (u.fw && beat && beat.playing && beat.section === 'drop' && u.fw.timer > 0.5) u.fw.timer = 0.46; // Kölner Lichter go off with the bass
       if (u.tick) u.tick(t / 1000, dt, { center, cars, beat: root.LamboBeat ? root.LamboBeat.now() : null }); // street life with its own animation (js/veedel.js)
       else if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
-      else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
+      else if (u.rain && center) { const p = a.geometry.attributes.position.array, st = u.streaks ? 6 : 3; for (let i = 0; i < p.length; i += st) { const fall = dt * 28; p[i + 1] -= fall; if (st === 6) p[i + 4] -= fall; if (p[i + 1] < 0) { const x = center.x + (Math.random() - 0.5) * 80, z = center.z + (Math.random() - 0.5) * 80; p[i] = x; p[i + 1] = 40; p[i + 2] = z; if (st === 6) { p[i + 3] = x + 0.08; p[i + 4] = 40.9; p[i + 5] = z + 0.05; } } } a.geometry.attributes.position.needsUpdate = true; }
       else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); if (u.baseY == null) u.baseY = a.position.y; a.position.y = u.baseY + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
       else if (u.walker) {
         const w = u.walker; let near = center ? Math.hypot(center.x - a.position.x, center.z - a.position.z) : 999;

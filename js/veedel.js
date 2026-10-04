@@ -3731,7 +3731,7 @@ Veedel.define('jga', { name: 'Junggesellinnenabschied', kind: 'strasse', w: 6, d
       parts.push(C(0.019, 0.019, 0.065, c, bx, ty + 0.047, bz, 5), C(0.008, 0.013, 0.045, k % 2 ? GOLD : SILVER, bx, ty + 0.1, bz, 4));
     }
     vmesh(p, parts); tee(p, 'TEAM BRAUT');
-    K.text(p, 'SCHABAU 1 €', { fg: '#ffffff', bg: '#e0147a', w: 0.46, h: 0.08, x: 0, y: ty + 0.045, z: tz + 0.172, sizeK: 0.72 });
+    K.text(p, 'SCHABAU 2 DM', { fg: '#ffffff', bg: '#e0147a', w: 0.46, h: 0.08, x: 0, y: ty + 0.045, z: tz + 0.172, sizeK: 0.72 });
     const aL = mkArm(p, -1, skin, PINK, [-0.29, 1.02, 0.27], null, new V3(-1, -0.5, -0.3));
     const aR = mkArm(p, 1, skin, PINK, [0.29, 1.02, 0.27], [0.33, 1.9, 0.16], new V3(1, -0.4, -0.35));
     aR.held = vmesh(p, [C(0.017, 0.017, 0.06, 0x2f8a3a, 0, 0.0, 0, 5), C(0.008, 0.012, 0.03, 0x2f8a3a, 0, 0.045, 0, 4), C(0.009, 0.009, 0.012, GOLD, 0, 0.065, 0, 4)]);
@@ -4350,4 +4350,45 @@ Veedel.define('autohausgina', { name: 'Autohaus Gina', kind: 'lambogina', w: 12,
     arm.rotation.z = -0.08 + Math.sin(wph) * amp;
   };
   g.userData.tick(0, 0, {});
+});
+
+/* ---- Heimspill: fans in red and white on the way to Müngersdorf, scarves up, one flag, and a goat that
+   came along on a lead. No club name, no crest: just the colours of the city. ---- */
+Veedel.define('fanmarsch', { name: 'Fans op dem Wäch noh Müngersdorf', kind: 'strasse', w: 7, d: 2.4, tracks: ['zuelpicher', 'ehrenfeld', 'kalk', 'zoch'] }, (g, o, K) => {
+  const rnd = K.rnd((o && o.seed) || 1948), night = K.theme().night, RED = 0xc1121f, WHITE = 0xf4f4f2;
+  const fans = [];
+  for (let i = 0; i < 9; i++) {
+    const x = -3 + i * 0.72 + (rnd() - 0.5) * 0.25, z = (i % 2 ? 0.45 : -0.35) + (rnd() - 0.5) * 0.3;
+    const p = K.person({ h: 1.62 + rnd() * 0.3, shirt: i % 3 === 1 ? WHITE : RED, pants: [0x2a2a34, 0x3a4a6a, 0x4a4a4a][i % 3], scarf: i % 3 === 1 ? RED : WHITE, hat: i % 4 === 2 ? 'cap' : 'none', koelsch: i % 4 === 0 });
+    K.put(g, p, x, 0, z, (rnd() - 0.5) * 0.5);
+    // the scarf held up over the head with both hands, red and white blocks
+    const sc = new THREE.Group(); sc.position.set(x, 1.95 + rnd() * 0.1, z);
+    for (let k = 0; k < 6; k++) K.box(sc, 0.16, 0.14, 0.03, k % 2 ? WHITE : RED, -0.4 + k * 0.16, 0, 0);
+    g.add(sc); fans.push({ p, sc, ph: rnd() * 6.28, base: p.position.y });
+  }
+  // a flag on a pole: red over white, with a small Dom silhouette instead of any crest
+  const flag = new THREE.Group(); flag.position.set(2.6, 0, -0.2); g.add(flag);
+  K.cyl(flag, 0.025, 0.03, 3.2, 0x8a6a3a, 0, 1.6, 0, 6);
+  const cloth = new THREE.Group(); cloth.position.set(0, 2.85, 0); flag.add(cloth);
+  K.box(cloth, 1.2, 0.35, 0.02, RED, 0.62, 0.17, 0); K.box(cloth, 1.2, 0.35, 0.02, WHITE, 0.62, -0.18, 0);
+  K.box(cloth, 0.08, 0.26, 0.03, 0x111111, 0.52, -0.16, 0); K.box(cloth, 0.08, 0.26, 0.03, 0x111111, 0.72, -0.16, 0); K.box(cloth, 0.28, 0.1, 0.03, 0x111111, 0.62, -0.25, 0);
+  // the banner the first two carry
+  K.text(g, 'RUT UN WIESS – MER JONN NOH MÜNGERSDORF', { fg: '#ffffff', bg: '#c1121f', w: 2.6, h: 0.42, x: -1.9, y: 1.45, z: 0.75, border: '#ffffff', glow: night, sizeK: 0.5 });
+  for (const x of [-3.15, -0.65]) K.cyl(g, 0.02, 0.02, 1.7, 0x8a6a3a, x, 0.85, 0.75, 5);
+  // ene Jeißbock: a white goat on a lead, nibbling at the verge
+  const goat = new THREE.Group(); goat.position.set(3.4, 0, 0.6); goat.rotation.y = -0.6; g.add(goat);
+  const GOAT = 0xece6d8, HORN = 0x6a5a40;
+  K.box(goat, 0.36, 0.34, 0.8, GOAT, 0, 0.62, 0);
+  for (const [lx, lz] of [[-0.12, 0.3], [0.12, 0.3], [-0.12, -0.3], [0.12, -0.3]]) K.box(goat, 0.08, 0.45, 0.08, GOAT, lx, 0.225, lz);
+  K.box(goat, 0.08, 0.14, 0.06, GOAT, 0, 0.82, -0.42);
+  const head = new THREE.Group(); head.position.set(0, 0.86, 0.42); goat.add(head);
+  K.box(head, 0.2, 0.2, 0.32, GOAT, 0, 0, 0.12); K.box(head, 0.06, 0.12, 0.06, 0xd8d0c0, 0, -0.14, 0.24);
+  for (const sx of [-1, 1]) { const h = K.cone(head, 0.035, 0.28, HORN, sx * 0.07, 0.18, -0.02, 5); h.rotation.x = -0.6; h.rotation.z = sx * 0.25; K.box(head, 0.12, 0.05, 0.04, GOAT, sx * 0.13, 0.04, 0.0); }
+  K.box(goat, 0.02, 0.02, 1.0, 0x8a1a1a, -0.2, 0.9, 0.9).rotation.x = 0.5; // the lead
+  g.userData.tick = (t, dt, ctx) => {
+    const b = ctx && ctx.beat, pulse = b && b.playing ? b.pulse : 0;
+    for (const f of fans) { const hop = Math.max(0, Math.sin(t * 5.2 + f.ph)); f.p.position.y = f.base + hop * 0.08 + pulse * 0.03; f.sc.position.y = 1.97 + hop * 0.1; f.sc.rotation.z = Math.sin(t * 2.6 + f.ph) * 0.12; }
+    cloth.rotation.y = Math.sin(t * 2.1) * 0.35; cloth.rotation.z = Math.sin(t * 3.3) * 0.05;
+    head.rotation.x = 0.55 + Math.sin(t * 1.3) * 0.35; // nibbling grass, looking up now and then
+  };
 });

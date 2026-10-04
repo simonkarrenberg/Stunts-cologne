@@ -11,6 +11,11 @@
   const ROAD_W = W.ROAD_W;
   const G = 9.81;
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  // on the 1968/1975 tracks nothing from later decades: no opera renovation jokes, no LamboGina radio, no Miami palms
+  const ERA_LATER = /Oper|LamboGina|Palme|Miami|KVK|Hochwasser|Tauben/;
+  const eraLines = (arr) => { if (!theme || !theme.era) return arr; const ok = arr.filter((t) => !ERA_LATER.test(t)); return ok.length ? ok : arr; };
+  // pick without repeating the last few lines of the same list (heist calls, Kripo restarts)
+  const recent = new Map(); const pickNew = (arr) => { const seen = recent.get(arr) || []; const fresh = arr.filter((x) => !seen.includes(x)); const t = pick(fresh.length ? fresh : arr); seen.push(t); while (seen.length > Math.max(0, arr.length - 1)) seen.shift(); recent.set(arr, seen); return t; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const fmtTime = (t) => { if (t == null || !isFinite(t)) return '--:--.--'; const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; };
   const TRACKS = D.TRACKS.slice().sort((a, b) => (a.order || 9) - (b.order || 9));
@@ -275,6 +280,7 @@
     $('#msgText').textContent = text;
     $('#msg').classList.add('show');
     msgTimer = (ms || 3500) / 1000;
+    return true;
   }
 
   // ---------------- racers ----------------
@@ -366,7 +372,7 @@
     if (!kripo) return;
     const L = track.length; let behind = player.s - kripo.s; if (behind > L / 2) behind -= L; if (behind < -L / 2) behind += L;
     if ((q.perks || []).includes('shakeKripo') || behind > 45 || behind < -10) {
-      sayMust(KRIPO, pick(tuenn.kripo.lost || tuenn.kripo.giveup), 2800);
+      sayMust(...kripoLine(tuenn.kripo.lost || tuenn.kripo.giveup), 2800);
       if (mission) { kripo.lostT = 9; kripo.s = ((kripo.s - 60) % L + L) % L; kripo.safeS = kripo.s; kripo.shortcut = -1; kripo.routePlan = null; kripo.prevRoadVy = 0; }
       else endKripo('lost');
     } else { kripo.routePlan = q.index; say(tuenn, pick(tuenn.kripo.follows || ['Die Kripo kütt hinger dir her!']), 2000); }
@@ -671,7 +677,7 @@
     $('#hudBeste').textContent = fmtTime(player.bestLap);
     const pos = standings().indexOf(player) + 1;
     $('#hudPos').textContent = `${pos} / ${racers.length}`;
-    $('#hudKn').textContent = knoellchen ? `${knoellchen} × 60 €` : '–';
+    $('#hudKn').textContent = knoellchen ? `${knoellchen} × 40 DM` : '–';
     $('#hudDeckel').textContent = deckel ? strokes(deckel) : '–';
     $('#hudWette').textContent = wette ? (wette.done ? (wette.won ? 'JEWONNE' : 'VERLORE') : `${wette.n}🍺 › ${wette.rival.name.toUpperCase().split(' ').pop()}`) : '–';
     if (mission) $('#hudAuftrag').textContent = missionHud(); else $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
@@ -794,6 +800,27 @@
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
   }
+  // arcade name entry: three letters on the record table, like on every cabinet in 1989
+  const NE_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ-. ';
+  const nameEntry = { on: false, cur: 0, letters: ['K', 'Ö', 'L'], def: null, date: 0 };
+  function savedInitials() { try { return localStorage.getItem('stuntskoelle.initials') || ''; } catch (e) { return ''; } }
+  function neRender() { document.querySelectorAll('#nameEntry .neCol span').forEach((el, i) => { el.textContent = nameEntry.letters[i] === ' ' ? '_' : nameEntry.letters[i]; el.classList.toggle('on', i === nameEntry.cur); }); }
+  function offerNameEntry(def, entry) {
+    const box = $('#nameEntry'); nameEntry.on = false; box.hidden = true;
+    if (player2 || def.daily || !getRecords(def).some((r) => r.date === entry.date)) return; // only when the time made the top five
+    const saved = savedInitials(); if (saved.length === 3) nameEntry.letters = saved.split('');
+    nameEntry.on = true; nameEntry.cur = 0; nameEntry.def = def; nameEntry.date = entry.date; box.hidden = false; neRender();
+  }
+  function neStep(i, d) { const k = NE_ABC.indexOf(nameEntry.letters[i]); nameEntry.letters[i] = NE_ABC[(Math.max(0, k) + d + NE_ABC.length) % NE_ABC.length]; nameEntry.cur = i; neRender(); }
+  function neDone() {
+    if (!nameEntry.on) return; nameEntry.on = false; const name = nameEntry.letters.join('').replace(/\s+$/, '') || 'DU';
+    try { localStorage.setItem('stuntskoelle.initials', nameEntry.letters.join('')); } catch (e) { /* ignore */ }
+    const list = getRecords(nameEntry.def); const r = list.find((x) => x.date === nameEntry.date); if (r) { r.name = name; try { localStorage.setItem(`stuntskoelle.rec.${nameEntry.def.id}`, JSON.stringify(list)); } catch (e) { /* ignore */ } }
+    $('#nameEntry').hidden = true;
+  }
+  document.querySelectorAll('#nameEntry .neCol button').forEach((b) => b.addEventListener('click', () => neStep(+b.dataset.i, +b.dataset.d)));
+  document.querySelectorAll('#nameEntry .neCol span').forEach((el) => el.addEventListener('click', () => neStep(+el.dataset.i, 1)));
+  $('#neOk').addEventListener('click', neDone);
   function finishRace() {
     phase = 'finished';
     // project finishing times for cars still out on the track
@@ -804,7 +831,7 @@
     const best = getBest(); const record = best == null || player.finishTime < best;
     if (record) setBest(player.finishTime);
     saveGhost();
-    addRecord(trackDef, { name: PLAYABLE[sel.driver].name + ' (DU)', car: D.CARS[sel.car].name, time: player.finishTime, date: Date.now() });
+    { const entry = { name: savedInitials() || PLAYABLE[sel.driver].name + ' (DU)', car: D.CARS[sel.car].name, time: player.finishTime, date: Date.now() }; addRecord(trackDef, entry); offerNameEntry(trackDef, entry); }
     fanfare(won); shotWanted = true;
     if (auftrag) endAuftrag();
     if (kripo) endKripo('finish');
@@ -816,11 +843,11 @@
     if (cup.on) { order.forEach((r, i) => { cup.pts[r.name] = (cup.pts[r.name] || 0) + (CUP_PTS[i] || 0); }); cup.i++; try { localStorage.setItem('stuntskoelle.cup', JSON.stringify(cup)); } catch (e) { /* ignore */ } }
     setTimeout(() => {
       if (phase === 'menu') return; // the attract mode went back to the menu meanwhile
-      $('#resTitle').textContent = player2 ? (order.indexOf(player) < order.indexOf(player2) ? `P1 SCHLÄGT P2! PLATZ ${place} GEGEN ${order.indexOf(player2) + 1}.` : `P2 SCHLÄGT P1! PLATZ ${order.indexOf(player2) + 1} GEGEN ${place}.`) : won ? 'JEWONNE! KÖLLE ALAAF!' : place === 2 ? 'ZWEITER. FAST, JUNG.' : `PLATZ ${place}. ET HÄTZ SCHLECHT, ÄVVER ET KÜTT!`;
+      $('#resTitle').textContent = player2 ? (order.indexOf(player) < order.indexOf(player2) ? `P1 SCHLÄGT P2! PLATZ ${place} GEGEN ${order.indexOf(player2) + 1}.` : `P2 SCHLÄGT P1! PLATZ ${order.indexOf(player2) + 1} GEGEN ${place}.`) : won ? (theme.heist ? 'JEWONNE! ICH HANN NIX JESINN.' : theme.era ? 'JEWONNE! DÄ RING JEHÖRT DIR.' : 'JEWONNE! KÖLLE ALAAF!') : place === 2 ? 'ZWEITER. FAST, JUNG.' : `PLATZ ${place}. ET KÜTT WIE ET KÜTT.`;
       const tb = $('#resTable'); tb.innerHTML = '';
       order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
       $('#resBest').textContent = fmtTime(player.bestLap);
-      $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 60} €, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} Kölsch) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: uff Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
+      $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 40} DM, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} Kölsch) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: op Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
       $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, place, order);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes(deckel)}</b> (${deckel} Striche) · GESAMT: <b>${total}</b> – <b>${rank}</b>` + (wette ? ` · WETTE: <b>${wette.won ? 'JEWONNE' : 'VERLORE'}</b> (${wette.n} Kölsch ${wette.won ? 'für dich' : 'für dä Lange'})` : '') + (kripoSeen ? ` · KRIPO: <b>${kripoCaught ? 'HÄT DICH JEKRIEGT' : 'ABJEHÄNGT'}</b>` : '');
@@ -857,8 +884,8 @@
     const fps = perf.frames / perf.since; perf.frames = 0; perf.since = 0;
     if (fps >= 24 || perf.wait > 0) return;
     perf.stage++; perf.wait = 8;
-    if (perf.stage === 1) { renderer.setPixelRatio(1); if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; if (sunLight) sunLight.castShadow = false; scene.traverse((o) => { if (o.isMesh && o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((m) => { m.needsUpdate = true; }); } }); } sayMust({ name: 'Heinzel', emoji: '🔧' }, 'Dat Handy schwitzt. Ich hab de Schatten avjeschraubt. Läuft.', 2600); }
-    else if (pixelScale === 1) { pixelScale = 2; applyPixelMode(); post.setScale(2); sayMust({ name: 'Heinzel', emoji: '🔧' }, 'Un jetz Pixel. Wie 1990. Dafür flüssig.', 2600); }
+    if (perf.stage === 1) { renderer.setPixelRatio(1); if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; if (sunLight) sunLight.castShadow = false; scene.traverse((o) => { if (o.isMesh && o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((m) => { m.needsUpdate = true; }); } }); } say({ name: 'Heinzel', emoji: '🔧' }, (isMobile ? 'Dat Handy schwitzt.' : 'Dä Rechner schwitzt.') + ' Ich hann de Schatte avjeschruuv. Läuf.', 2600); }
+    else if (pixelScale === 1) { pixelScale = 2; applyPixelMode(); post.setScale(2); say({ name: 'Heinzel', emoji: '🔧' }, 'Un jetz Pixel. Wie 1990. Dofür flüssig.', 2600); }
   }
   function frame(t) {
     requestAnimationFrame(frame);
@@ -889,7 +916,7 @@
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pick(tuenn.heist), 3800); } }, 5000); }
+      if (countdown <= 0) { phase = 'race'; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -907,9 +934,14 @@
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
-        if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pick(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 80 + Math.random() * 40; const roll = Math.random(); if (roll < 0.5) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pick(tuenn.express).replace('DÄ SCHNELLE: ', ''), 3500); else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pick(tuenn.grundgesetz), 3500); }
-        for (const st of stories) { if (st.told || routeFor(player)) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds > -8 && ds < 30) { st.told = true; if (storyCool > 0 || msgTimer > 0) continue; storyCool = 25; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5000); radioTimer = Math.max(radioTimer, 30); } }
+        if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
+        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 60 + Math.random() * 35; const roll = Math.random(); const radio = eraLines(tuenn.radio || []);
+          if (roll < 0.38) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pickNew(eraLines(tuenn.express)).replace('DÄ SCHNELLE: ', ''), 3500);
+          else if (roll < 0.72 && radio.length) say({ name: 'Radio Kölle', emoji: '📻' }, pickNew(radio).replace('RADIO KÖLLE: ', ''), 3800);
+          else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pickNew(tuenn.grundgesetz), 3500); }
+        // Dä Lange's place stories: one is told whenever the box is free and the place is just ahead or just
+        // passed (also from a side street running beside it). A story missed now comes back next lap.
+        if (storyCool <= 0 && msgTimer <= 0) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -12 && ds < 60) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 5500)) { st.told = true; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pick(tuenn.razziaEnd), 2500); } }
         else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); }
@@ -917,7 +949,7 @@
         for (const b of blitzers) {
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
           let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;
-          if (!routeFor(player) && ds > 0 && ds < 4 && b.cool <= 0) { b.cool = 8; if (Math.abs(player.v) * 3.6 > 120 && !player.air) { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); if (b.flash) b.flash.material.opacity = 1; flashTimer = 0.25; beep(1400, 0.12, 'square', 0.12); say({ name: 'Blitzer Kölle', emoji: '📸' }, pick(tuenn.blitzer), 2600); } }
+          if (!routeFor(player) && ds > 0 && ds < 4 && b.cool <= 0) { b.cool = 8; if (Math.abs(player.v) * 3.6 > 120 && !player.air) { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); if (b.flash) b.flash.material.opacity = 1; flashTimer = 0.25; beep(1400, 0.12, 'square', 0.12); say({ name: 'Blitzer Kölle', emoji: '📸' }, pickNew(eraLines(tuenn.blitzer)), 2600); } }
         }
         // Ampeln: over the stop line at red = Rotlichtblitzer (counts like a Knöllchen), at yellow a word from dä Lange
         for (const sg of signals) {
@@ -1023,6 +1055,14 @@
       if (e.code === 'KeyC') { replay.mode = (replay.mode + 1) % 4; }
       e.preventDefault(); return;
     }
+    if (phase === 'finished' && nameEntry.on) { // typing the three letters for the record table
+      if (e.code === 'ArrowUp' || e.code === 'ArrowDown') neStep(nameEntry.cur, e.code === 'ArrowUp' ? 1 : -1);
+      else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { nameEntry.cur = (nameEntry.cur + (e.code === 'ArrowRight' ? 1 : 2)) % 3; neRender(); }
+      else if (/^Key[A-Z]$/.test(e.code)) { nameEntry.letters[nameEntry.cur] = e.code.slice(3); nameEntry.cur = Math.min(2, nameEntry.cur + 1); neRender(); }
+      else if (e.code === 'Enter') neDone();
+      else if (e.code === 'Escape') { neDone(); toMenu(); }
+      return;
+    }
     if (player2) { readKeys2(); if (e.code === 'KeyV') views[1].mode = (views[1].mode + 1) % 3; }
     if (phase === 'intro' && (e.code === 'Enter' || e.code === 'Space')) introT = 99;
     if (e.code === 'KeyH' && phase === 'race') horn();
@@ -1117,6 +1157,12 @@
   }
   function onTrackChange() { renderMenu(); }
 
+  // every story Dä Lange has told, per track, to be read again under REKORDE
+  function heardStories() { try { return JSON.parse(localStorage.getItem('stuntskoelle.verzaellcher') || '{}') || {}; } catch (e) { return {}; } }
+  function rememberStory(text) {
+    const def = trackDef; if (!def || !def.id || def.daily) return; const all = heardStories(), list = all[def.id] || (all[def.id] = []);
+    if (list.includes(text)) return; list.push(text); try { localStorage.setItem('stuntskoelle.verzaellcher', JSON.stringify(all)); } catch (e) { /* ignore */ }
+  }
   // ---------------- records ----------------
   function showRecords() {
     const box = $('#recordsList'); box.innerHTML = '';
@@ -1129,6 +1175,9 @@
       div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (recs.length ? '<ol>' + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>' : '<p>Noch keine Zeit. Dä Lange wartet.</p>');
       box.appendChild(div);
     });
+    { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
+      v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an dä Plätze vorbei – dä Lange verzällt jet.</p>');
+      box.appendChild(v); }
     $('#records').hidden = false;
   }
 
@@ -1251,7 +1300,7 @@
     mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: B.what[k], short: B.whatShort[k], pickName: pick(B.where), dropName: pick(B.where), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
     if (mission.dropName === mission.pickName) mission.dropName = B.where[(B.where.indexOf(mission.pickName) + 1) % B.where.length];
     const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(a.f.T.x, a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring;
-    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName), 5200); }, 7600);
+    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
     });
   }
   function clearMission() { if (mission) { for (const m of mission.meshes) scene && scene.remove(m); if (mission.walker && scene) scene.remove(mission.walker); } mission = null; $('#hudPrompt').hidden = true; }
@@ -1288,7 +1337,7 @@
       mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
       const b = roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
       const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
-      if (!kripo) startKripo(); sayMust(tuenn, pick(B.back).replace('{drop}', mission.dropName), 3600);
+      if (!kripo) startKripo(); sayMust(tuenn, placeArticles(pick(B.back).replace('{drop}', mission.dropName)), 3600);
     }
   }
   function walkStep(dt) {
@@ -1310,7 +1359,7 @@
     if (!mission || phase !== 'race') return; phase = 'finished'; prompt(null); const B = tuenn.botengang; player.finished = true; player.finishTime = raceTime;
     if (kripo) endKripo('finish'); const m = mission; clearMission(); mission = null;
     const strokes = ok ? 8 : -3; addDeckel(strokes); const total = deckelTotal(deckel); if (ok) bumpStat('boten'); newOrden = checkOrden();
-    const headline = ok ? B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate; lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
+    const headline = (ok ? B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate).replace('{where}', (trackDef && trackDef.where) || 'EN KÖLLE'); lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
     setTimeout(() => {
       if (phase === 'menu') return;
       $('#resTitle').textContent = ok ? `BOTENGANG ERLEDIGT: ${m.short} BEIM ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
@@ -1321,7 +1370,7 @@
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes > 0 ? '+' : ''}${strokes}</b> Striche · GESAMT: <b>${total}</b> – <b>${deckelRank(total)}</b>`;
       $('#resCup').hidden = true; $('#againBtn').textContent = careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL (ENTER)' : 'KAPITEL NOCHMAL (ENTER)') : 'NOCHMAL (ENTER)';
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
-      $('#resTuenn').textContent = pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName); $('#resRival').textContent = '';
+      $('#resTuenn').textContent = placeArticles(pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName)); $('#resRival').textContent = '';
       if (careerChapter != null) applyCareerResult(ok);
       $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1400);
@@ -1394,6 +1443,20 @@
     while (tries++ < 400 && !(okAt(i) && clearAt(i))) i += 3;
     i %= n; return { s: i * track.ds, f: TB.frameAt(track, i * track.ds) };
   }
+  // Kripo lines: the police speak for themselves only when they really speak; the rest is Dä Lange telling it
+  function kripoLine(list) { const t = pickNew(list); return [/^(Hier spricht|„)/.test(t) ? KRIPO : tuenn, t]; }
+  // Klüngel jobs: the place names come with the right article (dat Büdche, de Pfandleihe, dä Spielclub),
+  // and a {what} that ends up at the start of a sentence gets its capital letter
+  const PLACE_GENDER = { f: /PFANDLEIHE|BAR\b|KNEIPE|BUDE/, n: /BÜDCHEN|KINO|BRAUHAUS|KLEIN KÖLN|^SARTORY$|CAFÉ|HOTEL/, p: /SÖHNE/ };
+  function placeArticles(text) {
+    const g = (name) => PLACE_GENDER.p.test(name) ? 'p' : PLACE_GENDER.f.test(name) ? 'f' : PLACE_GENDER.n.test(name) ? 'n' : 'm';
+    const NAME = "([A-ZÄÖÜ][A-ZÄÖÜ0-9É&,' -]*[A-ZÄÖÜ0-9É])";
+    return text
+      .replace(new RegExp('\\bzum ' + NAME, 'g'), (m, n) => (g(n) === 'f' ? 'zur ' : g(n) === 'p' ? 'zu ' : 'zum ') + n)
+      .replace(new RegExp('\\b(Der|Dä) ' + NAME, 'g'), (m, a, n) => ({ m: 'Dä ', n: 'Dat ', f: 'De ', p: 'De ' })[g(n)] + n)
+      .replace(new RegExp('\\bAm ' + NAME, 'g'), (m, n) => (g(n) === 'f' || g(n) === 'p' ? 'Bei dr ' : 'Am ') + n)
+      .replace(/([.!?:] )([a-zäöü])/g, (m, a, b) => a + b.toUpperCase());
+  }
   function startAuftrag() {
     const A = tuenn.auftrag; const what = pick(A.what), where = pick(A.where);
     const a = roadFrameAhead(player.s, 90 + Math.random() * 60), b = roadFrameAhead(a.s, 280 + Math.random() * 220);
@@ -1402,18 +1465,18 @@
     const m2 = dropMesh(where); m2.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); m2.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); m2.visible = false; scene.add(m2);
     let dist = b.s - a.s; if (dist < 0) dist += track.length;
     auftrag = { stage: 'pickup', s1: a.s, lat, s2: b.s, m1, m2, base, what, where, timer: 40, carryTime: Math.round(dist / 13) + 10, phase: Math.random() * 6 };
-    sayMust(tuenn, pick(A.start).replace('{what}', what).replace('{where}', where), 4200);
+    sayMust(tuenn, placeArticles(pick(A.start).replace('{what}', what).replace('{where}', where)), 4200);
   }
   function endAuftrag() { if (!auftrag) return; scene.remove(auftrag.m1); scene.remove(auftrag.m2); auftrag = null; }
   function failAuftrag(why) {
     const A = tuenn.auftrag; auftragFail++; deckel = Math.max(0, deckel - 2);
-    sayMust(tuenn, pick(why === 'lost' ? A.lost : A.late).replace('{what}', auftrag.what).replace('{where}', auftrag.where), 3600);
+    sayMust(tuenn, placeArticles(pick(why === 'lost' ? A.lost : A.late).replace('{what}', auftrag.what).replace('{where}', auftrag.where)), 3600);
     beep(220, 0.3, 'sawtooth', 0.12); endAuftrag(); auftragT = 45 + Math.random() * 25;
   }
   function updateAuftrag(dt) {
     const L = track.length;
     if (!auftrag) {
-      if (player.finished || kripo || razzia > 0) return;
+      if (player.finished || kripo || razzia > 0 || (trackDef && trackDef.theme && trackDef.theme.heist)) return; // the Domschatz-Raub has enough in the boot already
       auftragT -= dt; if (auftragT <= 0 && msgTimer <= 0 && auftragDone + auftragFail < 3) startAuftrag();
       return;
     }
@@ -1424,14 +1487,14 @@
       if (!routeFor(player) && Math.abs(ds) < 4.2 && Math.abs(player.lat - auftrag.lat) < 4.5 && !player.air && player.crashed <= 0) {
         auftrag.stage = 'carry'; auftrag.m1.visible = false; auftrag.m2.visible = true; auftrag.timer = auftrag.carryTime;
         beep(880, 0.08, 'square', 0.1); setTimeout(() => beep(1320, 0.12, 'square', 0.1), 80);
-        sayMust(tuenn, pick(tuenn.auftrag.pick).replace('{where}', auftrag.where), 3000);
+        sayMust(tuenn, placeArticles(pick(tuenn.auftrag.pick).replace('{where}', auftrag.where)), 3000);
       } else if (auftrag.timer <= 0) { endAuftrag(); auftragT = 40 + Math.random() * 20; }
     } else {
       const k = 1 + Math.sin(raceTime * 5) * 0.08; auftrag.m2.scale.set(k, 1, k);
       let ds = player.s - auftrag.s2; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
       if (!routeFor(player) && Math.abs(ds) < 4 && !player.air && player.crashed <= 0) {
         auftragDone++; addDeckel(5); player.turbo = 1; bumpStat('jobs'); beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.1, 'square', 0.12), 80); setTimeout(() => beep(2100, 0.16, 'square', 0.12), 160);
-        sayMust(tuenn, pick(tuenn.auftrag.done).replace('{where}', auftrag.where), 3800); endAuftrag(); auftragT = 45 + Math.random() * 25;
+        sayMust(tuenn, placeArticles(pick(tuenn.auftrag.done).replace('{where}', auftrag.where)), 3800); endAuftrag(); auftragT = 45 + Math.random() * 25;
       } else if (auftrag.timer <= 0) failAuftrag('late');
     }
   }
@@ -1473,7 +1536,8 @@
   function startDemo() {
     if (phase !== 'menu') return;
     demo = true; demoT = 0; cup.on = false; demoPrevCam = camMode;
-    const def = TRACKS[Math.floor(Math.random() * TRACKS.length)];
+    const era = TRACKS.filter((t) => t.theme && t.theme.era); // the crawl tells of the Ringe in 1968: show the Ring at night, not the zoo
+    const def = era.length ? era[Math.floor(Math.random() * era.length)] : TRACKS[Math.floor(Math.random() * TRACKS.length)];
     startRace(def, () => { camMode = 3; tvCam = null; });
     document.body.classList.add('demo'); const d = $('#demo'); d.hidden = false;
     const crawl = $('#demoCrawl'); crawl.innerHTML = tuenn.vorspann.map((l, i) => `<p class="${i === 0 || i === tuenn.vorspann.length - 1 ? 'big' : ''}">${l}</p>`).join('');
@@ -1540,7 +1604,7 @@
   function startKripo() {
     kripoSeen = true; kripoT = 0; kripoHitCool = 3;
     const base = D.CARS.find((c) => c.id === 'special') || D.CARS[0];
-    const cdef = Object.assign({}, base, { name: 'Peterwagen', color: 0xf4f4f0, stripe: 0x2d6a3a, shape: 'sedan', plate: 'K-3110', top: Math.max(base.top, player.car.top) * 1.08, accel: base.accel * 1.25, grip: Math.max(base.grip, player.car.grip) * 1.15 });
+    const cdef = Object.assign({}, base, { name: 'Streifewage', color: 0xf4f4f0, stripe: 0x2d6a3a, shape: 'sedan', plate: 'K-3110', top: Math.max(base.top, player.car.top) * 1.08, accel: base.accel * 1.25, grip: Math.max(base.grip, player.car.grip) * 1.15 });
     const mesh = W.buildCar(cdef, theme.night);
     const bar = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 0.34), new THREE.MeshBasicMaterial({ color: 0x2060ff })); bar.position.set(0, 1.55, -0.2); mesh.add(bar);
     const bar2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 0.34), new THREE.MeshBasicMaterial({ color: 0xffffff })); bar2.position.set(0, 1.55, -0.2); bar2.visible = false; mesh.add(bar2);
@@ -1548,7 +1612,7 @@
     const sign2 = sign.clone(); sign2.position.x = -0.9; sign2.rotation.y = -Math.PI / 2; mesh.add(sign2);
     kripo = makeRacer(cdef, mesh, { name: 'Kripo Kölle', skill: 1.05, wobble: 0, lines: {} }, true); kripo.isCop = true; kripo.bar = bar; kripo.bar2 = bar2;
     kripo.s = ((player.s - 75) % track.length + track.length) % track.length; kripo.lat = 0; kripo.v = Math.max(15, player.v * 0.8); kripo.safeS = kripo.s; kripo.turbo = 1;
-    scene.add(mesh); sayMust(KRIPO, pick(tuenn.kripo.start), 3500);
+    scene.add(mesh); sayMust(...kripoLine(tuenn.kripo.start), 3500);
   }
   function copControl(r) {
     const L = track.length; let ds = player.s - r.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
@@ -1578,8 +1642,8 @@
     const collisionDistance = sharedRoute ? ds * sharedRoute.length / (sharedRoute.endS - sharedRoute.startS) : ds;
     if (sameRoad(player, kripo) && kripoHitCool <= 0 && Math.abs(collisionDistance) < 4.8 && Math.abs(player.lat - kripo.lat) < 2.4 && !player.air && !kripo.air && player.crashed <= 0 && kripo.crashed <= 0 && pk !== 'loop' && pk !== 'ramp') {
       kripoHitCool = 2.4; player.damage = Math.min(1, player.damage + 0.14); player.v *= 0.82; player.lat += (player.lat >= kripo.lat ? 1 : -1) * 1.3; kripo.v *= 0.9; crashSound(); shake = 0.6;
-      if (player.damage >= 1) { kripoCaught = true; crash(player, 'kripo'); sayMust(KRIPO, pick(tuenn.kripo.caught), 3000); endKripo('caught'); if (mission) missionEnd(false, 'caught'); return; }
-      say(KRIPO, pick(tuenn.kripo.hit), 2200);
+      if (player.damage >= 1) { kripoCaught = true; crash(player, 'kripo'); sayMust(...kripoLine(tuenn.kripo.caught), 3000); endKripo('caught'); if (mission) missionEnd(false, 'caught'); return; }
+      say(...kripoLine(tuenn.kripo.hit), 2200);
     }
     if (mission) { if (ds < -170 || ds > 170) { kripo.s = ((player.s - 100) % L + L) % L; kripo.lat = 0; kripo.v = Math.max(15, player.v * 0.9); kripo.safeS = kripo.s; kripo.shortcut = -1; kripo.routePlan = null; kripo.prevRoadVy = 0; } }
     else if (kripoT > 55 || ds < -140) endKripo('giveup');
@@ -1588,7 +1652,7 @@
   function endKripo(why) {
     kripoEndT = raceTime;
     if (!kripo) return; scene.remove(kripo.mesh); kripo = null;
-    if (why === 'giveup') sayMust(KRIPO, pick(tuenn.kripo.giveup), 3000);
+    if (why === 'giveup') sayMust(...kripoLine(tuenn.kripo.giveup), 3000);
     if (why === 'lost') bumpStat('veedelEscapes');
     if (why !== 'caught') bumpStat('escapes');
   }
@@ -1598,7 +1662,7 @@
     sayMust(tuenn, pick(tuenn.wette.offer).replace('{r}', r.driver.name).replace('{n}', String(wette.n)), 4200);
   }
   function expressHeadline(place, won, record, order) {
-    const E = tuenn.express2; const car = D.CARS[sel.car].name.toUpperCase(); const fill = (t) => t.replace('{car}', car).replace('{track}', trackDef.name.toUpperCase()).replace('{n}', String(knoellchen)).replace('{p}', String(place));
+    const E = tuenn.express2; const car = D.CARS[sel.car].name.toUpperCase(); const fill = (t) => t.replace('{car}', car).replace('{where}', trackDef.where || 'EN KÖLLE').replace('{track}', trackDef.name.toUpperCase()).replace('{n}', String(knoellchen)).replace('{p}', String(place));
     if (record && won) return fill(E.record);
     if (kripoCaught) return fill(E.kripoCaught);
     if (won) return fill(E.win);
