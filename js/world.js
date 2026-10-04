@@ -594,7 +594,7 @@
       if (lite) part(new THREE.BoxGeometry(0.12, 0.07, 0.27), shoes, sx * 0.11, 0.035, 0.04); else { const sh = part(new THREE.SphereGeometry(0.075, SR + 2, SR), shoes, sx * 0.11, 0.05, 0.06); sh.scale.set(0.85, 0.6, 1.8); part(new THREE.BoxGeometry(0.11, 0.04, 0.12), shoes, sx * 0.11, 0.02, -0.02); }
     }
     // skirt / dress
-    if (o.dress) add(lathe([[0.15, 0.95], [0.19, 0.85], [0.26, 0.6], [0.3, 0.5]], o.dress), 0, 0, 0);
+    if (o.dress) add(lathe([[0.3, 0.5], [0.26, 0.6], [0.19, 0.85], [0.15, 0.95]], o.dress), 0, 0, 0);
     // torso: lathe with chest, waist and hips, squashed front-to-back
     const tor = coat
       ? lathe([[0.19, 0.5], [0.18, 0.7], [0.16 * heavy, 0.95], [0.155 * heavy, 1.08], [0.17 * heavy, 1.22], [0.19, 1.36], [0.16, 1.44], [0.07, 1.48]], shirt)
@@ -636,7 +636,7 @@
     const hairStyle = o.hairStyle || (o.dress ? 'long' : 'short');
     if (!o.bald && o.hat !== 'gnome' && o.hat !== 'helmet') {
       const hr = part(new THREE.SphereGeometry(0.122, lite ? 10 : 16, lite ? 6 : 10, 0, Math.PI * 2, 0, Math.PI * 0.5), hair, 0, 1.665, -0.015); hr.scale.set(1, 1.1, 1);
-      if (hairStyle === 'long') { part(new THREE.SphereGeometry(0.125, 12, 10, 0, Math.PI, 0, Math.PI * 0.8), hair, 0, 1.6, -0.02).rotation.y = Math.PI / 2; }
+      if (hairStyle === 'long') { part(new THREE.SphereGeometry(0.125, 12, 10, 0, Math.PI, 0, Math.PI * 0.8), hair, 0, 1.6, -0.02).rotation.y = Math.PI; }
       if (hairStyle === 'sides') { for (const sx of [-1, 1]) part(new THREE.SphereGeometry(0.06, 8, 8), hair, sx * 0.1, 1.62, -0.03).scale.set(0.6, 1, 1); }
     }
     if (o.bald && !o.hat) { for (const sx of [-1, 1]) part(new THREE.SphereGeometry(0.05, 8, 8), hair, sx * 0.1, 1.61, -0.03).scale.set(0.5, 0.9, 1); }
@@ -1398,6 +1398,26 @@
       return ((i0 + (u == null ? 0.5 : u) * (i1 - i0)) * track.ds) / L;
     }
     const SPANS = /^prop:(jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
+    // The city's sidewalks are paved 0.22 m above the circuit's base line (buildRoad). Everything that was
+    // placed at ground level inside that band (lamps, signs, Ampeln, people, bins, street scenes) is lifted
+    // onto the paving, instead of standing knee-deep in it.
+    function settleOnSidewalks(group) {
+      if (!(theme.street && theme.street !== 'park')) return;
+      const mouth = mouthSets(track), CELL = 24, grid = new Map();
+      for (let i = 0; i < n; i++) { const k = Math.floor(S[i].p.x / CELL) + ',' + Math.floor(S[i].p.z / CELL); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i); }
+      const paved = (i) => { const a = S[i], b = S[(i + 1) % n]; return /^(straight|curve|hill|dip|tunnel)$/.test(a.kind) && a.p.y > -0.02 && b.p.y > -0.02; };
+      for (const ch of group.children) {
+        const u = ch.userData; if (u.keep || u.sky || u.water || Math.abs(ch.position.y - GROUND_Y) > 1e-4) continue;
+        const x = ch.position.x, z = ch.position.z, cx = Math.floor(x / CELL), cz = Math.floor(z / CELL); let best = -1, bd = 1e18;
+        for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) for (const i of grid.get((cx + dx) + ',' + (cz + dz)) || []) { const d = (S[i].p.x - x) ** 2 + (S[i].p.z - z) ** 2; if (d < bd) { bd = d; best = i; } }
+        if (best < 0) continue;
+        const s = S[best], bl = Math.hypot(s.B.x, s.B.z) || 1, lat = ((x - s.p.x) * s.B.x + (z - s.p.z) * s.B.z) / bl;
+        if (Math.abs(lat) < ROAD_W + 0.9 || Math.abs(lat) > ROAD_W + 4.7) continue;
+        const side = lat < 0 ? '-1' : '1', prev = (best - 1 + n) % n;
+        if (!paved(best) || !paved(prev) || mouth[side].has(best) || mouth[side].has(prev)) continue;
+        ch.position.y = s.p.y + 0.22;
+      }
+    }
     function clearTheStreets(group) {
       const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.6;
       const footprint = (obj, buildingOnly) => {
@@ -1637,6 +1657,8 @@
       for (let i = 0; i < n; i++) { const k = S[i].kind; if (S[i].cork && !seenCork) { seenCork = true; story('cork', i * track.ds - 40); } else if (k === 'loop' && !seenLoop) { seenLoop = true; story('loop', i * track.ds - 40); } if (k === 'ramp' && !seenJump) { seenJump = true; story('jump', i * track.ds - 40); } if (k === 'tunnel' && !seenTunnel) { seenTunnel = true; story('tunnel', i * track.ds - 30); } } }
     // oriented footprints of the houses, so the side streets' own rows can fill in without overlapping them
     const houseBoxes = [];
+    // where the Veedel scenes stand: sidewalk furniture, people and green strips keep out of them
+    const sceneSpots = [], nearScene = (x, z, pad) => sceneSpots.some((q) => (q.x - x) ** 2 + (q.z - z) ** 2 < (q.r + pad) ** 2);
     function obbOf(o, hu, hv) {
       o.updateMatrix(); const e = o.matrix.elements, ul = Math.hypot(e[0], e[2]) || 1, vl = Math.hypot(e[8], e[10]) || 1;
       return { x: o.position.x, z: o.position.z, u: [e[0] / ul, e[2] / ul], v: [e[8] / vl, e[10] / vl], hu: hu != null ? hu : o.userData.w / 2, hv: hv != null ? hv : o.userData.d / 2 };
@@ -1689,7 +1711,7 @@
         if (rnd() < 0.7) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const ps = S[zi + 1]; f.position.set(ps.p.x + ps.B.x / bl * side * (ROAD_W + 2.2), GROUND_Y, ps.p.z + ps.B.z / bl * side * (ROAD_W + 2.2)); f.lookAt(ps.p.x, GROUND_Y, ps.p.z); g.add(f); }
         if (side === -1) { // one or two Kölner actually crossing: they walk over the zebra and hop back to the curb when a car comes too fast
           const nW = 1 + Math.floor(rnd() * 2);
-          for (let w = 0; w < nW; w++) { const ps = S[zi + 1 + w]; const f = P.passant({ k: Math.floor(rnd() * 20) }); const a = new THREE.Vector3(ps.p.x - ps.B.x / bl * (ROAD_W + 2.4), GROUND_Y, ps.p.z - ps.B.z / bl * (ROAD_W + 2.4)), b = new THREE.Vector3(ps.p.x + ps.B.x / bl * (ROAD_W + 2.4), GROUND_Y, ps.p.z + ps.B.z / bl * (ROAD_W + 2.4));
+          for (let w = 0; w < nW; w++) { const ps = S[zi + 1 + w]; const f = P.passant({ k: Math.floor(rnd() * 20) }); const a = new THREE.Vector3(ps.p.x - ps.B.x / bl * (ROAD_W + 2.4), ps.p.y + 0.22, ps.p.z - ps.B.z / bl * (ROAD_W + 2.4)), b = new THREE.Vector3(ps.p.x + ps.B.x / bl * (ROAD_W + 2.4), ps.p.y + 0.22, ps.p.z + ps.B.z / bl * (ROAD_W + 2.4));
             f.userData.walker = { a, b, t: rnd(), dir: rnd() < 0.5 ? 1 : -1, wait: rnd() * 3, speed: 0.9 + rnd() * 0.5, hop: 0 }; f.position.copy(a).lerp(b, f.userData.walker.t); f.userData.kind = 'walker'; g.add(f); animated.push(f); }
         }
         keepOut.push({ x, z, r: 3 });
@@ -1759,7 +1781,7 @@
           if (big ? !freeAt(x, z, R + 2, ii) : (!trackFree(x, z, R + 0.5, ii) || keepOut.some((k) => (k.x - x) ** 2 + (k.z - z) ** 2 < (Math.min(k.r, 14) * 0.55 + R) ** 2))) { veedelMiss++; continue; }
           prop.position.set(x, GROUND_Y, z); prop.lookAt(sq.p.x, GROUND_Y, sq.p.z); prop.userData.kind = 'veedel:' + pickC.id; prop.userData.at = ii * track.ds / L;
           g.add(prop); if (prop.userData.tick) animated.push(prop);
-          keepOut.push({ x, z, r: Math.hypot(w, d) / 2 + (big ? 6 : 1.5) }); houseBoxes.push(obbOf(prop, w / 2 + 0.5, d / 2 + 0.5));
+          keepOut.push({ x, z, r: Math.hypot(w, d) / 2 + (big ? 6 : 1.5) }); houseBoxes.push(obbOf(prop, w / 2 + 0.5, d / 2 + 0.5)); sceneSpots.push({ x, z, r: R });
           used[pickC.id] = (used[pickC.id] || 0) + 1; if (m.kind === 'lambogina') lambo++;
           story(pickC.id, ii * track.ds, prop); ok = true; veedelPlaced++;
         }
@@ -1779,18 +1801,18 @@
           const x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
           if (!freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { // the whole footprint must clear every other part of the circuit
             const gx = s.p.x + bx / bl * side * (ROAD_W + 9), gz = s.p.z + bz / bl * side * (ROAD_W + 9);
-            if (trackFree(gx, gz, 7, i) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
+            if (trackFree(gx, gz, 7, i) && !nearScene(gx, gz, 7) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
             continue;
           }
           house.position.set(x, GROUND_Y, z); house.lookAt(s.p.x, GROUND_Y, s.p.z); house.userData.kind = 'house'; g.add(house); count++; houses++; sinceGap++; houseBoxes.push(obbOf(house));
           if (house.userData.pub) { // Kölsch drinkers in front of every Brauhaus
-            for (let k = 0; k < 2; k++) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const lat = ROAD_W + 2.6 + rnd() * 1.6; const off = (rnd() - 0.5) * w * 0.6; f.position.set(x + bx / bl * side * (lat - dist) + s.T.x * off, GROUND_Y, z + bz / bl * side * (lat - dist) + s.T.z * off); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+            for (let k = 0; k < 2; k++) { const f = P.passant({ k: Math.floor(rnd() * 20) }); const lat = ROAD_W + 2.6 + rnd() * 1.6; const off = (rnd() - 0.5) * w * 0.6; f.position.set(x + bx / bl * side * (lat - dist) + s.T.x * off, GROUND_Y, z + bz / bl * side * (lat - dist) + s.T.z * off); f.rotation.y = rnd() * Math.PI * 2; if (!nearScene(f.position.x, f.position.z, 0.5)) g.add(f); }
             story('brauhaus', sPos + w / 2, house);
           }
           sPos += w + (inner ? w * 0.25 : 0) + 0.15;
           if (sinceGap > 4 + rnd() * 5) { // a side street: sign + something in the gap (square, graffiti wall, billboard, Büdchen)
             sinceGap = 0; const gapLen = 12 + rnd() * 6; const gi = Math.floor(((sPos + gapLen / 2) / track.ds)) % n; const gs = S[gi]; const gbx = gs.B.x, gbz = gs.B.z; const gbl = Math.hypot(gbx, gbz) || 1;
-            const putGap = (prop, lat, face) => { prop.position.set(gs.p.x + gbx / gbl * side * lat, GROUND_Y, gs.p.z + gbz / gbl * side * lat); if (face) prop.lookAt(gs.p.x, GROUND_Y, gs.p.z); else prop.rotation.y = Math.atan2(gs.T.x, gs.T.z); g.add(prop); return prop; };
+            const putGap = (prop, lat, face) => { prop.position.set(gs.p.x + gbx / gbl * side * lat, GROUND_Y, gs.p.z + gbz / gbl * side * lat); if (face) prop.lookAt(gs.p.x, GROUND_Y, gs.p.z); else prop.rotation.y = Math.atan2(gs.T.x, gs.T.z); if (!nearScene(prop.position.x, prop.position.z, 3)) g.add(prop); return prop; };
             if (theme.streets) putGap(P.schild({ text: theme.streets[Math.floor(rnd() * theme.streets.length)] }), ROAD_W + 3.9, true);
             const gr = rnd();
             if (gr < 0.3) { putGap(P.platz({ seed: Math.floor(rnd() * 1000) }), ROAD_W + 4.5 + 7, true); story('platz', sPos + gapLen / 2); }
@@ -1907,7 +1929,7 @@
       if (street !== 'park' && flat) {
         const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
         const at = (side, lat) => [s.p.x + bx / bl * side * lat, s.p.z + bz / bl * side * lat];
-        const put = (prop, side, lat, face) => { const [x, z] = at(side, lat); prop.position.set(x, GROUND_Y, z); if (face) prop.lookAt(s.p.x, GROUND_Y, s.p.z); else prop.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(prop); };
+        const put = (prop, side, lat, face) => { const [x, z] = at(side, lat); if (nearScene(x, z, 0.8)) return; prop.position.set(x, GROUND_Y, z); if (face) prop.lookAt(s.p.x, GROUND_Y, s.p.z); else prop.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(prop); };
         const k = i / step;
         if (k % 2 === 0) {
           const side = k % 4 ? 1 : -1;
@@ -1917,7 +1939,7 @@
         if (k % 7 === 3 && theme.streets) put(P.schild({ text: theme.streets[Math.floor(k / 7) % theme.streets.length] }), k % 2 ? 1 : -1, ROAD_W + 3.9, true);
         if (Math.abs(s.curv || 0) > 0.02 && k % 5 === 0) put(P.ampel(), 1, ROAD_W + 2.0, true);
         if (rnd() < 0.32) { const taxi = rnd() < 0.22; put(P.parkedcar(taxi ? { taxi: true } : { color: [0x8a8a90, 0xdddddd, 0x223355, 0x7a1a1a, 0x2d6a4f, 0x111111, 0xd9a24a, 0xe0b060, 0x4a6a8a][Math.floor(rnd() * 9)] }), rnd() < 0.5 ? 1 : -1, ROAD_W + 2.4, false); if (taxi) story('taxi', i * track.ds); }
-        for (let pp = 0; pp < 2; pp++) if (rnd() < 0.45) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2.2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x + s.T.x * (rnd() - 0.5) * 8, GROUND_Y, z + s.T.z * (rnd() - 0.5) * 8); f.rotation.y = rnd() * Math.PI * 2; g.add(f); }
+        for (let pp = 0; pp < 2; pp++) if (rnd() < 0.45) { const side = rnd() < 0.5 ? 1 : -1; const [x, z] = at(side, ROAD_W + 2.2 + rnd() * 2.2); const f = P.passant({ k: Math.floor(rnd() * 20) }); f.position.set(x + s.T.x * (rnd() - 0.5) * 8, GROUND_Y, z + s.T.z * (rnd() - 0.5) * 8); f.rotation.y = rnd() * Math.PI * 2; if (!nearScene(f.position.x, f.position.z, 0.5)) g.add(f); }
         if (rnd() < 0.15) put(P.muell(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.0, false);
         if (rnd() < 0.15) put(P.fahrrad(), rnd() < 0.5 ? 1 : -1, ROAD_W + 4.1, false);
         if (k % 9 === 5) put(P.litfass({ texts: theme.posters }), k % 2 ? 1 : -1, ROAD_W + 5.0, false);
@@ -2019,6 +2041,7 @@
     // sideways off the road, and removed if 24 m of pushing does not free them. Structures that span the
     // road on purpose (gates, bridges, gantries, rails, the Dom with its Domplatte) are left alone.
     clearTheStreets(g);
+    settleOnSidewalks(g);
     if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
     mergeStatic(g, new Set(animated));
@@ -2055,7 +2078,7 @@
       if (u.tick) u.tick(t / 1000, dt, { center, cars, beat: root.LamboBeat ? root.LamboBeat.now() : null }); // street life with its own animation (js/veedel.js)
       else if (u.wave) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_yAxis, Math.sin(t * 0.0015) * 0.25)); a.traverse((c) => { if (c.userData.waveArm) c.rotation.z = -2.6 + Math.sin(t * 0.006) * 0.35; }); }
       else if (u.rain && center) { const p = a.geometry.attributes.position.array; for (let i = 0; i < p.length; i += 3) { p[i + 1] -= dt * 28; if (p[i + 1] < 0) { p[i + 1] = 40; p[i] = center.x + (Math.random() - 0.5) * 80; p[i + 2] = center.z + (Math.random() - 0.5) * 80; } } a.geometry.attributes.position.needsUpdate = true; }
-      else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
+      else if (u.crowd) { if (!u.baseQ) u.baseQ = a.quaternion.clone(); if (u.baseY == null) u.baseY = a.position.y; a.position.y = u.baseY + Math.abs(Math.sin(t * 0.006 + u.phase)) * 0.35; a.quaternion.copy(u.baseQ).multiply(_qTmp.setFromAxisAngle(_zAxis, Math.sin(t * 0.003 + u.phase) * 0.03)); }
       else if (u.walker) {
         const w = u.walker; let near = center ? Math.hypot(center.x - a.position.x, center.z - a.position.z) : 999;
         if (cars) for (const c of cars) { const d = Math.hypot(c.x - a.position.x, c.z - a.position.z) + 12; if (d < near) near = d; }
@@ -2064,7 +2087,7 @@
           const goal = w.t < 0.5 ? 0.05 : 0.95; const step = dt * 7 / w.a.distanceTo(w.b); w.t += Math.sign(goal - w.t) * Math.min(step, Math.abs(goal - w.t)); w.hop = Math.min(1, w.hop + dt * 6); w.wait = 2.5 + Math.random() * 2; w.fled = true;
         } else if (w.wait > 0) { w.wait -= dt; w.hop = Math.max(0, w.hop - dt * 3); if (w.fled && near < 70) w.wait = 1; }
         else { w.fled = false; const step = dt * w.speed / w.a.distanceTo(w.b); w.t += w.dir * step; if (w.t >= 1 || w.t <= 0) { w.t = w.t >= 1 ? 1 : 0; w.dir *= -1; w.wait = 2 + Math.random() * 5; } w.hop = Math.max(0, w.hop - dt * 3); }
-        const prev = a.position.clone(); a.position.copy(w.a).lerp(w.b, w.t); a.position.y = GROUND_Y + Math.abs(Math.sin(t * 0.012 * (w.hop ? 2 : 1))) * (w.hop ? 0.35 : 0.05) * (w.wait > 0 && !w.hop ? 0 : 1);
+        const prev = a.position.clone(); a.position.copy(w.a).lerp(w.b, w.t); a.position.y = (Math.abs(w.t * 2 - 1) * w.a.distanceTo(w.b) / 2 < ROAD_W ? w.a.y - 0.12 : w.a.y) + Math.abs(Math.sin(t * 0.012 * (w.hop ? 2 : 1))) * (w.hop ? 0.35 : 0.05) * (w.wait > 0 && !w.hop ? 0 : 1);
         if (prev.distanceToSquared(a.position) > 1e-6) { const d = a.position.clone().sub(prev); d.y = 0; if (d.lengthSq() > 1e-8) a.rotation.y = Math.atan2(d.x, d.z); }
       }
       else if (u.boat) a.position.x += Math.sin(t * 0.0002) * 0.02;

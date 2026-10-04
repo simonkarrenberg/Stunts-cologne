@@ -108,9 +108,11 @@
       });
       return !blocked;
     };
-    const addProp = (obj, f, lat, faceStreet, kind, ignored, turn) => {
-      obj.position.set(f.p.x + f.B.x * lat, W.GROUND_Y, f.p.z + f.B.z * lat);
-      if (faceStreet) obj.lookAt(f.p.x, W.GROUND_Y, f.p.z); else obj.rotation.y = Math.atan2(f.T.x, f.T.z);
+    // y: on the street's paving (f.surfaceOffset), plus the curb height when the prop stands on the sidewalk
+    const addProp = (obj, f, lat, faceStreet, kind, ignored, turn, onWalk) => {
+      const y = f.p.y + (f.surfaceOffset || 0) + (onWalk ? 0.14 : 0);
+      obj.position.set(f.p.x + f.B.x * lat, y, f.p.z + f.B.z * lat);
+      if (faceStreet) obj.lookAt(f.p.x, y, f.p.z); else obj.rotation.y = Math.atan2(f.T.x, f.T.z);
       obj.rotation.y += turn || 0;
       obj.userData.kind = kind || 'streetFurniture';
       if (!propClear(obj, ignored)) return null;
@@ -189,10 +191,10 @@
       const frame = (d) => root.Shortcuts.frameAt(route, d);
       for (let d = 14, k = 0; d < L - 14; d += 23, k++) {
         const side = k % 2 ? 1 : -1, lat = side > 0 ? right + 1.1 : left - 1.1;
-        if (clearAt(d, lat)) addProp(P.lamp(), frame(d), lat, true, 'streetLamp');
+        if (clearAt(d, lat)) addProp(P.lamp(), frame(d), lat, true, 'streetLamp', null, 0, true);
       }
       if (route.perks.includes('trees')) for (let d = 9; d < L - 9; d += 12) for (const side of [-1, 1]) {
-        const lat = side > 0 ? right + 1.9 : left - 1.9; if (clearAt(d, lat)) addProp(P.tree(Math.floor(d) % 3), frame(d), lat, false, 'streetTree');
+        const lat = side > 0 ? right + 1.9 : left - 1.9; if (clearAt(d, lat)) addProp(P.tree(Math.floor(d) % 3), frame(d), lat, false, 'streetTree', null, 0, true);
       }
       if (park) for (let d = 16, k = 0; d < L - 16; d += 7.5, k++) {
         if (k % 4 === 3 || !clearAt(d, hw + park / 2)) continue;
@@ -209,7 +211,7 @@
         const f = frame(d), lats = [left - 1.4, right + 1.4];
         const k = Math.max(0, Math.min(S.length - 1, Math.round(d))), lat = Math.abs(prof[k].lat + lats[0] * prof[k].bd) > Math.abs(prof[k].lat + lats[1] * prof[k].bd) ? lats[0] : lats[1];
         const sign = P.schild({ text: route.street });
-        addProp(sign, f, lat, false, 'streetName', null, -Math.PI / 2);
+        addProp(sign, f, lat, false, 'streetName', null, -Math.PI / 2, true);
       }
       // A longer alternate honestly shows +metres; green cuts show the saving.
       const color = routeColor(route), arrow = route.side < 0 ? '←' : '→', post = makePost(3.7);
