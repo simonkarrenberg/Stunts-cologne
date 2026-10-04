@@ -8,6 +8,7 @@
   'use strict';
 
   const DS = 1.0; // metres per sample
+  const VERGE = 6, VERGE_KINDS = ['straight', 'curve', 'hill', 'dip']; // default shoulder width beyond the road edge
 
   // --- tiny vector helpers ---------------------------------
   const v3 = (x, y, z) => ({ x, y, z });
@@ -235,6 +236,10 @@
       const nx = safe[(i + 1) % n];
       safe[i] = Math.min(safe[i], nx + 0.35);
     }
+    // verge: metres of shoulder (gravel, grass, sidewalk) beside the road edge, [left (lat < 0), right]. A car
+    // there is slowed, not wrecked. None on a bridge (rails, water), in a tunnel, a trench or on stilts, in a
+    // loop or on a jump; the scenery builder narrows it further where a house or the water comes close.
+    for (const q of samples) { const v = VERGE_KINDS.includes(q.kind) && q.p.y < 1.5 && q.p.y > -0.5 ? VERGE : 0; q.vg = [v, v]; }
     return { def, segments, samples, safe, length: info.length, info, ds: DS };
   }
 
@@ -253,5 +258,5 @@
     };
   }
 
-  root.TrackBuilder = { buildTrack, frameAt, v3, add, sub, mul, dot, cross, len, norm, rot, DS };
+  root.TrackBuilder = { buildTrack, frameAt, v3, add, sub, mul, dot, cross, len, norm, rot, DS, VERGE };
 })(typeof window !== 'undefined' ? window : module.exports);

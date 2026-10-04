@@ -1647,6 +1647,46 @@
         return true;
       };
       for (const ch of group.children) if (ch.userData.type === 'rhine' || ch.userData.type === 'rhineSide') clipWater(ch, landAt);
+      // The verge (track.js: a shoulder of gravel, grass or sidewalk beside the road edge) ends where a house, a
+      // landmark or the water begins: probe outward from the edge of the circuit and of every side street, with
+      // a car's half width, and keep the free metres per sample and side. Beyond them the car hits something.
+      {
+        const waters = []; group.traverse((m) => { if (m.isMesh && m.userData.water && m.userData.waterGrid) { m.updateMatrixWorld(true); waters.push({ inv: new THREE.Matrix4().copy(m.matrixWorld).invert(), w: m.userData.waterGrid.width, l: m.userData.waterGrid.height, kept: m.userData.waterKept }); } });
+        const wv = new THREE.Vector3(), wet = (x, z) => waters.some((wt) => { wv.set(x, GROUND_Y, z).applyMatrix4(wt.inv); if (Math.abs(wv.x) >= wt.w / 2 || Math.abs(wv.y) >= wt.l / 2) return false; return !wt.kept || wt.kept.has(Math.floor((wv.x + wt.w / 2) / 6) * 4096 + Math.floor((wv.y + wt.l / 2) / 6)); });
+        const CELL = 24, cells = new Map(), key = (cx, cz) => cx * 65536 + cz;
+        const addCell = (o, x0, x1, z0, z1) => { for (let cx = Math.floor(x0 / CELL); cx <= Math.floor(x1 / CELL); cx++) for (let cz = Math.floor(z0 / CELL); cz <= Math.floor(z1 / CELL); cz++) { const k = key(cx, cz); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(o); } };
+        for (const b of houseBoxes) { const r = b.hu + b.hv; addCell({ box: b }, b.x - r, b.x + r, b.z - r, b.z + r); }
+        for (const fp of reserved) if (fp.maxX - fp.minX < 700 && fp.maxZ - fp.minZ < 700) addCell({ fp }, fp.minX, fp.maxX, fp.minZ, fp.maxZ);
+        // gates, gantries and bridges span the road on purpose: their posts and piers beside it still stop a car
+        for (const ch of group.children) {
+          const kind = ch.userData.kind || ''; if (!SPANS.test(kind) || /^prop:(rhine|rhineSide|bunting|banner|neon|tramline|dom|hbf)$/.test(kind)) continue;
+          ch.updateMatrixWorld(true);
+          ch.traverse((mesh) => { if (!mesh.isMesh || !mesh.geometry) return; const fp = footprint(mesh); if (!fp || fp.maxX - fp.minX > 60 || fp.maxZ - fp.minZ > 60 || fp.minY > GROUND_Y + 2.5 || hit(fp, 0) >= 0) return; addCell({ fp }, fp.minX, fp.maxX, fp.minZ, fp.maxZ); });
+        }
+        // street furniture at car height (parked cars, tree trunks, lamp posts, Litfaßsäulen, benches, people at the
+        // stop): a car on the verge hits it, it does not drive through it. Only the part between knee and roof height
+        // counts, so a crown or a sign overhead leaves the verge free; 0.5 m extra for the car's length.
+        for (const ch of group.children) {
+          const u = ch.userData, kind = u.kind || ''; if (u.keep || u.sky || u.water || u.landmarkName || kind === 'house' || kind === 'walker' || kind === 'paint' || SPANS.test(kind)) continue;
+          ch.updateMatrixWorld(true);
+          ch.traverse((mesh) => { if (!mesh.isMesh || !mesh.geometry || mesh.userData.walker) return; const fp = footprint(mesh); if (!fp || fp.maxX - fp.minX > 24 || fp.maxZ - fp.minZ > 24 || fp.minY > GROUND_Y + 1.3 || fp.maxY < GROUND_Y + 0.35) return; fp.pad = 0.5; addCell({ fp }, fp.minX - 0.5, fp.maxX + 0.5, fp.minZ - 0.5, fp.maxZ + 0.5); });
+        }
+        const near = (fp, x, z) => { if (inside(fp.c, x, z)) return true; if (!fp.pad) return false; for (let k = 0; k < 4; k++) { const a = fp.c[k], b = fp.c[(k + 1) % 4], dx = b.x - a.x, dz = b.z - a.z, t = Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / Math.max(1e-9, dx * dx + dz * dz))); if ((x - a.x - t * dx) ** 2 + (z - a.z - t * dz) ** 2 < fp.pad * fp.pad) return true; } return false; };
+        const solid = (x, z) => {
+          for (const o of cells.get(key(Math.floor(x / CELL), Math.floor(z / CELL))) || []) {
+            if (o.box) { const b = o.box, dx = x - b.x, dz = z - b.z; if (Math.abs(dx * b.u[0] + dz * b.u[1]) < b.hu && Math.abs(dx * b.v[0] + dz * b.v[1]) < b.hv) return true; }
+            else if (x >= o.fp.minX - (o.fp.pad || 0) && x <= o.fp.maxX + (o.fp.pad || 0) && z >= o.fp.minZ - (o.fp.pad || 0) && z <= o.fp.maxZ + (o.fp.pad || 0) && near(o.fp, x, z)) return true;
+          }
+          return wet(x, z);
+        };
+        const fit = (samples, edge) => { for (const q of samples) {
+          if (!q.vg) q.vg = [TB.VERGE, TB.VERGE];
+          const bl = Math.hypot(q.B.x, q.B.z) || 1;
+          for (let k = 0; k < 2; k++) { let d = 0; for (; d < q.vg[k]; d += 0.5) { const lat = (k ? 1 : -1) * (edge + d + 1.1); if (solid(q.p.x + q.B.x / bl * lat, q.p.z + q.B.z / bl * lat)) break; } q.vg[k] = Math.min(q.vg[k], d); }
+        } };
+        fit(S, ROAD_W + 1.6);
+        for (const route of track.shortcuts || []) fit(route.samples, route.halfWidth - 0.6);
+      }
       if (root.STUNTS_AUDIT) console.log('clearTheStreets:', { moved, removed, relocated, engulfed, unresolved });
     }
     // water never lies on a street: the plane is rebuilt from tiles, dropping every tile close to a
@@ -1660,17 +1700,18 @@
         if (!dimensions || !Number.isFinite(dimensions.width) || !Number.isFinite(dimensions.height)) return;
         const w = dimensions.width, l = dimensions.height; const tile = 6;
         m.userData.waterGrid = { width: w, height: l };
-        const nx = Math.ceil(w / tile), nz = Math.ceil(l / tile); const pos = [], uv = [], idx = []; let dropped = 0;
+        const nx = Math.ceil(w / tile), nz = Math.ceil(l / tile); const pos = [], uv = [], idx = [], kept = new Set(); let dropped = 0;
         for (let ix = 0; ix < nx; ix++) for (let iz = 0; iz < nz; iz++) {
           const x0 = -w / 2 + ix * tile, x1 = Math.min(w / 2, x0 + tile), y0 = -l / 2 + iz * tile, y1 = Math.min(l / 2, y0 + tile);
           wp.set((x0 + x1) / 2, (y0 + y1) / 2, 0).applyMatrix4(m.matrixWorld);
           let near = !!(landAt && landAt(wp.x, wp.z));
           if (!near) for (let i = 0; i < streetSamples.length; i += 2) { const q = streetSamples[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
           if (near) { dropped++; continue; }
-          const b = pos.length / 3; pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
+          kept.add(ix * 4096 + iz); const b = pos.length / 3; pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
           uv.push((x0 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y1 + l / 2) / l, (x0 + w / 2) / w, (y1 + l / 2) / l);
           idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
         }
+        m.userData.waterKept = dropped ? kept : null; // which tiles are still water (the verges end there)
         if (!dropped) return;
         const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals();
         m.geometry.dispose(); m.geometry = geo;

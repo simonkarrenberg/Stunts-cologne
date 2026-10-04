@@ -348,6 +348,14 @@ Himmelsspiegelung.
 Im Rennen: **TURBO** lädt beim Fahren und Driften auf, Shift/N zündet ihn. **SCHADEN** steigt
 bei Crashs und Rempeleien und kostet Topspeed; bei 100 % ist der Wagen kurz hin. Vier Kameras
 (C), darunter das Cockpit mit Lenkrad und Armaturen.
+Neben der Fahrbahn liegt ein **Bankett** (Schotter, Rasen, Bürgersteig, bis 6 m breit): dort fehlen
+60 % Grip, der Wagen bremst hart ab und wirft Steinchen oder Grasbüschel hoch. Gecrasht wird erst
+dahinter oder am Hindernis: Hauswand, parkendes Auto, Baumstamm, Laterne, Brückengeländer, Tunnelwand,
+Torpfeiler oder Wasser – für dich und die
+Rivalen nach denselben Regeln. Nach einem Crash steht der Wagen auf der Mittellinie, mindestens 20 m
+weiter als der letzte sichere Punkt und nie zurück vor der Stelle, an der er rausflog (aus einer
+Seitenstraße: vor deren Einfahrt; beim Botengang und Klüngel-Auftrag nie hinter die Stelle, zu der du
+unterwegs bist); R setzt dich auf der Hauptstrecke dort ab, wo du gerade bist.
 
 **Klüngel-Baukasten:** eigener Streckeneditor im Menü. Teile aneinanderreihen (Gerade, Kurven,
 Steilkurven, Hügel, Senke, Looping, Korkenzieher, Sprung, Sprung übers Haus, Brücke, Tunnel),
@@ -425,8 +433,14 @@ und der Tipp des Tages vom Türsteher.
   Haltestellen, Parks, Loopings und Sprüngen – ohne dass ein echter Name fällt.
   Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
 - `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft
-  vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, KI-Rivale,
+  vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, Bankett, KI-Rivale,
   Kollisionen, Kameras, HUD, Minimap, WebAudio-Motor, Bestzeiten im `localStorage`.
+  Das Rennen rechnet in festen Schritten von 1/120 s (höchstens 8 pro Bild, gezeichnet wird zwischen
+  den letzten beiden): Sprünge und Rundenzeiten sind auf dem 30-Hz-Handy dieselben wie am 144-Hz-Monitor,
+  `raceTime` zählt Schritte. Die Bankettbreite pro Streckenpunkt und Seite setzt `js/track.js`
+  (keins auf Brücke, im Tunnel, Looping, Sprung, Trog oder auf Stelzen), `js/world.js` kürzt sie,
+  wo Häuser, Wahrzeichen, Torpfeiler, Straßenmöbel in Autohöhe (parkende Autos, Baumstämme, Laternen)
+  oder Wasser näher stehen.
 - `js/data.js` — Strecken, Karren, Archetypen, Straßennamen, Ladenschilder und alle kölschen Sprüche.
 - Alle statischen Requisiten werden pro Material zu einem Mesh zusammengefasst, alle einfarbigen
   Teile sogar zu einem einzigen vertex-gefärbten Mesh; Schilder mit gleichem Text teilen sich eine
@@ -461,14 +475,21 @@ Zwei Prüfungen brauchen keinen Browser: `brands` liest jeden String in `js/*.js
 `index.html` gegen eine Liste echter Marken, Clubs, Firmen und Brauereien (erlaubt sind nur die
 erfundenen: KVK, DÄ SCHNELLE, Krachkeller …), `koelsch-lint` hält das Kölsch auf einer Linie
 (der/d'r für männlich, de für weiblich, et für sächlich; do küss, ich hann, emmer).
+`verge` fährt mit → bei 100 km/h aufs Bankett (erst dahinter Crash, Rivale und Spieler Schritt für
+Schritt gleich) und lässt im ersten Karriere-Kapitel fünfmal abfliegen: Der Fortschritt nach dem
+Respawn geht nie zurück. `fixed-step` stellt die Uhr von `requestAnimationFrame` und den Timern selbst:
+eine Autopilot-Runde Poller Wiesen bei 30 und 144 fps (gleiche Zeit), der Rheinsprung am Zoo (gleiche
+Höhe) und 10 s bei erzwungenen 15 fps (10 s Rennzeit, keine Zeitlupe).
 
 ## Debug
 
 In der Browser-Konsole: `STUNTS_AUTOPILOT = true` lässt die KI das eigene Auto fahren,
 `STUNTS_DEBUG()` gibt den aktuellen Rennzustand aus, `STUNTS_PROPS()` listet alle
 platzierten Wahrzeichen und `STUNTS_FREECAM = { pos: [x,y,z], look: [x,y,z] }` setzt eine freie Kamera.
-`STUNTS_SIMSTEPS = 60` lässt die Physik 60 Schritte pro gerendertem Bild laufen (für Autopilot-Tests
-auf langsamen Maschinen), `STUNTS_FIELD()` liefert Position, Runde und Zustand aller acht Wagen,
-`STUNTS_FRAME(s)` das Streckenkoordinatensystem samt Segmentart an Position s.
+`STUNTS_SIMSTEPS = 60` lässt pro gerendertem Bild 60 × 1/60 s Rennen laufen, unabhängig von der Uhr
+(für Autopilot-Tests auf langsamen Maschinen); `STUNTS_DRIVE_STEPS(n)` und `STUNTS_FIELD_STEPS(n)`
+rechnen n × 1/60 s, jeweils als zwei feste Schritte. `STUNTS_NORENDER = true` rechnet nur noch, ohne
+zu zeichnen. `STUNTS_FIELD()` liefert Position, Runde und Zustand aller Wagen,
+`STUNTS_FRAME(s)` das Streckenkoordinatensystem samt Segmentart und Bankettbreite an Position s.
 
 *Et hätt noch emmer jot jejange.*

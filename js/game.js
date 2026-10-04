@@ -414,13 +414,29 @@
       shortcut: -1, shortcutsDone: new Set(), routeSeed: 0, branchPlan: -1, branchKey: '', routePlan: null
     };
   }
-  function respawn(r) { r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
+  // Back on the road after a crash, on the centre line. On the main road: where the car crashed, at least 20 m past
+  // the last safe point and never behind it, moved on to the next plain stretch (not into a loop, a jump or a gap),
+  // so progress never goes down and nobody is put back before the fork that just threw them off. From a side street:
+  // its own reset point on the main road before the entry (a side street has no centre line on the main course).
+  const SAFE_KINDS = ['straight', 'bridge', 'tunnel', 'curve', 'hill', 'dip'];
+  function respawnS(r) {
+    if (r.crashRoute) return ((r.safeS - 18) % track.length + track.length) % track.length;
+    let s = Math.max(r.safeS + (r.resetHere ? 0 : 20), r.crashS != null ? r.crashS : -1e9);
+    for (let k = 0; k < 900; k++, s += 1) { const f = TB.frameAt(track, s); if (SAFE_KINDS.includes(f.kind) && f.N.y > 0.9 && SAFE_KINDS.includes(TB.frameAt(track, s + 6).kind)) break; }
+    // never past the pickup or the drop-off the player was heading for (Botengang, Klüngel-Auftrag): just before it
+    const goal = r !== player ? null : mission ? (mission.onFoot ? null : mission.stage === 'drive1' ? mission.pickS : mission.stage === 'drive2' ? mission.dropS : null) : auftrag && auftrag.stage === 'pickup' ? auftrag.s1 : null;
+    if (goal != null) { const c = r.crashS != null ? r.crashS : r.safeS, L = track.length, ahead = ((goal - c) % L + L) % L; if (c + ahead < s + 6) s = Math.max(c, c + ahead - 8); }
+    return s; // may lie past the line: the next update counts the lap
+  }
+  function respawn(r) { const s = respawnS(r); r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = s; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; r.onVerge = false; if (!r.crashRoute) r.safeS = Math.min(s, track.length - 0.01); r.crashS = null; r.crashRoute = false; r.resetHere = false; }
+  // the verge (metres of shoulder beyond the road edge) at the racer's sample, on the side it is on
+  function vergeAt(r, f, lat) { const route = routeFor(r), q = route ? route.samples[f.index] : track.samples[f.index]; return q && q.vg ? q.vg[lat < 0 ? 0 : 1] : route ? 2 : TB.VERGE; }
   let crashLog = [], crashAt = [], helpSaid = -99; const notesTold = new Set(); // two crashes in half a minute: Dä Lange gives a real tip
   function crash(r, kind) {
     if (r === player && auftrag && auftrag.stage === 'carry') failAuftrag('lost');
     if (r.crashed > 0) return;
-    r.lastCrash = kind; if (r === player) { crashes++; crashLog.push(raceTime); crashAt.push(r.s); while (crashLog.length && raceTime - crashLog[0] > 30) crashLog.shift(); if (crashLog.length >= 2 && raceTime - helpSaid > 25) { helpSaid = raceTime; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(tuenn.help) + (isMobile ? '' : ' R = zeröck op de Stroß.'), 4200); }, 1200); } if (kind === 'water') { waterCrashes++; bumpStat('water'); } if (kind === 'roof') bumpStat('roofs'); }
-    r.crashed = 2.2; r.v = 0; r.air = false; r.turboOn = false;
+    r.lastCrash = kind; r.crashS = r.s; r.crashRoute = r.shortcut >= 0; if (r === player) { crashes++; crashLog.push(raceTime); crashAt.push(r.s); while (crashLog.length && raceTime - crashLog[0] > 30) crashLog.shift(); if (crashLog.length >= 2 && raceTime - helpSaid > 25) { helpSaid = raceTime; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(tuenn.help) + (isMobile ? '' : ' R = zeröck op de Stroß.'), 4200); }, 1200); } if (kind === 'water') { waterCrashes++; bumpStat('water'); } if (kind === 'roof') bumpStat('roofs'); }
+    r.crashed = 2.2; r.v = 0; r.air = false; r.turboOn = false; endJump(r);
     r.damage = Math.min(1, r.damage + 0.25);
     if (!r.isAI) {
       crashSound(); shake = 1;
@@ -431,6 +447,7 @@
     }
   }
 
+  function endJump(r) { if (!r.jumpLive) return; (r.jumps || (r.jumps = [])).push({ s: Math.round(r.jumpLive.s), h: r.jumpLive.peak - r.jumpLive.y0 }); if (r.jumps.length > 30) r.jumps.shift(); r.jumpLive = null; }
   function updateRacer(r, dt, ctl) {
     const car = r.car;
     if (r.crashed > 0) { r.crashed -= dt; if (r.crashed <= 0) respawn(r); return; }
@@ -453,22 +470,21 @@
     const topMul = (1 - r.damage * 0.2) * (r.turboOn ? 1.18 : 1);
     if (!r.air) {
       const slope = f.T.y;
-      let a = ctl.gas * car.accel * (r.turboOn ? 1.9 : 1) - ctl.brake * (r.v > 0.5 ? car.brake : -car.accel * 0.4) - G * slope * 0.9;
-      a -= r.v * Math.abs(r.v) * 0.004 + (ctl.gas > 0 ? 0 : 0.8) * Math.sign(r.v);
+      // on the verge (gravel, grass, sidewalk): wheels spin, heavy drag, 40 % grip; the same rules for every car
+      const verge = r.onVerge = Math.abs(r.lat) > roadWidth;
+      let a = ctl.gas * car.accel * (r.turboOn ? 1.9 : 1) * (verge ? 0.5 : 1) - ctl.brake * (r.v > 0.5 ? car.brake : -car.accel * 0.4) - G * slope * 0.9;
+      a -= r.v * Math.abs(r.v) * 0.004 + (ctl.gas > 0 ? 0 : 0.8) * Math.sign(r.v) + (verge ? r.v * 0.35 + 3 * Math.sign(r.v) : 0);
       r.v += a * dt;
       r.v = clamp(r.v, -8, car.top * topMul * (1.0 + (slope < 0 ? 0.15 : 0)));
       const bankAssist = Math.min(1, Math.abs(f.roll) / (25 * Math.PI / 180)) * 0.6;
       const onRoute = routeFor(r);
-      const gripAcc = 24 * car.grip * (1 + bankAssist) * (onRoute && onRoute.surface === 'cobble' ? 0.85 : 1); // Kopfsteinpflaster: less grip
+      const gripAcc = 24 * car.grip * (1 + bankAssist) * (onRoute && onRoute.surface === 'cobble' ? 0.85 : 1) * (verge ? 0.4 : 1); // Kopfsteinpflaster: less grip
       const need = f.curv * r.v * Math.abs(r.v);
       const centrifugal = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
       r.slide = centrifugal;
-      const steerV = (ctl.steer + (r === player && promille > 0 ? 0 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
+      const steerV = (ctl.steer + (r === player && promille > 0 ? 0 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v)) * (verge ? 0.7 : 1);
       r.lat += (steerV + centrifugal) * dt;
-      if (Math.abs(r.lat) > roadWidth) {
-        if (r.isAI) { r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); r.v *= 0.6; }
-        else { crash(r, 'off'); return; }
-      }
+      if (Math.abs(r.lat) > roadWidth + vergeAt(r, f, r.lat)) { crash(r, 'off'); return; } // past the verge: the wall, the house, the water
       if (onRoute) { // market stall and crate stacks in a Gasse: a bump that costs speed, and a word from the stall
         const d = (r.s - onRoute.startS) * onRoute.length / (onRoute.endS - onRoute.startS);
         for (const o of routeObstacles(onRoute)) if (Math.abs(d - o.d) < 1.8 && Math.abs(r.lat - o.lat) < o.r + 0.9 && !(r.bumpT > 0)) {
@@ -490,16 +506,17 @@
       }
       if (!r.air && !routeFor(r) && Math.abs(r.lat) < ROAD_W && ['straight', 'bridge', 'tunnel', 'curve', 'hill', 'dip'].includes(f.kind) && f.N.y > 0.9) r.safeS = r.s;
     } else {
+      if (!r.jumpLive) r.jumpLive = { s: r.s, y0: r.y, peak: r.y }; // the flight's height above its take-off (debug and tests)
       advanceRacer(r, r.v * dt);
       r.lat += ctl.steer * car.steer * 1.5 * dt;
       const f2 = racerFrame(r);
       const landing = f2.kind !== 'gap' && f2.kind !== 'ramp';
-      r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt;
+      r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt; r.jumpLive.peak = Math.max(r.jumpLive.peak, r.y);
       const ry = f2.p.y;
       if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over) { crash(r, 'roof'); return; } }
       else if (r.y <= ry + 0.12) {
-        r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y;
-        if (Math.abs(r.lat) > roadWidth) { if (r.isAI) r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); else { crash(r, 'off'); return; } }
+        r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y; endJump(r);
+        if (Math.abs(r.lat) > roadWidth + vergeAt(r, f2, r.lat)) { crash(r, 'off'); return; } // a landing on the verge is rough but survivable
         if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
         if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pick(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
         r.vy = 0;
@@ -569,11 +586,12 @@
     const need = f.curv * r.v * r.v, gripAcc = 24 * r.car.grip;
     const slide = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
     steer -= clamp(slide / (2.5 + 0.16 * r.v), -1, 1);
-    const turbo = fork ? 0 : r.turbo > 0.6 && f.kind === 'straight' && r.skill > 0.88 && Math.random() < 0.02 ? 1 : (r.turboOn && r.turbo > 0.05 ? 1 : 0);
+    const turbo = fork ? 0 : r.turbo > 0.6 && f.kind === 'straight' && r.skill > 0.88 && Math.random() < 1.2 * dt ? 1 : (r.turboOn && r.turbo > 0.05 ? 1 : 0);
     return { gas, brake, steer: clamp(steer, -1, 1), turbo };
   }
 
-  function collide(a, b) {
+  function collide(a, b, dt) {
+    const k = (dt || 1 / 60) * 60; // the push and the scratches per second do not depend on the step size
     if (a.crashed > 0 || b.crashed > 0 || a.air !== b.air || !sameRoad(a, b)) return;
     let ds = a.s - b.s; const L = track.length;
     if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
@@ -582,11 +600,11 @@
     const dl = a.lat - b.lat;
     if (Math.abs(ds) < 4.6 && Math.abs(dl) < 2.3) {
       const push = (dl >= 0 ? 1 : -1) * 4;
-      a.lat += push * 0.05; b.lat -= push * 0.05;
-      if (Math.abs(ds) < 2.5) { a.lat += push * 0.08; b.lat -= push * 0.08; }
+      a.lat += push * 0.05 * k; b.lat -= push * 0.05 * k;
+      if (Math.abs(ds) < 2.5) { a.lat += push * 0.08 * k; b.lat -= push * 0.08 * k; }
       else if (ds > 0) { const vb = b.v; b.v = Math.min(b.v, a.v * 0.95); a.v = Math.max(a.v, vb * 0.9); }
       else { const va = a.v; a.v = Math.min(a.v, b.v * 0.95); b.v = Math.max(b.v, va * 0.9); }
-      for (const r of [a, b]) if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.01); if (r.damage >= 1) crash(r, 'off'); } // a full damage bar is a Totalschaden, never a silent 100 %
+      for (const r of [a, b]) if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.01 * k); if (r.damage >= 1) crash(r, 'off'); } // a full damage bar is a Totalschaden, never a silent 100 %
       if (!a.isAI || !b.isAI) beep(90, 0.08, 'sawtooth', 0.08);
     }
   }
@@ -608,13 +626,46 @@
     r.mesh.quaternion.slerp(_q, Math.min(1, dt * 14));
     if (window.Cars) window.Cars.animate(r.mesh, r.v, dt, r.steerVis);
     if (r.crashed > 0) { r.mesh.rotation.z += dt * 6; r.mesh.position.y += Math.sin(r.crashed * 9) * 0.5 + 0.5; }
-    r.frame = { pos, T, N, B, fwd, up };
+    r.frame = { pos, T, N, B, fwd, up }; r.drawFrame = null;
+  }
+  // a car on the verge throws up gravel and grit (city) or grass and soil (park) behind its rear wheels: square pixels
+  const dirt = { pts: null, n: 256, k: 0, vel: null, life: null };
+  function vergeDirt(dt) {
+    if (!scene) return;
+    if (!dirt.pts || dirt.pts.parent !== scene) {
+      if (dirt.pts) { dirt.pts.geometry.dispose(); dirt.pts.material.dispose(); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dirt.n * 3).fill(-9999), 3)); g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(dirt.n * 3), 3));
+      dirt.pts = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.34, vertexColors: true })); dirt.pts.frustumCulled = false; scene.add(dirt.pts);
+      dirt.vel = new Float32Array(dirt.n * 3); dirt.life = new Float32Array(dirt.n); dirt.k = 0;
+    }
+    const P = dirt.pts.geometry.attributes.position.array, C = dirt.pts.geometry.attributes.color.array, V = dirt.vel; let live = false;
+    const green = !theme.street || theme.street === 'park', cols = (green ? [0x4f9a35, 0x6fb444, 0x6b4a2a] : [0x9a8f80, 0x7d736a, 0xbdb19c]).map((c) => new THREE.Color(c).multiplyScalar(theme.night ? 0.45 : 1));
+    for (const r of ipBodies()) {
+      if (!r.onVerge || r.air || r.crashed > 0 || Math.abs(r.v) < 3 || !r.mesh || !r.mesh.visible) { r.dirtAcc = 0; continue; }
+      const fr = r.drawFrame || r.frame; if (!fr) continue;
+      if (r === player && Math.abs(r.v) > 8) shake = Math.max(shake, 0.12); // the shoulder rattles
+      r.dirtAcc = (r.dirtAcc || 0) + dt * Math.min(90, 20 + Math.abs(r.v) * 2.5);
+      for (; r.dirtAcc >= 1; r.dirtAcc--) {
+        const i = dirt.k, side = Math.random() < 0.5 ? -1 : 1, c = cols[Math.floor(Math.random() * 3)]; dirt.k = (dirt.k + 1) % dirt.n;
+        P[i * 3] = fr.pos.x - fr.fwd.x * 1.6 + fr.B.x * side * 0.85; P[i * 3 + 1] = fr.pos.y + 0.25; P[i * 3 + 2] = fr.pos.z - fr.fwd.z * 1.6 + fr.B.z * side * 0.85;
+        const fwd = Math.abs(r.v) * (0.25 + Math.random() * 0.2), up = 2 + Math.random() * 3.5, out = side * (0.5 + Math.random() * 2.5);
+        V[i * 3] = fr.fwd.x * fwd + fr.B.x * out; V[i * 3 + 1] = up; V[i * 3 + 2] = fr.fwd.z * fwd + fr.B.z * out;
+        dirt.life[i] = 0.45 + Math.random() * 0.4; C[i * 3] = c.r; C[i * 3 + 1] = c.g; C[i * 3 + 2] = c.b;
+      }
+    }
+    for (let i = 0; i < dirt.n; i++) {
+      if (dirt.life[i] <= 0) continue;
+      dirt.life[i] -= dt; live = true;
+      if (dirt.life[i] <= 0) { P[i * 3 + 1] = -9999; continue; }
+      V[i * 3 + 1] -= 14 * dt; P[i * 3] += V[i * 3] * dt; P[i * 3 + 1] += V[i * 3 + 1] * dt; P[i * 3 + 2] += V[i * 3 + 2] * dt;
+    }
+    if (live) { dirt.pts.geometry.attributes.position.needsUpdate = true; dirt.pts.geometry.attributes.color.needsUpdate = true; }
   }
 
   // ---------------- camera (one per view) ----------------
   function updateCameraFor(view, r, dt, mode, cam) {
     cam = cam || camera;
-    const fr = r && r.frame; if (!fr) return;
+    const fr = r && (r.drawFrame || r.frame); if (!fr) return;
     let target, look, up; const N = fr.N, T = fr.T;
     if (mode === 0 || mode === 2) {
       const dist = mode === 0 ? 11 : 20, h = mode === 0 ? 4.2 : 8;
@@ -650,7 +701,7 @@
     if (!player || !player.frame) return;
     if (mission && mission.onFoot && mission.walker) { const w = mission.walker; const fwd = new THREE.Vector3(Math.sin(w.rotation.y), 0, Math.cos(w.rotation.y)); views[0].pos.lerp(w.position.clone().addScaledVector(fwd, -4.2).add(new THREE.Vector3(0, 3.6, 0)), Math.min(1, dt * 6)); views[0].look.lerp(w.position.clone().addScaledVector(fwd, 3).add(new THREE.Vector3(0, 1.3, 0)), Math.min(1, dt * 10)); views[0].up.set(0, 1, 0); camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look); if (player.mesh) player.mesh.visible = true; return; }
     if (phase === 'intro') { // flyover: from high above the first bend down into the chase position behind the grid
-      const k = Math.min(1, introT / 3.8), e = k * k * (3 - 2 * k); const fr = player.frame;
+      const k = Math.min(1, (introT + simAcc) / 3.8), e = k * k * (3 - 2 * k); const fr = player.drawFrame || player.frame; // simAcc: smooth between the fixed steps
       let fs = Math.min(170, track.length * 0.3); { const fk = TB.frameAt(track, fs).kind; if (fk === 'loop' || fk === 'ramp' || fk === 'gap') fs = 90; } const f = TB.frameAt(track, fs); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
       const near = fr.pos.clone().addScaledVector(fr.fwd, -11).addScaledVector(fr.up, 4.2);
       views[0].pos.copy(far).lerp(near, e); views[0].look.copy(fr.pos).addScaledVector(fr.fwd, 6 * e); views[0].up.set(0, 1, 0);
@@ -660,7 +711,7 @@
       updateCameraFor(views[0], player, dt, camMode, camera);
       if (player2 && camera2) updateCameraFor(views[1], player2, dt, views[1].mode, camera2);
     }
-    const fr = player.frame;
+    const fr = player.drawFrame || player.frame;
     if (carLight) carLight.position.copy(fr.pos).addScaledVector(fr.up, 3).addScaledVector(fr.fwd, 6);
     if (sunLight && sunLight.castShadow) { sunLight.position.set(fr.pos.x + 120, fr.pos.y + 200, fr.pos.z + 80); sunLight.target.position.copy(fr.pos); sunLight.target.updateMatrixWorld(); }
     if (player.mesh) player.mesh.visible = !(camMode === 1 && phase !== 'replay' && !player2);
@@ -857,7 +908,7 @@
   function startRaceNow(def) {
     buildScene(def);
     raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear(); pendingNote = noteShown = null;
-    raceTime = 0; loopHud.inLoop = false; loopHud.until = -1; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
+    raceTime = 0; raceTicks = 0; simAcc = 0; loopHud.inLoop = false; loopHud.until = -1; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
@@ -873,7 +924,7 @@
     setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
-    if (introT >= 99) { for (const r of racers) placeRacer(r, 1 / 60); updateCamera(1 / 60); tick(1 / 60); } // NOCHMAL: no flyover, the camera sits behind the car and the countdown runs at once
+    if (introT >= 99) { for (const r of racers) placeRacer(r, 1 / 60); updateCamera(1 / 60); tick(SIM_DT); } // NOCHMAL: no flyover, the camera sits behind the car and the countdown runs at once
   }
   // arcade name entry: three letters on the record table, like on every cabinet in 1989
   const NE_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ-. ';
@@ -1011,18 +1062,49 @@
     if (perf.stage === 1) { renderer.setPixelRatio(1); if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; if (sunLight) sunLight.castShadow = false; scene.traverse((o) => { if (o.isMesh && o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach((m) => { m.needsUpdate = true; }); } }); } say({ name: 'Heinzel', emoji: '🔧' }, (isMobile ? 'Dat Handy schwitzt.' : 'Dä Rechner schwitzt.') + ' Ich hann de Schatte avjeschruuv. Läuf.', 2600); }
     else if (pixelScale === 1) { pixelScale = 2; applyPixelMode(); post.setScale(2); say({ name: 'Heinzel', emoji: '🔧' }, 'Un jetz Pixel. Wie 1990. Dofür flüssig.', 2600); }
   }
+  // Fixed-timestep race: the simulation always advances in steps of 1/120 s, as many as the real time asks for (at
+  // most 8 per frame, so below 15 fps the game slows down instead of tunnelling), and the cars are drawn between their
+  // last two steps. Jump arcs and lap times are the same on a 30 Hz phone and a 144 Hz screen; raceTime counts the
+  // steps. STUNTS_SIMSTEPS (headless tests) runs that many 1/60 s per frame instead, independent of the wall clock.
+  const SIM_DT = 1 / 120, SIM_MAX = 8; let simAcc = 0, raceTicks = 0;
+  const fixedPhase = () => phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished';
+  const ipBodies = () => kripo ? racers.concat([kripo]) : racers;
+  function ipBefore() { for (const r of ipBodies()) { if (!r.mesh) continue; if (!r.ip) r.ip = { a: r.mesh.position.clone(), b: r.mesh.position.clone(), fa: new THREE.Vector3(), fb: r.frame ? r.frame.pos.clone() : new THREE.Vector3() }; r.ip.a.copy(r.ip.b); r.ip.fa.copy(r.ip.fb); } }
+  function ipAfter() { for (const r of ipBodies()) if (r.ip) { r.ip.b.copy(r.mesh.position); if (r.frame) r.ip.fb.copy(r.frame.pos); } }
+  function ipDraw(alpha) { // between the last two steps; a respawn or a teleport is not smeared across the map
+    for (const r of ipBodies()) {
+      if (!r.ip || !r.frame || r.ip.a.distanceToSquared(r.ip.b) > 64) continue;
+      r.mesh.position.lerpVectors(r.ip.a, r.ip.b, alpha);
+      r.drawFrame = Object.assign({}, r.frame, { pos: new THREE.Vector3().lerpVectors(r.ip.fa, r.ip.fb, alpha) });
+    }
+  }
+  function msgStep(dt) { if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show', 'open'); } }
   function frame(t) {
     requestAnimationFrame(frame);
     const dtReal = Math.min(0.5, (t - lastT) / 1000 || 0.016); adaptQuality(dtReal); lastDtReal = dtReal;
     const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016); lastT = t;
     renderer.info.reset();
-    if (phase === 'menu' || phase === 'editor') { tick(dt); if (phase === 'menu') menuFx(t); return; }
+    if (phase === 'menu' || phase === 'editor') { simAcc = 0; tick(dt); if (phase === 'menu') menuFx(t); return; }
     if (!scene || phase === 'club') return;
-    const steps = window.STUNTS_SIMSTEPS && (phase === 'intro' || phase === 'countdown' || phase === 'race' || phase === 'finished') ? window.STUNTS_SIMSTEPS : 1;
-    if (!window.STUNTS_MANUAL_STEP && !paused) for (let k = 0; k < steps; k++) tick(steps > 1 ? 1 / 60 : dt);
+    const fixed = fixedPhase(), stepping = !window.STUNTS_MANUAL_STEP && !paused;
+    if (stepping && !fixed) { simAcc = 0; tick(dt); }
+    else if (stepping) {
+      let n;
+      if (window.STUNTS_SIMSTEPS) { n = window.STUNTS_SIMSTEPS * 2; simAcc = 0; }
+      else {
+        simAcc += Math.min(0.25, dtReal); n = Math.floor(simAcc / SIM_DT + 1e-6);
+        if (n > SIM_MAX) { if (phase === 'countdown') countdown -= (n - SIM_MAX) * SIM_DT; n = SIM_MAX; simAcc = Math.min(simAcc, (SIM_MAX + 1) * SIM_DT); } // below 15 fps the excess is dropped; a slow phone still does not stretch the countdown
+        simAcc = Math.max(0, simAcc - n * SIM_DT);
+      }
+      for (let k = 0; k < n && fixedPhase(); k++) { ipBefore(); if (!window.STUNTS_SIMSTEPS) msgStep(SIM_DT); tick(SIM_DT, k === n - 1); ipAfter(); }
+      const alpha = window.STUNTS_SIMSTEPS ? 1 : simAcc / SIM_DT;
+      if (fixedPhase()) { ipDraw(alpha); if (ghost && (phase === 'race' || phase === 'finished')) updateGhost((alpha - 1) * SIM_DT); }
+    }
+    if (!(fixed && stepping) || window.STUNTS_SIMSTEPS) msgStep(dt); // in a race the box runs on race time (the steps)
+    if (window.STUNTS_NORENDER) return; // headless timing checks: the simulation only
     if (scenery && !paused) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
-    if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show', 'open'); }
+    if (!paused && (phase === 'race' || phase === 'finished')) vergeDirt(dt);
     updateCamera(dt);
     const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
     if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
@@ -1031,30 +1113,31 @@
     if (shotWanted) { shotWanted = false; try { lastShot = airShot || renderer.domElement.toDataURL('image/jpeg', 0.82); } catch (e) { lastShot = null; } }
   }
 
-  // one simulation step (physics, AI, commentary); the frame loop may run several per render for headless testing
-  function tick(dt) {
+  // one simulation step (physics, AI, commentary); in the race always SIM_DT long. draw: the last step before a
+  // render, which also refreshes the HUD, the minimap and the engine sound
+  function tick(dt, draw) {
+    if (draw === undefined) draw = true;
     if (phase === 'intro') {
-      introT += dt; for (const r of racers) placeRacer(r, dt); updateHUD();
+      introT += dt; for (const r of racers) placeRacer(r, dt); if (draw) updateHUD();
       if (introT > 3.8) { phase = 'countdown'; $('#introCard').hidden = true; showControlsCard(); }
     } else if (phase === 'countdown') {
-      countdown -= window.STUNTS_SIMSTEPS ? dt : Math.min(0.25, lastDtReal); // real time, so a slow phone does not stretch the countdown
+      countdown -= dt; // fixed steps follow the real time (see frame), so a slow phone does not stretch the countdown
       const idx = 3 - Math.ceil(countdown - 0.2); const cd = $('#countdown');
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
       if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pick(theme.intro), 4200); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
-      updateHUD();
+      if (draw) updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
-      if (phase === 'race') raceTime += dt;
+      if (phase === 'race') raceTime = ++raceTicks * SIM_DT; // counts fixed steps, never sums frame times
       if (tilt.mode > 0 && tilt.listening) readKeys();
       const ctl = player.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : (window.STUNTS_AUTOPILOT || demo) ? aiControl(player, dt) : input;
       if (mission && mission.onFoot) { player.v = 0; walkStep(dt); } else updateRacer(player, dt, ctl);
       if (player2) updateRacer(player2, dt, player2.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : window.STUNTS_AUTOPILOT ? aiControl(player2, dt) : input2);
       if (phase === 'race') recordFrame(dt);
-      if (ghost) updateGhost();
       for (const r of racers) if (r.isAI) updateRacer(r, dt, r.finished ? { gas: 0, brake: 0.3, steer: 0, turbo: 0 } : aiControl(r, dt));
-      for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) collide(racers[i], racers[j]);
+      for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) collide(racers[i], racers[j], dt);
       for (const r of racers) placeRacer(r, dt);
       if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else updateAuftrag(dt); }
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
@@ -1091,9 +1174,7 @@
       }
       if (player2 && phase === 'race') { const first = [player, player2].filter((r) => r.finished); if (first.length === 1) { if (!first[0].waitT) first[0].waitT = raceTime; else if (raceTime - first[0].waitT > 20) { const o = first[0] === player ? player2 : player; o.finished = true; o.finishTime = raceTime + 5; o.projected = true; } } }
       if (player.finished && (!player2 || player2.finished) && phase === 'race') finishRace();
-      if (phase === 'race') updateHUD();
-      drawMinimap();
-      audioEngine(Math.abs(player.v), ctl.gas, player.turboOn);
+      if (draw) { if (phase === 'race') updateHUD(); drawMinimap(); audioEngine(Math.abs(player.v), ctl.gas, player.turboOn); }
     } else if (phase === 'replay') {
       replayStep(dt);
     } else if (phase === 'menu' || phase === 'editor' || phase === 'club') {
@@ -1203,7 +1284,7 @@
     if (e.code === 'KeyC') { camMode = (camMode + 1) % 4; tvCam = null; }
     if (e.code === 'KeyF') cyclePixel();
     if (e.code === 'KeyM') toggleMute();
-    if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; }
+    if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; player.resetHere = true; } // back onto the road where you are, no 20 m for free
     if (e.code === 'KeyK' && phase === 'race') tuennsTelefon();
     if (e.code === 'Escape') toMenu();
     if (e.code === 'Enter' && phase === 'finished') $('#againBtn').onclick();
@@ -1951,9 +2032,9 @@
     ghost.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; const cl = ms.map((m) => { const c = m.clone(); c.transparent = true; c.opacity = 0.35; c.depthWrite = false; return c; }); o.material = Array.isArray(o.material) ? cl : cl[0]; } });
     scene.add(ghost);
   }
-  function updateGhost() {
+  function updateGhost(ahead) { // ahead: the ghost is drawn between two steps, like the cars
     if (!ghostData || !ghost) return;
-    const t = raceTime - player.lapStart; const T = ghostData.t; if (t > T[T.length - 1]) { ghost.visible = false; return; }
+    const t = raceTime + (ahead || 0) - player.lapStart; const T = ghostData.t; if (t > T[T.length - 1]) { ghost.visible = false; return; }
     ghost.visible = phase === 'race';
     let lo = 0, hi = T.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (T[mid] < t) lo = mid + 1; else hi = mid; } const i = Math.max(0, lo - 1); const u = clamp((t - T[i]) / Math.max(1e-3, T[i + 1] - T[i]), 0, 1);
     const s = ghostData.s[i] + (ghostData.s[Math.min(i + 1, T.length - 1)] - ghostData.s[i]) * u, lat = ghostData.l[i] + (ghostData.l[Math.min(i + 1, T.length - 1)] - ghostData.l[i]) * u;
@@ -2124,13 +2205,13 @@
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_MISSION = (t) => startMission(t != null ? allTracks()[t] : activeTrackDef()); window.STUNTS_CAREER = startCareer; window.STUNTS_ACT = missionAction;
-  window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; placeRacer(player, 1); } };
+  window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; player.jumpLive = null; placeRacer(player, 1); } };
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
-  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash, onVerge: !!player.onVerge, laps: player.laps.slice(), jumps: (player.jumps || []).slice() }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_ROUTES = () => track ? track.shortcuts.map(({ samples, ...r }) => r) : [];
-  window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000); i++) { raceTime += 1 / 60; updateRacer(player, 1 / 60, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, 1 / 60) : input)); placeRacer(player, 1 / 60); recordFrame(1 / 60); } updateHUD(); return window.STUNTS_DEBUG(); };
+  window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; updateRacer(player, SIM_DT, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, SIM_DT) : input)); placeRacer(player, SIM_DT); recordFrame(SIM_DT); } updateHUD(); return window.STUNTS_DEBUG(); }; // n steps of 1/60 s, each as two fixed steps
   window.STUNTS_REPLAY_AT = (t) => { startReplay(); replay.time = t; replay.paused = true; replayStep(0); return window.STUNTS_DEBUG(); };
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
@@ -2139,10 +2220,10 @@
   window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); };
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
-  window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind }; };
+  window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind, verge: (track.samples[f.index].vg || []).slice(), edge: ROAD_W + 1.6 }; };
   window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan }));
   window.STUNTS_FIELD_SETUP = (s, v) => { racers.forEach((r, i) => { r.s = r.isAI ? s - i * 7 : 6; r.v = r.isAI ? v : 0; r.lat = 0; r.shortcut = -1; r.branchPlan = -1; r.routePlan = null; r.branchKey = ''; r.safeS = r.s; r.air = false; r.vy = 0; r.prevRoadVy = 0; r.crashed = 0; r.finished = false; placeRacer(r, 1); }); return window.STUNTS_FIELD(); };
-  window.STUNTS_FIELD_STEPS = (n) => { for (let i = 0; i < Math.min(n, 6000); i++) { raceTime += 1 / 60; for (const r of racers) if (r.isAI && !r.finished) { updateRacer(r, 1 / 60, aiControl(r, 1 / 60)); placeRacer(r, 1 / 60); } for (let a = 0; a < racers.length; a++) for (let b = a + 1; b < racers.length; b++) collide(racers[a], racers[b]); } return window.STUNTS_FIELD(); };
+  window.STUNTS_FIELD_STEPS = (n) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; for (const r of racers) if (r.isAI && !r.finished) { updateRacer(r, SIM_DT, aiControl(r, SIM_DT)); placeRacer(r, SIM_DT); } for (let a = 0; a < racers.length; a++) for (let b = a + 1; b < racers.length; b++) collide(racers[a], racers[b], SIM_DT); } return window.STUNTS_FIELD(); };
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
   window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.shortcut = -1; r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
