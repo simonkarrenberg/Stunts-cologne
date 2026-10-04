@@ -246,6 +246,7 @@
     }
     if (ppos.length) { const m = mesh(ppos, pcol, pidx, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, roughness: 0.85 })); m.userData.kind = 'streetPaint'; group.add(m); }
     if (root.STUNTS_AUDIT_STREETS) root.STUNTS_AUDIT_STREETS(group, track);
+    group.userData.occluders = W.collectOccluders(group); // the cameras keep clear of trees and parked cars
     W.mergeStatic(group, new Set()); // lamps, trees, parked cars and signs: one draw call per material
     return group;
   };

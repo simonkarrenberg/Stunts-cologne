@@ -167,6 +167,14 @@
         samples[i].B = norm(cross(t, samples[i].N));
       }
     }
+    // the grip physics reads curv: it must follow the corrected tangents (the turn in the ground plane per metre),
+    // else the visible bend and the pull of the road disagree. A loop turns about its own right axis (no curv), and
+    // the step into it is the loop's sideways shift, not a bend
+    for (let i = Math.max(0, from - 1); i < n; i++) {
+      if (samples[i].kind === 'loop' || samples[(i + 1) % n].kind === 'loop') continue;
+      const a = samples[i].T, b = samples[(i + 1) % n].T;
+      samples[i].curv = Math.atan2(a.z * b.x - a.x * b.z, dot(a, b)) / DS;
+    }
     const headingErr = Math.acos(Math.max(-1, Math.min(1, dot(last.T, samples[0].T)))) / DEG;
     return { errLen, headingErr, length: n * DS };
   }
@@ -204,6 +212,21 @@
       }
     }
     return segs;
+  }
+
+  // How well a layout closes by itself (after the straights were stretched, before closeLoop bends anything):
+  // the gap from the end of the last piece to the start and the heading error. Only a gap under 2 m and a
+  // heading error under 5° count as closed; closeLoop then corrects at most those 2 m.
+  const CLOSE_GAP = 2, CLOSE_HEADING = 5;
+  function closure(def) {
+    const samples = buildCenterline(autoClose(scaleSegments(def.segments, def.scale)));
+    const n = samples.length; if (n < 2) return { gap: Infinity, headingErr: 180, closed: false };
+    const last = samples[n - 1], endP = add(last.p, mul(last.T, DS)), e = sub(samples[0].p, endP);
+    const h = (t) => Math.atan2(t.x, t.z); let dh = Math.abs(h(last.T) + (last.curv || 0) * DS - h(samples[0].T)) / DEG % 360; if (dh > 180) dh = 360 - dh; // a curve turns once more after its last sample
+    const gap = len(e);
+    // the gap seen from the end of the track: metres ahead (+) and to the left (+)
+    const he = h(last.T) + (last.curv || 0) * DS, f = v3(Math.sin(he), 0, Math.cos(he)), ahead = e.x * f.x + e.z * f.z, left = e.x * f.z - e.z * f.x;
+    return { gap, headingErr: dh, ahead, left, closed: gap < CLOSE_GAP && dh < CLOSE_HEADING, samples }; // samples: the layout as built, not yet bent shut
   }
 
   function scaleSegments(segments, k) {
@@ -258,5 +281,5 @@
     };
   }
 
-  root.TrackBuilder = { buildTrack, frameAt, v3, add, sub, mul, dot, cross, len, norm, rot, DS, VERGE };
+  root.TrackBuilder = { buildTrack, frameAt, closure, CLOSE_GAP, CLOSE_HEADING, v3, add, sub, mul, dot, cross, len, norm, rot, DS, VERGE };
 })(typeof window !== 'undefined' ? window : module.exports);

@@ -44,7 +44,9 @@
   let auftrag = null, auftragT = 40, auftragDone = 0, auftragFail = 0, shotWanted = false, lastShot = null, airShot = null, airBest = 0, airNow = 0, airShotT = -9, demo = false, demoT = 0, idleT = 0;
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
   const input2 = { gas: 0, brake: 0, steer: 0, turbo: 0 };
-  const rec = { frames: [], t: [], acc: 0, on: false };          // replay recorder
+  // replay recorder: a typed ring buffer for 30 min at 20 Hz; per frame and racer REC_F values (see recordFrame)
+  const REC_HZ = 20, REC_CAP = 30 * 60 * REC_HZ, REC_F = 8;
+  const rec = { buf: null, t: new Float64Array(REC_CAP), n: 0, head: 0, stride: REC_F, acc: 0, cars: [] };
   const replay = { on: false, time: 0, speed: 1, paused: false, camIdx: -1, cams: [], mode: 0 };
   let ghost = null, ghostData = null;                              // best-lap ghost
   const voice = { on: true, ready: false, de: null, list: [] };
@@ -619,7 +621,7 @@
     const yaw = -r.steerVis * 0.18 * Math.sign(r.v || 1);
     let fwd = T.clone().applyAxisAngle(N, yaw);
     let up = N.clone();
-    if (r.air) { const pitch = clamp(Math.atan2(r.vy, Math.max(5, r.v)), -0.6, 0.6); fwd = new THREE.Vector3(T.x, 0, T.z).normalize().applyAxisAngle(B, -pitch); up = new THREE.Vector3(0, 1, 0).applyAxisAngle(B, -pitch); }
+    if (r.air) { const pitch = clamp(Math.atan2(r.vy, Math.max(5, r.v)), -0.6, 0.6); fwd = new THREE.Vector3(T.x, 0, T.z).normalize().applyAxisAngle(B, pitch); up = new THREE.Vector3(0, 1, 0).applyAxisAngle(B, pitch); } // B points right: a turn about it lifts the nose while the car climbs
     const right = new THREE.Vector3().crossVectors(up, fwd).normalize();
     _m.makeBasis(right, up, fwd); _q.setFromRotationMatrix(_m);
     r.mesh.position.copy(pos);
@@ -662,6 +664,73 @@
     if (live) { dirt.pts.geometry.attributes.position.needsUpdate = true; dirt.pts.geometry.attributes.color.needsUpdate = true; }
   }
 
+  // ---------------- line of sight for the cameras ----------------
+  // A coarse layer of oriented boxes (houses, trees, landmarks, loop supports: world.js keeps one per mesh before it
+  // batches them) in a 16 m grid. A box a car drives through (a gate, a bridge, a tunnel tube, the house under a jump)
+  // is no wall for the cameras and is left out.
+  const OCC_CELL = 16, OCC_W = 18; const occ = { n: 0, data: null, cells: new Map(), stamp: null, mark: 0 };
+  const occKey = (cx, cz) => (cx + 32768) * 65536 + (cz + 32768);
+  function buildOccluders() {
+    const list = (scenery.occluders || []).slice(); road.traverse((o) => { if (o.userData.occluders) for (const b of o.userData.occluders) list.push(b); });
+    // the road deck itself where it leaves the ground (loops, ramps, bridges): the far side of a loop hides the car
+    for (let i = 0; i < track.samples.length; i += 2) {
+      const q = track.samples[i]; if (q.kind !== 'loop' && q.kind !== 'ramp' && q.p.y < 1.5) continue;
+      const ax = [q.T, q.N, q.B], inv = []; for (const a of ax) inv.push(a.x, a.y, a.z, -(a.x * q.p.x + a.y * q.p.y + a.z * q.p.z));
+      const w = ROAD_W + 0.6; list.push({ inv, min: [-1.2, -0.4, -w], max: [1.2, 0.02, w], world: [q.p.x - w - 2, q.p.y - w - 2, q.p.z - w - 2, q.p.x + w + 2, q.p.y + w + 2, q.p.z + w + 2] });
+    }
+    const pts = new Map(), addPt = (x, y, z) => { const k = occKey(Math.floor(x / OCC_CELL), Math.floor(z / OCC_CELL)); if (!pts.has(k)) pts.set(k, []); pts.get(k).push(x, y, z); };
+    for (const q of track.samples) addPt(q.p.x + q.N.x * 1.2, q.p.y + q.N.y * 1.2, q.p.z + q.N.z * 1.2);
+    for (const r of track.shortcuts || []) for (const q of r.samples) addPt(q.p.x, q.p.y + 1.2, q.p.z);
+    const data = new Float32Array(list.length * OCC_W); let n = 0; occ.cells = new Map();
+    const inside = (o, x, y, z) => { for (let a = 0; a < 3; a++) { const v = data[o + a * 4] * x + data[o + a * 4 + 1] * y + data[o + a * 4 + 2] * z + data[o + a * 4 + 3]; if (v < data[o + 12 + a] - 0.05 || v > data[o + 15 + a] + 0.05) return false; } return true; };
+    for (const b of list) {
+      const o = n * OCC_W; data.set(b.inv, o); data.set(b.min, o + 12); data.set(b.max, o + 15);
+      const w = b.world, c0 = Math.floor(w[0] / OCC_CELL), c1 = Math.floor(w[3] / OCC_CELL), z0 = Math.floor(w[2] / OCC_CELL), z1 = Math.floor(w[5] / OCC_CELL);
+      let road = false; for (let cx = c0; cx <= c1 && !road; cx++) for (let cz = z0; cz <= z1 && !road; cz++) { const P = pts.get(occKey(cx, cz)); if (P) for (let k = 0; k < P.length && !road; k += 3) road = inside(o, P[k], P[k + 1], P[k + 2]); }
+      if (road) continue;
+      for (let cx = c0; cx <= c1; cx++) for (let cz = z0; cz <= z1; cz++) { const k = occKey(cx, cz); if (!occ.cells.has(k)) occ.cells.set(k, []); occ.cells.get(k).push(n); }
+      n++;
+    }
+    occ.n = n; occ.data = data; occ.stamp = new Uint32Array(n); occ.mark = 0;
+  }
+  // the first hit on the segment a → b as a fraction 0..1 of its length, -1 for a clear line
+  function occHit(a, b) {
+    if (!occ.n) return -1;
+    const D = occ.data, cx0 = Math.floor(Math.min(a.x, b.x) / OCC_CELL), cx1 = Math.floor(Math.max(a.x, b.x) / OCC_CELL), cz0 = Math.floor(Math.min(a.z, b.z) / OCC_CELL), cz1 = Math.floor(Math.max(a.z, b.z) / OCC_CELL);
+    if ((cx1 - cx0 + 1) * (cz1 - cz0 + 1) > 400) return -1; // far apart: not a camera question
+    let best = 2; if (++occ.mark >= 0xffffffff) { occ.stamp.fill(0); occ.mark = 1; }
+    for (let cx = cx0; cx <= cx1; cx++) for (let cz = cz0; cz <= cz1; cz++) {
+      const list = occ.cells.get(occKey(cx, cz)); if (!list) continue;
+      for (const i of list) {
+        if (occ.stamp[i] === occ.mark) continue; occ.stamp[i] = occ.mark; const o = i * OCC_W; let t0 = 0, t1 = Math.min(1, best);
+        for (let k = 0; k < 3 && t0 <= t1; k++) {
+          const r = o + k * 4, pa = D[r] * a.x + D[r + 1] * a.y + D[r + 2] * a.z + D[r + 3], pb = D[r] * b.x + D[r + 1] * b.y + D[r + 2] * b.z + D[r + 3], d = pb - pa, lo = D[o + 12 + k], hi = D[o + 15 + k];
+          if (Math.abs(d) < 1e-9) { if (pa < lo || pa > hi) t0 = 2; continue; }
+          let ta = (lo - pa) / d, tb = (hi - pa) / d; if (ta > tb) { const q = ta; ta = tb; tb = q; }
+          if (ta > t0) t0 = ta; if (tb < t1) t1 = tb;
+        }
+        if (t0 <= t1 && t0 < best) best = t0;
+      }
+    }
+    return best <= 1 ? best : -1;
+  }
+  const carEye = (fr, h) => fr.pos.clone().addScaledVector(fr.up || fr.N, h == null ? 1.2 : h); // the point a camera has to see
+  // a trackside TV spot beside frame f: both sides, three heights, the first one that sees every point of the car's path
+  // (path[0]: where the car is now). None does: the one that sees the car now and most of the rest; none sees the car:
+  // a camera just behind it, pulled in front of whatever is in the way
+  function tvSpot(f, side0, dist, heights, path, fr) {
+    let best = null, bestN = -1;
+    for (const side of [side0, -side0]) for (const h of heights) {
+      const c = new THREE.Vector3(f.p.x + f.B.x * side * dist, f.p.y + h, f.p.z + f.B.z * side * dist); let n = 0;
+      for (let k = 0; k < path.length; k++) if (occHit(path[k], c) < 0) n += k ? 1 : 100;
+      if (n === path.length + 99) return c; if (n > bestN) { bestN = n; best = c; }
+    }
+    if (bestN >= 100 || !fr) return best;
+    const c = path[0].clone().addScaledVector(fr.fwd || fr.T, -10).addScaledVector(fr.up || fr.N, 3.5), t = occHit(path[0], c);
+    return t < 0 ? c : path[0].clone().lerp(c, Math.max(0, t - 0.5 / 10.6));
+  }
+  const onPath = (f, h) => new THREE.Vector3(f.p.x + (f.N ? f.N.x : 0) * h, f.p.y + (f.N ? f.N.y : 1) * h, f.p.z + (f.N ? f.N.z : 0) * h);
+
   // ---------------- camera (one per view) ----------------
   function updateCameraFor(view, r, dt, mode, cam) {
     cam = cam || camera;
@@ -677,17 +746,25 @@
     } else if (mode === 1) {
       target = fr.pos.clone().addScaledVector(T, -0.2).addScaledVector(N, 1.45);
       look = fr.pos.clone().addScaledVector(T, 30).addScaledVector(N, 1.0); up = N;
+    } else if (racerFrame(r).kind === 'tunnel') { // no TV camera sees into a tunnel: ride along inside the tube
+      target = fr.pos.clone().addScaledVector(T, -9).addScaledVector(N, 3); look = fr.pos.clone().addScaledVector(T, 6).addScaledVector(N, 1); up = N; view.tvTimer = 0;
     } else {
       view.tvTimer -= dt;
-      if (!view.tv || view.tvRoute !== r.shortcut || view.tvTimer <= 0 || view.tv.distanceTo(fr.pos) > 140) {
-        const route = routeFor(r);
-        const f = route ? window.Shortcuts.frameAt(route, (r.s - route.startS) * route.length / (route.endS - route.startS) + 60) : TB.frameAt(track, r.s + 60);
-        const side = Math.random() < 0.5 ? -1 : 1; view.tv = new THREE.Vector3(f.p.x + f.B.x * side * 22, f.p.y + 12 + Math.random() * 10, f.p.z + f.B.z * side * 22); view.tvTimer = 5; view.tvRoute = r.shortcut;
+      const eye = carEye(fr); view.tvBlocked = view.tv && occHit(eye, view.tv) >= 0 ? 1 : 0; // a house, a tree or the far side of a loop moved into the shot: cut to the next camera
+      if (!view.tv || view.tvRoute !== r.shortcut || view.tvTimer <= 0 || view.tv.distanceTo(fr.pos) > 140 || view.tvBlocked > 0) {
+        const route = routeFor(r), at = (d) => route ? window.Shortcuts.frameAt(route, (r.s - route.startS) * route.length / (route.endS - route.startS) + d) : TB.frameAt(track, r.s + d);
+        // the camera stands 60 m ahead; it must see the car now and on its way past (the next 90 m)
+        view.tv = tvSpot(at(60), Math.random() < 0.5 ? -1 : 1, 22, [12 + Math.random() * 4, 18 + Math.random() * 4, 26], [eye].concat([15, 30, 45, 60, 75, 90].map((d) => onPath(at(d), 1.2))), fr); view.tvTimer = 5; view.tvRoute = r.shortcut; view.tvBlocked = 0;
       }
       target = view.tv; look = fr.pos.clone(); up = new THREE.Vector3(0, 1, 0);
     }
     const k = mode === 3 ? 1 : Math.min(1, dt * (mode === 1 ? 30 : 6));
     view.pos.lerp(target, k); view.look.lerp(look, Math.min(1, dt * 12)); view.up.lerp(up, Math.min(1, dt * 5)).normalize();
+    if (mode === 0 || mode === 2) {
+      if (r.air) view.pos.y = Math.max(view.pos.y, fr.pos.y + 1.6); // in the air: never below the roof, never among the wheels
+      const eye = carEye(fr, 1.5), t = occHit(eye, view.pos); // a house, a tree or a loop support between car and camera: pull in to 0.5 m before it
+      if (t >= 0) { const d = eye.distanceTo(view.pos), back = view.pos.clone(); view.pos.copy(eye).lerp(back, Math.max(0, t * d - 0.5) / Math.max(1e-3, d)); }
+    }
     if (shake > 0 && r === player) { shake -= dt * 2; view.pos.x += (Math.random() - 0.5) * shake; view.pos.y += (Math.random() - 0.5) * shake; }
     cam.position.copy(view.pos); cam.up.copy(view.up); cam.lookAt(view.look);
     if (cam.fov !== (isMobile ? 76 : 70)) { cam.fov = isMobile ? 76 : 70; cam.updateProjectionMatrix(); }
@@ -857,7 +934,7 @@
     const sz = pixelScale === 1 ? { w: renderer.domElement.width, h: renderer.domElement.height } : (post ? post.size() : { w: 640, h: 360 }); if (camera2) { camera2.aspect = sz.w / (sz.h / 2); camera2.updateProjectionMatrix(); camera.aspect = player2 ? sz.w / (sz.h / 2) : window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); } else { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
     for (const v of views) { v.pos.set(0, 5, -15); v.up.set(0, 1, 0); v.look.set(0, 0, 10); v.tv = null; }
     buildMinimap(); lastPos = null;
-    rec.frames = []; rec.t = []; rec.acc = 0; loadGhost();
+    recReset(); loadGhost(); buildOccluders();
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
     signals = (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
@@ -1439,13 +1516,26 @@
     const list = $('#edSeq'); list.innerHTML = '';
     ed.pieces.forEach((p, i) => { const b = document.createElement('span'); b.textContent = PIECES.find((q) => q.id === p).label; b.title = 'Klick: entfernen'; b.onclick = () => { ed.pieces.splice(i, 1); edRender(); }; list.appendChild(b); });
     $('#edCount').textContent = `TEILE: ${ed.pieces.length} / 40`;
-    const heading = edHeading(); const ok = ed.pieces.length >= 4 && heading === 0 && ed.pieces.some((p) => p === 'straight' || p === 'bridge' || p === 'tunnel');
-    $('#edWarn').textContent = ed.pieces.length < 4 ? 'Mindestens 4 Teile, Jung.' : heading !== 0 ? `Streck jeht nit zo: noch ${360 - heading}° Kurve links (oder ${heading}° rechts) fehlen.` : !ed.pieces.some((p) => p === 'straight' || p === 'bridge' || p === 'tunnel') ? 'Mindestens eine Gerade, sonst kann der Klüngel nix schließen.' : 'Streck is zo. Fott domet!';
+    const heading = edHeading(), straight = ed.pieces.some((p) => p === 'straight' || p === 'bridge' || p === 'tunnel');
+    const shut = ed.pieces.length >= 4 && heading === 0 && straight ? TB.closure(edDef()) : null; const ok = !!(shut && shut.closed); // only a gap under 2 m and under 5° counts as zo
+    $('#edWarn').textContent = ed.pieces.length < 4 ? 'Mindestens 4 Teile, Jung.' : heading !== 0 ? `Streck jeht nit zo: noch ${360 - heading}° Kurve links (oder ${heading}° rechts) fehlen.` : !straight ? 'Mindestens eine Gerade, sonst kann der Klüngel nix schließen.' : ok ? 'Streck is zo. Fott domet!' : `Streck is noch op: NOCH ${Math.max(2, Math.round(shut.gap))} M AFF. ${edHint(shut)}`;
     $('#edWarn').className = ok ? 'ok' : 'bad';
     $('#edDrive').disabled = !ok; $('#edSave').disabled = !ok;
     const cv = $('#edPreview');
-    if (ed.pieces.length >= 2) { try { const tr = TB.buildTrack(edDef()); SP.outline(tr.samples, cv, cv.clientWidth || 420, cv.clientHeight || 260, ok ? '#7fff00' : '#ff7b7b'); $('#edLen').textContent = (tr.length / 1000).toFixed(2) + ' KM'; } catch (e) { /* ignore */ } }
+    if (ed.pieces.length >= 2) { try { const tr = TB.buildTrack(edDef()); SP.outline(ok ? tr.samples : TB.closure(edDef()).samples, cv, cv.clientWidth || 420, cv.clientHeight || 260, ok ? '#7fff00' : '#ff7b7b'); /* an open layout is drawn open: the gap shows */ $('#edLen').textContent = (tr.length / 1000).toFixed(2) + ' KM'; } catch (e) { /* ignore */ } }
     else { cv.getContext('2d').clearRect(0, 0, cv.width, cv.height); $('#edLen').textContent = ''; }
+  }
+  // the missing piece for a layout that does not close: try one more GERADE in every place and name the place that
+  // closes the gap, or else shrinks it most; no place helps: say where the end lies from the start
+  function edHint(shut) {
+    const def = edDef(); let best = null;
+    for (let k = 0; k <= ed.pieces.length && ed.pieces.length < 40; k++) {
+      const segs = def.segments.slice(); segs.splice(k, 0, Object.assign({}, PIECES[0].seg)); const c = TB.closure({ segments: segs, scale: 1 });
+      if (!best || c.gap < best.gap - 0.5) best = { k, gap: c.gap, closed: c.closed };
+    }
+    const where = (k) => k === 0 ? 'janz vürre' : `noh Teil ${k} (${PIECES.find((q) => q.id === ed.pieces[k - 1]).label})`;
+    if (best && best.gap < shut.gap - 1) return best.closed ? `Et fählt en GERADE ${where(best.k)}.` : `Tipp: en GERADE ${where(best.k)}, dann sin et noch ${Math.round(best.gap)} m.`;
+    return Math.abs(shut.ahead) >= Math.abs(shut.left) ? `Dä Start litt ${Math.round(Math.abs(shut.ahead))} m ${shut.ahead > 0 ? 'vür' : 'hinger'} dem Engk: Gerade ${shut.ahead > 0 ? 'dobei' : 'fott'}.` : `Dä Start litt ${Math.round(Math.abs(shut.left))} m ${shut.left > 0 ? 'links' : 'räächs'} vum Engk: do fählt en Gerade quer.`;
   }
   function edUndo() { ed.pieces.pop(); edRender(); }
   function edSave() {
@@ -1477,7 +1567,7 @@
     const rng = (seed) => { let a = seed >>> 0; return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
     const FILL = ['straight', 'straight', 'straight', 'hill', 'hill', 'dip', 'loop', 'jump', 'jumphouse', 'cork', 'bridge', 'tunnel', 'straight'];
     const STUNT = /loop|jump|cork/; const piece = (id) => Object.assign({}, PIECES.find((q) => q.id === id).seg);
-    for (let attempt = 0; attempt < 40; attempt++) {
+    for (let attempt = 0; attempt < 160; attempt++) { // a layout the straights cannot close is thrown away: plenty of tries
       const r = rng(key * 7 + attempt * 131); const ids = ['straight'];
       const nRight = Math.floor(r() * 3); const curves = []; for (let i = 0; i < 4 + nRight; i++) curves.push(r() < 0.3 ? 'lbank' : 'lcurve'); for (let i = 0; i < nRight; i++) curves.push(r() < 0.3 ? 'rbank' : 'rcurve');
       for (let i = curves.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [curves[i], curves[j]] = [curves[j], curves[i]]; }
@@ -1488,7 +1578,7 @@
       const names = tuenn.dailyNames.filter((nm) => base.theme.night ? true : !/NACHT/.test(nm));
       const def = { id: 'tag-' + key, daily: true, name: names[(key + attempt) % names.length].replace('{v}', v), district: 'STRECK DES TAGES · ' + d.getDate() + '.' + (d.getMonth() + 1) + '.', tag: 'TAGESSTRECK', laps: 3, diff: Math.min(5, 2 + Math.floor(ids.length / 6)), scale: 1,
         theme: base.theme, segments: segs, waypoints: [v, 'ZUFALL', 'KLÜNGEL'], desc: tuenn.dailyDesc + ' Heute: ' + ids.length + ' Teile durch ' + v + ', Kulisse wie ' + base.name + '.', props: [{ type: 'tuenn', seg: 0, u: 0.05, side: 1, dist: 9 }, { type: 'crowd', seg: 0, u: 0.1, side: -1, dist: 10 }] };
-      try { const t = TB.buildTrack(def); const S = t.samples; const a = S[0].p, b = S[S.length - 1].p; const gap = Math.hypot(a.x - b.x, a.z - b.z); if (gap < 6 && t.length > 900 && t.length < 2600) return def; } catch (e) { /* next attempt */ }
+      try { if (!TB.closure(def).closed) continue; const t = TB.buildTrack(def); if (t.length > 900 && t.length < 2600) return def; } catch (e) { /* next attempt */ } // only a truly closed round
     }
     return null;
   }
@@ -1952,19 +2042,27 @@
   }
 
   // ---------------- replay ----------------
-  function recordFrame(dt) {
-    rec.acc += dt; if (rec.acc < 0.05 || rec.frames.length > 6000) return; rec.acc = 0;
-    const f = new Float32Array(racers.length * 6);
-    racers.forEach((r, i) => { f[i * 6] = r.s + r.lap * track.length; f[i * 6 + 1] = r.lat; f[i * 6 + 2] = r.air ? r.y : -999; f[i * 6 + 3] = r.steerVis; f[i * 6 + 4] = r.crashed > 0 ? 1 : 0; f[i * 6 + 5] = r.shortcut; });
-    rec.frames.push(f); rec.t.push(raceTime);
+  function recReset() {
+    rec.stride = racers.length * REC_F; if (!rec.buf || rec.buf.length < REC_CAP * rec.stride) rec.buf = new Float32Array(REC_CAP * rec.stride);
+    rec.n = 0; rec.head = 0; rec.acc = 0; rec.cars = racers.map((r) => r.car && r.car.id);
   }
-  function buildReplayCams() {
+  const recAt = (i) => ((rec.head + i) % REC_CAP) * rec.stride; // offset of the i-th oldest frame
+  const recT = (i) => rec.t[(rec.head + i) % REC_CAP];
+  function recordFrame(dt) {
+    rec.acc += dt; if (rec.acc < 1 / REC_HZ - 1e-9) return; rec.acc = Math.min(rec.acc - 1 / REC_HZ, 1 / REC_HZ); // keeps the remainder: 20 frames per second, not 17
+    if (!rec.buf) recReset();
+    const slot = (rec.head + rec.n) % REC_CAP; if (rec.n < REC_CAP) rec.n++; else rec.head = (rec.head + 1) % REC_CAP; // past 30 min the oldest frame goes
+    const f = rec.buf, o = slot * rec.stride; rec.t[slot] = raceTime;
+    // per racer: distance incl. laps, lateral, height in the air (-999 on the road), steering, crashed, side street, speed, vertical speed
+    racers.forEach((r, i) => { const k = o + i * REC_F; f[k] = r.s + r.lap * track.length; f[k + 1] = r.lat; f[k + 2] = r.air ? r.y : -999; f[k + 3] = r.steerVis; f[k + 4] = r.crashed > 0 ? 1 : 0; f[k + 5] = r.shortcut; f[k + 6] = r.v; f[k + 7] = r.vy || 0; });
+  }
+  function buildReplayCams() { // a camera every 90 m, used while the car is 20 m before it to 100 m past it: it must see that stretch
     replay.cams = [];
-    for (let s = 40; s < track.length; s += 90) { const f = TB.frameAt(track, s); const side = (Math.floor(s / 90) % 2) ? 1 : -1; replay.cams.push({ s, pos: new THREE.Vector3(f.p.x + f.B.x * side * 18, f.p.y + 5 + (s % 3) * 3, f.p.z + f.B.z * side * 18) }); }
+    for (let s = 40; s < track.length; s += 90) { const f = TB.frameAt(track, s); const side = (Math.floor(s / 90) % 2) ? 1 : -1; const path = [-20, 10, 40, 70, 100].map((d) => onPath(TB.frameAt(track, s + d), 1.2)); replay.cams.push({ s, pos: tvSpot(f, side, 18, [5 + (s % 3) * 3, 11, 17], path) }); }
   }
   function startReplay() {
-    if (rec.frames.length < 10) return;
-    phase = 'replay'; replay.on = true; document.body.classList.add('replaying'); document.body.classList.remove('resultsOpen'); replay.time = 0; replay.paused = false; replay.speed = 1; replay.camIdx = -1; replay.mode = 0;
+    if (rec.n < 10) return;
+    phase = 'replay'; replay.on = true; document.body.classList.add('replaying'); document.body.classList.remove('resultsOpen'); replay.time = 0; replay.paused = false; replay.speed = 1; replay.camIdx = -1; replay.mode = 0; replay.alt = null; replay.routeKey = null;
     buildReplayCams();
     $('#results').hidden = true; $('#replayUI').hidden = false; $('#hud').hidden = false; $('#cockpit').hidden = true;
     for (const r of racers) { r.crashed = 0; r.mesh.visible = true; }
@@ -1975,20 +2073,22 @@
   function stopReplay() { replay.on = false; phase = 'finished'; document.body.classList.remove('replaying'); document.body.classList.add('resultsOpen'); $('#replayUI').hidden = true; $('#results').hidden = false; if (ghost) ghost.visible = true; }
   function replayStep(dt) {
     if (!replay.paused) replay.time += dt * replay.speed;
-    const T = rec.t; const last = T[T.length - 1];
+    if (Math.abs(replay.time - (replay.shown == null ? replay.time : replay.shown)) > 1) { views[0].tv = null; replay.alt = null; } replay.shown = replay.time; // a jump in time: a new TV camera
+    const last = recT(rec.n - 1), first = recT(0);
     if (replay.time >= last) { replay.time = last; replay.paused = true; }
-    if (replay.time < 0) replay.time = 0;
+    if (replay.time < first) replay.time = first;
     // locate frame
-    let i = 0; let lo = 0, hi = T.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (T[mid] < replay.time) lo = mid + 1; else hi = mid; } i = Math.max(0, lo - 1);
-    const a = rec.frames[i], b = rec.frames[Math.min(i + 1, rec.frames.length - 1)]; const u = (b === a) ? 0 : clamp((replay.time - T[i]) / Math.max(1e-3, T[i + 1] - T[i]), 0, 1);
+    let lo = 0, hi = rec.n - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (recT(mid) < replay.time) lo = mid + 1; else hi = mid; } const i = Math.max(0, lo - 1), j = Math.min(i + 1, rec.n - 1);
+    const F = rec.buf, a = recAt(i), b = recAt(j), u = i === j ? 0 : clamp((replay.time - recT(i)) / Math.max(1e-3, recT(j) - recT(i)), 0, 1);
     racers.forEach((r, k) => {
-      const S = a[k * 6] + (b[k * 6] - a[k * 6]) * u; r.lap = Math.floor(S / track.length); r.s = S - r.lap * track.length;
-      r.lat = a[k * 6 + 1] + (b[k * 6 + 1] - a[k * 6 + 1]) * u; const ya = a[k * 6 + 2], yb = b[k * 6 + 2]; r.air = ya > -900 && yb > -900; r.y = r.air ? ya + (yb - ya) * u : 0; r.steerVis = a[k * 6 + 3]; r.crashed = a[k * 6 + 4] > 0.5 ? 1 : 0; r.v = 30;
-      r.shortcut = playbackRoute(r.s, a[k * 6 + 5], b[k * 6 + 5]);
+      const A = a + k * REC_F, B = b + k * REC_F, mix = (q) => F[A + q] + (F[B + q] - F[A + q]) * u;
+      const S = mix(0); r.lap = Math.floor(S / track.length); r.s = S - r.lap * track.length;
+      r.lat = mix(1); const ya = F[A + 2], yb = F[B + 2]; r.air = ya > -900 && yb > -900; r.y = r.air ? mix(2) : 0; r.vy = r.air ? mix(7) : 0; r.steerVis = F[A + 3]; r.crashed = F[A + 4] > 0.5 ? 1 : 0; r.v = mix(6); // the recorded speed, not a fixed 108 km/h
+      r.shortcut = playbackRoute(r.s, F[A + 5], F[B + 5]);
       placeRacer(r, dt); if (r.crashed) r.mesh.rotation.z += dt * 6;
     });
     raceTime = replay.time; drawMinimap();
-    $('#replayTime').textContent = fmtTime(replay.time) + ' / ' + fmtTime(last); $('#replayBar').style.width = (100 * replay.time / last) + '%';
+    $('#replayTime').textContent = fmtTime(replay.time) + ' / ' + fmtTime(last); $('#replayBar').style.width = (100 * (replay.time - first) / Math.max(1e-3, last - first)) + '%';
     $('#replayState').textContent = replay.paused ? '❚❚ PAUSE' : replay.speed > 1 ? '▶▶ ' + replay.speed + '×' : '▶ REPLAY';
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
   }
@@ -1998,17 +2098,23 @@
     if (route) {
       // Scenic streets can sit far outside the main-road TV cameras.
       const metres = (r.s - route.startS) * route.length / (route.endS - route.startS);
-      const f = window.Shortcuts.frameAt(route, Math.floor(metres / 60) * 60 + 20);
-      camera.position.set(f.p.x + f.B.x * 18, f.p.y + 12, f.p.z + f.B.z * 18);
-      camera.up.set(0, 1, 0); camera.lookAt(r.frame.pos); camera.fov = 60; camera.updateProjectionMatrix();
-      return;
+      const m0 = Math.floor(metres / 60) * 60 + 20, key = r.shortcut + ':' + m0;
+      if (replay.routeKey !== key) { replay.routeKey = key; replay.routeCam = tvSpot(window.Shortcuts.frameAt(route, m0), 1, 18, [12, 18, 7], [-20, 0, 20, 40].map((d) => onPath(window.Shortcuts.frameAt(route, m0 + d), 1.2))); }
+      replayShot(r, replay.routeCam, 60); return;
     }
+    if (racerFrame(r).kind === 'tunnel') { const b = racerFrame(r, r.s - 10); replayShot(r, new THREE.Vector3(b.p.x + b.B.x * r.lat + b.N.x * 3.5, b.p.y + b.N.y * 3.5, b.p.z + b.B.z * r.lat + b.N.z * 3.5), 60); return; } // inside the tube
     // Stunts-style trackside TV: nearest camera the car just passed, looking at the car
     const pos = r.s; let best = replay.camIdx;
     if (best < 0 || replay.cams[best].s > pos + 20 || pos - replay.cams[best].s > 100) { best = 0; for (let i = 0; i < replay.cams.length; i++) if (replay.cams[i].s <= pos + 20) best = i; }
-    replay.camIdx = best; const c = replay.cams[best];
-    camera.position.copy(c.pos); camera.up.set(0, 1, 0); camera.lookAt(r.frame.pos);
-    camera.fov = clamp(70 - camera.position.distanceTo(r.frame.pos) * 0.35, 28, 70); camera.updateProjectionMatrix();
+    replay.camIdx = best; replayShot(r, replay.cams[best].pos);
+  }
+  // look at the car from pos; something in between (a loop's far side, a house the path bends behind): a spare camera
+  // beside the car until the line is clear again
+  function replayShot(r, pos, fov) {
+    const eye = carEye(r.frame);
+    if (occHit(eye, pos) >= 0 || (replay.alt && replay.time < replay.altT)) { if (!replay.alt || occHit(eye, replay.alt) >= 0) { const f = racerFrame(r, r.s + 25); replay.alt = tvSpot(f, r.lat >= 0 ? 1 : -1, 16, [6, 11, 17], [eye, onPath(f, 1.2)], r.frame); replay.altT = replay.time + 1.5; } pos = replay.alt; } else replay.alt = null; // the spare stays 1.5 s: a lamp post sweeping through the line is no reason to cut back and forth
+    camera.position.copy(pos); camera.up.set(0, 1, 0); camera.lookAt(r.frame.pos);
+    camera.fov = fov || clamp(70 - camera.position.distanceTo(r.frame.pos) * 0.35, 28, 70); camera.updateProjectionMatrix();
   }
 
   // ---------------- ghost of your best lap ----------------
@@ -2028,7 +2134,8 @@
       else ghostData.routes = ghostData.routes.map((r) => r != null && r >= 0 ? now.indexOf(ghostData.routeIds[r]) : r);
     }
     if (!ghostData) return;
-    ghost = W.buildCar(Object.assign({}, D.CARS[0], { color: 0xdde6ff, plate: 'GEIST' }), false);
+    const car = D.CARS.find((c) => c.id === ghostData.car) || (player && player.car) || D.CARS[0]; // the car that drove the lap, in ghost colours
+    ghost = W.buildCar(Object.assign({}, car, { color: 0xdde6ff, stripe: 0x9fb4ff, plate: 'GEIST' }), false);
     ghost.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; const cl = ms.map((m) => { const c = m.clone(); c.transparent = true; c.opacity = 0.35; c.depthWrite = false; return c; }); o.material = Array.isArray(o.material) ? cl : cl[0]; } });
     scene.add(ghost);
   }
@@ -2041,17 +2148,22 @@
     const routes = ghostData.routes || [], route = playbackRoute(s, routes[i], routes[Math.min(i + 1, T.length - 1)]);
     const f = racerFrame({ s, shortcut: route }); const B = new THREE.Vector3(f.B.x, f.B.y, f.B.z), N = new THREE.Vector3(f.N.x, f.N.y, f.N.z), Tt = new THREE.Vector3(f.T.x, f.T.y, f.T.z);
     ghost.position.set(f.p.x, f.p.y, f.p.z).addScaledVector(B, lat).addScaledVector(N, f.surfaceOffset || 0.1);
+    const Y = ghostData.y, j = Math.min(i + 1, T.length - 1), ya = Y && Y[i], yb = Y && Y[j];
+    if (ya != null && yb != null) { // in the air at the recorded height, nose along the flight
+      ghost.position.y = ya + (yb - ya) * u + 0.1; const pitch = clamp(Math.atan2((yb - ya) / Math.max(1e-3, T[j] - T[i]), 25), -0.6, 0.6);
+      const fwd = new THREE.Vector3(Tt.x, 0, Tt.z).normalize().applyAxisAngle(B, pitch), up = new THREE.Vector3(0, 1, 0).applyAxisAngle(B, pitch); _m.makeBasis(new THREE.Vector3().crossVectors(up, fwd).normalize(), up, fwd); ghost.quaternion.setFromRotationMatrix(_m); return;
+    }
     const right = new THREE.Vector3().crossVectors(N, Tt).normalize(); _m.makeBasis(right, N, Tt); ghost.quaternion.setFromRotationMatrix(_m);
   }
   function saveGhost() {
-    if (!player.bestLap || player.laps.length === 0 || rec.frames.length < 10) return;
+    if (!player.bestLap || player.laps.length === 0 || rec.n < 10) return;
     const old = ghostData; if (old && old.time <= player.bestLap + 0.01) return;
-    // find the best lap window in the recording
+    // find the best lap window in the recording (the player is racer 0)
     let start = 0; let bestIdx = player.laps.indexOf(player.bestLap); for (let k = 0; k < bestIdx; k++) start += player.laps[k];
-    const end = start + player.bestLap; const t = [], sArr = [], l = [], routes = [];
-    for (let i = 0; i < rec.frames.length; i++) { const tt = rec.t[i]; if (tt < start || tt > end) continue; const f = rec.frames[i]; t.push(Math.round((tt - start) * 100) / 100); sArr.push(Math.round((f[0] % track.length) * 10) / 10); l.push(Math.round(f[1] * 10) / 10); routes.push(f[5]); }
+    const end = start + player.bestLap; const t = [], sArr = [], l = [], routes = [], y = [];
+    for (let i = 0; i < rec.n; i++) { const tt = recT(i); if (tt < start || tt > end) continue; const o = recAt(i), F = rec.buf; t.push(Math.round((tt - start) * 100) / 100); sArr.push(Math.round((F[o] % track.length) * 10) / 10); l.push(Math.round(F[o + 1] * 10) / 10); routes.push(F[o + 5]); y.push(F[o + 2] > -900 ? Math.round(F[o + 2] * 10) / 10 : null); }
     if (t.length < 10) return;
-    try { localStorage.setItem(ghostKey(), JSON.stringify({ time: player.bestLap, t, s: sArr, l, routes, routeIds: (track.shortcuts || []).map((r) => r.id) })); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(ghostKey(), JSON.stringify({ time: player.bestLap, car: player.car && player.car.id, t, s: sArr, l, y, routes, routeIds: (track.shortcuts || []).map((r) => r.id) })); } catch (e) { /* ignore */ }
   }
 
   // ---------------- share links for Baukasten tracks ----------------
@@ -2213,6 +2325,13 @@
   window.STUNTS_ROUTES = () => track ? track.shortcuts.map(({ samples, ...r }) => r) : [];
   window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; updateRacer(player, SIM_DT, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, SIM_DT) : input)); placeRacer(player, SIM_DT); recordFrame(SIM_DT); } updateHUD(); return window.STUNTS_DEBUG(); }; // n steps of 1/60 s, each as two fixed steps
   window.STUNTS_REPLAY_AT = (t) => { startReplay(); replay.time = t; replay.paused = true; replayStep(0); return window.STUNTS_DEBUG(); };
+  // cameras and the recorder: n frames of driving with the camera following (no render), a replay at t with `settle` frames of run-up in replay camera mode m,
+  // the recorded frame nearest to t (the player), the ghost placed at lap time t, the camera itself and the size of the line-of-sight layer
+  window.STUNTS_CAM_STEPS = (n) => { for (let i = 0; i < n; i++) { window.STUNTS_DRIVE_STEPS(1); updateCamera(1 / 60); } return { pos: camera.position.toArray(), mode: camMode }; };
+  window.STUNTS_REPLAY_CAM = (t, m, settle) => { if (phase !== 'replay') startReplay(); replay.mode = m || 0; replay.paused = false; replay.speed = 1; replay.time = Math.max(0, t - (settle || 0) / 60); replayStep(0); for (let i = 0; i < (settle || 0); i++) { replayStep(1 / 60); updateCamera(1 / 60); } replay.paused = true; replayStep(0); updateCamera(1 / 60); return { time: replay.time, pos: camera.position.toArray(), speedo: $('#speed').textContent, label: $('#replayTime').textContent }; };
+  window.STUNTS_REC = (t) => { if (!rec.n) return null; let i = 0; for (let k = 1; k < rec.n; k++) if (Math.abs(recT(k) - t) < Math.abs(recT(i) - t)) i = k; const o = recAt(i); return { t: recT(i), v: rec.buf[o + 6], y: rec.buf[o + 2] > -900 ? rec.buf[o + 2] : null, n: rec.n, first: recT(0), last: recT(rec.n - 1), cars: rec.cars.slice() }; };
+  window.STUNTS_GHOST = (t) => { if (!ghost) return null; if (t != null) updateGhost(t - (raceTime - player.lapStart)); return { pos: ghost.position.toArray(), visible: ghost.visible, n: ghostData.t.length, time: ghostData.time, car: ghostData.car }; };
+  window.STUNTS_CAM = () => camera; window.STUNTS_OCC = (a, b) => a ? occHit(new THREE.Vector3(...a), new THREE.Vector3(...b)) : { boxes: occ.n, cells: occ.cells.size }; /* with two points: the layer's first hit on that line */ window.STUNTS_STATIC = () => [road, scenery && scenery.group].filter(Boolean);
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
   window.STUNTS_CAR_SCREEN = () => { if (!player || !player.mesh || !camera) return null; const v = player.mesh.position.clone().project(camera); return { x: (v.x + 1) / 2 * window.innerWidth, y: (1 - v.y) / 2 * window.innerHeight, mode: camMode }; }; // where the player's car is drawn, in CSS pixels

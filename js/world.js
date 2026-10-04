@@ -87,6 +87,42 @@
   }
   let _vc; function vcMat() { if (!_vc) _vc = new THREE.MeshLambertMaterial({ vertexColors: true }); return _vc; }
 
+  // ---------- line of sight: oriented boxes for the cameras (game.js) ----------
+  // One box per static mesh (the inverse world matrix and the local bounding box of its geometry), taken before the
+  // meshes melt into the batches. A big mesh (a viaduct, a merged row of houses, a landmark) is cut into 8 m pieces
+  // of its own triangles, so its box does not reach over the street. People and boats are left out.
+  const _occInv = new THREE.Matrix4(), _occBox = new THREE.Box3(), _occSize = new THREE.Vector3(), _occV = new THREE.Vector3();
+  function collectOccluders(group, out) {
+    out = out || []; group.updateMatrixWorld(true);
+    // an animated prop is mostly still (a church with a flag, a stage with a light show): its boxes count; what walks or floats does not
+    const moving = (o) => { for (let p = o; p && p !== group; p = p.parent) { const u = p.userData; if (u.walker || u.kind === 'walker' || u.sky || u.water || u.boat || u.speedboat || u.train || u.tramline || u.gondola != null || u.zeppelin || u.moewe) return true; } return false; }; // a tram, a train or a cable car leaves its first spot: no phantom wall there
+    const push = (m, min, max) => {
+      _occBox.min.set(min[0], min[1], min[2]); _occBox.max.set(max[0], max[1], max[2]); _occBox.applyMatrix4(m.matrixWorld); _occBox.getSize(_occSize);
+      if (Math.max(_occSize.x, _occSize.y, _occSize.z) < 1) return; // a sill, a sign on a wall: inside the house's own box
+      const e = _occInv.elements;
+      out.push({ inv: [e[0], e[4], e[8], e[12], e[1], e[5], e[9], e[13], e[2], e[6], e[10], e[14]], min, max, world: [_occBox.min.x, _occBox.min.y, _occBox.min.z, _occBox.max.x, _occBox.max.y, _occBox.max.z] });
+    };
+    group.traverse((m) => {
+      if (!m.isMesh || !m.geometry || !m.geometry.attributes.position || moving(m)) return;
+      const mat = Array.isArray(m.material) ? m.material[0] : m.material;
+      if (!mat || (mat.transparent && mat.opacity < 0.9) || mat.side === THREE.BackSide) return;
+      const g = m.geometry; if (!g.boundingBox) g.computeBoundingBox(); const b = g.boundingBox; if (!isFinite(b.min.x)) return;
+      _occBox.copy(b).applyMatrix4(m.matrixWorld); _occBox.getSize(_occSize);
+      if (_occSize.x > 600 || _occSize.z > 600) return; // the ground
+      _occInv.copy(m.matrixWorld).invert();
+      if (Math.max(_occSize.x, _occSize.z) <= 24) { push(m, [b.min.x, b.min.y, b.min.z], [b.max.x, b.max.y, b.max.z]); return; }
+      const P = g.attributes.position, I = g.index ? g.index.array : null, cnt = I ? I.length : P.count, cells = new Map();
+      for (let k = 0; k + 2 < cnt; k += 3) {
+        let cx = 0, cy = 0, cz = 0; for (let j = 0; j < 3; j++) { const v = I ? I[k + j] : k + j; cx += P.getX(v); cy += P.getY(v); cz += P.getZ(v); }
+        const key = Math.floor(cx / 24) * 1e8 + Math.floor(cy / 24) * 1e4 + Math.floor(cz / 24); // centroid (×3) in 8 m cells
+        let c = cells.get(key); if (!c) { c = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]; cells.set(key, c); }
+        for (let j = 0; j < 3; j++) { const v = I ? I[k + j] : k + j, x = P.getX(v), y = P.getY(v), z = P.getZ(v); if (x < c[0]) c[0] = x; if (y < c[1]) c[1] = y; if (z < c[2]) c[2] = z; if (x > c[3]) c[3] = x; if (y > c[4]) c[4] = y; if (z > c[5]) c[5] = z; }
+      }
+      for (const c of cells.values()) push(m, [c[0], c[1], c[2]], [c[3], c[4], c[5]]);
+    });
+    return out;
+  }
+
   // ---------- static geometry merger: one mesh per material ----------
   const FLAT_MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
   function mergeStatic(group, animatedSet) {
@@ -1429,6 +1465,7 @@
     const bp = off(s0, 0, 6.5); banner.position.copy(bp); banner.lookAt(bp.clone().sub(V(s0.T))); g.add(banner);
     for (const side of [-1, 1]) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7.5, 6), post); pole.position.copy(off(s0, side * 10, 3.5)); g.add(pole); }
     if (root.STUNTS_AUDIT_DETAILS) root.STUNTS_AUDIT_DETAILS(g, track, { ROAD_W, GROUND_Y });
+    g.userData.occluders = collectOccluders(g); // loop supports, gantries, rails: the cameras keep clear of them
     mergeStatic(g, new Set());
     return g;
   }
@@ -2184,8 +2221,9 @@
     }
     if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
+    const occluders = collectOccluders(g); // houses, trees, landmarks: what a camera must not sit in or look through
     mergeStatic(g, new Set(animated));
-    return { group: g, animated, props: propList, signals };
+    return { group: g, animated, props: propList, signals, occluders };
   }
 
   const _qTmp = new THREE.Quaternion(), _yAxis = new THREE.Vector3(0, 1, 0), _zAxis = new THREE.Vector3(0, 0, 1);
@@ -2414,6 +2452,6 @@
     return pts;
   }
 
-  root.World = { buildRoad, buildScenery, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored, mergeStatic,
+  root.World = { buildRoad, buildScenery, collectOccluders, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored, mergeStatic,
     setTheme: (t) => { THEME = t; }, theme: () => THEME, signalState };
 })(window);

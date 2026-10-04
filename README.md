@@ -360,14 +360,25 @@ unterwegs bist); R setzt dich auf der Hauptstrecke dort ab, wo du gerade bist.
 **Klüngel-Baukasten:** eigener Streckeneditor im Menü. Teile aneinanderreihen (Gerade, Kurven,
 Steilkurven, Hügel, Senke, Looping, Korkenzieher, Sprung, Sprung übers Haus, Brücke, Tunnel),
 Kulisse wählen, speichern, fahren.
-Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel automatisch an.
+Die Kurven müssen sich zu 360° ergänzen, die Geraden passt der Klüngel automatisch an. „Zo“ ist eine
+Strecke erst, wenn die Lücke unter 2 m und der Winkelfehler unter 5° liegt; sonst zeigt der Baukasten
+die Lücke („NOCH 34 M AFF“), zeichnet die Vorschau offen und schlägt die fehlende Gerade vor.
 
 **Rekorde:** die fünf besten Zeiten pro Strecke bleiben im Browser gespeichert. Wer es in die Top 5 schafft, trägt wie am Automaten drei Buchstaben ein (▲▼ Buchstabe, ◀▶ Stelle, ENTER; auf dem Handy die Pfeiltasten antippen); die Initialen merkt sich das Spiel für das nächste Mal.
 
 **Replay:** nach dem Rennen 📼 REPLAY drücken. Streckenkameras wie im alten Stunts, Leertaste
-Pause, → schneller, ← fünf Sekunden zurück, C für Verfolger/Cockpit, Esc zurück.
+Pause, → schneller, ← fünf Sekunden zurück, C für Verfolger/Cockpit, Esc zurück. Aufgezeichnet wird
+20-mal pro Sekunde bis zu 30 Minuten (Ringpuffer), samt Tempo und Flughöhe: der Tacho im Replay zeigt
+das echte Tempo.
 
-**Geist:** deine beste Runde fährt beim nächsten Rennen als durchsichtiger Geisterwagen mit.
+**Kameras:** Verfolger- und TV-Kamera prüfen die Sichtlinie gegen eine grobe Schicht aus Häusern,
+Bäumen, Wahrzeichen, Looping-Stützen und der Fahrbahn über dem Boden. Die Verfolgerkamera rückt vor
+ein Hindernis heran und bleibt im Flug über dem Dach; die TV-Kameras suchen sich unter sechs
+Standorten (beide Seiten, drei Höhen) einen mit freier Sicht und schneiden weiter, sobald etwas ins
+Bild rückt; im Tunnel fahren sie mit.
+
+**Geist:** deine beste Runde fährt beim nächsten Rennen als durchsichtiger Geisterwagen mit, im
+Wagen, mit dem du sie gefahren bist, und über Sprünge in der aufgezeichneten Höhe.
 
 **2 Spieler** an einer Tastatur (nicht am Handy): im Menü 👥 2 SPIELER einschalten. Oben P1
 mit Pfeiltasten + Shift, unten P2 mit W/A/S/D + Q. V wechselt die Kamera von P2. Das Feld
@@ -479,7 +490,11 @@ erfundenen: KVK, DÄ SCHNELLE, Krachkeller …), `koelsch-lint` hält das Kölsc
 Schritt gleich) und lässt im ersten Karriere-Kapitel fünfmal abfliegen: Der Fortschritt nach dem
 Respawn geht nie zurück. `fixed-step` stellt die Uhr von `requestAnimationFrame` und den Timern selbst:
 eine Autopilot-Runde Poller Wiesen bei 30 und 144 fps (gleiche Zeit), der Rheinsprung am Zoo (gleiche
-Höhe) und 10 s bei erzwungenen 15 fps (10 s Rennzeit, keine Zeitlupe).
+Höhe) und 10 s bei erzwungenen 15 fps (10 s Rennzeit, keine Zeitlupe). `baukasten` prüft, dass nur
+wirklich geschlossene Strecken als zo gelten und dass `curv` nach dem Schließen den Tangenten folgt.
+`cameras` schießt in Ehrenfeld, auf der Zülpicher und den Poller Wiesen alle 2 s exakte Strahlen von
+der Kamera zum Auto (Rennen und Replay, Verfolger und TV): mindestens 95 % frei. `replay` fährt am Zoo
+über 5:32, prüft Replay-Länge, Tacho und Geist (20 Proben pro Sekunde) und den Geist im Sprung.
 
 ## Debug
 
@@ -491,5 +506,8 @@ platzierten Wahrzeichen und `STUNTS_FREECAM = { pos: [x,y,z], look: [x,y,z] }` s
 rechnen n × 1/60 s, jeweils als zwei feste Schritte. `STUNTS_NORENDER = true` rechnet nur noch, ohne
 zu zeichnen. `STUNTS_FIELD()` liefert Position, Runde und Zustand aller Wagen,
 `STUNTS_FRAME(s)` das Streckenkoordinatensystem samt Segmentart und Bankettbreite an Position s.
+`STUNTS_CAM_STEPS(n)` fährt n Bilder mit mitlaufender Kamera, `STUNTS_REPLAY_CAM(t, modus, vorlauf)`
+springt im Replay an t, `STUNTS_REC(t)` liefert das aufgezeichnete Bild bei t, `STUNTS_GHOST(t)` setzt
+den Geist auf Rundenzeit t, `STUNTS_OCC(a, b)` den ersten Treffer der Sichtschicht auf der Linie a–b.
 
 *Et hätt noch emmer jot jejange.*
