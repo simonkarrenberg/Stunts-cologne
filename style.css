@@ -749,3 +749,7 @@ body.mobile .resWhy { font-size: 8px; padding: 4px 8px; margin-bottom: 6px; }
 #results { overflow: auto; align-items: flex-start; padding: 8px 0; box-sizing: border-box; }
 .resInner { margin: auto; }
 .resBtns { position: sticky; bottom: 0; z-index: 3; background: var(--panel); padding: 8px 0; }
+/* 11:11 on the Zülpicher: the screen flashes in carnival colours */
+body.alaaf #flash { opacity: 1 !important; background: repeating-linear-gradient(45deg, rgba(255,95,162,.35) 0 20px, rgba(255,212,0,.35) 20px 40px, rgba(0,160,255,.3) 40px 60px) !important; animation: alaafFlash .6s steps(3) 4; }
+@keyframes alaafFlash { 50% { opacity: .2; } }
+#controlsCard small { display: block; font-size: 10px; line-height: 1.6; max-width: 520px; color: #ddd; margin-top: 4px; }

@@ -468,7 +468,7 @@
     const dg = new THREE.SphereGeometry(45, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2); { const uv = dg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 10, uv.getY(i) * 4); }
     const dome = new THREE.Mesh(dg, tmat(T.facade('glass', 0x3a4a70, 9, THEME.night), 0xffffff)); g.add(dome);
     const arch = new THREE.Mesh(new THREE.TorusGeometry(52, 2.2, 6, 24, Math.PI), bmat(THEME.night ? 0x7fd3ff : 0xd8e8f0)); arch.position.y = 2; g.add(arch);
-    const sign = textPlane('ARENA KÖLLE', '#00e5ff', '#0b0f2a', 40, 5, true); sign.position.set(0, 50, 0); g.add(sign);
+    for (const ry of [0, Math.PI]) { const sign = textPlane('ARENA KÖLLE', '#00e5ff', '#0b0f2a', 40, 5, true); sign.material = sign.material.clone(); sign.material.side = THREE.FrontSide; sign.position.set(0, 50, 0); sign.rotation.y = ry; g.add(sign); } // readable from both sides, never mirrored
     return g;
   };
   P.messeturm = () => { const g = new THREE.Group(); const b = T.brick(0x9a4a34); g.add(tbox(18, 70, 18, b, 0, 35, 0, 0xffffff, [6, 6])); g.add(tbox(12, 12, 12, b, 0, 76, 0, 0xffffff, [6, 6])); g.add(box(2, 8, 2, 0x333333, 0, 86, 0)); g.add(tbox(120, 18, 40, T.facade('industrial', 0x9a4a34, 3, THEME.night), 60, 9, 0, 0xffffff, [14, 14])); return g; };
@@ -476,6 +476,7 @@
   P.elephant = () => { const g = new THREE.Group(); g.add(box(7, 4.5, 4, 0x8a8a8a, 0, 4, 0)); g.add(box(3.5, 3.5, 3.5, 0x8a8a8a, 5, 5, 0)); g.add(box(0.8, 4, 0.8, 0x8a8a8a, 6.5, 2.4, 0)); for (const [x, z] of [[-2.5, -1.3], [-2.5, 1.3], [2.5, -1.3], [2.5, 1.3]]) g.add(box(1.4, 2, 1.4, 0x777777, x, 1, z)); g.add(box(0.4, 3, 3, 0x9a9a9a, 5, 5, 0)); g.add(box(8, 0.3, 6, 0x6a5a40, 0, 0.15, 0)); return g; };
   P.koelsch = () => {
     const g = new THREE.Group();
+    if (THEME.kids) { g.add(box(7, 14, 4, 0xc1121f, 0, 7, 0)); g.add(box(7.1, 2.4, 4.1, 0xffffff, 0, 9, 0)); g.add(cyl(0.6, 2.2, 3, 0xffd400, 0, 15.5, 0, 8)); const l = textPlane('KAMELLE!', '#c1121f', '#ffffff', 6, 2.2, false, { border: '#c1121f' }); l.position.set(0, 9, 2.1); g.add(l); const l2 = l.clone(); l2.position.z = -2.1; l2.rotation.y = Math.PI; g.add(l2); return g; } // Pänz-Modus: a giant bag of Kamelle
     const glass = cyl(3, 3, 16, 0xffc300, 0, 8, 0, 12); glass.material.transparent = true; glass.material.opacity = 0.92; g.add(glass);
     g.add(cyl(3.2, 3.2, 2.5, 0xffffff, 0, 17, 0, 12));
     const label = textPlane('RING KÖLSCH', '#c1121f', '#ffffff', 5.5, 2.4, false, { border: '#c1121f' }); label.position.set(0, 9, 3.05); g.add(label);
@@ -484,7 +485,7 @@
   };
   P.billboard = (o) => {
     const g = new THREE.Group();
-    const s = textPlane(o.text, '#1a1a1a', '#f6e7b8', 16, 4, false, { border: '#c1121f' });
+    const s = textPlane(THEME.kids ? String(o.text).replace(/RING KÖLSCH.*|DRINK DOCH.*/, 'KAMELLE FÖR ALL PÄNZ!') : o.text, '#1a1a1a', '#f6e7b8', 16, 4, false, { border: '#c1121f' });
     s.position.y = 5.5; g.add(s);
     g.add(box(0.4, 3.5, 0.4, 0x555555, -6, 1.75, 0)); g.add(box(0.4, 3.5, 0.4, 0x555555, 6, 1.75, 0));
     return g;
@@ -744,6 +745,11 @@
     const r = mulberry(31);
     const outfits = THEME.confetti ? CROWD_OUTFITS.concat(JECK_OUTFITS, JECK_OUTFITS) : CROWD_OUTFITS; // on carnival tracks most people are in costume
     for (let i = 0; i < 10; i++) { const f = human(Object.assign({ h: 1.6 + r() * 0.3, lite: true }, outfits[Math.floor(r() * outfits.length)])); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.rotation.y = (r() - 0.5) * 0.6; g.add(f); }
+    if (THEME.confetti) { // carnival: three deep, children in front with their bags up, umbrellas upside down for the Kamelle
+      for (let i = 0; i < 9; i++) { const f = human(Object.assign({ h: 1.65 + r() * 0.3, lite: true }, outfits[Math.floor(r() * outfits.length)])); f.position.set((i - 4) * 1.4 + 0.5, 0, -2.2 + (r() - 0.5) * 0.8); f.rotation.y = (r() - 0.5) * 0.5; g.add(f); }
+      for (let i = 0; i < 4; i++) { const k = human(Object.assign({ h: 1.05 + r() * 0.15, lite: true }, JECK_OUTFITS[Math.floor(r() * JECK_OUTFITS.length)])); k.position.set((i - 1.5) * 3.1, 0, 0.95); g.add(k); g.add(box(0.3, 0.32, 0.12, [0xffffff, 0xc1121f, 0xffd400][i % 3], (i - 1.5) * 3.1, 1.25, 1.1)); }
+      for (let i = 0; i < 3; i++) { const u = new THREE.Mesh(new THREE.ConeGeometry(0.75, 0.55, 8, 1, true), mat([0xc1121f, 0x1c3f95, 0xffd400][i], { side: THREE.DoubleSide })); u.rotation.x = Math.PI; u.position.set((i - 1) * 4.2 + 1, 2.25, -0.4); g.add(u); g.add(box(0.03, 0.9, 0.03, 0x333333, (i - 1) * 4.2 + 1, 1.7, -0.4)); }
+    }
     g.add(box(14, 0.8, 0.3, 0x8a5a2a, 0, 0.4, 1.4)); // barrier
     mergeVertexColored(g);
     g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
@@ -891,7 +897,7 @@
   P.tribuene = () => { // carnival grandstand full of Jecken
     const g = new THREE.Group(); const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800, 0x7fff00];
     const r = mulberry(77);
-    for (let row = 0; row < 4; row++) { g.add(box(22, 0.8, 1.6, 0x6a5a4a, 0, 0.4 + row * 0.9, -row * 1.6)); for (let i = 0; i < 12; i++) { const f = human(Object.assign({ h: 1.55 + r() * 0.3 }, CROWD_OUTFITS[Math.floor(r() * CROWD_OUTFITS.length)])); f.position.set(-9.5 + i * 1.75, 0.8 + row * 0.9, -row * 1.6); g.add(f); } }
+    for (let row = 0; row < 4; row++) { g.add(box(22, 0.8, 1.6, 0x6a5a4a, 0, 0.4 + row * 0.9, -row * 1.6)); for (let i = 0; i < 12; i++) { const OUT = THEME.confetti ? JECK_OUTFITS : CROWD_OUTFITS; const f = human(Object.assign({ h: 1.55 + r() * 0.3 }, OUT[Math.floor(r() * OUT.length)])); f.position.set(-9.5 + i * 1.75, 0.8 + row * 0.9, -row * 1.6); g.add(f); } }
     mergeVertexColored(g);
     const s = textPlane('KÖLLE ALAAF!', '#ffffff', '#c1121f', 12, 1.6, false, { border: '#ffd400' }); s.position.set(0, 5.5, -6); g.add(s);
     g.userData.crowd = true; g.userData.phase = Math.random() * 6; animated.push(g);
@@ -2343,8 +2349,10 @@
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     const pts = new THREE.Points(g, new THREE.PointsMaterial({ size: rain ? 0.22 : 0.5, vertexColors: true, transparent: rain, opacity: rain ? 0.7 : 1 }));
+    let last = null;
+    pts.userData.burst = () => { if (!last) return; const a = g.attributes.position.array; for (let i = 0; i < N; i++) { a[i * 3] = last.x + (Math.random() - 0.5) * 36; a[i * 3 + 1] = 4 + Math.random() * 14; a[i * 3 + 2] = last.z + (Math.random() - 0.5) * 36; } g.attributes.position.needsUpdate = true; }; // 11:11: everything at once
     pts.userData.update = (dt, center) => {
-      const a = g.attributes.position.array;
+      last = center; const a = g.attributes.position.array;
       for (let i = 0; i < N; i++) {
         if (rain) a[i * 3 + 1] -= dt * (22 + (i % 7)); else { a[i * 3 + 1] -= dt * (3 + (i % 5)); a[i * 3] += Math.sin(a[i * 3 + 1] * 0.5 + i) * dt * 2; }
         if (a[i * 3 + 1] < -1) { a[i * 3 + 1] = 40; a[i * 3] = center.x + (Math.random() - 0.5) * 120; a[i * 3 + 2] = center.z + (Math.random() - 0.5) * 120; }

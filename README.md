@@ -71,6 +71,14 @@ erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jeder
 
 ### Steuerung
 
+**PÄNZ-MODUS** (im Menü): für Kinder an der Tastatur. Statt Kölsch liegen Kamelle-Tüten auf der Straße, das
+Riesen-Kölschglas am Start wird eine Kamelle-Tüte, Sprüche übers Trinken fallen weg, und aus dem DURSTLÖSCHER
+wird der KAMELLE-KÖNIG. Unabhängig davon gibt es kein Betrunken-Schlingern mehr: fünf Deckel in einer Runde
+bringen drei Extra-Striche und einen vollen Turbo. Karriere-Kapitel 2 verlangt drei saubere Stunts statt
+fünf Kölsch, der Orden für Knöllchen heißt jetzt SAUBERMANN (zehn Rennen ohne Knöllchen), und ein voller
+Schadensbalken ist ein Totalschaden mit Ansage statt stiller 100 %. Vor jedem Karriere-Kapitel zeigt eine
+Karte Titel, Ziel und Auftrag.
+
 **Für alle Augen und Daumen:** „SCHRIFT: JROSS“ im Menü macht Menü, Nachrichten, Anzeige, Schilder und Ergebnis
 deutlich größer. In den ersten drei Rennen zeigt eine Karte während des Countdowns die Tasten. Die Anzeige
 oben rechts zeigt nur Zeit, Runde und Platz; Knöllchen, Kripo, Wette, Auftrag und Telefon erscheinen erst,
@@ -134,6 +142,16 @@ Attract-Modus läuft immer über diese beiden Nachtstrecken.
 Ort vor oder gerade hinter dir liegt – auch aus einer Seitenstraße heraus; was in Runde 1 nicht
 passte, kommt in Runde 2 oder 3. Jede gehörte Geschichte landet unter **REKORDE → DÄ LANGE SING
 VERZÄLLCHER**, nach Strecke sortiert zum Nachlesen.
+
+**Fastelovend richtig:** Auf „Zülpicher 11.11.“ läuft oben eine Uhr ab 11:10:45; um **11:11** spielt ein Tusch,
+Konfetti fällt, und Dä Lange ruft dreimal „Kölle – Alaaf!“ (Orden ELF UHR ELF). Am 11.11. gibt es keinen Zoch:
+statt Wagen und Tribünen stehen Absperrgitter mit kostümierten Jecken, „GLASVERBOT“ und „VEEDEL VOLL“. Beim
+„Karneval Krawall“ (Rosenmontag) stehen die Jecken drei Reihen tief am Zochweg, Pänz halten die Tüte hoch,
+Schirme stehen verkehrt herum für die Kamelle. Auf beiden Strecken redet Dä Lange Fastelovend statt Bass, nach
+Looping und Sprung und im Ziel spielt ein Tusch, und die Botengänge führen zu Wagenbauhalle, Kostümverleih und
+Kamelle-Lager. Jan un Griet und Wieverfastelovend am Alter Markt sind richtig erzählt, Fräulein Anna ist ein
+Funkemariechen mit Spagat statt Stöckelschuh-Witzen (Orden BÜTZJE VUM MARIECHEN, SESSIONSORDEN). Biegt man
+zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für eine Straße ist.
 
 **Geld:** Der Automat ist von 1989, also Mark: Knöllchen 40 DM, Kurzstrecke fünf Mark.
 

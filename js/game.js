@@ -89,6 +89,8 @@
     const src = ctx.createBufferSource(); src.buffer = buf; const g = ctx.createGain(); g.gain.value = 0.3;
     src.connect(g); g.connect(ctx.destination); src.start();
   }
+  // a Tusch like the Sitzungskapelle plays it: three short brass chords and a long one
+  function tusch() { const ch = [[262, 330, 392], [262, 330, 392], [262, 330, 392], [349, 440, 523]]; ch.forEach((c, i) => setTimeout(() => c.forEach((f) => beep(f, i === 3 ? 0.8 : 0.13, 'sawtooth', 0.05)), i * 170)); }
   function fanfare(win) { const notes = win ? [523, 659, 784, 1047] : [392, 349, 311, 262]; notes.forEach((f, i) => setTimeout(() => beep(f, 0.35, 'triangle', 0.2), i * 180)); }
 
   // ---------------- music ----------------
@@ -140,14 +142,14 @@
   const SECTION_KOELSCH = { a: 'STROPH', b: 'REFRAIN', rise: 'JLEICH KÜTT ET …', drop: 'DÄ BASS!', end: 'US' };
   // in the race the song is part of the drive: dä Lange calls the hook and the riser, and in the long bass run
   // the player's turbo recharges twice as fast (only while the song really plays)
-  let bassRun = false, hookSaid = 0, dropSaid = -99, riseSaid = -99, lamboLines = 0; // the song talks at most four times a race, never twice in a minute
+  let raceStunts = 0, bassRun = false, hookSaid = 0, dropSaid = -99, riseSaid = -99, lamboLines = 0, jeckSaid = 0; // the song talks at most four times a race, never twice in a minute
   if (window.LamboBeat) window.LamboBeat.onSection((sec) => {
     bassRun = sec === 'drop' && phase === 'race';
     if (phase !== 'race' || !tuenn.lambo) return;
-    if (sec === 'drop') { if (raceTime - dropSaid > 60 && lamboLines < 4) { dropSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.drop), 3200); } document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
+    if (sec === 'drop') { if (raceTime - dropSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { dropSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.drop), 3200); } document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
     else document.body.classList.remove('bassrun');
-    if (sec === 'rise' && raceTime - riseSaid > 60 && lamboLines < 4) { riseSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.rise), 2600); }
-    if (sec === 'b' && raceTime - hookSaid > 60 && lamboLines < 4) { hookSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.hook), 2400); }
+    if (sec === 'rise' && raceTime - riseSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { riseSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.rise), 2600); }
+    if (sec === 'b' && raceTime - hookSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { hookSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.hook), 2400); }
   });
   function jukeStart() { if (!juke.on || phase !== 'menu' || music.muted || demo) return; juke.started = true; musicPlay(); updateJuke(); }
   function jukeToggle() {
@@ -271,8 +273,13 @@
   // flavour messages are throttled while driving: never over a message that is still showing, and at least
   // 12 s apart. sayMust() is for things the player needs to know (laps, Kripo, Razzia, Wette, Telefon).
   let quiet = 0;
+  // PÄNZ-MODUS: for children at the keyboard – Kölsch becomes Kamelle, drinking lines are left out
+  let kids = false; try { kids = localStorage.getItem('stuntskoelle.kids') === '1'; } catch (e) { /* ignore */ }
+  const DRINK = /\bKölsch\b(?!e)|Kölsch-|Bier|Schabau|Promille|nüchtern|besoffe|jedrunke|drinke?\b|Theke|Köbes|Kneipe|Brauhaus|Halve Hahn|zapf/i;
+  const kidsText = (t) => t.replace(/\b(e|ein|dat|ding|em|op e)\s+Kölsch\b(?!e)/gi, '$1 Limo').replace(/\bKölsch\b(?![e-])/g, 'Kamelle').replace(/Kölsch-/g, 'Kamelle-').replace(/Bier/g, 'Limo');
   function sayMust(who, text, ms) { return say(who, text, ms, true); }
   function say(who, text, ms, must) {
+    if (kids && text && DRINK.test(text)) { if (!must && phase === 'race') return false; text = kidsText(text); }
     if (phase === 'race' && !must && (msgTimer > 0 || quiet > 0)) return false;
     if (phase === 'race') quiet = isMobile ? 18 : 12; // on a phone the box covers the road: fewer lines
     if (phase === 'race' || phase === 'countdown' || phase === 'intro' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
@@ -293,7 +300,7 @@
   function sameRoad(a, b) { return (a.shortcut == null ? -1 : a.shortcut) === (b.shortcut == null ? -1 : b.shortcut); }
   // Real side streets: what kind of branch it is, and how tight its corners are (for the AI's braking)
   const ROUTE_KIND = { cut: 'ABKÜRZUNG', parallel: 'PARALLELSTROSS', bypass: 'UMJEHUNG' };
-  const ROUTE_PERK = { koelsch: 'KÖLSCH', market: 'MARKT', parked: 'PARKER', shakeKripo: 'KRIPO-FREI', tram: 'KVB-GLEISE', brauhaus: 'BRAUHAUS', kiosk: 'BÜDCHEN' };
+  const ROUTE_PERK = { koelsch: 'KÖLSCH', market: 'MARKT', parked: 'FALSCHPARKER', shakeKripo: 'KRIPO-FREI', tram: 'KVB-GLEISE', brauhaus: 'BRAUHAUS', kiosk: 'BÜDCHEN' };
   function routeLabel(q) { return `${q.street.toUpperCase()} · ${q.kind === 'alternate' ? 'PANORAMA' : ROUTE_KIND[q.type] || 'ABKÜRZUNG'}${q.surface === 'cobble' ? ' · KOPPSTEIN' : ''}`; }
   function routePerks(q) { return (q.perks || []).map((k) => ROUTE_PERK[k]).filter(Boolean).join(' · '); }
   function routeMaxCurv(q) { if (q._maxCurv == null) { let m = 0.001; for (const sm of q.samples) m = Math.max(m, Math.abs(sm.curv || 0)); q._maxCurv = m; } return q._maxCurv; }
@@ -369,6 +376,8 @@
   function getVeedel() { try { const ids = JSON.parse(localStorage.getItem('stuntskoelle.veedel') || '[]'); return Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : []; } catch (e) { return []; } }
   // the player turns into a side street: the Kripo follows when it is close behind, otherwise it loses you in the Veedel
   function enterRoute(q) {
+    // the first time per race in a real side street: Dä Lange tells what that street is (its researched note)
+    if (q.note && !notesTold.has(q.id) && !kripo) { notesTold.add(q.id); quiet = 0; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, `${q.street || q.name}: ${q.note}`, 5500); }
     if (!kripo) return;
     const L = track.length; let behind = player.s - kripo.s; if (behind > L / 2) behind -= L; if (behind < -L / 2) behind += L;
     if ((q.perks || []).includes('shakeKripo') || behind > 45 || behind < -10) {
@@ -388,7 +397,7 @@
     };
   }
   function respawn(r) { r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = ((r.safeS - 18) % track.length + track.length) % track.length; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; }
-  let crashLog = [], crashAt = [], helpSaid = -99; // two crashes in half a minute: Dä Lange gives a real tip
+  let crashLog = [], crashAt = [], helpSaid = -99; const notesTold = new Set(); // two crashes in half a minute: Dä Lange gives a real tip
   function crash(r, kind) {
     if (r === player && auftrag && auftrag.stage === 'carry') failAuftrag('lost');
     if (r.crashed > 0) return;
@@ -398,7 +407,7 @@
     if (!r.isAI) {
       crashSound(); shake = 1;
       const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : kind === 'roof' ? tuenn.roof : tuenn.crash;
-      if (r.damage >= 1) { say(tuenn, pick(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
+      if (r.damage >= 1) { sayMust(tuenn, 'TOTALSCHADEN! ' + pick(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
       else say(tuenn, pick(quotes), 3000);
       if (Math.random() < 0.6) setTimeout(() => { if (phase === 'race') { const rival = pick(racers.filter((x) => x.isAI)); if (rival && rival.driver.lines.taunt) say(rival.driver, pick(rival.driver.lines.taunt), 2400); } }, 3200);
     }
@@ -436,7 +445,7 @@
       const need = f.curv * r.v * Math.abs(r.v);
       const centrifugal = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
       r.slide = centrifugal;
-      const steerV = (ctl.steer + (r === player && promille > 0 ? Math.sin(raceTime * 4.5) * (isMobile ? 0.2 : 0.45) : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
+      const steerV = (ctl.steer + (r === player && promille > 0 ? 0 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v));
       r.lat += (steerV + centrifugal) * dt;
       if (Math.abs(r.lat) > roadWidth) {
         if (r.isAI) { r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); r.v *= 0.6; }
@@ -445,12 +454,12 @@
       if (onRoute) { // market stall and crate stacks in a Gasse: a bump that costs speed, and a word from the stall
         const d = (r.s - onRoute.startS) * onRoute.length / (onRoute.endS - onRoute.startS);
         for (const o of routeObstacles(onRoute)) if (Math.abs(d - o.d) < 1.8 && Math.abs(r.lat - o.lat) < o.r + 0.9 && !(r.bumpT > 0)) {
-          r.bumpT = 1.2; r.v *= 0.45; r.lat += (r.lat >= o.lat ? 1 : -1) * 0.8; if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.08); crashSound(); shake = 0.4; say(tuenn, pick(tuenn.routes && tuenn.routes.bump || ['Pass op, dä Maat!']), 2000); }
+          r.bumpT = 1.2; r.v *= 0.45; r.lat += (r.lat >= o.lat ? 1 : -1) * 0.8; if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1) crash(r, 'off'); crashSound(); shake = 0.4; say(tuenn, pick(tuenn.routes && tuenn.routes.bump || ['Pass op, dä Maat!']), 2000); }
         }
         if (r.bumpT > 0) r.bumpT -= dt;
       }
       if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
-      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); } }
+      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
       advanceRacer(r, r.v * dt);
       const f2 = racerFrame(r);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
@@ -473,8 +482,8 @@
       else if (r.y <= ry + 0.12) {
         r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y;
         if (Math.abs(r.lat) > roadWidth) { if (r.isAI) r.lat = clamp(r.lat, -Math.min(ROAD_W, roadWidth), Math.min(ROAD_W, roadWidth)); else { crash(r, 'off'); return; } }
-        if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); } else if (r.vy < -14) r.v *= 0.8;
-        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pick(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); } }
+        if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
+        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pick(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
         r.vy = 0;
       }
       if (r.y - ry > 60) { crash(r, 'off'); return; }
@@ -559,7 +568,7 @@
       if (Math.abs(ds) < 2.5) { a.lat += push * 0.08; b.lat -= push * 0.08; }
       else if (ds > 0) { const vb = b.v; b.v = Math.min(b.v, a.v * 0.95); a.v = Math.max(a.v, vb * 0.9); }
       else { const va = a.v; a.v = Math.min(a.v, b.v * 0.95); b.v = Math.max(b.v, va * 0.9); }
-      for (const r of [a, b]) if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.01); }
+      for (const r of [a, b]) if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.01); if (r.damage >= 1) crash(r, 'off'); } // a full damage bar is a Totalschaden, never a silent 100 %
       if (!a.isAI || !b.isAI) beep(90, 0.08, 'sawtooth', 0.08);
     }
   }
@@ -670,10 +679,22 @@
   function hudQuiet() {
     hudQuietT = 0.5; // desktop too: ZEIT, RUNDE, POS always; the rest only while it has something to say
     if (!hudRows) hudRows = Array.from(document.querySelectorAll('.hudStats > div')).map((d) => ({ d, b: d.querySelector('b') }));
-    for (const r of hudRows) { const t = r.b.textContent.trim(); r.d.classList.toggle('quiet', t === '–' || t === '' || /^--/.test(t) || r.b.id === 'hudTel' && t === telLabel() && !kripo || r.b.id === 'hudBeste' && isMobile); }
+    for (const r of hudRows) { const t = r.b.textContent.trim(); r.d.classList.toggle('quiet', t === '–' || t === '' || /^--/.test(t) || r.b.id === 'hudTel' && t === telLabel() && !kripo || r.b.id === 'hudBeste' && isMobile || mission && /^hud(Runde|Pos|Beste)$/.test(r.b.id)); } // a Botengang has no laps or places
+  }
+  // Zülpicher 11.11.: a clock from 11:10:45; at 11:11:00 the Session opens
+  let elfDone = false;
+  function elfUhrElf() {
+    const sec = 11 * 3600 + 10 * 60 + 45 + (phase === 'countdown' ? 4.2 - countdown : 4.2 + raceTime), hh = Math.floor(sec / 3600), mm = Math.floor(sec / 60) % 60, ss = Math.floor(sec) % 60;
+    $('#hudTrack').textContent = `🕚 ${hh}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')} · ` + trackDef.name.toUpperCase();
+    if (!elfDone && phase === 'race' && sec >= 11 * 3600 + 11 * 60) {
+      elfDone = true; tusch(); setTimeout(tusch, 900); if (confetti && confetti.userData.burst) confetti.userData.burst(); bumpStat('elfUhrElf');
+      sayMust({ name: 'Dä Lange', emoji: '🎉' }, 'Elf Uhr elf! Kölle – Alaaf! Kölle – Alaaf! Kölle – Alaaf! De Session es op!', 5000);
+      document.body.classList.add('alaaf'); setTimeout(() => document.body.classList.remove('alaaf'), 2400);
+    }
   }
   function updateHUD() {
     if ((hudQuietT -= 0.016) <= 0) hudQuiet();
+    if (theme.elfUhrElf && careerChapter == null && !missionMode && (phase === 'race' || phase === 'countdown')) elfUhrElf();
     const activeRoute = routeFor(player);
     const here = track.samples[Math.floor(((player.s % track.length) + track.length) % track.length / track.ds) % track.samples.length]; // no 'einordnen' while upside down in a loop
     const aheadFork = !activeRoute && !(here && here.kind === 'loop') && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < 100);
@@ -712,7 +733,7 @@
   function activeTrackDef() { return allTracks()[sel.track] || TRACKS[0]; }
   function buildScene(def) {
     trackDef = def || activeTrackDef();
-    theme = trackDef.theme;
+    theme = trackDef.theme; theme.kids = kids; // the scenery builds its Kamelle versions from this
     track = TB.buildTrack(trackDef);
     track.shortcuts = window.Shortcuts.buildRoutes(track);
     track.routeGroups = routeGroups(track.shortcuts);
@@ -792,9 +813,14 @@
     const ov = $('#loading'); ov.hidden = false; $('#loadingText').textContent = pick(tuenn.loading || ['Dä Lange kuckt dich an…']); $('#menu').hidden = true; $('#results').hidden = true;
     requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { try { startRaceNow(def); if (after) after(); } finally { ov.hidden = true; } }, 20)));
   }
-  let quickAgain = false;
+  let quickAgain = false, introLinePending = false;
   // the first three races: a big card with the controls during the countdown (after that it is in the pause panel)
   function showControlsCard() {
+    if (careerChapter != null && tuenn.career[careerChapter] && !demo) { // career: a briefing card with the goal, readable before the start
+      const c = tuenn.career[careerChapter]; $('#controlsCard').querySelector('b').textContent = `KAPITEL ${careerChapter + 1}: ${c.title}`;
+      $('#controlsText').innerHTML = `ZIEL: ${c.type === 'mission' ? 'ABHOLEN UN ABLIEFERN' : goalText(c.goal)}<br><small>${c.intro}</small>`; $('#controlsCard').hidden = false; return;
+    }
+    $('#controlsCard').querySelector('b').textContent = 'SU FÄHRS DE';
     let n = 0; try { n = parseInt(localStorage.getItem('stuntskoelle.controlsSeen') || '0') || 0; localStorage.setItem('stuntskoelle.controlsSeen', String(n + 1)); } catch (e) { /* ignore */ }
     if (n >= 3 || demo || window.STUNTS_SIMSTEPS) return;
     $('#controlsText').innerHTML = isMobile ? '▲ JAS · ■ BREMS<br>◀ ▶ LENKE · N TURBO<br>☰ PAUS' : '↑ JAS · ↓ BREMS · ← → LENKE<br>SHIFT TURBO · R ZERÖCK OP DE STROSS<br>P PAUS · ESC MENÜ';
@@ -804,7 +830,7 @@
   document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
   function startRaceNow(def) {
     buildScene(def);
-    hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; crashLog = []; crashAt = []; helpSaid = -99;
+    raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear();
     raceTime = 0; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
@@ -812,8 +838,8 @@
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
     const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
     const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
-    if (theme.intro) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(theme.intro), 4200); }, 7000);
-    else if (sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
+    introLinePending = !!theme.intro; // said when the race starts, however slow the flyover
+    if (!theme.intro && sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
     sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = telLabel();
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
@@ -865,14 +891,15 @@
     if (record) setBest(player.finishTime);
     saveGhost();
     { const entry = { name: savedInitials() || PLAYABLE[sel.driver].name + ' (DU)', car: D.CARS[sel.car].name, time: player.finishTime, date: Date.now() }; addRecord(trackDef, entry); offerNameEntry(trackDef, entry); }
-    fanfare(won); shotWanted = true;
+    if (theme.confetti && won) tusch(); else fanfare(won); shotWanted = true;
     if (auftrag) endAuftrag();
     if (kripo) endKripo('finish');
     if (wette && !wette.done) { wette.done = true; wette.won = order.indexOf(wette.rival.r) > order.indexOf(player); if (wette.won) addDeckel(wette.n * 2); else deckel = Math.max(0, deckel - wette.n); }
     const total = deckelTotal(deckel); const rank = deckelRank(total);
     try { const hs = parseInt(localStorage.getItem('stuntskoelle.hiscore') || '0') || 0; if (deckel > hs) localStorage.setItem('stuntskoelle.hiscore', String(deckel)); } catch (e) { /* ignore */ }
     const headline = expressHeadline(place, won, record, order); lastHeadline = headline; lastPlace = place;
-    if (knoellchen) bumpStat('knoellchen', knoellchen); if (koelsch) bumpStat('koelsch', koelsch); if (record) bumpStat('records'); if (won && theme.night) bumpStat('nightWins'); if (trackDef.daily) bumpStat('daily'); newOrden = checkOrden();
+    if (won && theme.confetti) bumpStat('sessionWins'); { const anna = racers.find((r) => r.isAI && r.driver && r.driver.id === 'anna'); if (anna && order.indexOf(player) < order.indexOf(anna)) bumpStat('annaBeaten'); }
+    if (knoellchen) bumpStat('knoellchen', knoellchen); else if (!player2) bumpStat('cleanRaces'); if (koelsch) bumpStat('koelsch', koelsch); if (record) bumpStat('records'); if (won && theme.night) bumpStat('nightWins'); if (trackDef.daily) bumpStat('daily'); newOrden = checkOrden();
     if (cup.on) { order.forEach((r, i) => { cup.pts[r.name] = (cup.pts[r.name] || 0) + (CUP_PTS[i] || 0); }); cup.i++; try { localStorage.setItem('stuntskoelle.cup', JSON.stringify(cup)); } catch (e) { /* ignore */ } }
     setTimeout(() => {
       if (phase === 'menu') return; // the attract mode went back to the menu meanwhile
@@ -881,7 +908,7 @@
       const tb = $('#resTable'); tb.innerHTML = '';
       order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
       $('#resBest').textContent = fmtTime(player.bestLap);
-      $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 40} DM, Klüngel Tom regelt dat) · KÖLSCH UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} Kölsch) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: op Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
+      $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 40} DM, Klüngel Tom regelt dat) · ${kids ? 'KAMELLE' : 'KÖLSCH'} UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} ${kids ? 'Kamelle' : 'Kölsch'}) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: op Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
       $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, place, order);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes(deckel)}</b> (${deckel} Striche) · GESAMT: <b>${total}</b> – <b>${rank}</b>` + (wette ? ` · WETTE: <b>${wette.won ? 'JEWONNE' : 'VERLORE'}</b> (${wette.n} Kölsch ${wette.won ? 'für dich' : 'für dä Lange'})` : '') + (kripoSeen ? ` · KRIPO: <b>${kripoCaught ? 'HÄT DICH JEKRIEGT' : 'ABJEHÄNGT'}</b>` : '');
@@ -889,7 +916,7 @@
       renderCup(order);
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
       if (!wette) $('#resTuenn').textContent = newOrden.length ? pick(tuenn.ordenLine).replace('{name}', newOrden[0].name) : record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
-      if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true); }
+      if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.stunts ? raceStunts >= g.stunts : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true); }
       const rd = order[won ? 1 : 0].driver;
       $('#resRival').textContent = `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“`;
       $('#results').hidden = false; document.body.classList.add('resultsOpen');
@@ -959,7 +986,7 @@
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
+      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pick(theme.intro), 4200); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -979,7 +1006,8 @@
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
         if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
         if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 60 + Math.random() * 35; const roll = Math.random(); const radio = eraLines(tuenn.radio || []);
-          if (roll < 0.38) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pickNew(eraLines(tuenn.express)).replace('DÄ SCHNELLE: ', ''), 3500);
+          if (theme.confetti && tuenn.jeck && roll < 0.5) say(tuenn, pickNew(tuenn.jeck), 3400);
+          else if (roll < 0.38) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pickNew(eraLines(tuenn.express)).replace('DÄ SCHNELLE: ', ''), 3500);
           else if (roll < 0.72 && radio.length) say({ name: 'Radio Kölle', emoji: '📻' }, pickNew(radio).replace('RADIO KÖLLE: ', ''), 3800);
           else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pickNew(tuenn.grundgesetz), 3500); }
         // Dä Lange's place stories: one is told whenever the box is free and the place is just ahead or just
@@ -1224,7 +1252,7 @@
       box.appendChild(div);
     });
     { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
-      grid.innerHTML = '<b class="ordenHead">ORDEN OP DÄ DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${o.name}</b><small>${o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
+      grid.innerHTML = '<b class="ordenHead">ORDEN OP DÄ DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${kids && o.id === 'stammgast' ? 'KAMELLE-KÖNIG' : o.name}</b><small>${kids ? kidsText(o.desc) : o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
       grid.querySelectorAll('.orden canvas').forEach((c, i) => medalIcon(c, tuenn.orden[i].color, 3)); box.appendChild(grid); }
     { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
       v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an dä Plätze vorbei – dä Lange verzällt jet.</p>');
@@ -1342,14 +1370,15 @@
   }
 
   // ---------------- Botengang: fetch something on foot, deliver it by car, the Kripo behind you ----------------
-  function goalText(g) { return g.place ? `TOP ${g.place}` : g.win ? 'SIEG' : g.koelsch ? `${g.koelsch} KÖLSCH` : g.auftrag ? `${g.auftrag} AUFTRAG` : 'ANKOMMEN'; }
+  function goalText(g) { return g.place ? `TOP ${g.place}` : g.win ? 'SIEG' : g.stunts ? `${g.stunts} STUNTS` : g.koelsch ? `${g.koelsch} KÖLSCH` : g.auftrag ? `${g.auftrag} AUFTRAG` : 'ANKOMMEN'; }
   function startMission(def) {
     missionMode = true; missionDef = def; clearMission();
     startRace(Object.assign({}, def, { laps: 99 }), () => {
     const B = tuenn.botengang; const k = Math.floor(Math.random() * B.what.length);
     const a = roadFrameAhead(player.s, 230 + Math.random() * 150, 45);
-    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: B.what[k], short: B.whatShort[k], pickName: pick(B.where), dropName: pick(B.where), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
-    if (mission.dropName === mission.pickName) mission.dropName = B.where[(B.where.indexOf(mission.pickName) + 1) % B.where.length];
+    const WH = (trackDef.mission && trackDef.mission.where) || B.where, WT = trackDef.mission && trackDef.mission.what; // a track can bring its own places (Rosenmontag: Wagenbauhalle, Kostümverleih …)
+    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: WT ? WT[k % WT.length] : B.what[k], short: B.whatShort[k], pickName: pick(WH), dropName: pick(WH), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
+    if (mission.dropName === mission.pickName) mission.dropName = WH[(WH.indexOf(mission.pickName) + 1) % WH.length];
     const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(a.f.T.x, a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring;
     setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
     });
@@ -1571,7 +1600,7 @@
     line('AUS DEM POLIZEIBERICHT', true); line(`Platz ${place} von ${order.length}`); line(`Zeit ${fmtTime(player.finishTime)}`); line(`Fahrer: ${PLAYABLE[sel.driver].name}`); line(`Karre: ${D.CARS[sel.car].name}`); sy += 6;
     line(`Knöllchen: ${knoellchen}`); line(`Kölsch: ${koelsch}`); line(`Deckel: ${deckel} Striche`); if (auftragDone || auftragFail) line(`Klüngel: ${auftragDone} erledigt`); if (kripoSeen) line(`Kripo: ${kripoCaught ? 'erwischt' : 'abjehängt'}`); sy += 6;
     line('WETTER', true); line(theme.night ? 'Nacht, Neon, 11°' : theme.wet ? 'Regen, nasse Ringe' : theme.dawn ? 'Morgengrauen, 8°' : theme.dusk || theme.sunset ? 'Blaue Stunde, 17°' : 'Sonne, Kölsch kalt');
-    x.fillStyle = '#c1121f'; x.font = 'bold 13px "Courier New", monospace'; x.fillText('DÄ LANGE: „' + pick(['Ich hab nix jesehe.', 'Kein Kommentar. Kölsch?', 'Dat wor Klüngel, kein Verbreche.', 'Man kennt sich.', 'Ich wor an der Tür. Die janze Zeit.']) + '“', 20, py + ph + 34);
+    { x.fillStyle = '#c1121f'; const q = 'DÄ LANGE: „' + pick(['Ich hann nix jesinn.', 'Kein Kommentar. Kölsch?', 'Dat wor Klüngel, kein Verbreche.', 'Man kennt sich.', 'Ich wor an dr Dür. De janze Zick.']) + '“'; let fs = 13; do { x.font = `bold ${fs}px "Courier New", monospace`; fs--; } while (x.measureText(q).width > pw && fs > 8); x.fillText(q, 20, py + ph + 34); } // stays under the photo, clear of the WETTER column
     x.fillStyle = '#111'; x.font = '9px "Courier New", monospace'; x.textAlign = 'center'; x.fillText('DÄ SCHNELLE · Klüngel-Presse Köln-Ehrenfeld · Alle Angaben ohne Jewähr, alle Namen un Blätter erfunden', W2 / 2, H2 - 14); x.textAlign = 'left';
   }
   function shareFrontPage() {
@@ -1609,6 +1638,13 @@
   function deckelRank(total) { let r = tuenn.ranks[0][1]; for (const [min, name] of tuenn.ranks) if (total >= min) r = name; return r; }
   function koelschMesh() {
     const g = new THREE.Group();
+    if (kids) { // a red-white bag of Kamelle instead of a glass
+      const bag = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.7, 0.4), new THREE.MeshBasicMaterial({ color: 0xc1121f })); bag.position.y = 0.45; g.add(bag);
+      const band = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.14, 0.42), new THREE.MeshBasicMaterial({ color: 0xffffff })); band.position.y = 0.55; g.add(band);
+      const knot = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.25, 6), new THREE.MeshBasicMaterial({ color: 0xffd400 })); knot.position.y = 0.92; g.add(knot);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.05, 6, 24), new THREE.MeshBasicMaterial({ color: 0xffe080, transparent: true, opacity: 0.7 })); halo.rotation.x = Math.PI / 2; halo.position.y = 0.05; g.add(halo);
+      return g;
+    }
     const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.26, 1.0, 12), new THREE.MeshBasicMaterial({ color: 0xffc300, transparent: true, opacity: 0.9 })); glass.position.y = 0.5; g.add(glass);
     const foam = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff })); foam.position.y = 1.08; g.add(foam);
     const mat = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.04, 16), new THREE.MeshBasicMaterial({ color: 0xf4e8c8 })); mat.position.y = -0.02; g.add(mat);
@@ -1636,7 +1672,7 @@
   function updatePickups(dt) {
     pickT += dt;
     if (player.lap !== lastLapSeen) { lastLapSeen = player.lap; koelschLap = 0; for (const p of pickups) { p.taken = false; p.mesh.visible = true; } }
-    if (promille > 0) { promille -= dt; if (promille <= 0) say(tuenn, pick(tuenn.promilleEnd), 2200); }
+    if (promille > 0) { promille -= dt; }
     const L = track.length;
     for (const p of pickups) {
       if (p.taken) continue;
@@ -1646,7 +1682,7 @@
       else { ds = player.s - p.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; onIt = !routeFor(player); }
       if (onIt && Math.abs(ds) < 3.6 && Math.abs(player.lat - p.lat) < 2.0 && !player.air && player.crashed <= 0) {
         p.taken = true; p.mesh.visible = false; koelsch++; koelschLap++; addDeckel(1); player.turbo = Math.min(1, player.turbo + 0.3);
-        if (koelschLap >= 5 && promille <= 0 && !promilleDone) { promilleDone = true; promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); }
+        if (koelschLap >= 5 && promille <= 0 && !promilleDone) { promilleDone = true; promille = 7; addDeckel(3); player.turbo = 1; sayMust(tuenn, pick(tuenn.promille), 3200); }
         beep(1180, 0.07, 'square', 0.1); setTimeout(() => beep(1580, 0.1, 'square', 0.1), 70);
         if (msgTimer <= 0.4) say(D.DRIVERS.find((d) => d.id === 'koebes'), pick(tuenn.koelschPick), 1600);
       }
@@ -1949,6 +1985,8 @@
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice; $('#voicePickBtn').onclick = nextVoice;
+    const applyKids = () => { document.body.classList.toggle('kids', kids); labelBtn($('#kidsBtn'), kids ? 'PÄNZ-MODUS: AN' : 'PÄNZ-MODUS: AUS'); const cl = document.querySelector('.coinLine span'); if (cl) cl.textContent = kids ? 'INSERT COIN · 1 KAMELL = 1 CREDIT' : 'INSERT COIN · 1 KÖLSCH = 1 CREDIT'; };
+    applyKids(); $('#kidsBtn').onclick = () => { kids = !kids; try { localStorage.setItem('stuntskoelle.kids', kids ? '1' : '0'); } catch (e) { /* ignore */ } applyKids(); };
     // JROSSE SCHRIFT: everything you read gets bigger (menu, messages, HUD, signs, results), for older eyes
     const applyFont = (on) => { document.body.classList.toggle('bigtext', on); labelBtn($('#fontBtn'), on ? 'SCHRIFT: JROSS' : 'SCHRIFT: NORMAL'); };
     { let on = false; try { on = localStorage.getItem('stuntskoelle.bigtext') === '1'; } catch (e) { /* ignore */ } applyFont(on);
