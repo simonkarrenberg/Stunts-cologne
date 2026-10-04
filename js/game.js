@@ -15,6 +15,7 @@
   const ERA_LATER = /Oper|LamboGina|Palme|Miami|KVK|Linie 16|Bahn streik|Hochwasser|Tauben/;
   const eraLines = (arr) => { if (!theme || !theme.era) return arr; const ok = arr.filter((t) => !ERA_LATER.test(t)); return ok.length ? ok : arr; };
   // pick without repeating the last few lines of the same list (heist calls, Kripo restarts)
+  // the memory is cleared at every start, so within one race a list gives each of its lines once before any comes back
   const recent = new Map(); const pickNew = (arr) => { const seen = recent.get(arr) || []; const fresh = arr.filter((x) => !seen.includes(x)); const t = pick(fresh.length ? fresh : arr); seen.push(t); while (seen.length > Math.max(0, arr.length - 1)) seen.shift(); recent.set(arr, seen); return t; };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const fmtTime = (t) => { if (t == null || !isFinite(t)) return '--:--.--'; const m = Math.floor(t / 60), s = t - m * 60; return `${m}:${s.toFixed(2).padStart(5, '0')}`; };
@@ -149,11 +150,18 @@
   if (window.LamboBeat) window.LamboBeat.onSection((sec) => {
     bassRun = sec === 'drop' && phase === 'race';
     if (phase !== 'race' || !tuenn.lambo) return;
-    if (sec === 'drop') { if (raceTime - dropSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { dropSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.drop), 3200); } document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
+    if (sec === 'drop') { if (raceTime - dropSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { dropSaid = raceTime; lamboLines++; lamboSay(tuenn.lambo.drop, 3200); } document.body.classList.add('bassrun'); bumpStat('bassRuns'); }
     else document.body.classList.remove('bassrun');
-    if (sec === 'rise' && raceTime - riseSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { riseSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.rise), 2600); }
-    if (sec === 'b' && raceTime - hookSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { hookSaid = raceTime; lamboLines++; say(tuenn, pickNew(tuenn.lambo.hook), 2400); }
+    if (sec === 'rise' && raceTime - riseSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { riseSaid = raceTime; lamboLines++; lamboSay(tuenn.lambo.rise, 2600); }
+    if (sec === 'b' && raceTime - hookSaid > 60 && lamboLines < (theme && theme.confetti ? 1 : 4)) { hookSaid = raceTime; lamboLines++; lamboSay(tuenn.lambo.hook, 2400); }
   });
+  // the first song line a player ever hears explains dä weiße Keil (the dream car the career unlocks); after that the usual lines
+  function lamboSay(pool, ms) {
+    let first = false; try { first = !!tuenn.lambo.keil && localStorage.getItem('stuntskoelle.keil') !== '1'; } catch (e) { /* ignore */ }
+    if (!first) return say(tuenn, pickNew(pool), ms);
+    const ok = say(tuenn, tuenn.lambo.keil.t, 5600, false, { hd: tuenn.lambo.keil.hd }); if (ok) try { localStorage.setItem('stuntskoelle.keil', '1'); } catch (e) { /* ignore */ }
+    return ok;
+  }
   function jukeStart() { if (!juke.on || phase !== 'menu' || music.muted || demo) return; juke.started = true; musicPlay(); updateJuke(); }
   function jukeToggle() {
     juke.on = !juke.on; try { localStorage.setItem('stuntskoelle.jukebox', juke.on ? 'on' : 'off'); } catch (e) { /* ignore */ }
@@ -234,7 +242,8 @@
     return t.replace(/,,/g, ',');
   }
   // menu buttons carry a pixel icon (canvas) in front of their text; the icon survives label changes
-  function labelBtn(btn, text) { if (!btn) return; const name = btn.dataset.icon; btn.textContent = ''; if (name && SP.icon) { const c = document.createElement('canvas'); c.className = 'pxi'; SP.icon(name, c, 1); btn.appendChild(c); } btn.appendChild(document.createTextNode(text)); }
+  // gloss: the small Hochdeutsch word under a Kölsch label (SCHRIFT: JROSS / Schrift: groß), left out where both read the same
+  function labelBtn(btn, text, gloss) { if (!btn) return; const name = btn.dataset.icon; btn.textContent = ''; btn.dataset.label = text; btn.dataset.gloss = gloss || ''; if (name && SP.icon) { const c = document.createElement('canvas'); c.className = 'pxi'; SP.icon(name, c, 1); btn.appendChild(c); } btn.appendChild(document.createTextNode(text)); if (gloss) { const g = document.createElement('small'); g.className = 'gl'; g.textContent = gloss; btn.appendChild(g); } }
   function updateVoiceUI() {
     labelBtn($('#voiceBtn'), ('speechSynthesis' in window) ? (voice.on ? 'STIMME: AN' : 'STIMME: AUS') : 'STIMME: –');
     const b = $('#voicePickBtn'); if (!b) return; const many = voice.list && voice.list.length > 1; b.hidden = !many;
@@ -275,22 +284,64 @@
   // ---------------- messages ----------------
   // flavour messages are throttled while driving: never over a message that is still showing, and at least
   // 12 s apart. sayMust() is for things the player needs to know (laps, Kripo, Razzia, Wette, Telefon).
-  let quiet = 0;
+  // GESCHWÄTZ (chatter, menu): VILL = every line with today's throttle; NORMAL (desktop default) = flavour more seldom;
+  // WENIJ (touch default) = only the lines the player needs and dä Lange's stories, never two lines within 10 s (a needed
+  // line waits up to 8 s for its turn). In every setting stories beat flavour, and no line is said twice in one race.
+  // KÖLSCH-HÜLP: a small grey Hochdeutsch line under the message, from the line's hd field (HD looks it up by text)
+  let quiet = 0, chat = 1, hdOn = false, msgAge = 0, chatClock = 0, lastLineT = -99, mustQ = [];
+  const CHAT = ['VILL', 'NORMAL', 'WENIJ'], CHAT_HD = ['Gerede: viel', 'Gerede: normal', 'Gerede: wenig'], CHAT_QUIET = [[12, 18], [18, 24], [10, 10]];
+  const saidRace = new Set(), msgLog = []; // every line shown in this race (the harness reads it)
+  const VERZ = { name: 'Dä Lange verzällt', emoji: '🎩' };
+  try { hdOn = localStorage.getItem('stuntskoelle.hd') === '1'; } catch (e) { /* ignore */ }
+  const HD = new Map(); // Kölsch text → Hochdeutsch help: stories, side-street notes, place lines, pause, song lines
+  { const add = (t, hd) => { if (typeof t === 'string' && typeof hd === 'string' && hd) HD.set(t, hd); };
+    for (const t of D.TRACKS) { for (const p of t.props || []) add(p.story, p.hd); for (const r of (t.shortcuts || []).concat(t.branches || [])) add(r.note, r.hd); }
+    const walk = (o, depth) => { if (!o || typeof o !== 'object' || depth > 4) return; if (typeof o.t === 'string') add(o.t, o.hd); for (const k of Object.keys(o)) walk(o[k], depth + 1); }; walk(D.TUENN, 0); }
+  const lineT = (x) => (x && typeof x === 'object' ? x.t : x); // a pool entry is a string or { t, hd }
   // PÄNZ-MODUS: for children at the keyboard – Kölsch becomes Kamelle, drinking lines are left out
   let kids = false; try { kids = localStorage.getItem('stuntskoelle.kids') === '1'; } catch (e) { /* ignore */ }
   const DRINK = /\bKölsch\b(?!e)|Kölsch-|Bier|Schabau|Promille|nüchtern|besoffe|jedrunke|drinke?\b|Theke|Köbes|Kneipe|Brauhaus|Halve Hahn|zapf/i;
   const kidsText = (t) => t.replace(/\b(e|ein|dat|ding|em|op e)\s+Kölsch\b(?!e)/gi, '$1 Limo').replace(/\bKölsch\b(?![e-])/g, 'Kamelle').replace(/Kölsch-/g, 'Kamelle-').replace(/Bier/g, 'Limo');
-  function sayMust(who, text, ms) { return say(who, text, ms, true); }
-  function say(who, text, ms, must) {
-    if (kids && text && DRINK.test(text)) { if (!must && phase === 'race') return false; text = kidsText(text); }
-    if (phase === 'race' && !must && (msgTimer > 0 || quiet > 0)) return false;
-    if (phase === 'race') quiet = isMobile ? 18 : 12; // on a phone the box covers the road: fewer lines
+  function sayMust(who, text, ms, ex) { return say(who, text, ms, true, ex); } // ex.small: a greeting or start line that WENIJ lets go first when something needed waits
+  // ex: { story: a place story or side-street note (beats flavour), hd: its Hochdeutsch line, tag: the place's name for the phone's one-line tag }
+  function say(who, text, ms, must, ex) {
+    ex = ex || {}; text = lineT(text); if (!text) return false; let hd = ex.hd != null ? ex.hd : HD.get(text) || '';
+    if (kids && DRINK.test(text)) { if (!must && phase === 'race') return false; text = kidsText(text); hd = kidsText(hd); }
+    const race = phase === 'race', start = race || phase === 'countdown' || phase === 'intro';
+    if (race && saidRace.has(text) && (!must || chat === 2)) return false; // no line twice in one race
+    if (race && !must && !ex.story && (chat === 2 || storyNear())) return false; // WENIJ: no flavour; a place just ahead keeps the box free for its story
+    if (race && !must && (ex.story ? msgTimer > 0 && !(msgPrio === 0 && msgAge > 1.2) : msgTimer > 0 || quiet > 0)) return false; // a story pushes a flavour line aside once it has been read a moment
+    if (start && chat === 2 && chatClock - lastLineT < 10) { if (must) { mustQ.push({ who, text, ms, ex, at: chatClock }); if (mustQ.length > 3) { const i = mustQ.findIndex((q) => q.ex.small); mustQ.splice(Math.max(0, i), 1); } } return false; }
+    if (race) quiet = CHAT_QUIET[chat][isMobile ? 1 : 0]; // on a phone the box covers the road: fewer lines
     if (phase === 'race' || phase === 'countdown' || phase === 'intro' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
+    const tag = ex.tag && isMobile && chat > 0 ? ex.tag : ''; // phone: a story is a one-line place tag, a tap opens the whole text
     $('#msgWho').textContent = `${who.emoji || '🏁'} ${who.name}`;
-    $('#msgText').textContent = text;
-    $('#msg').classList.remove('open'); $('#msg').classList.add('show');
-    msgTimer = (ms || 3500) / 1000; msgPrio = must ? 2 : 0;
+    $('#msgText').textContent = text; $('#msgTag').textContent = tag ? `📍 ${tag} – tipp för mieh` : '';
+    const hdEl = $('#msgHd'); hdEl.textContent = hdOn ? hd : ''; hdEl.hidden = !(hdOn && hd);
+    $('#msg').classList.remove('open'); $('#msg').classList.toggle('tagged', !!tag); $('#msg').classList.add('show');
+    msgTimer = (ms || 3500) / 1000; msgPrio = must ? 2 : ex.story ? 1 : 0; msgAge = 0;
+    if (start) { lastLineT = chatClock; saidRace.add(text); msgLog.push({ t: +raceTime.toFixed(2), c: +chatClock.toFixed(2), phase, who: who.name, text, hd: hdOn ? hd : '', must: !!must, story: !!ex.story, tag }); }
     return true;
+  }
+  // WENIJ: a needed line that came within 10 s of the last one is said when its turn comes, if it is not older than 15 s
+  // (a greeting or start line: 8 s). Real news (the Botengang brief, the Wette, the Kripo) goes before small talk, and a
+  // story whose place is right here goes first of all (its window lasts only a few seconds, the waiting line can wait)
+  function chatStep(dt) {
+    chatClock += dt;
+    if (mustQ.length) mustQ = mustQ.filter((q) => chatClock - q.at <= (q.ex.small ? 8 : 15));
+    if (mustQ.length && chatClock - lastLineT >= 10 && !storyReady()) { const i = mustQ.findIndex((q) => !q.ex.small), q = mustQ.splice(Math.max(0, i), 1)[0]; say(q.who, q.text, q.ms, true, q.ex); }
+  }
+  function storyReady() { if (phase !== 'race' || storyCool > 0 || !player || player.air) return false; for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) return calmRoad(); } return false; }
+  function chatReset() { saidRace.clear(); recent.clear(); msgLog.length = 0; mustQ = []; chatClock = 0; lastLineT = -99; msgAge = 0; }
+  // a place story just ahead (or just passed and still untold): flavour lines keep quiet
+  function storyNear() { if (!player || !track) return false; for (const st of stories) { if (st.told) continue; const ds = storyDs(st); if (ds > -70 && ds < 140) return true; } return false; }
+  function storyDs(st) { let ds = st.s - player.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; return ds; } // > 0: the place is ahead
+  // the phone's tag: the place's own name (the first words of its story), else the kind of place
+  const KIND_TAG = { brauhaus: 'BRAUHAUS', buedchen: 'BÜDCHEN', blitzer: 'BLITZER', polizei: 'KRIPO', kirche: 'KIRCH', haltestelle: 'HALTESTELL', park: 'PARK', taxi: 'TAXI', platz: 'PLATZ', tram: 'DE BAHN', tunnel: 'TUNNEL', loop: 'LOOPING', cork: 'KORKENZIEHER', jump: 'SPRUNG' };
+  const PLACE_LINES = new Set(Object.values(D.TUENN.places || {}).flat().map(lineT));
+  function storyTag(text, kind) {
+    if (PLACE_LINES.has(text)) return KIND_TAG[kind] || String(kind || 'KÖLLE').toUpperCase();
+    const m = text.match(/^(.{3,36}?)(?<!\bSt)(?:[.:!?,–]\s|$)/); return (m && !/^(Links|Hee|Do|Op|Ein|Fröher|Am|Sonndag)/.test(m[1]) ? m[1] : String(kind || 'KÖLLE')).toUpperCase().replace(/^(DER|DIE|DAT|DE|DÄ) /, '');
   }
 
   // ---------------- racers ----------------
@@ -382,14 +433,15 @@
   // flavour line aside, never a line the player needs), marked told only once heard, and taken off the box on leaving
   let pendingNote = null, noteShown = null;
   const streetKey = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/^(da|de|der|die|d'r)\s+/, '').replace(/\balte?r?\b|\bahle?\b/g, 'ahl').replace(/rhein/g, 'rhing').replace(/strasse|stross/g, 'str').replace(/gasse/g, 'gass').replace(/\bwa+ch\b/g, 'weg');
-  function noteText(q) { const st = q.street || q.name || ''; return st && !streetKey(q.note).startsWith(streetKey(st)) ? `${st}: ${q.note}` : q.note; } // 'Bechergass: …' needs no 'Bechergasse: ' in front
+  function noteText(q, hd) { const st = q.street || q.name || '', t = hd ? q.noteHd || '' : q.note; return t && st && !streetKey(t).startsWith(streetKey(st)) ? `${st}: ${t}` : t; } // 'Bechergass: …' needs no 'Bechergasse: ' in front
   function tellNote() {
     const q = pendingNote; if (!q || phase !== 'race') return;
     if (!player || player.shortcut !== q.index || notesTold.has(q.id) || kripo) { pendingNote = null; return; } // left the street unheard: next lap
     if (kids && DRINK.test(q.note)) { notesTold.add(q.id); pendingNote = null; return; }
     if (msgTimer > 0 && msgPrio > 0) return; // wait behind a line the player needs
-    msgTimer = 0; quiet = 0;
-    if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, noteText(q), 5500)) { notesTold.add(q.id); pendingNote = null; msgPrio = 1; noteShown = { index: q.index, text: $('#msgText').textContent }; }
+    const was = msgTimer; msgTimer = 0;
+    if (say(VERZ, noteText(q), 5500, false, { story: true, hd: noteText(q, true), tag: (q.street || q.name || '').toUpperCase() })) { notesTold.add(q.id); pendingNote = null; noteShown = { index: q.index, text: $('#msgText').textContent }; }
+    else msgTimer = was;
   }
   function noteTick() {
     if (pendingNote) tellNote();
@@ -404,7 +456,7 @@
       sayMust(...kripoLine(tuenn.kripo.lost || tuenn.kripo.giveup), 2800);
       if (mission) { kripo.lostT = 9; kripo.s = ((kripo.s - 60) % L + L) % L; kripo.safeS = kripo.s; kripo.shortcut = -1; kripo.routePlan = null; kripo.prevRoadVy = 0; }
       else endKripo('lost');
-    } else { kripo.routePlan = q.index; say(tuenn, pick(tuenn.kripo.follows || ['Die Kripo kütt hinger dir her!']), 2000); }
+    } else { kripo.routePlan = q.index; say(tuenn, pickNew(tuenn.kripo.follows || ['Die Kripo kütt hinger dir her!']), 2000); }
   }
   function makeRacer(carDef, mesh, driver, isAI) {
     return {
@@ -443,9 +495,9 @@
     if (!r.isAI) {
       crashSound(); shake = 1;
       const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : kind === 'roof' ? tuenn.roof : tuenn.crash;
-      if (r.damage >= 1) { sayMust(tuenn, 'TOTALSCHADEN! ' + pick(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
-      else say(tuenn, pick(quotes), 3000);
-      if (Math.random() < 0.6) setTimeout(() => { if (phase === 'race') { const rival = pick(racers.filter((x) => x.isAI)); if (rival && rival.driver.lines.taunt) say(rival.driver, pick(rival.driver.lines.taunt), 2400); } }, 3200);
+      if (r.damage >= 1) { sayMust(tuenn, 'TOTALSCHADEN! ' + pickNew(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
+      else say(tuenn, pickNew(quotes), 3000);
+      if (Math.random() < 0.6) setTimeout(() => { if (phase === 'race') { const rival = pick(racers.filter((x) => x.isAI)); if (rival && rival.driver.lines.taunt) say(rival.driver, pickNew(rival.driver.lines.taunt), 2400); } }, 3200);
     }
   }
 
@@ -458,7 +510,7 @@
     const roadY = f.p.y;
     // turbo
     const nitroK = 0.6 + car.nitro * 0.12;
-    if (ctl.turbo && r.turbo > 0.02 && r.v > 5 && !r.air) { r.turboOn = true; r.turbo = Math.max(0, r.turbo - dt * 0.22); if (!r.isAI && !r.turboWasOn) say(tuenn, pick(tuenn.turbo), 1500); }
+    if (ctl.turbo && r.turbo > 0.02 && r.v > 5 && !r.air) { r.turboOn = true; r.turbo = Math.max(0, r.turbo - dt * 0.22); if (!r.isAI && !r.turboWasOn) say(tuenn, pickNew(tuenn.turbo), 1500); }
     else {
       r.turboOn = false;
       if (r.v > 15) {
@@ -490,12 +542,12 @@
       if (onRoute) { // market stall and crate stacks in a Gasse: a bump that costs speed, and a word from the stall
         const d = (r.s - onRoute.startS) * onRoute.length / (onRoute.endS - onRoute.startS);
         for (const o of routeObstacles(onRoute)) if (Math.abs(d - o.d) < 1.8 && Math.abs(r.lat - o.lat) < o.r + 0.9 && !(r.bumpT > 0)) {
-          r.bumpT = 1.2; r.v *= 0.45; r.lat += (r.lat >= o.lat ? 1 : -1) * 0.8; if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1) crash(r, 'off'); crashSound(); shake = 0.4; say(tuenn, pick(tuenn.routes && tuenn.routes.bump || ['Pass op, dä Maat!']), 2000); }
+          r.bumpT = 1.2; r.v *= 0.45; r.lat += (r.lat >= o.lat ? 1 : -1) * 0.8; if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1) crash(r, 'off'); crashSound(); shake = 0.4; say(tuenn, pickNew(tuenn.routes && tuenn.routes.bump || ['Pass op, dä Maat!']), 2000); }
         }
         if (r.bumpT > 0) r.bumpT -= dt;
       }
       if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
-      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
+      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pickNew(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
       advanceRacer(r, r.v * dt);
       const f2 = racerFrame(r);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
@@ -520,7 +572,7 @@
         r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y; endJump(r);
         if (Math.abs(r.lat) > roadWidth + vergeAt(r, f2, r.lat)) { crash(r, 'off'); return; } // a landing on the verge is rough but survivable
         if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
-        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pick(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
+        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pickNew(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
         r.vy = 0;
       }
       if (r.y - ry > 60) { crash(r, 'off'); return; }
@@ -870,8 +922,8 @@
     if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${trackDef.laps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
       const ais = racers.filter((r) => r.isAI && !r.isCop); if (!ais.length) return; const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
-      if (pos < lastPos) { say(byTuenn ? tuenn : other, byTuenn ? pick(tuenn.overtake) : pick(other.lines.overtaken), 2200); addDeckel(1); }
-      else say(byTuenn ? tuenn : other, byTuenn ? pick(tuenn.overtaken) : pick(other.lines.overtake), 2200);
+      if (pos < lastPos) { say(byTuenn ? tuenn : other, byTuenn ? pickNew(tuenn.overtake) : pickNew(other.lines.overtaken), 2200); addDeckel(1); }
+      else say(byTuenn ? tuenn : other, byTuenn ? pickNew(tuenn.overtaken) : pickNew(other.lines.overtake), 2200);
     }
     lastPos = pos;
     const tb = $('#turboBar').children, db = $('#dmgBar').children;
@@ -938,7 +990,7 @@
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
     signals = (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
-    stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, told: false }));
+    stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, hd: p.userData.storyHd || HD.get(p.userData.story) || '', tag: p.userData.storyTag || storyTag(p.userData.story, p.userData.type), told: kids && DRINK.test(p.userData.story) })); // Pänz: a drinking story is never told, so it keeps no flavour line waiting
     telefon = { ready: true, active: 0, used: 0 };
     knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30;
     const idx = TRACKS.indexOf(trackDef);
@@ -963,7 +1015,7 @@
   }
   const telLabel = () => document.body.classList.contains('mobile') || isMobile ? '☎ TIPPEN' : 'K = ANRUFEN';
   function startRace(def, after) { // the scenery build blocks for a moment: show the doorman first, then build
-    audioInit(); if (phase === 'loading') return; phase = 'loading';
+    audioInit(); if (phase === 'loading') return; closeOnboard(); phase = 'loading';
     const ov = $('#loading'); ov.hidden = false; $('#loadingText').textContent = pick(tuenn.loading || ['Dä Lange kuckt dich an…']); $('#menu').hidden = true; $('#results').hidden = true;
     requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => { try { startRaceNow(def); if (after) after(); } finally { ov.hidden = true; } }, 20)));
   }
@@ -974,16 +1026,18 @@
       const c = tuenn.career[careerChapter]; $('#controlsCard').querySelector('b').textContent = `KAPITEL ${careerChapter + 1}: ${c.title}`;
       $('#controlsText').innerHTML = `ZIEL: ${c.type === 'mission' ? 'ABHOLEN UN ABLIEFERN' : goalText(c.goal)}<br><small>${c.intro}</small>`; $('#controlsCard').hidden = false; return;
     }
-    $('#controlsCard').querySelector('b').textContent = 'SU FÄHRS DE';
+    $('#controlsCard').querySelector('b').innerHTML = 'SU FÄHRS DE<i class="gl">So fährst du</i>';
     let n = 0; try { n = parseInt(localStorage.getItem('stuntskoelle.controlsSeen') || '0') || 0; localStorage.setItem('stuntskoelle.controlsSeen', String(n + 1)); } catch (e) { /* ignore */ }
     if (n >= (isMobile ? 1 : 3) || demo || window.STUNTS_SIMSTEPS) return; // a phone shows it once, as a small card in the top third
-    $('#controlsText').innerHTML = isMobile ? '▲ JAS · ■ BREMS<br>◀ ▶ LENKE · N TURBO<br>☰ PAUS' : '↑ JAS · ↓ BREMS · ← → LENKE<br>SHIFT TURBO · R ZERÖCK OP DE STROSS<br>P PAUS · ESC MENÜ';
+    // every key with its Kölsch word and, under it, the Hochdeutsch one (JAS / Gas)
+    const rows = isMobile ? [['▲', 'JAS', 'Gas'], ['■', 'BREMS', 'Bremse'], ['◀ ▶', 'LENKE', 'lenken'], ['N', 'TURBO'], ['☰', 'PAUS', 'Pause']] : [['↑', 'JAS', 'Gas'], ['↓', 'BREMS', 'Bremse'], ['← →', 'LENKE', 'lenken'], ['SHIFT', 'TURBO'], ['R', 'ZERÖCK OP DE STROSS', 'zurück auf die Straße'], ['P', 'PAUS', 'Pause'], ['ESC', 'MENÜ']];
+    $('#controlsText').innerHTML = rows.map(([k, w, g]) => `<span class="kv">${k} ${w}${g ? `<i>${g}</i>` : ''}</span>`).join('');
     $('#controlsCard').hidden = false;
   }
   // a tap anywhere outside the buttons skips the flyover, like Enter or Space
   document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !paused && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
   function startRaceNow(def) {
-    buildScene(def);
+    buildScene(def); chatReset();
     raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear(); pendingNote = noteShown = null;
     raceTime = 0; raceTicks = 0; simAcc = 0; loopHud.inLoop = false; loopHud.until = -1; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
@@ -993,12 +1047,12 @@
     const { hour, dayLines } = sceneHour();
     const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
     introLinePending = !!theme.intro; // said when the race starts, however slow the flyover
-    if (!theme.intro && sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
-    sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (!(demo || greeted++) || Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
+    if (!theme.intro && sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pickNew(tuenn.scene[sceneKey]), 4000, { small: true }); }, 7000);
+    sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (!(demo || greeted++) || Math.random() < 0.35 ? pickNew(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pickNew(tuenn.door) : pickNew(tuenn.intro)), 3800, { small: true });
     $('#hudTel').textContent = telLabel();
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     if (isMobile) { camMode = 0; tvCam = null; }
-    setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pick(d.lines.start), 2500); } }, 3900);
+    setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pickNew(d.lines.start), 2500, { small: true }); } }, 3900);
     setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
     cdShown = -1;
     if (introT >= 99) { for (const r of racers) placeRacer(r, 1 / 60); updateCamera(1 / 60); tick(SIM_DT); } // NOCHMAL: no flyover, the camera sits behind the car and the countdown runs at once
@@ -1069,7 +1123,7 @@
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes(deckel)}</b> (${deckel} Striche) · GESAMT: <b>${total}</b> – <b>${rank}</b>` + (wette ? ` · WETTE: <b>${wette.won ? 'JEWONNE' : 'VERLORE'}</b> (${wette.n} Kölsch ${wette.won ? 'für dich' : 'für dä Lange'})` : '') + (kripoSeen ? ` · KRIPO: <b>${kripoCaught ? 'HÄT DICH JEKRIEGT' : 'ABJEHÄNGT'}</b>` : '');
       if (wette) { const wl = pick(wette.won ? tuenn.wette.won : tuenn.wette.lost).replace('{r}', wette.rival.name).replace('{n}', String(wette.n)); $('#resTuenn').textContent = wl; }
       renderCup(order);
-      { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
+      { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = ordenItems(newOrden); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
       if (!wette) $('#resTuenn').textContent = newOrden.length ? pick(tuenn.ordenLine).replace('{name}', newOrden[0].name) : record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
       if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.stunts ? raceStunts >= g.stunts : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true); }
       const rd = order[won ? 1 : 0].driver;
@@ -1092,7 +1146,7 @@
   function setPause(on) {
     const was = paused; paused = !!on && racing(); $('#pause').hidden = !paused; document.body.classList.toggle('paused', paused);
     if (paused !== was) pauseAudio(paused);
-    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); fingers.clear(); mouseKey = null; touchSync(); $('#pauseLine').textContent = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']); }
+    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); fingers.clear(); mouseKey = null; touchSync(); const pl = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']), t = lineT(pl), h = (pl && pl.hd) || ''; $('#pauseLine').textContent = kids ? kidsText(t) : t; $('#pauseHd').textContent = kids ? kidsText(h) : h; $('#pauseHd').hidden = !(hdOn && h); $('#pauseKeysHd').hidden = !hdOn || isMobile; }
   }
   // a phone call or the pause: engine, chiptune and song fall silent and the audio clock stops; LOSS JONN (a tap or a key, as iOS wants) brings them back
   function pauseAudio(on) {
@@ -1155,7 +1209,7 @@
       r.drawFrame = Object.assign({}, r.frame, { pos: new THREE.Vector3().lerpVectors(r.ip.fa, r.ip.fb, alpha) });
     }
   }
-  function msgStep(dt) { if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show', 'open'); } }
+  function msgStep(dt) { msgAge += dt; if (msgTimer > 0) { msgTimer -= dt; if (msgTimer <= 0) $('#msg').classList.remove('show', 'open'); } }
   function frame(t) {
     requestAnimationFrame(frame);
     const dtReal = Math.min(0.5, (t - lastT) / 1000 || 0.016); adaptQuality(dtReal); lastDtReal = dtReal;
@@ -1173,11 +1227,11 @@
         if (n > SIM_MAX) { if (phase === 'countdown') countdown -= (n - SIM_MAX) * SIM_DT; n = SIM_MAX; simAcc = Math.min(simAcc, (SIM_MAX + 1) * SIM_DT); } // below 15 fps the excess is dropped; a slow phone still does not stretch the countdown
         simAcc = Math.max(0, simAcc - n * SIM_DT);
       }
-      for (let k = 0; k < n && fixedPhase(); k++) { ipBefore(); if (!window.STUNTS_SIMSTEPS) msgStep(SIM_DT); tick(SIM_DT, k === n - 1); ipAfter(); }
+      for (let k = 0; k < n && fixedPhase(); k++) { ipBefore(); msgStep(SIM_DT); tick(SIM_DT, k === n - 1); ipAfter(); }
       const alpha = window.STUNTS_SIMSTEPS ? 1 : simAcc / SIM_DT;
       if (fixedPhase()) { ipDraw(alpha); if (ghost && (phase === 'race' || phase === 'finished')) updateGhost((alpha - 1) * SIM_DT); }
     }
-    if (!(fixed && stepping) || window.STUNTS_SIMSTEPS) msgStep(dt); // in a race the box runs on race time (the steps)
+    if (!(fixed && stepping)) msgStep(dt); // in a race the box runs on race time (the steps), also when a harness speeds it up
     if (window.STUNTS_NORENDER) return; // headless timing checks: the simulation only
     if (scenery && !paused) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
@@ -1194,6 +1248,7 @@
   // render, which also refreshes the HUD, the minimap and the engine sound
   function tick(dt, draw) {
     if (draw === undefined) draw = true;
+    if (phase === 'intro' || phase === 'countdown' || phase === 'race') chatStep(dt);
     if (phase === 'intro') {
       introT += dt; for (const r of racers) placeRacer(r, dt); if (draw) updateHUD();
       if (introT > 3.8) { phase = 'countdown'; $('#introCard').hidden = true; showControlsCard(); }
@@ -1203,7 +1258,7 @@
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pick(theme.intro), 4200); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
+      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(theme.intro), 4200, { small: true }); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       if (draw) updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -1228,11 +1283,14 @@
           else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pickNew(tuenn.grundgesetz), 3500); }
         // Dä Lange's place stories: one is told whenever the box is free and the place is just ahead or just
         // passed (also from a side street running beside it). A story missed now comes back next lap.
-        if (storyCool <= 0 && msgTimer <= 0 && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -40 && ds < 70) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 6500)) { st.told = true; msgPrio = 1; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
+        // The Verzällcher journal gets the full story of every place you pass, also when the box was busy, on a phone
+        // (where the story is only a one-line tag) or in WENIJ (the 10 s gap); dä Lange tells as many as fit, a missed one next lap
+        if (!demo) for (const st of stories) if (!st.logged && Math.abs(storyDs(st)) < 70) { st.logged = true; if (!(kids && DRINK.test(st.text))) rememberStory(st.text); } // the attract mode only logs what it tells; Pänz get no drinking stories
+        if (storyCool <= 0 && (msgTimer <= 0 || msgPrio === 0 && msgAge > 1.2) && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) { const ms = isMobile && chat > 0 ? 5000 : 6500; if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag })) { st.told = true; storyCool = chat === 0 ? 9 : ms / 1000 + 1; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
-        if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pick(tuenn.razziaEnd), 2500); } }
-        else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); }
-        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 26 + Math.random() * 18; const ev = pick(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
+        if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pickNew(tuenn.razziaEnd), 2500); } }
+        else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pickNew(tuenn.razzia), 3500); }
+        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 26 + Math.random() * 18; const ev = pickNew(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
         for (const b of blitzers) {
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
           let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;
@@ -1243,8 +1301,8 @@
           sg.cool -= dt; let ds = player.s - sg.s; if (ds > track.length / 2) ds -= track.length;
           if (!routeFor(player) && ds > 0 && ds < 4 && sg.cool <= 0 && !player.air && player.crashed <= 0) {
             sg.cool = 6; const st = W.signalState(sg);
-            if (st === 'red' || st === 'redyellow') { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); flashTimer = 0.25; beep(1400, 0.12, 'square', 0.1); say({ name: 'Rotlichtblitzer', emoji: '🚦' }, pick(tuenn.rotlicht || tuenn.blitzer), 2600); }
-            else if (st === 'yellow') say(tuenn, pick(tuenn.gelb || ['Dat wor noch jelb.']), 1800);
+            if (st === 'red' || st === 'redyellow') { knoellchen++; if (knoellchen >= 3 && !kripo && !kripoSeen) startKripo(); flashTimer = 0.25; beep(1400, 0.12, 'square', 0.1); say({ name: 'Rotlichtblitzer', emoji: '🚦' }, pickNew(tuenn.rotlicht || tuenn.blitzer), 2600); }
+            else if (st === 'yellow') say(tuenn, pickNew(tuenn.gelb || ['Dat wor noch jelb.']), 1800);
           }
         }
         if (flashTimer > 0) { flashTimer -= dt; $('#flash').style.opacity = String(Math.max(0, flashTimer * 3)); }
@@ -1255,7 +1313,7 @@
     } else if (phase === 'replay') {
       replayStep(dt);
     } else if (phase === 'menu' || phase === 'editor' || phase === 'club') {
-      if (phase === 'menu' && !document.hidden && $('#records').hidden) { idleT += dt; if (idleT > (window.STUNTS_IDLE || 50)) startDemo(); }
+      if (phase === 'menu' && !document.hidden && $('#records').hidden && !onboard.open) { idleT += dt; if (idleT > (window.STUNTS_IDLE || 50)) startDemo(); }
       // idle drive-by behind the menu
       if (player) { player.s = (player.s + dt * 30) % track.length; placeRacer(player, dt); racers.forEach((r, i) => { if (r.isAI) { r.s = (player.s + 8 + i * 7) % track.length; placeRacer(r, dt); } }); }
     }
@@ -1321,6 +1379,11 @@
     if (e.repeat) return;
     idleT = 0; if (demo) { e.preventDefault(); toMenu(); return; }
     keys[e.code] = true; readKeys();
+    if (onboard.open) { // the door cards: → / Enter on, ← back, Esc closes; a focused button keeps its own Enter and Space
+      if ((e.code === 'Enter' || e.code === 'Space') && e.target.closest && e.target.closest('#onboard button')) return;
+      const k = { Escape: 0, ArrowRight: 1, Enter: 1, Space: 1, ArrowLeft: -1 }[e.code]; if (k === undefined) return; // Tab and the browser's own keys stay as they are
+      e.preventDefault(); if (k === 0) closeOnboard(); else obStep(k); return;
+    }
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && phase !== 'menu' && phase !== 'editor') e.preventDefault();
     if (phase === 'club') { if (window.Club) window.Club.key(e.code); return; }
     if (phase === 'menu') {
@@ -1479,10 +1542,10 @@
       box.appendChild(div);
     });
     { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
-      grid.innerHTML = '<b class="ordenHead">ORDEN OP DER DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${kids && o.id === 'stammgast' ? 'KAMELLE-KÖNIG' : o.name}</b><small>${kids ? kidsText(o.desc) : o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
+      grid.innerHTML = '<b class="ordenHead">ORDEN OP DER DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${kids && o.id === 'stammgast' ? 'KAMELLE-KÖNIG' : o.name}</b><small>${kids ? kidsText(o.desc) : o.desc}</small>${hdOn && o.hd ? `<small class="hdl">${kids ? kidsText(o.hd) : o.hd}</small>` : ''}<i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
       grid.querySelectorAll('.orden canvas').forEach((c, i) => medalIcon(c, tuenn.orden[i].color, 3)); box.appendChild(grid); }
     { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
-      v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an de Plätze vörbei – dä Lange verzällt jet.</p>');
+      v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>${hdOn && HD.get(x) ? `<p class="hdl">${HD.get(x)}</p>` : ''}`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an de Plätze vörbei – dä Lange verzällt jet.</p>');
       box.appendChild(v); }
     $('#records').hidden = false;
   }
@@ -1593,6 +1656,8 @@
     if (fresh.length) { try { localStorage.setItem('stuntskoelle.orden', JSON.stringify(have)); } catch (e) { /* ignore */ } setTimeout(() => { beep(784, 0.12, 'square', 0.12); setTimeout(() => beep(1046, 0.12, 'square', 0.12), 120); setTimeout(() => beep(1568, 0.3, 'square', 0.12), 240); }, 800); }
     return fresh;
   }
+  // the results' new Orden, with the Hochdeutsch line under the Kölsch when KÖLSCH-HÜLP is on
+  function ordenItems(list) { return list.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${kids ? kidsText(o.desc) : o.desc}${hdOn && o.hd ? `<small class="hdl">${kids ? kidsText(o.hd) : o.hd}</small>` : ''}</span></div>`).join(''); }
   function medalIcon(canvas, color, scale) { // a pixel medal: coloured disc on a red-white ribbon
     const map = ['......rr..rr....', '.....rwwrrwwr...', '.....rwwrrwwr...', '....rwwrrrrwwr..', '....rwwrrrrwwr..', '......kkkkkk....', '.....kXXXXXXk...', '....kXXxxxxXXk..', '...kXXxxwwxxXXk.', '...kXXxwwwwxXXk.', '...kXXxwwwwxXXk.', '...kXXxxwwxxXXk.', '....kXXxxxxXXk..', '.....kXXXXXXk...', '......kkkkkk....', '................'];
     const C = { y: ['#c9a227', '#ffd23f'], o: ['#c25a00', '#ff7a00'], p: ['#b0206e', '#ff3fa0'], b: ['#2a6da0', '#4fd6ff'], r: ['#8a0f18', '#ff2a2a'], g: ['#207a20', '#3adf3a'], w: ['#9a9aa8', '#f4f4f4'] }[color] || ['#9a9aa8', '#f4f4f4'];
@@ -1605,8 +1670,8 @@
     if (hornCool > 0 || phase !== 'race') return; hornCool = 1.2; audioInit();
     beep(392, 0.45, 'sawtooth', 0.12); beep(494, 0.45, 'sawtooth', 0.1); setTimeout(() => { beep(392, 0.3, 'sawtooth', 0.1); beep(494, 0.3, 'sawtooth', 0.08); }, 520);
     let ahead = null, best = 99; for (const o of racers) { if (o === player || o.isCop || !sameRoad(player, o)) continue; let ds = o.s - player.s; const L = track.length; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (ds > 0 && ds < 22 && ds < best) { best = ds; ahead = o; } }
-    if (ahead) { ahead.yieldT = 2.5; if (msgTimer <= 0 && Math.random() < 0.6) say(ahead.driver, pick(tuenn.hupeRival), 2200); }
-    else if (msgTimer <= 0 && Math.random() < 0.5) say(tuenn, pick(tuenn.hupe), 2200);
+    if (ahead) { ahead.yieldT = 2.5; if (msgTimer <= 0 && Math.random() < 0.6) say(ahead.driver, pickNew(tuenn.hupeRival), 2200); }
+    else if (msgTimer <= 0 && Math.random() < 0.5) say(tuenn, pickNew(tuenn.hupe), 2200);
   }
 
   // ---------------- Botengang: fetch something on foot, deliver it by car, the Kripo behind you ----------------
@@ -1620,7 +1685,7 @@
     mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: WT[k], short: WS[k] || 'PAKET', pickName: pick(WH), dropName: pick(WH), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
     if (mission.dropName === mission.pickName) mission.dropName = WH[(WH.indexOf(mission.pickName) + 1) % WH.length];
     const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(-a.f.T.x, -a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring; // the sign faces the driver coming up the road
-    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
+    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pickNew(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
     });
   }
   function clearMission() { if (mission) { for (const m of mission.meshes) scene && scene.remove(m); if (mission.walker && scene) scene.remove(mission.walker); } mission = null; $('#hudPrompt').hidden = true; }
@@ -1651,13 +1716,13 @@
       const d = TB.frameAt(track, mission.pickS + 22 + Math.random() * 14); const Bd = new THREE.Vector3(d.B.x, 0, d.B.z).normalize(); mission.doorPos = new THREE.Vector3(d.p.x, W.GROUND_Y, d.p.z).addScaledVector(Bd, mission.side * (ROAD_W + 4.3));
       const door = dropMesh(mission.pickName); door.position.copy(mission.doorPos); door.lookAt(player.mesh.position.x, mission.doorPos.y, player.mesh.position.z); door.scale.set(0.55, 1, 0.55); scene.add(door); mission.meshes.push(door); mission.door = door;
       const pk = umschlagMesh(); pk.position.copy(mission.doorPos); pk.position.y += 0.4; scene.add(pk); mission.meshes.push(pk); mission.pkg = pk;
-      scene.remove(mission.ring); sayMust(tuenn, pick(B.out), 3000); return;
+      scene.remove(mission.ring); sayMust(tuenn, pickNew(B.out), 3000); return;
     }
     if (mission.stage === 'walkback' && !$('#hudPrompt').hidden) { // back in: the drop-off appears, the Kripo too
       mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
       const b = roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
       const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(-b.f.T.x, -b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
-      if (!kripo) startKripo(); sayMust(tuenn, placeArticles(pick(B.back).replace('{drop}', mission.dropName)), 3600);
+      if (!kripo) startKripo(); sayMust(tuenn, placeArticles(pickNew(B.back).replace('{drop}', mission.dropName)), 3600);
     }
   }
   function walkStep(dt) {
@@ -1670,10 +1735,10 @@
       for (let k = -80; k <= 80; k += 2) { const q = S[((i0 + k) % n + n) % n]; const d = (q.p.x - w.position.x) ** 2 + (q.p.z - w.position.z) ** 2; if (d < bestD) { bestD = d; bestI = ((i0 + k) % n + n) % n; } }
       const q = S[bestI]; const bl = Math.hypot(q.B.x, q.B.z) || 1; const bx = q.B.x / bl, bz = q.B.z / bl; let lat = (w.position.x - q.p.x) * bx + (w.position.z - q.p.z) * bz; const along = (w.position.x - q.p.x) * q.T.x + (w.position.z - q.p.z) * q.T.z;
       const maxLat = ROAD_W + 5.6; let pushed = false; if (Math.abs(lat) > maxLat) { lat = Math.sign(lat) * maxLat; pushed = true; }
-      let ds = (bestI - i0) * track.ds; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (Math.abs(ds) > 70) { pushed = true; if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pick(B.far), 2500); } }
+      let ds = (bestI - i0) * track.ds; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (Math.abs(ds) > 70) { pushed = true; if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pickNew(B.far), 2500); } }
       if (pushed) { const sI = Math.abs(ds) > 70 ? ((i0 + Math.sign(ds) * Math.round(70 / track.ds)) % n + n) % n : bestI; const qq = S[sI]; const bl2 = Math.hypot(qq.B.x, qq.B.z) || 1; w.position.x = qq.p.x + qq.B.x / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.x * along); w.position.z = qq.p.z + qq.B.z / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.z * along); }
     }
-    if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; cr.lookAt(w.position.x, cr.position.y, w.position.z); scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pick(B.got), 3000); } }
+    if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; cr.lookAt(w.position.x, cr.position.y, w.position.z); scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pickNew(B.got), 3000); } }
   }
   function missionEnd(ok, why) {
     if (!mission || phase !== 'race') return; phase = 'finished'; prompt(null); const B = tuenn.botengang; player.finished = true; player.finishTime = raceTime;
@@ -1689,7 +1754,7 @@
       $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, ok ? 1 : 10, [player]);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes > 0 ? '+' : ''}${strokes}</b> Striche · GESAMT: <b>${total}</b> – <b>${deckelRank(total)}</b>`;
       $('#resCup').hidden = true; againLabel(careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL' : 'KAPITEL NOCHMAL') : 'NOCHMAL');
-      { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
+      { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = ordenItems(newOrden); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
       $('#resTuenn').textContent = placeArticles(pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName)); $('#resRival').textContent = '';
       if (careerChapter != null) applyCareerResult(ok);
       resLayout(); $('#results').hidden = false; document.body.classList.add('resultsOpen');
@@ -1723,7 +1788,7 @@
     if (ok) {
       if (st.chapter === ch) { st.chapter = ch + 1; try { localStorage.setItem('stuntskoelle.career', JSON.stringify(st)); } catch (e) { /* ignore */ } }
       const finale = ch + 1 >= tuenn.career.length;
-      if (finale) { try { localStorage.setItem('stuntskoelle.countach', '1'); } catch (e) { /* ignore */ } bumpStat('career'); const no = checkOrden(); if (no.length) { newOrden = newOrden.concat(no); const ob = $('#resOrden'); ob.hidden = false; ob.innerHTML = newOrden.map((o) => `<div class="oitem"><canvas class="medal"></canvas><span>NEUER ORDEN: <b>${o.name}</b> · ${o.desc}</span></div>`).join(''); ob.querySelectorAll('canvas').forEach((cv, i) => medalIcon(cv, newOrden[i].color, 2)); } }
+      if (finale) { try { localStorage.setItem('stuntskoelle.countach', '1'); } catch (e) { /* ignore */ } bumpStat('career'); const no = checkOrden(); if (no.length) { newOrden = newOrden.concat(no); const ob = $('#resOrden'); ob.hidden = false; ob.innerHTML = ordenItems(newOrden); ob.querySelectorAll('canvas').forEach((cv, i) => medalIcon(cv, newOrden[i].color, 2)); } }
       $('#resTitle').textContent = (finale ? 'NACHTSCHICHT BEENDET! ' : `KAPITEL ${ch + 1} JESCHAFFT: ${c.title}. `) + $('#resTitle').textContent;
       $('#resTuenn').textContent = c.outro + (finale ? ' Die Contessa steht im Menü, Jung.' : '');
       againLabel(finale ? 'NOCHMAL VON VORNE' : 'NÄCHSTES KAPITEL');
@@ -1786,12 +1851,12 @@
     const m2 = dropMesh(where); m2.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); m2.rotation.y = Math.atan2(-b.f.T.x, -b.f.T.z); m2.visible = false; scene.add(m2);
     let dist = b.s - a.s; if (dist < 0) dist += track.length;
     auftrag = { stage: 'pickup', s1: a.s, lat, s2: b.s, m1, m2, base, what, where, timer: 40, carryTime: Math.round(dist / 13) + 10, phase: Math.random() * 6 };
-    sayMust(tuenn, placeArticles(pick(A.start).replace('{what}', what).replace('{where}', where)), 4200);
+    sayMust(tuenn, placeArticles(pickNew(A.start).replace('{what}', what).replace('{where}', where)), 4200);
   }
   function endAuftrag() { if (!auftrag) return; scene.remove(auftrag.m1); scene.remove(auftrag.m2); auftrag = null; }
   function failAuftrag(why) {
     const A = tuenn.auftrag; auftragFail++; deckel = Math.max(0, deckel - 2);
-    sayMust(tuenn, placeArticles(pick(why === 'lost' ? A.lost : A.late).replace('{what}', auftrag.what).replace('{where}', auftrag.where)), 3600);
+    sayMust(tuenn, placeArticles(pickNew(why === 'lost' ? A.lost : A.late).replace('{what}', auftrag.what).replace('{where}', auftrag.where)), 3600);
     beep(220, 0.3, 'sawtooth', 0.12); endAuftrag(); auftragT = 45 + Math.random() * 25;
   }
   function updateAuftrag(dt) {
@@ -1808,14 +1873,14 @@
       if (!routeFor(player) && Math.abs(ds) < 4.2 && Math.abs(player.lat - auftrag.lat) < 4.5 && !player.air && player.crashed <= 0) {
         auftrag.stage = 'carry'; auftrag.m1.visible = false; auftrag.m2.visible = true; auftrag.timer = auftrag.carryTime;
         beep(880, 0.08, 'square', 0.1); setTimeout(() => beep(1320, 0.12, 'square', 0.1), 80);
-        sayMust(tuenn, placeArticles(pick(tuenn.auftrag.pick).replace('{where}', auftrag.where)), 3000);
+        sayMust(tuenn, placeArticles(pickNew(tuenn.auftrag.pick).replace('{where}', auftrag.where)), 3000);
       } else if (auftrag.timer <= 0) { endAuftrag(); auftragT = 40 + Math.random() * 20; }
     } else {
       const k = 1 + Math.sin(raceTime * 5) * 0.08; auftrag.m2.scale.set(k, 1, k);
       let ds = player.s - auftrag.s2; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
       if (!routeFor(player) && Math.abs(ds) < 4 && !player.air && player.crashed <= 0) {
         auftragDone++; addDeckel(5); player.turbo = 1; bumpStat('jobs'); beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.1, 'square', 0.12), 80); setTimeout(() => beep(2100, 0.16, 'square', 0.12), 160);
-        sayMust(tuenn, placeArticles(pick(tuenn.auftrag.done).replace('{where}', auftrag.where)), 3800); endAuftrag(); auftragT = 45 + Math.random() * 25;
+        sayMust(tuenn, placeArticles(pickNew(tuenn.auftrag.done).replace('{where}', auftrag.where)), 3800); endAuftrag(); auftragT = 45 + Math.random() * 25;
       } else if (auftrag.timer <= 0) failAuftrag('late');
     }
   }
@@ -1883,7 +1948,7 @@
   function tuennsTelefon() {
     if (!telefon.ready || telefon.active > 0) { sayMust(tuenn, 'Besetzt, Jung. Ich telefonier nur eimol pro Rund.', 2000); return; }
     telefon.ready = false; telefon.active = 6; telefon.used++;
-    if (kripo) { endKripo('off'); sayMust(tuenn, pick(tuenn.kripo.off), 3500); } else sayMust(tuenn, pick(tuenn.tuennsTelefon), 3500);
+    if (kripo) { endKripo('off'); sayMust(tuenn, pickNew(tuenn.kripo.off), 3500); } else sayMust(tuenn, pickNew(tuenn.tuennsTelefon), 3500);
     beep(660, 0.12, 'triangle', 0.15); setTimeout(() => beep(880, 0.12, 'triangle', 0.15), 150);
     $('#hudTel').textContent = 'BESETZT'; setTimeout(() => { $('#hudTel').textContent = telefon.ready ? telLabel() : 'NÄCHSTE RUND'; }, 6000);
   }
@@ -1938,9 +2003,9 @@
       else { ds = player.s - p.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; onIt = !routeFor(player); }
       if (onIt && Math.abs(ds) < 3.6 && Math.abs(player.lat - p.lat) < 2.0 && !player.air && player.crashed <= 0) {
         p.taken = true; p.mesh.visible = false; koelsch++; koelschLap++; addDeckel(1); player.turbo = Math.min(1, player.turbo + 0.3);
-        if (koelschLap >= 5 && promille <= 0 && !promilleDone) { promilleDone = true; promille = 7; addDeckel(3); player.turbo = 1; sayMust(tuenn, pick(tuenn.promille), 3200); }
+        if (koelschLap >= 5 && promille <= 0 && !promilleDone) { promilleDone = true; promille = 7; addDeckel(3); player.turbo = 1; sayMust(tuenn, pickNew(tuenn.promille), 3200); }
         beep(1180, 0.07, 'square', 0.1); setTimeout(() => beep(1580, 0.1, 'square', 0.1), 70);
-        if (msgTimer <= 0.4) say(D.DRIVERS.find((d) => d.id === 'koebes'), pick(tuenn.koelschPick), 1600);
+        if (msgTimer <= 0.4) say(D.DRIVERS.find((d) => d.id === 'koebes'), pickNew(tuenn.koelschPick), 1600);
       }
     }
   }
@@ -2009,7 +2074,7 @@
   function offerWette() {
     const cands = racers.filter((r) => r.isAI && r !== player2); if (!cands.length) return;
     const r = pick(cands); wette = { rival: { name: r.driver.name, r }, n: 1 + Math.floor(Math.random() * 3), done: false, won: false };
-    sayMust(tuenn, pick(tuenn.wette.offer).replace('{r}', r.driver.name).replace('{n}', String(wette.n)), 4200);
+    sayMust(tuenn, pickNew(tuenn.wette.offer).replace('{r}', r.driver.name).replace('{n}', String(wette.n)), 4200);
   }
   function expressHeadline(place, won, record, order) {
     const E = tuenn.express2; const car = D.CARS[sel.car].name.toUpperCase(); const fill = (t) => t.replace('{car}', car).replace('{where}', trackDef.where || 'EN KÖLLE').replace('{track}', trackDef.name.toUpperCase()).replace('{n}', String(knoellchen)).replace('{p}', String(place));
@@ -2038,7 +2103,7 @@
       box.appendChild(pod);
     }
     if (done) { const line = myPos === 1 ? pick(tuenn.cup.champion) : myPos <= 3 ? pick(tuenn.cup.podium) : pick(tuenn.cup.loser); $('#resTuenn').textContent = line; try { const wins = parseInt(localStorage.getItem('stuntskoelle.cupwins') || '0') || 0; if (myPos === 1) { bumpStat('cupWins'); const no = checkOrden(); if (no.length) newOrden = newOrden.concat(no); } if (myPos === 1) localStorage.setItem('stuntskoelle.cupwins', String(wins + 1)); } catch (e) { /* ignore */ } }
-    else setTimeout(() => { if (phase === 'finished') say(tuenn, pick(tuenn.cup.next), 3000); }, 2500);
+    else setTimeout(() => { if (phase === 'finished') say(tuenn, pickNew(tuenn.cup.next), 3000); }, 2500);
   }
 
   // ---------------- replay ----------------
@@ -2251,7 +2316,7 @@
     $('#muteBtn').onclick = toggleMute;
     $('#pauseBtn').onclick = () => { if (racing()) setPause(!paused); else toMenu(); };
     $('#resFacts').onclick = () => { if ($('#results').classList.contains('compact')) $('#resFacts').classList.toggle('open'); };
-    $('#msg').onclick = () => { const m = $('#msg'); if (!document.body.classList.contains('mobile') || !m.classList.contains('show')) return; if (m.classList.toggle('open')) msgTimer = Math.max(msgTimer, 6); }; // phone: the one-line ticker opens on a tap
+    $('#msg').onclick = () => { const m = $('#msg'); if (!document.body.classList.contains('mobile') || !m.classList.contains('show')) return; if (m.classList.toggle('open')) msgTimer = Math.max(msgTimer, m.classList.contains('tagged') ? 12 : 6); }; // phone: the one-line ticker opens on a tap
     { const mini = document.querySelector('.hudMini'); if (isMobile) mini.title = 'Kaat (tippen: jrößer)'; try { mini.classList.toggle('open', localStorage.getItem('stuntskoelle.minimap') === 'open'); } catch (e) { /* ignore */ } // phone: the map is folded to a thumbnail until tapped
       mini.onclick = () => { if (!document.body.classList.contains('mobile')) return; const on = mini.classList.toggle('open'); try { localStorage.setItem('stuntskoelle.minimap', on ? 'open' : 'folded'); } catch (e) { /* ignore */ } }; }
     $('#pauseGo').onclick = () => setPause(false); $('#pauseRestart').onclick = quickRestart; $('#pauseQuit').onclick = toMenu;
@@ -2273,13 +2338,22 @@
     $('#p2Btn').onclick = toggleTwoPlayer;
     $('#tTel').addEventListener('touchstart', (e) => { e.preventDefault(); if (phase === 'race') tuennsTelefon(); }, { passive: false });
     $('#voiceBtn').onclick = toggleVoice; $('#voicePickBtn').onclick = nextVoice;
-    const applyKids = () => { document.body.classList.toggle('kids', kids); labelBtn($('#kidsBtn'), kids ? 'PÄNZ-MODUS: AN' : 'PÄNZ-MODUS: AUS'); const cl = document.querySelector('.coinLine span'); if (cl) cl.textContent = kids ? 'INSERT COIN · 1 KAMELL = 1 CREDIT' : 'INSERT COIN · 1 KÖLSCH = 1 CREDIT'; };
+    const applyKids = () => { document.body.classList.toggle('kids', kids); labelBtn($('#kidsBtn'), kids ? 'PÄNZ-MODUS: AN' : 'PÄNZ-MODUS: AUS', kids ? 'Kinder-Modus: an' : 'Kinder-Modus: aus'); const cl = document.querySelector('.coinLine span'); if (cl) cl.textContent = kids ? 'INSERT COIN · 1 KAMELL = 1 CREDIT' : 'INSERT COIN · 1 KÖLSCH = 1 CREDIT'; };
     applyKids(); $('#kidsBtn').onclick = () => { kids = !kids; try { localStorage.setItem('stuntskoelle.kids', kids ? '1' : '0'); } catch (e) { /* ignore */ } applyKids(); };
     // JROSSE SCHRIFT: everything you read gets bigger (menu, messages, HUD, signs, results), for older eyes
-    const applyFont = (on) => { document.body.classList.toggle('bigtext', on); labelBtn($('#fontBtn'), on ? 'SCHRIFT: JROSS' : 'SCHRIFT: NORMAL'); };
+    const applyFont = (on) => { document.body.classList.toggle('bigtext', on); labelBtn($('#fontBtn'), on ? 'SCHRIFT: JROSS' : 'SCHRIFT: NORMAL', on ? 'Schrift: groß' : ''); };
     { let on = false; try { on = localStorage.getItem('stuntskoelle.bigtext') === '1'; } catch (e) { /* ignore */ } applyFont(on);
       $('#fontBtn').onclick = () => { on = !on; try { localStorage.setItem('stuntskoelle.bigtext', on ? '1' : '0'); } catch (e) { /* ignore */ } applyFont(on); }; }
     $('#tiltBtn').onclick = toggleTilt; updateTiltUI(); if (!isMobile) $('#tiltBtn').hidden = true;
+    // GESCHWÄTZ (NORMAL on a desktop, WENIJ on touch until the player picks one) and KÖLSCH-HÜLP
+    try { const v = localStorage.getItem('stuntskoelle.chatter'); chat = CHAT.includes(v) ? CHAT.indexOf(v) : isTouch ? 2 : 1; } catch (e) { chat = isTouch ? 2 : 1; }
+    applyChat(); $('#chatBtn').onclick = () => setChat((chat + 1) % CHAT.length, true);
+    applyHd(); $('#hdBtn').onclick = () => setHd(!hdOn);
+    labelBtn($('#editorBtn'), 'KLÜNGEL-BAUKASTEN', 'Streckeneditor'); labelBtn($('#onboardBtn'), 'NEU EN KÖLLE?', 'Neu in Köln?'); $('#onboardBtn').onclick = openOnboard;
+    // one plain line per setting: the button's title, and the hint line under the buttons on hover, focus or a tap
+    $('#setHint').textContent = isTouch ? 'Tipp op ne Knopp: hee steiht, wat hä mäht.' : 'Met der Muus op ne Knopp: hee steiht, wat hä mäht.';
+    for (const id of Object.keys(tuenn.hints || {})) { const b = document.getElementById(id); if (!b) continue; b.title = tuenn.hints[id]; for (const ev of ['mouseenter', 'focus', 'click']) b.addEventListener(ev, () => { $('#setHint').textContent = tuenn.hints[id]; }); }
+    $('#obNext').onclick = () => obStep(1); $('#obPrev').onclick = () => obStep(-1); $('#obSkip').onclick = closeOnboard;
     voiceInit();
     for (const id of ['turboBar2']) { const el = document.getElementById(id); for (let i = 0; i < 10; i++) el.appendChild(document.createElement('i')); }
     // a track shared by link?
@@ -2298,8 +2372,34 @@
     const firstTouch = () => { if (!juke.started) jukeStart(); };
     document.addEventListener('pointerdown', firstTouch, { once: true }); document.addEventListener('keydown', firstTouch, { once: true });
     updateJuke();
+    // first start: Dä Lange's door cards. A browser driven by a test harness (navigator.webdriver) skips them unless
+    // window.STUNTS_ONBOARD = true; STUNTS_ONBOARD = false hides them for a real browser too
+    if (!onboardSeen() && (window.STUNTS_ONBOARD === true || (!navigator.webdriver && window.STUNTS_ONBOARD !== false))) openOnboard();
     requestAnimationFrame(frame);
   }
+  // ---------------- settings: GESCHWÄTZ and KÖLSCH-HÜLP ----------------
+  function applyChat() { labelBtn($('#chatBtn'), 'GESCHWÄTZ: ' + CHAT[chat], CHAT_HD[chat]); }
+  function setChat(i, save) { chat = clamp(i | 0, 0, CHAT.length - 1); if (save) try { localStorage.setItem('stuntskoelle.chatter', CHAT[chat]); } catch (e) { /* ignore */ } applyChat(); }
+  function applyHd() { document.body.classList.toggle('hdhelp', hdOn); labelBtn($('#hdBtn'), hdOn ? 'KÖLSCH-HÜLP: AN' : 'KÖLSCH-HÜLP: AUS', hdOn ? 'Hochdeutsch-Hilfe: an' : 'Hochdeutsch-Hilfe: aus'); if (!hdOn) $('#msgHd').hidden = true; $('#pauseKeysHd').hidden = !hdOn || isMobile; }
+  function setHd(on) { hdOn = !!on; try { localStorage.setItem('stuntskoelle.hd', hdOn ? '1' : '0'); } catch (e) { /* ignore */ } applyHd(); }
+  // ---------------- 'Neu en Kölle?': Dä Lange's four door cards (first start, and NEU EN KÖLLE? in the menu) ----------------
+  const onboard = { i: 0, open: false };
+  function onboardSeen() { try { return localStorage.getItem('stuntskoelle.onboarded') === '1'; } catch (e) { return true; } }
+  function openOnboard() {
+    const O = tuenn.onboard; if (!O || phase !== 'menu') return;
+    $('#obTitle').innerHTML = `${O.title}<i class="gl">${O.titleHd}</i>`; $('#obHello').textContent = O.hello; $('#obHelloHd').textContent = O.helloHd;
+    $('#obCards').innerHTML = O.cards.map((c, i) => { const k = kids && c.tKids, tch = !k && isTouch && c.tTouch;
+      return `<section class="obCard" data-i="${i}"><h3><span>${i + 1}/${O.cards.length}</span>${k ? c.titleKids : c.title}<i class="gl">${k ? c.titleKidsHd : c.titleHd}</i></h3><p>${k ? c.tKids : tch ? c.tTouch : c.t}</p><p class="hdl">${k ? c.hdKids : tch ? c.hdTouch : c.hd}</p></section>`; }).join('');
+    SP.portrait('langer', $('#obFace'), 4);
+    onboard.i = 0; onboard.open = true; idleT = 0; $('#onboard').hidden = false; obShow(); try { $('#obNext').focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+  }
+  function obShow() {
+    const cards = [...document.querySelectorAll('#onboard .obCard')], last = onboard.i >= cards.length - 1;
+    cards.forEach((c, i) => c.classList.toggle('on', i === onboard.i)); $('#obDots').textContent = cards.map((c, i) => (i === onboard.i ? '■' : '□')).join(' ');
+    $('#obPrev').disabled = onboard.i === 0; $('#obNext').querySelector('span').textContent = last ? 'LOSS JONN ▶' : 'WIGGER ▶'; $('#obNext').querySelector('i').textContent = last ? 'los geht’s' : 'weiter';
+  }
+  function obStep(d) { const n = document.querySelectorAll('#onboard .obCard').length; if (onboard.i + d >= n) { closeOnboard(); return; } onboard.i = clamp(onboard.i + d, 0, n - 1); obShow(); }
+  function closeOnboard() { if (!onboard.open && $('#onboard').hidden) return; onboard.open = false; $('#onboard').hidden = true; try { localStorage.setItem('stuntskoelle.onboarded', '1'); } catch (e) { /* ignore */ } }
   function drawBanner() {
     SP.logo($('#logo'), 560, 140);
     SP.skyline($('#skyline'), Math.max(600, window.innerWidth), 150);
@@ -2309,7 +2409,7 @@
     if ($('#rotateArt')) SP.carSide(D.CARS[0], $('#rotateArt'));
     // arcade cabinet pixel art: button icons, joystick and buttons, blinking coin, chunky frames
     $('#cupBtn').textContent = `KÖLSCH-CUP (${TRACKS.length} STRECKEN)`; { const st = careerState(); $('#careerBtn').textContent = st.chapter >= tuenn.career.length ? 'KARRIERE: NACHTSCHICHT BEENDET · NOCHMAL' : `KARRIERE · KAPITEL ${st.chapter + 1}/${tuenn.career.length}: ${tuenn.career[st.chapter].title}`; }
-    for (const b of document.querySelectorAll('#menu button[data-icon]')) labelBtn(b, b.textContent.trim());
+    for (const b of document.querySelectorAll('#menu button[data-icon]')) { const gl = b.querySelector('.gl'); labelBtn(b, gl ? b.dataset.label : b.textContent.trim(), gl ? b.dataset.gloss : ''); } // a glossed label keeps its Hochdeutsch word
     if ($('#joyArt')) { SP.joystick($('#joyArt'), 2); SP.joystick($('#joyArt2'), 2); }
     if ($('#coinArt')) { SP.icon('coin', $('#coinArt'), 1); SP.icon('coin', $('#coinArt2'), 1); let on = true; setInterval(() => { on = !on; for (const id of ['#coinArt', '#coinArt2']) { const c = $(id); if (c) c.style.visibility = on ? 'visible' : 'hidden'; } }, 500); }
     if (SP.frameTile) { const tile = SP.frameTile([106, 63, 160]); for (const pnl of document.querySelectorAll('#menu .panel')) { pnl.style.borderImage = `url(${tile}) 8 repeat`; pnl.style.borderWidth = '8px'; pnl.style.borderStyle = 'solid'; } }
@@ -2333,11 +2433,15 @@
   window.STUNTS_GHOST = (t) => { if (!ghost) return null; if (t != null) updateGhost(t - (raceTime - player.lapStart)); return { pos: ghost.position.toArray(), visible: ghost.visible, n: ghostData.t.length, time: ghostData.time, car: ghostData.car }; };
   window.STUNTS_CAM = () => camera; window.STUNTS_OCC = (a, b) => a ? occHit(new THREE.Vector3(...a), new THREE.Vector3(...b)) : { boxes: occ.n, cells: occ.cells.size }; /* with two points: the layer's first hit on that line */ window.STUNTS_STATIC = () => [road, scenery && scenery.group].filter(Boolean);
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
+  // the message box: every line shown this race, the chatter setting (VILL / NORMAL / WENIJ or 0-2), the Hochdeutsch help, the place stories and the journal
+  window.STUNTS_MSGLOG = () => msgLog.slice(); window.STUNTS_CHAT = (m) => { if (m != null) setChat(typeof m === 'string' ? CHAT.indexOf(m) : m, false); return CHAT[chat]; };
+  window.STUNTS_HD = (on) => { if (on != null) setHd(on); return hdOn; }; window.STUNTS_JOURNAL = () => heardStories();
+  window.STUNTS_STORIES = () => stories.map((st) => ({ s: st.s, text: st.text, hd: st.hd, tag: st.tag, told: st.told, logged: !!st.logged }));
   window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
   window.STUNTS_CAR_SCREEN = () => { if (!player || !player.mesh || !camera) return null; const v = player.mesh.position.clone().project(camera); return { x: (v.x + 1) / 2 * window.innerWidth, y: (1 - v.y) / 2 * window.innerHeight, mode: camMode }; }; // where the player's car is drawn, in CSS pixels
-  window.STUNTS_SCENE = () => scene; window.STUNTS_SAY = (text, ms) => { quiet = 0; msgTimer = 0; return say(tuenn, text, ms || 3000); }; // a flavour line, as the radio or a rival would say it
-  window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); };
-  window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); };
+  window.STUNTS_SCENE = () => scene; window.STUNTS_SAY = (text, ms, must) => { quiet = 0; msgTimer = 0; return say(tuenn, text, ms || 3000, !!must); }; // a flavour line, as the radio or a rival would say it (must: a line the player needs)
+  window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pickNew(tuenn.razzia), 3500); };
+  window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pickNew(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind, verge: (track.samples[f.index].vg || []).slice(), edge: ROAD_W + 1.6 }; };
   window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan }));

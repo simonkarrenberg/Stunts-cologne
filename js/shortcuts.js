@@ -198,7 +198,7 @@
       if ([first, last].some((q) => !['straight', 'curve'].includes(q.kind) || Math.abs(q.p.y) > 0.15 || q.N.y < 0.995 || Math.abs(q.T.y) > 0.02) || Math.abs(first.p.y - last.p.y) > 0.1) continue;
       if (!approachIsClear(track, startS)) continue;
       const route = { id, name: def.street || def.name || 'Kölner Nebenstrecke', street: def.street || def.name || 'Kölner Nebenstrecke',
-        toward: def.toward || '', note: def.note || '', surface: def.surface || 'asphalt', perks: def.perks || [], offset: 0,
+        toward: def.toward || '', note: def.note || '', noteHd: def.hd || '', surface: def.surface || 'asphalt', perks: def.perks || [], offset: 0,
         index: routes.length, seg: def.from.seg, fork, startS, endS, resetS: resetBefore(track, startS), halfWidth: def.halfWidth || 3.8 };
       if (fork && routes.some((r) => r.fork === fork && !sameFork(route, r))) continue;
       if (route.resetS == null || routes.some((r) => startS < r.endS + 20 && endS > r.startS - 20 && !sameFork(route, r))) continue;
@@ -391,7 +391,7 @@
         if (resetS == null) { reject(def, 'no level reset plot before the junction', why); continue; }
         const mid = b.shape.samples[Math.floor(b.shape.samples.length / 2)], mainMid = TB.frameAt(track, (b.startS + b.endS) / 2);
         const side = def.side || Math.sign(dot(sub(mid.p, mainMid.p), mainMid.B)) || 1;
-        const route = { id, name: def.street || def.name || 'Seitenstraße', street: def.street || def.name || 'Seitenstraße', type: def.type || 'cut', toward: def.toward || '', note: def.note || '',
+        const route = { id, name: def.street || def.name || 'Seitenstraße', street: def.street || def.name || 'Seitenstraße', type: def.type || 'cut', toward: def.toward || '', note: def.note || '', noteHd: def.hd || '',
           kind: b.saved >= 3 ? 'shortcut' : 'alternate', style: b.saved >= 3 ? 'shortcut' : 'scenic', fork: null,
           surface: def.surface || 'asphalt', perks: def.perks || [], index: routes.length, startS: b.startS, endS: b.endS, resetS, length: b.shape.length, saved: b.saved, side,
           halfWidth: b.halfWidth, samples: b.shape.samples, offset: b.shape.offset || 0 };
@@ -453,7 +453,7 @@
       const side = Math.sign(dot(sub(mid.p, mainMid.p), mainMid.B)) || -Math.sign(seg.angle);
       const id = def.id || track.def.id + '-shortcut-' + def.seg;
       if (routes.some((r) => r.id === id)) continue;
-      const legacy = { id, name: def.street || def.name || 'Klüngel-Abkürzung', street: def.street || def.name || 'Klüngel-Abkürzung', type: 'cut', toward: def.toward || '', note: def.note || '',
+      const legacy = { id, name: def.street || def.name || 'Klüngel-Abkürzung', street: def.street || def.name || 'Klüngel-Abkürzung', type: 'cut', toward: def.toward || '', note: def.note || '', noteHd: def.hd || '',
         kind: 'shortcut', style: 'shortcut', fork: null,
         surface: def.surface || 'asphalt', perks: def.perks || [], index: routes.length, seg: def.seg,
         startS, endS, resetS, length: shape.length, saved, side, halfWidth: def.halfWidth || 3.8, samples: shape.samples, offset: 0 };

@@ -77,12 +77,16 @@
         <button id="voiceBtn" data-icon="speaker">STIMME: AN</button>
         <button id="fontBtn" data-icon="people">SCHRIFT: NORMAL</button>
         <button id="kidsBtn" data-icon="people">PÄNZ-MODUS: AUS</button>
+        <button id="chatBtn" data-icon="speaker">GESCHWÄTZ: NORMAL</button>
+        <button id="hdBtn" data-icon="note">KÖLSCH-HÜLP: AUS</button>
         <button id="voicePickBtn" data-icon="speaker" hidden>SPRECHER</button>
         <button id="tiltBtn" data-icon="phone">NEIGEN: AUS</button>
         <button id="musicBtn" data-icon="note">MUSIK LADEN</button>
         <span id="musicTitle"></span>
         <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
+        <button id="onboardBtn" data-icon="flag">NEU EN KÖLLE?</button>
       </div>
+      <p id="setHint" class="setHint" aria-live="polite"></p>
       <div class="coinReturn" aria-hidden="true"><span>1 KÖLSCH</span><i></i><small>KEIN WECHSELGELD. NUR VOLLJAS.</small></div>
     </div>
   </div>
@@ -95,6 +99,15 @@
   </footer>
   </div>
   <div class="quickStart"><span id="quickTrack"></span><button id="quickStartBtn">JETZ FAHREN ↗</button></div>
+</div>
+
+<!-- ============ NEU EN KÖLLE? (first start: Dä Lange's four door cards) ============ -->
+<div id="onboard" hidden role="dialog" aria-modal="true" aria-labelledby="obTitle">
+  <div class="obBox">
+    <div class="obHead"><canvas id="obFace"></canvas><div><b id="obTitle">NEU EN KÖLLE?</b><p id="obHello"></p><p id="obHelloHd" class="hdl"></p></div></div>
+    <div id="obCards"></div>
+    <div class="obNav"><button id="obSkip"><span>ÖVVERSPRINGE</span><i>überspringen</i></button><span id="obDots"></span><button id="obPrev"><span>◀ ZERÖCK</span><i>zurück</i></button><button id="obNext"><span>WIGGER ▶</span><i>weiter</i></button></div>
+  </div>
 </div>
 
 <!-- ============ HINTERZIMMER ============ -->
@@ -167,8 +180,8 @@
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
   <button id="hudPrompt" hidden>E · AUSSTEIJEN</button>
   <div id="controlsCard" hidden><b>SU FÄHRS DE</b><p id="controlsText"></p></div>
-  <div id="pause" hidden><b>PAUSE</b><p id="pauseLine"></p><div class="pauseBtns"><button id="pauseGo"><span>LOSS JONN (ENTER)</span><i>weiter</i></button><button id="pauseRestart"><span>NEU STARTE (BACKSPACE)</span><i>neu starten</i></button><button id="pauseQuit"><span>MENÜ (ESC)</span><i>zum Menü</i></button></div><small><kbd>↑</kbd> JAS · <kbd>↓</kbd> BREMS · <kbd>←</kbd> <kbd>→</kbd> LENKE · <kbd>SHIFT</kbd> TURBO · <kbd>R</kbd> ZERÖCK OP DE STROSS · <kbd>P</kbd> PAUS<br><kbd>F</kbd> PIXEL · <kbd>C</kbd> KAMERA · <kbd>H</kbd> HUPE · <kbd>K</kbd> KLÜNGEL-TELEFON · <kbd>E</kbd> AUS-/EINSTEIJE · <kbd>M</kbd> TON · <kbd>BACKSPACE</kbd> NEU STARTE</small></div>
-  <div id="msg" title="Tippen: janze Nachricht"><div id="msgWho"></div><div id="msgText"></div></div>
+  <div id="pause" hidden><b>PAUSE</b><p id="pauseLine"></p><p id="pauseHd" class="hdl" hidden></p><div class="pauseBtns"><button id="pauseGo"><span>LOSS JONN (ENTER)</span><i>weiter</i></button><button id="pauseRestart"><span>NEU STARTE (BACKSPACE)</span><i>neu starten</i></button><button id="pauseQuit"><span>MENÜ (ESC)</span><i>zum Menü</i></button></div><small><kbd>↑</kbd> JAS · <kbd>↓</kbd> BREMS · <kbd>←</kbd> <kbd>→</kbd> LENKE · <kbd>SHIFT</kbd> TURBO · <kbd>R</kbd> ZERÖCK OP DE STROSS · <kbd>P</kbd> PAUS<br><kbd>F</kbd> PIXEL · <kbd>C</kbd> KAMERA · <kbd>H</kbd> HUPE · <kbd>K</kbd> KLÜNGEL-TELEFON · <kbd>E</kbd> AUS-/EINSTEIJE · <kbd>M</kbd> TON · <kbd>BACKSPACE</kbd> NEU STARTE</small><small id="pauseKeysHd" class="hdl" hidden>↑ Gas · ↓ Bremse · ← → lenken · R zurück auf die Straße · P Pause · E aus-/einsteigen · Backspace neu starten</small></div>
+  <div id="msg" title="Tippen: janze Nachricht"><div id="msgWho"></div><div id="msgTag"></div><div id="msgText"></div><div id="msgHd" hidden></div></div>
   <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
   <div id="introCard" hidden><b id="introName"></b><span id="introSub"></span></div>
   <div id="demo" hidden>
@@ -209,7 +222,7 @@
       <p id="resTitle" class="resTitle"></p>
       <p id="resWhy" class="resWhy" hidden></p>
       <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt op der Bierdeckel.</div>
-      <div id="nameEntry" class="nameEntry" hidden><b>DING NAME FÖR DE TAFEL</b><div class="neRow"><div class="neCol"><button data-i="0" data-d="1">▲</button><span data-i="0">A</span><button data-i="0" data-d="-1">▼</button></div><div class="neCol"><button data-i="1" data-d="1">▲</button><span data-i="1">A</span><button data-i="1" data-d="-1">▼</button></div><div class="neCol"><button data-i="2" data-d="1">▲</button><span data-i="2">A</span><button data-i="2" data-d="-1">▼</button></div><button id="neOk">OK</button></div><small>▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch</small></div>
+      <div id="nameEntry" class="nameEntry" hidden><b>DING NAME FÖR DE TAFEL<i class="gl">dein Name für die Tafel</i></b><div class="neRow"><div class="neCol"><button data-i="0" data-d="1">▲</button><span data-i="0">A</span><button data-i="0" data-d="-1">▼</button></div><div class="neCol"><button data-i="1" data-d="1">▲</button><span data-i="1">A</span><button data-i="1" data-d="-1">▼</button></div><div class="neCol"><button data-i="2" data-d="1">▲</button><span data-i="2">A</span><button data-i="2" data-d="-1">▼</button></div><button id="neOk">OK</button></div><small>▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch</small></div>
     <div id="resOrden" class="record orden" hidden></div>
       <div id="resExpress" class="express"></div>
       <table><tbody id="resTable"></tbody></table>

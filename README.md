@@ -99,6 +99,33 @@ Die Initialen vom letzten Mal stehen schon da, ein Tipp auf OK trägt den Rekord
 Gabelungsschilder kürzer, und Dä Lange redet seltener. Das Titelbild der Zeitung zeigt den weitesten Sprung
 des Rennens.
 
+**Neu en Kölle?** Beim allerersten Start hält Dä Lange vier Karten an der Tür hoch: Gas, Bremse und Nitro
+(auf dem Handy die Touch-Knöpfe), Kölschgläser (im PÄNZ-MODUS Kamelle) als Striche auf dem Bierdeckel,
+Blitzer → Knöllchen → nach dem dritten die Kripo, dagegen K oder ☎ für das Klüngel-Telefon, und die
+Schilder (grün Abkürzung, blau Panorama, weiß Hauptstrecke; FALSCHPARKER, KRIPO-FREI, KÖLSCH). Danach
+nie wieder von selbst; der Knopf „NEU EN KÖLLE?“ zwischen den Einstellungen zeigt sie noch einmal (→/Enter
+weiter, ← zurück, Esc zu). Jede Einstellung erklärt sich in einer Zeile: als Tooltip und in der Hinweiszeile
+unter den Knöpfen („PÄNZ = Kinder: Kamelle statt Kölsch, keine Trinksprüche“). Die erste LamboGina-Zeile im
+Rennen verrät, wer „dä weiße Keil“ ist: der Traumwagen, den die Karriere freischaltet.
+
+**GESCHWÄTZ: VILL / NORMAL / WENIJ** (im Menü) stellt ein, wie viel Dä Lange redet. VILL ist alles wie
+gehabt, NORMAL (Standard am Rechner) lässt Radio, Rivalen und Sprüche seltener zu Wort kommen, WENIJ
+(Standard auf dem Handy) sagt nur noch, was man wissen muss, und die Geschichten der Orte – höchstens eine
+Zeile alle 10 Sekunden; eine wichtige Zeile (Botengang-Auftrag, Wette, Kripo) wartet bis zu 15 Sekunden
+auf ihren Platz und geht vor Begrüßung und Startsprüchen, die nach 8 Sekunden verfallen. In jeder Stufe gehen
+die Geschichten vor: Kommt ein Ort mit Geschichte, schweigt das Radio, und eine Geschichte schiebt einen
+Spruch beiseite. Keine Zeile kommt zweimal im selben Rennen. Auf dem Handy erscheint eine Geschichte als
+einzeiliges Ortsschild („📍 BARBAROSSAPLATZ – tipp för mieh“, ein Tipp öffnet den ganzen Text), und jede
+Geschichte eines Ortes, an dem man vorbeifährt, landet ganz im Verzällcher unter REKORDE – auch wenn das
+Kästchen gerade belegt war.
+
+**KÖLSCH-HÜLP: AUS / AN.** Kölsch bleibt die Sprache des Spiels. Mit KÖLSCH-HÜLP steht unter jeder
+Geschichte, jeder Notiz zu einer Seitenstraße, jeder Ortsanekdote, dem Pausenspruch, den Orden und den
+Verzällcher-Einträgen eine kleine graue Zeile auf Hochdeutsch (das Feld `hd` der Zeile; Zeilen ohne `hd`
+bekommen nichts dazu). Bedienelemente tragen ihre Übersetzung immer klein darunter: die Tastenkarte
+(JAS / Gas, BREMS / Bremse), die Einstellungen (SCHRIFT: JROSS / Schrift: groß, GESCHWÄTZ / Gerede) und die
+Namenseingabe (DING NAME / dein Name).
+
 | Taste | Funktion |
 |---|---|
 | ↑ / W | Gas |
@@ -495,6 +522,13 @@ wirklich geschlossene Strecken als zo gelten und dass `curv` nach dem Schließen
 `cameras` schießt in Ehrenfeld, auf der Zülpicher und den Poller Wiesen alle 2 s exakte Strahlen von
 der Kamera zum Auto (Rennen und Replay, Verfolger und TV): mindestens 95 % frei. `replay` fährt am Zoo
 über 5:32, prüft Replay-Länge, Tacho und Geist (20 Proben pro Sekunde) und den Geist im Sprung.
+`onboard` prüft, dass jede Geschichte, jede Seitenstraßen-Notiz und jede Ortsanekdote ein `hd` hat und
+jede Einstellung einen Hinweis, dann im Browser die vier Türkarten beim ersten Start (beim zweiten keine),
+NEU EN KÖLLE?, die Übersetzungen unter den Knöpfen und #msgHd nur mit KÖLSCH-HÜLP. `chatter` fährt drei
+Autopilot-Rennen ohne Bild: Dom mit KÖLSCH-HÜLP (jede „Dä Lange verzällt“-Zeile mit Hochdeutsch), Kalk am
+Rechner auf NORMAL (drei Runden, mindestens 80 % der Geschichten im Verzällcher, nichts doppelt) und die
+Zülpicher auf dem Handy auf WENIJ (höchstens eine Zeile pro 10 s, nichts doppelt, Ortsschilder, jede
+passierte Geschichte im Verzällcher). `koelsch-lint` lässt die Hochdeutsch-Felder (`hd`, `titleHd` …) in Ruhe.
 
 ## Debug
 
@@ -509,5 +543,10 @@ zu zeichnen. `STUNTS_FIELD()` liefert Position, Runde und Zustand aller Wagen,
 `STUNTS_CAM_STEPS(n)` fährt n Bilder mit mitlaufender Kamera, `STUNTS_REPLAY_CAM(t, modus, vorlauf)`
 springt im Replay an t, `STUNTS_REC(t)` liefert das aufgezeichnete Bild bei t, `STUNTS_GHOST(t)` setzt
 den Geist auf Rundenzeit t, `STUNTS_OCC(a, b)` den ersten Treffer der Sichtschicht auf der Linie a–b.
+`STUNTS_MSGLOG()` listet jede Zeile des laufenden Rennens (Zeit, Sprecher, Text, Hochdeutsch, Ortsschild),
+`STUNTS_CHAT('WENIJ')` stellt das Geschwätz, `STUNTS_HD(true)` die Kölsch-Hülp um, `STUNTS_STORIES()` und
+`STUNTS_JOURNAL()` zeigen die Geschichten der Strecke und den Verzällcher. Ein von Playwright gesteuerter
+Browser (`navigator.webdriver`) überspringt die Türkarten beim ersten Start, damit die Menütests klicken
+können; `STUNTS_ONBOARD = true` (vor dem Laden gesetzt) zeigt sie trotzdem.
 
 *Et hätt noch emmer jot jejange.*

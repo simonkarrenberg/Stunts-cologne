@@ -23,7 +23,10 @@ const RULES = [
 
 module.exports = async function () {
   const lines = [], hits = [], strings = gameStrings();
-  for (const s of strings) for (const r of RULES) if (r.re.test(s.text)) hits.push(`${s.file}:${s.line} ${r.why}: "${s.text.slice(0, 100)}"`);
+  // the Hochdeutsch help lines (hd, titleHd, hdTouch …) are meant to be Hochdeutsch: the Kölsch sheet leaves them alone
+  const isHd = (s) => !!s.key && /^hd|Hd$/.test(s.key);
+  if (!strings.some(isHd)) hits.push('the string scan no longer sees the hd keys');
+  for (const s of strings) if (!isHd(s)) for (const r of RULES) if (r.re.test(s.text)) hits.push(`${s.file}:${s.line} ${r.why}: "${s.text.slice(0, 100)}"`);
   // the rules must bite: each one has to flag its own bad example
   const bad = ['Op dä Hohenzollernbröck', 'an de Rhing', 'Du kütts hee nit rein', 'Ich hab dich', 'Der Kellner jewinnt', 'Grantig, schnell', 'Hä bringk Kölsch', 'Kein Ampel', 'Dräi Stunts', 'ET HÄTT NOCH ' + 'IMMER JOT JEJANGE', 'hät et Pokal'];
   const good = ["Op der Hohenzollernbröck", "an d'r Rhing", 'Do küss hee nit eren', 'Ich hann dich', 'Ich habe Sie gewinnen lassen.', 'Der Köbes jewinnt', 'Hä brängk Kölsch', 'Kei Ampel', 'Drei Stunts', 'Et hätt noch emmer jot jejange', 'Dä Lange verzällt', 'en Dä Schnelle'];

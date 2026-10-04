@@ -1789,7 +1789,7 @@
       place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : !!prop.userData.landmarkName || FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
-      prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) prop.userData.story = pd.story; propList.push(prop);
+      prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) { prop.userData.story = pd.story; if (pd.hd) prop.userData.storyHd = pd.hd; if (pd.tag) prop.userData.storyTag = pd.tag; } propList.push(prop);
       if (!pd.story && (pd.type === 'polizei' || pd.type === 'blitzer' || pd.type === 'kirche' || pd.type === 'tramline')) pendingStories.push([pd.type === 'tramline' ? 'tram' : pd.type, at * L, prop]);
       prop.userData.kind = 'prop:' + pd.type; g.add(prop);
       if (pd.type === 'rhine' || pd.type === 'rhineSide') clipWater(prop);
@@ -1815,8 +1815,8 @@
     function story(kind, sPos, prop) {
       const lines = placeLines[kind]; if (!lines || !lines.length) return;
       for (const a of storyAt) if (Math.abs(a - sPos) < 90 || Math.abs(a - sPos) > L - 90) return;
-      used[kind] = (used[kind] || 0); if (used[kind] >= 3) return; const text = lines[used[kind] % lines.length]; used[kind]++;
-      storyAt.push(sPos); const holder = prop || new THREE.Object3D(); holder.userData.story = text; holder.userData.at = (sPos % L) / L; holder.userData.type = holder.userData.type || kind; propList.push(holder);
+      used[kind] = (used[kind] || 0); if (used[kind] >= 3) return; const line = lines[used[kind] % lines.length]; used[kind]++; // a line is { t: Kölsch, hd: Hochdeutsch help }
+      storyAt.push(sPos); const holder = prop || new THREE.Object3D(); holder.userData.story = typeof line === 'string' ? line : line.t; if (line.hd) holder.userData.storyHd = line.hd; holder.userData.at = (sPos % L) / L; holder.userData.type = holder.userData.type || kind; propList.push(holder);
     }
     for (const ps of pendingStories) story(ps[0], ps[1]);
     { let seenLoop = false, seenJump = false, seenTunnel = false, seenCork = false;
