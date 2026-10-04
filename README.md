@@ -48,11 +48,22 @@ Das Startmenü ist eine Arcade-Kiste der 80er: beleuchtetes Glas-Marquee, Lautsp
 Bildschirmrahmen, nummerierte Auswahlfelder, eine Metallkonsole mit griffigen Knöpfen und Münzrückgabe.
 Pixel-Icons, zwei Pixel-Joysticks um den roten Start-Knopf und eine blinkende Münze für „Insert Coin“ bleiben.
 Die Streckenliste scrollt innerhalb des Automaten; auch die Pfeiltasten halten die Auswahl sichtbar.
-Wie am Automaten gibt es oben die Zeile „1UP · HI-SCORE · CREDIT“
-(gefüttert aus dem Bierdeckel), ein blinkendes „PRESS START“ und unten das Kleingedruckte von
+Wie am Automaten gibt es oben eine schmale Leiste mit „1UP · HI-SCORE · CREDIT“
+(gefüttert aus dem Bierdeckel) und der Jukebox (BPM), ein blinkendes „PRESS START“ und unten das Kleingedruckte von
 Klüngel Amusements. Fahrer, Wagen und Strecken haben schwarze Namensschilder, auf denen jeder Name
 vollständig steht (lange Namen brechen um, nichts wird abgeschnitten) – auch auf dem Handy, wo die
 Karten in drei Spalten größer sind. Alle Knöpfe und Tasten sind dieselben wie vorher.
+
+**EINFACH LOSFAHRE** ist der erste, große Knopf: ein Tipp, und das Rennen läuft – auf der zuletzt gefahrenen
+Strecke, beim allerersten Mal auf dem Dom mit Tünnes (LEICHT). Die Streckenliste zeigt pro Strecke kleine
+Schilder (LOOP · SPRUNG · SCHRAUB · 3 WEGE · NACHT); Veedels-Pass und Nebenwege stehen hinter **▶ DETAILS**.
+Auf dem 1366×768-Laptop stehen Fahrer und Wagen ganz über der JETZ-FAHREN-Leiste.
+
+**Auf dem Handy** passt das Menü auf einen Bildschirm: oben eine schmale Leiste (Logo, Jukebox), darunter
+EINFACH LOSFAHRE und **☰ MEHR**, die Strecken als Karussell zum Wischen (Bild, Name, eine schlichte Zeile,
+Schilder), Fahrer und Wagen als Wisch-Chips und unten die feste JETZ-FAHREN-Leiste. Karriere, Botengang,
+Hinterzimmer, Cup, Baukasten, Rekorde, Einstellungen und das Impressum liegen hinter ☰ MEHR. Keine Schrift
+ist kleiner als 9 px, mit SCHRIFT: JROSS mindestens 12 px. Tablets und Touch-Laptops bekommen dasselbe Menü, nur größer gezeichnet.
 
 ## Spielen (auch auf dem Handy)
 
@@ -237,11 +248,15 @@ zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für
   Platz und meckert; sonst kommentiert der Türsteher.
 - **Regen:** Auf nassen Strecken (Domschatz-Raub) fällt Regen.
 - **Siegerehrung:** Nach der letzten Cup-Strecke stehen die ersten drei auf dem Podest, mit Portrait und Punkten.
-- **Karriere „Nachtschicht“:** Zwölf Kapitel, die der Türsteher aneinanderreiht – vom Neuen auf den
-  Ringen („unter die ersten fünf“) über Kölsch am Dom, Podium in Ehrenfeld, einen Auftrag im Zoch,
-  Siege im Hafen und auf der Zülpicher bis zur letzten Nacht auf den Poller Wiesen. Drei Kapitel sind
-  Botengänge. Jedes Kapitel hat ein Ziel (Platz, Sieg, Kölsch, Auftrag), das im Streckentitel und in
-  der Vorstellung steht; geschafft heißt weiter, sonst nochmal. Der Fortschritt wird gespeichert. Der
+- **Karriere „Nachtschicht“:** Zwölf Kapitel, die der Türsteher aneinanderreiht – in der Reihenfolge der
+  Session: vom Neuen auf den Ringen („unter die ersten fünf“) über Stunts am Dom und das Podium in Ehrenfeld
+  zum Elften im Elften auf der Zülpicher, dann Rosenmontag im Zoch (Auftrag und Paket), Karnevalsdienstag
+  nachts („Dä Nubbel es schuld. Wie jedes Johr.“), Aschermittwoch im Hafen, Schäl Sick, Koffer, Domschatz
+  und die letzte Nacht auf den Poller Wiesen. Drei Kapitel sind Botengänge. **KARRIERE** öffnet eine Karte
+  mit allen zwölf Kapiteln: Strecke, Ziel, geschafft/offen/gesperrt und bis zu drei Sterne (Ziel · Top 3,
+  beim Botengang heil angekommen · kein Knöllchen). Jedes geschaffte Kapitel lässt sich mit einem Tipp
+  nochmal fahren, etwa mit dem Nachwuchs. Geschafft heißt weiter, sonst nochmal. Der Fortschritt wird pro
+  Kapitel gespeichert; alte Spielstände (nach Kapitelnummer) werden einmalig übernommen. Der
   weiße LamboGina Contessa ist bis zum Ende der Nachtschicht gesperrt (🔒 im Menü) und wird mit dem
   letzten Kapitel freigeschaltet, zusammen mit dem Orden LEGENDE VUM RING.
 - **Botengang (vielleicht kriminell, vielleicht nicht):** Auf jeder Strecke startbar, ohne Rivalen.

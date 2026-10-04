@@ -880,3 +880,160 @@ body.mobile #onboard .obCard { min-height: 0; padding: 6px 10px; } body.mobile #
 body.mobile #onboard .obCard p { font-size: 8px; line-height: 1.7; } body.mobile #onboard .obCard p.hdl { font-size: 7px; margin-top: 4px; }
 body.mobile #onboard .obNav { margin-top: 6px; } body.mobile #onboard button { min-height: 40px; min-width: 96px; padding: 6px 8px; font-size: 8px; }
 body.bigtext #onboard .obBox { zoom: 1.2; } body.mobile.bigtext #onboard .obBox { zoom: 1; } body.mobile.bigtext #onboard .obCard p { font-size: 9px; }
+/* ---------- KARRIERE: the Nachtschicht map, twelve chapter tiles in Session order ---------- */
+#careerMap { position: fixed; inset: 0; z-index: 22; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(6, 7, 16, 0.86); }
+#careerMap .cmBox { width: min(1100px, 100%); max-height: 100%; overflow: auto; background: linear-gradient(180deg, #1b1236, #0b0c1f); border: 3px solid var(--yellow); box-shadow: 6px 6px 0 #000; padding: 12px 16px; }
+#careerMap .cmHead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+#careerMap #cmTitle { font-size: 14px; color: var(--yellow); text-shadow: 3px 3px 0 #000; letter-spacing: 1px; }
+#careerMap .cmSession { flex: 1; font-size: 9px; color: var(--pink); letter-spacing: 1px; }
+#careerMap button { font-family: var(--px); cursor: pointer; }
+#cmClose, #cmGo { background: #2a2f55; color: #fff; border: 3px solid #000; box-shadow: 3px 3px 0 #000; padding: 10px 14px; font-size: 10px; min-height: 44px; }
+#cmGo { background: var(--red2); border-color: var(--yellow); font-size: 11px; }
+.cmTiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.cmTile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 112px; padding: 8px 10px 8px 34px; text-align: left; color: var(--cream); background: linear-gradient(150deg, #192331, #0b101a 65%); border: 2px solid #344152; }
+.cmTile:hover, .cmTile:focus-visible { border-color: var(--cyan); outline: none; box-shadow: 0 0 10px rgba(79,214,255,.35); }
+.cmTile .cmNo { position: absolute; left: 6px; top: 8px; min-width: 22px; padding: 2px 3px; text-align: center; font-size: 10px; color: #000; background: #8d86b5; }
+.cmTile b { font-size: 10px; line-height: 1.4; color: #fff; }
+.cmTile .cmTrack { font-size: 9px; color: var(--cyan); line-height: 1.4; }
+.cmTile .cmGoal { font-size: 9px; color: #ddd; }
+.cmTile .cmStars { display: flex; gap: 4px; } /* pixel stars: a clip-path star, dim until earned */
+.cmTile .cmStars i { width: 14px; height: 14px; background: #4a4462; clip-path: polygon(50% 0, 63% 36%, 100% 36%, 70% 58%, 81% 100%, 50% 74%, 19% 100%, 30% 58%, 0 36%, 37% 36%); }
+.cmTile .cmStars i.on { background: var(--yellow); }
+.cmTile em { font-style: normal; }
+.cmTile .cmState { margin-top: auto; font-size: 9px; color: #b9b2c9; }
+.cmTile .cmEpi { font-size: 9px; line-height: 1.5; color: #ffb36b; }
+.cmTile.done { border-color: #3d7a55; } .cmTile.done .cmNo { background: var(--green); } .cmTile.done .cmState { color: var(--green); }
+.cmTile.cur { border-color: var(--yellow); box-shadow: 0 0 0 1px var(--yellow), 0 0 16px rgba(255,210,63,.35); } .cmTile.cur .cmNo { background: var(--yellow); } .cmTile.cur .cmState { color: var(--yellow); }
+.cmTile.locked { opacity: .5; cursor: not-allowed; } .cmTile.locked b { color: #aaa; }
+.cmTile.shake { animation: carShake 0.4s; }
+#careerMap .cmFoot { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+#cmNote { flex: 1; margin: 0; font-size: 9px; line-height: 1.7; color: #d6bc87; }
+body.mobile #careerMap { padding: 6px max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left)); }
+body.mobile #careerMap .cmBox { padding: 8px 10px; }
+body.mobile #careerMap .cmHead { margin-bottom: 6px; gap: 8px; } body.mobile #careerMap #cmTitle { font-size: 11px; } body.mobile #careerMap .cmSession { display: none; }
+body.mobile .cmTiles { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+body.mobile .cmTile { min-height: 92px; padding: 4px 4px 4px 4px; gap: 2px; } body.mobile .cmTile .cmNo { position: static; font-size: 9px; }
+body.mobile .cmTile b { font-size: 9px; overflow-wrap: anywhere; } body.mobile .cmTile .cmTrack, body.mobile .cmTile .cmEpi { display: none; }
+body.mobile .cmTile .cmStars { gap: 2px; } body.mobile .cmTile .cmStars i { width: 12px; height: 12px; }
+body.mobile .cmTile .cmGoal em, body.mobile .cmTile .cmState:not(.cur) em { display: none; } body.mobile .cmTile { min-height: 0; } body.mobile #cmNote { font-size: 9px; line-height: 1.5; }
+body.mobile #cmClose { padding: 6px 10px; font-size: 9px; min-height: 40px; } body.mobile #cmGo { padding: 6px 12px; font-size: 10px; min-height: 44px; }
+body.mobile #careerMap .cmFoot { margin-top: 6px; }
+body.bigtext #careerMap .cmBox { zoom: 1.2; } body.mobile.bigtext #careerMap .cmBox { zoom: 1; }
+body.mobile.bigtext .cmTiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } /* big letters or a small phone: four wide, so a title breaks between words */
+@media (max-width: 760px) { body.mobile .cmTiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+body.mobile.bigtext .cmTile b, body.mobile.bigtext .cmTile .cmGoal, body.mobile.bigtext .cmTile .cmState, body.mobile.bigtext #cmNote { font-size: 12px; }
+/* ---------- one-tap start and a short menu ----------
+   desktop: maker's name, hi-score and the jukebox (BPM) sit in the slim top strip, the marquee is lower, and the rail under it
+   carries the big EINFACH LOSFAHRE; the jargon (Veedels-Pass, side streets) is folded behind DETAILS */
+.cabinetCrown .hiScore { position: static; transform: none; display: flex; gap: 18px; font-size: 8px; z-index: auto; }
+.cabinetCrown .juke { position: static; flex: none; font-size: 8px; padding: 4px 8px; gap: 8px; }
+.cabinetCrown .crownName { flex: 1; }
+#menu .cabinetCrown { padding: 3px 14px; min-height: 26px; gap: 16px; }
+#menu .banner { height: 100px; }
+#menu #logo { top: 5px; width: 360px; height: 90px; }
+#menu .bannerQuote { top: 14px; }
+#menu .selectionRail { padding: 6px 18px; gap: 14px; }
+/* a lower cabinet so that 01 FAHRER and 02 WAGEN both stand above the JETZ FAHREN bar on a 1366×768 laptop */
+#menu { padding-top: 10px; }
+#menu .panel h2 { margin-bottom: 8px; padding-bottom: 6px; }
+#menu .menuGrid { row-gap: 8px; }
+#menu .stat { line-height: 1.35; }
+#menu > .quickStart { padding-top: 6px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+#menu .drivers .card canvas { width: 48px; height: 60px; }
+#menu #driverCards .card > b { min-height: 22px; }
+#menu #carCards .card > b { min-height: 26px; }
+#menu .easyGo b { font-size: 15px; color: #fff; text-shadow: 2px 2px 0 #5a0810; letter-spacing: .06em; }
+.easyGo { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; min-width: min(420px, 100%); min-height: 50px; padding: 6px 22px; border: 3px solid #f2bd5c; border-radius: 9px; color: #fff; background: linear-gradient(#ff5245, #d12f36 50%, #a91b2a); box-shadow: inset 0 1px 0 #ffb09a, 0 4px 0 #5a0810, 0 0 0 3px #090a10, 0 0 20px rgba(255,42,42,.45); text-shadow: 2px 2px 0 #5a0810; font-family: var(--px); }
+.easyGo b { font-size: 15px; font-weight: normal; letter-spacing: .06em; }
+.easyGo small { font-size: 9px; color: #ffe9a8; letter-spacing: .04em; }
+.easyGo:hover { background: linear-gradient(#ff7562, #e0202e 50%, #c52b36); } .easyGo:active { transform: translateY(3px); box-shadow: inset 0 1px 0 #ffb09a, 0 1px 0 #5a0810, 0 0 0 3px #090a10; }
+.moreBtn { display: none; font-family: var(--px); }
+.trackRow { flex: none; } /* a row never squeezes below its content in the scrolling list */
+.trackRow .info .chips { display: flex; flex-wrap: wrap; gap: 4px; } .trackRow .info .chips:empty { display: none; }
+.trackRow .info .chips i { font-style: normal; font-size: 9px; line-height: 1; padding: 3px 4px; color: #0b0d1a; background: #8ec4ce; border-radius: 2px; }
+.trackMore { margin-top: 8px; } .trackMore summary { list-style: none; } .trackMore summary::-webkit-details-marker { display: none; } .trackMore[open] summary .tmArrow { display: inline-block; transform: rotate(90deg); }
+.trackMore summary { cursor: pointer; color: #e3b655; font-size: 9px; letter-spacing: .05em; padding: 4px 3px; }
+.trackMore summary:hover { color: #ffe395; } .trackMore .routeLegend { margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .easyGo:active { transform: none; } }
+
+/* phone: one screen. A slim strip (logo, jukebox), EINFACH LOSFAHRE and ☰ MEHR, the track carousel (picture, name, one plain line,
+   icon chips), driver and car as swipe chips, the sticky JETZ FAHREN bar. KARRIERE, HINTERZIMMER, CUP, BAUKASTEN, REKORDE and the
+   settings wait behind ☰ MEHR. No text under 9 px; with JROSSE SCHRIFT 12 px (letters grow in place, no zoom) */
+body.mobile #menu { --f: 9px; padding: 0 max(10px, env(safe-area-inset-right)) 60px max(10px, env(safe-area-inset-left)); }
+body.mobile.bigtext #menu { --f: 12px; }
+body.mobile.bigtext .arcadeCabinet { zoom: 1; }
+body.mobile #menu .arcadeCabinet { position: relative; padding: 0 6px 6px; border-top-width: 0; border-radius: 0 0 6px 6px; }
+body.mobile #menu .cabinetCrown { position: absolute; z-index: 5; top: 0; right: 10px; min-height: 0; height: 36px; padding: 0; gap: 0; }
+body.mobile #menu .cabinetCrown > :not(.juke) { display: none; }
+body.mobile #menu .juke { font-size: var(--f); padding: 3px 6px; gap: 6px; } body.mobile #menu .juke .js { display: none; }
+body.mobile #menu .banner { height: 36px; margin: 0 -6px; border-radius: 0; }
+body.mobile #menu #logo { top: 2px; left: 6px; width: 128px; height: 32px; max-width: 40vw; }
+body.mobile #menu .bannerQuote { display: none; }
+body.mobile #menu .selectionRail { padding: 3px 0; gap: 8px; }
+body.mobile #menu .selectionRail > span { display: none; }
+body.mobile .easyGo { flex: 1; min-width: 0; min-height: 44px; padding: 5px 10px; flex-direction: row; justify-content: center; gap: 12px; border-width: 2px; }
+body.mobile #menu .easyGo b { font-size: 12px; white-space: nowrap; } body.mobile .easyGo small { font-size: var(--f); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mobile.bigtext #menu .easyGo b { font-size: 14px; }
+body.mobile .moreBtn { display: block; flex: none; min-height: 44px; min-width: 96px; padding: 6px 10px; font-size: var(--f); color: #ffe198; background: linear-gradient(#4d4351, #302839); border: 2px solid #ba9a60; border-radius: 6px; }
+body.mobile #menu .menuGrid { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 0; }
+body.mobile #menu .tracks { order: 1; } body.mobile #menu .drivers { order: 2; } body.mobile #menu .cars { order: 3; } body.mobile #menu .startRow { order: 4; }
+body.mobile #menu .panel { padding: 4px 6px; border-width: 3px !important; } /* the pixel frame tile is set inline at 8 px */
+body.mobile #menu .panel h2 { min-height: 0; margin: 0 0 4px; padding: 0 0 3px; font-size: var(--f); gap: 6px; }
+body.mobile #menu .panelNumber { min-width: 0; height: auto; padding: 1px 4px; font-size: var(--f); }
+body.mobile #menu .panelHint, body.mobile #menu .langer, body.mobile #menu .p1 { display: none; }
+/* track carousel */
+body.mobile #menu .trackList { display: flex; flex-direction: row; gap: 6px; max-height: none; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; scrollbar-gutter: auto; padding-bottom: 3px; -webkit-overflow-scrolling: touch; }
+body.mobile #menu .trackRow { flex: 0 0 210px; display: grid; grid-template-columns: 1fr; grid-template-rows: auto; min-height: 0; padding: 4px; gap: 3px; scroll-snap-align: start; }
+body.mobile #menu .trackRow .thumb { width: 100%; height: 30px; object-fit: cover; }
+body.mobile #menu .trackRow .map { display: none; }
+body.mobile #menu .trackRow .info { gap: 2px; }
+body.mobile #menu .trackRow .info b { font-size: var(--f); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.mobile #menu .trackRow .info .sub { font-size: var(--f); line-height: 1.3; color: #c1cad3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.mobile #menu .trackRow .info .wp, body.mobile #menu .trackRow .pips { display: none; }
+body.mobile #menu .trackRow .info .chips { flex-wrap: wrap; overflow: hidden; max-height: calc(var(--f) + 4px); } /* one row: a chip that does not fit drops out whole, never cut in half */ body.mobile #menu .trackRow .info .chips i { flex: none; font-size: var(--f); padding: 2px 3px; }
+body.mobile #menu .tracks { position: relative; }
+body.mobile #menu .trackMore:not([open]) summary { position: absolute; top: 3px; right: 8px; }
+body.mobile #menu #trackDesc { display: none; font-size: var(--f); margin-top: 4px; }
+body.mobile.trackDetails #menu #trackDesc { display: block; }
+body.mobile #menu .trackMore { margin-top: 2px; } body.mobile #menu .trackMore summary { font-size: var(--f); padding: 2px; }
+body.mobile #menu .routeLegend { font-size: var(--f); }
+/* driver and car: swipe chips */
+body.mobile #menu .drivers, body.mobile #menu .cars { display: flex; align-items: center; gap: 6px; }
+body.mobile #menu .drivers h2, body.mobile #menu .cars h2 { flex: none; width: 84px; margin: 0; padding: 0; border: 0; flex-wrap: wrap; line-height: 1.3; }
+body.mobile #menu .drivers h2 .panelNumber, body.mobile #menu .cars h2 .panelNumber { display: none; }
+body.mobile #menu #driverCards, body.mobile #menu #carCards { flex: 1; min-width: 0; display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; padding-bottom: 2px; }
+body.mobile #menu .card { flex: 0 0 auto; flex-direction: row; align-items: center; gap: 5px; padding: 2px 6px 2px 2px; min-height: 0; scroll-snap-align: start; }
+body.mobile #menu .card canvas { width: 20px; height: 25px; border-width: 1px; }
+body.mobile #menu #carCards .card canvas { width: 54px; height: 19px; }
+body.mobile #menu .card > b { width: auto; min-height: 0 !important; margin: 0; padding: 0; border: 0; font-size: var(--f); white-space: nowrap; line-height: 1.2; }
+body.mobile #menu .card small, body.mobile #menu .card .stat { display: none; }
+body.mobile #menu .card .diff { font-size: var(--f); margin: 0; }
+body.mobile #menu .card.car .tease { display: none; }
+/* ☰ MEHR: the cabinet's lower half, only when asked for */
+body.mobile #menu .startRow { display: none; margin: 0; padding: 8px; gap: 8px; }
+body.mobile.menuMore #menu .startRow { display: flex; }
+body.mobile #menu .menuFooter { display: none; }
+body.mobile.menuMore #menu .menuFooter { display: flex; font-size: var(--f); padding: 8px 4px; }
+body.mobile #menu .deckPlate, body.mobile #menu .coinLine, body.mobile #menu .pressStart, body.mobile #menu .startCab, body.mobile #menu .coinReturn { display: none; }
+body.mobile #menu .modeRow button, body.mobile #menu .clubEntry, body.mobile #menu .subBtns button { font-size: var(--f); line-height: 1.6; padding: 8px; min-height: 44px; }
+body.mobile #menu .gl, body.mobile #menu .setHint, body.mobile #menu #musicTitle { font-size: var(--f); }
+body.mobile #menu .menuFooter .slogan, body.mobile #menu .menuFooter .tipp, body.mobile #menu .menuFooter .copy { font-size: var(--f); }
+body.mobile #menu .p2Info { font-size: var(--f); }
+/* the sticky JETZ FAHREN bar */
+body.mobile #menu > .quickStart { padding: 6px 12px max(6px, env(safe-area-inset-bottom)); gap: 12px; }
+body.mobile #menu > .quickStart::before { content: none; }
+body.mobile #menu #quickTrack { font-size: var(--f); max-width: 50vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.mobile #menu #quickStartBtn { font-size: var(--f); min-height: 38px; padding: 7px 14px; }
+/* a tablet or a touch laptop is "mobile" too: the same one-screen menu, drawn larger so it fills the screen */
+@media (min-width: 900px) and (min-height: 560px) {
+  body.mobile #menu { --f: 12px; } body.mobile.bigtext #menu { --f: 14px; }
+  body.mobile #menu .banner { height: 64px; } body.mobile #menu #logo { width: 240px; height: 60px; max-width: 40vw; } body.mobile #menu .cabinetCrown { height: 64px; }
+  body.mobile #menu .selectionRail { padding: 8px 0; } body.mobile .easyGo { min-height: 64px; } body.mobile #menu .easyGo b { font-size: 18px; } body.mobile .moreBtn { min-height: 64px; min-width: 140px; }
+  body.mobile #menu .menuGrid { gap: 10px; } body.mobile #menu .panel { padding: 8px 10px; }
+  body.mobile #menu .trackRow { flex-basis: 300px; padding: 6px; gap: 5px; } body.mobile #menu .trackRow .thumb { height: 96px; }
+  body.mobile #menu .drivers h2, body.mobile #menu .cars h2 { width: 120px; }
+  body.mobile #menu .card { gap: 8px; padding: 4px 10px 4px 4px; } body.mobile #menu .card canvas { width: 48px; height: 60px; border-width: 2px; } body.mobile #menu #carCards .card canvas { width: 120px; height: 42px; }
+  body.mobile #menu #quickStartBtn { min-height: 48px; }
+}
+@media (max-width: 1100px) { .cabinetCrown .hiScore { display: none; } }
+@media (max-width: 650px) { .cabinetCrown .crownName { display: none; } }

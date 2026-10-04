@@ -1309,22 +1309,29 @@
       headlineCaught: 'DÄ SCHNELLE: KRIPO STOPPT KURIER {where} – PAKET WOR „KAMELLE“',
       headlineLate: 'DÄ SCHNELLE: KURIER ZU SPÄT – PAKET JETZ BEIM FUNDBÜRO'
     },
-    // Karriere: the Nachtschicht, twelve chapters from the new kid at the door to the white wedge
+    // Karriere: the Nachtschicht, twelve chapters from the new kid at the door to the white wedge, in Session order:
+    // Elfter im Elften opens the Session, then Rosenmontag, Karnevalsdienstag night (the Nubbel burns), Aschermittwoch and after.
+    // Progress is saved by chapter id; careerV1 is the order of the first release, so an old save ({ chapter: n }) keeps its chapters.
     career: [
-      { track: 'chicago', type: 'race', goal: { place: 5 }, title: 'DER NEUE', intro: 'Du bes neu. Fahr die Ringe, komm unter die ersten fünf, dann rede mer weiter.', outro: 'Nit schlecht för ne Neue. Morje jeht et weiter.' },
-      { track: 'dom', type: 'race', goal: { stunts: 3 }, title: 'MORJENS AM DOM', intro: 'Am Dom sin de Tauben fröher wach als ich. Drei saubere Stunts – Looping oder Sprung –, dann bes de dobei.', outro: 'Drei Stunts vür aach. De Tauben han applaudiert.' },
-      { track: 'chicago', type: 'mission', goal: {}, title: 'DER ERSTE UMSCHLAG', intro: 'Dinge erste Botengang. Hol wat, bräng et wohin, lass dich nit erwische. Mehr musste nit wisse.', outro: 'Sauber abjeliefert. Der Klüngel hät dich jesinn.' },
-      { track: 'ehrenfeld', type: 'race', goal: { place: 3 }, title: 'TAPE RUN', intro: 'Ehrenfeld, blaue Stunde. Podium, Jung. Sonst lacht Schäl.', outro: 'Podium in Ehrenfeld. Schäl lacht nit mehr.' },
-      { track: 'zoch', type: 'race', goal: { auftrag: 1 }, title: 'KAMELLE FÖR TOM', intro: 'Rosenmontag. Ich jeb dir unterwegs en Auftrag. Erledige en. Dat is alles.', outro: 'Auftrag erledigt, mitten im Zoch. Respekt.' },
-      { track: 'zoch', type: 'mission', goal: {}, title: 'DAT PAKET VUM ROSENMONTAG', intro: 'E Paket im Zoch. Vielleicht Kamelle, vielleicht nit. Hol et, bräng et, un de Kripo hät heut och frei. Denkste.', outro: 'Kamelle, sach ich. Un du sachs och Kamelle.' },
-      { track: 'rheinauhafen', type: 'race', goal: { win: true }, title: 'HAFENRUNDE', intro: 'Hafen, Sonnenuntergang. Ich will en Sieg. Ming Wette steht.', outro: 'Jewonne im Hafen. Die Wette is bezahlt.' },
-      { track: 'zoo', type: 'race', goal: { place: 3 }, title: 'SCHÄL SICK', intro: 'Op de Schäl Sick jilt: nit unter die ersten drei, dann küss de nit mieh über die Brück.', outro: 'Über die Brück un zurück. Podium.' },
-      { track: 'rheinauhafen', type: 'mission', goal: {}, title: 'DER KOFFER VUM HAFEN', intro: 'Ne Koffer im Hafen. Schwer. Frag nit. Sprung übers Hafenbecken inklusive.', outro: 'Der Koffer is anjekumme. Trocken sojar.' },
-      { track: 'heist', type: 'race', goal: { place: 3 }, title: 'DOMSCHATZ', intro: '1975. De Kripo hängt dir vum Start an im Nacken. Podium, un kein Wort.', outro: 'Podium mit der Kripo im Nacken. Du bes jetz einer von uns.' },
-      { track: 'zuelpicher', type: 'race', goal: { win: true }, title: 'ELFTER IM ELFTEN', intro: 'Aschermittwoch es lang vörbei. Elfter im Elften: De nächste Session fängk an, op der Zülpicher. Doppelt so vill Kölsch, un du jewinnst trotzdem.', outro: 'Sieg im Kwartier Latäng. Die Tür jeht auf.' },
-      { track: 'poller', type: 'race', goal: { win: true }, title: 'DIE TÜR STEHT OFFE', intro: 'Letzte Nacht. Poller Wiesen, drei Loopings. Jewinn, un der weiße Keil is dinge.', outro: 'Die Tür steht offe. För emmer. Der weiße Keil is dinge – LamboGina Contessa, K-LG 88.' }
+      { id: 'neue', track: 'kalk', type: 'race', goal: { place: 5 }, title: 'DER NEUE', intro: 'Du bes neu. Fahr die Ringe, komm unter die ersten fünf, dann rede mer weiter.', outro: 'Nit schlecht för ne Neue. Morje jeht et weiter.' },
+      { id: 'dom', track: 'dom', type: 'race', goal: { stunts: 3 }, title: 'MORJENS AM DOM', intro: 'Am Dom sin de Tauben fröher wach als ich. Drei saubere Stunts – Looping oder Sprung –, dann bes de dobei.', outro: 'Drei Stunts vür aach. De Tauben han applaudiert.' },
+      { id: 'umschlag', track: 'kalk', type: 'mission', goal: {}, title: 'DER ERSTE UMSCHLAG', intro: 'Dinge erste Botengang. Hol wat, bräng et wohin, lass dich nit erwische. Mehr musste nit wisse.', outro: 'Sauber abjeliefert. Der Klüngel hät dich jesinn.' },
+      { id: 'taperun', track: 'ehrenfeld', type: 'race', goal: { place: 3 }, title: 'TAPE RUN', intro: 'Ehrenfeld, blaue Stunde. Podium, Jung. Sonst lacht Schäl.', outro: 'Podium in Ehrenfeld. Schäl lacht nit mehr.' },
+      { id: 'elfter', track: 'zuelpicher', type: 'race', goal: { place: 3 }, title: 'ELFTER IM ELFTEN', intro: 'Elfter im Elften, elf Uhr elf: De Session fängk an, op der Zülpicher. Doppelt so vill Kölsch, un du küss trotzdem op et Podium.', outro: 'Podium im Kwartier Latäng. De Session hät anjefange – bes Rosenmontag es et nit mieh wigg.' },
+      { id: 'kamelle', track: 'zoch', type: 'race', goal: { auftrag: 1 }, title: 'KAMELLE FÖR TOM', intro: 'Rosenmontag. Ich jeb dir unterwegs en Auftrag. Erledige en. Dat is alles.', outro: 'Auftrag erledigt, mitten im Zoch. Respekt.' },
+      { id: 'paket', track: 'zoch', type: 'mission', goal: {}, title: 'DAT PAKET VUM ROSENMONTAG', intro: 'E Paket im Zoch. Vielleicht Kamelle, vielleicht nit. Hol et, bräng et, un de Kripo hät heut och frei. Denkste.', outro: 'Kamelle, sach ich. Un du sachs och Kamelle.', epilogue: 'Karnevalsdienstag, Mitternacht. Dä Nubbel brennt. Dä Nubbel es schuld. Wie jedes Johr.' },
+      { id: 'hafen', track: 'rheinauhafen', type: 'race', goal: { win: true }, title: 'HAFENRUNDE', intro: 'Aschermittwoch. Der Fastelovend es vörbei, ming Wette nit. Hafen, Sonnenuntergang: Ich will en Sieg.', outro: 'Jewonne im Hafen. Die Wette is bezahlt.' },
+      { id: 'schaelsick', track: 'zoo', type: 'race', goal: { place: 3 }, title: 'SCHÄL SICK', intro: 'Op de Schäl Sick jilt: nit unter die ersten drei, dann küss de nit mieh über die Brück.', outro: 'Über die Brück un zurück. Podium.' },
+      { id: 'koffer', track: 'rheinauhafen', type: 'mission', goal: {}, title: 'DER KOFFER VUM HAFEN', intro: 'Ne Koffer im Hafen. Schwer. Frag nit. Sprung übers Hafenbecken inklusive.', outro: 'Der Koffer is anjekumme. Trocken sojar.' },
+      { id: 'domschatz', track: 'heist', type: 'race', goal: { place: 3 }, title: 'DOMSCHATZ', intro: '1975. De Kripo hängt dir vum Start an im Nacken. Podium, un kein Wort.', outro: 'Podium mit der Kripo im Nacken. Du bes jetz einer von uns. Die Tür jeht auf.' },
+      { id: 'tuer', track: 'poller', type: 'race', goal: { win: true }, title: 'DIE TÜR STEHT OFFE', intro: 'Letzte Nacht. Poller Wiesen, drei Loopings. Jewinn, un der weiße Keil is dinge.', outro: 'Die Tür steht offe. För emmer. Der weiße Keil is dinge – LamboGina Contessa, K-LG 88.' }
     ],
-    careerLines: { fail: ['Nit jeschafft. Morje nochmal, die Tür läuft nit weg.', 'Dat wor nix. Kapitel nochmal, Jung.'], locked: ['Der weiße Keil steht hinger der Tür. Karriere beenden, dann küss de dran.', 'Contessa? Erst die Nachtschicht, dann der Keil.'] },
+    careerV1: ['neue', 'dom', 'umschlag', 'taperun', 'kamelle', 'paket', 'hafen', 'schaelsick', 'koffer', 'domschatz', 'elfter', 'tuer'],
+    careerLines: { fail: ['Nit jeschafft. Morje nochmal, die Tür läuft nit weg.', 'Dat wor nix. Kapitel nochmal, Jung.'], locked: ['Der weiße Keil steht hinger der Tür. Karriere beenden, dann küss de dran.', 'Contessa? Erst die Nachtschicht, dann der Keil.'],
+      // the KARRIERE map: tile states, the continue button and the star legend
+      mapDone: 'JESCHAFFT · NOCHMAL', mapCur: 'HÜCK DRAN', mapOpen: 'NOCH OFFE', mapLocked: 'NOCH ZO', mapGo: 'WIGGER MET KAPITEL', mapAgain: 'NOCHMAL VUN VÖRNE: KAPITEL 1',
+      mapLockedLine: ['Nit esu flöck. Eets dat Kapitel dovör.', 'Die Tür es noch zo. Eins nohm andere, Jung.'],
+      mapLegend: 'DREI STÄÄNE: ZIEL · TOP 3 (BOTENGANG: HEIL ANJEKUMME) · KEIN KNÖLLCHE. Jeschaffte Kapitel kanns de emmer widder fahre – och met dingem Pänz.' },
     // dat Hinterzimmer: the back room where the underworld plays cards for Deckel strokes
     club: {
       welcome: ['Hinterzimmer. Hee wird jespielt, nit jeredet. Wat darf et sin?', 'Setz dich. Der Köbes brängk Kölsch, Tom brängk de Kaate, ich bränge de Rauh.', 'Kei Kredit, Jung. Striche op der Deckel, söns nix. Also, wat spiele mer?', 'Die Tür is zu. Wat hee passiert, bleibt hee. Außer du verlierst, dat erzähl ich.'],
@@ -1378,6 +1385,8 @@
     },
     // one line per menu setting: what the button does, in plain words (shown as its title and in the hint line)
     hints: {
+      easyBtn: 'EINFACH LOSFAHRE = sofort ein Rennen: die letzte Strecke; beim ersten Mal der Dom mit Tünnes (leicht)',
+      moreBtn: 'MEHR = Karriere, Hinterzimmer, Cup, Baukasten, Rekorde und die Einstellungen',
       chatBtn: 'GESCHWÄTZ = wie viel der Lange redet: VILL alles, NORMAL, WENIJ nur Wichtiges und Geschichten',
       hdBtn: 'KÖLSCH-HÜLP = eine graue Zeile auf Hochdeutsch unter Geschichten, Pause und Orden',
       onboardBtn: 'NEU EN KÖLLE? = die vier Karten vom Lange: Steuerung, Deckel, Kripo, Schilder',
