@@ -824,3 +824,8 @@ body.mobile.bigtext .hudTitle { font-size: 10px; } body.mobile.bigtext .hudStats
 body.mobile.bigtext #msg { top: calc(var(--ht) + 36px); max-width: none; } body.mobile.bigtext #msgWho { font-size: 8px; } body.mobile.bigtext #msgText { font-size: 10px; }
 body.mobile.bigtext #hudShortcut, body.mobile.bigtext #controlsCard { top: calc(var(--ht) + 74px); } body.mobile.bigtext #hudShortcut { font-size: 9px; }
 body.mobile.bigtext #controlsCard b { font-size: 10px; } body.mobile.bigtext #controlsCard p { font-size: 10px; }
+/* the fork right after a loop: the banner drops lower (into the driver's eye line) and turns yellow-edged for 2 s */
+#hudShortcut.low { top: 32%; border-color: #ffd400; outline-color: #000; font-size: 12px; animation: lowIn .25s steps(3); }
+body.mobile #hudShortcut.low, body.mobile.bigtext #hudShortcut.low { top: 34%; left: 50%; right: auto; transform: translateX(-50%); max-width: 70vw; font-size: 8px; }
+body.mobile.bigtext #hudShortcut.low { font-size: 10px; } /* Jroße Schrift stays large in the low banner too */
+@keyframes lowIn { from { opacity: 0; } to { opacity: 1; } }

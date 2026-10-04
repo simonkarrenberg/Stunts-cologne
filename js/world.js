@@ -920,6 +920,17 @@
     return c < 8 ? 'green' : c < 10 ? 'yellow' : c < 16 ? 'red' : 'redyellow';
   }
   P.schild = (o) => { const g = new THREE.Group(); g.add(cyl(0.06, 0.08, 3, 0x777777, 0, 1.5, 0, 6)); const s = textPlane((o && o.text) || 'HOHE STRASSE', '#ffffff', '#1c3f95', 2.6, 0.5, false, { border: '#ffffff', sizeK: 0.5 }); s.position.set(0.9, 2.7, 0); g.add(s); return g; };
+  // overhead direction gantry before a loop that drops you straight onto a fork: 'NOH DÄM LOOPING:' and one blue panel per arm
+  // (← left street · ↑ main road · → right street). Placed on the road centre; the panels face the oncoming driver (local −z).
+  P.gantry = (o) => {
+    const g = new THREE.Group(); const half = ROAD_W + 2.4, dirs = (o && o.dirs) || ['↑'], n = dirs.length, pw = Math.min(6.2, (2 * half - 1.2) / n - 0.3);
+    for (const x of [-half, half]) { const p = box(0.45, 8.6, 0.45, 0x6a6e74, x, 4.3, 0); p.userData.post = true; g.add(p); g.add(box(0.9, 0.3, 0.9, 0x55585c, x, 0.15, 0)); } // posts: the only part at car height (clearTheStreets checks these)
+    g.add(box(2 * half + 0.6, 0.35, 0.5, 0x6a6e74, 0, 8.0, 0)); g.add(box(2 * half + 0.6, 0.25, 0.4, 0x6a6e74, 0, 5.4, 0)); // two crossbeams: the header hangs between them
+    const panel = (text, w, h, x, y, sizeK) => { const t = textPlane(text, '#ffffff', '#1c4fa8', w, h, true, { border: '#ffffff', sizeK }); t.position.set(x, y, -0.36); t.rotation.y = Math.PI; g.add(t); g.add(box(w, h, 0.1, 0x3a3e44, x, y, -0.24)); }; // grey back: nothing reads mirrored from behind
+    panel((o && o.text) || 'NOH DÄM LOOPING:', Math.min(2 * half - 1, 11), 1.1, 0, 8.9, 0.5);
+    dirs.forEach((d, i) => panel(d, pw, 1.8, -(i - (n - 1) / 2) * (pw + 0.3), 6.7, 0.45)); // the driver looks along +z: his left is local +x
+    return g;
+  };
   P.parkedcar = (o) => { o = o || {}; const c = o.taxi ? (THEME.era && THEME.era < 1971 ? 0x141414 : 0xf1e2b0) : (o.color || 0x888888); // taxis were black until the ivory rule of 1971
     if (!window.Cars) { const g = new THREE.Group(); g.add(box(1.8, 0.6, 4.0, c, 0, 0.7, 0)); g.add(box(1.6, 0.55, 2.0, c, 0, 1.25, -0.2)); g.add(box(1.62, 0.3, 1.8, 0x223344, 0, 1.3, -0.2)); for (const [x, z] of [[-0.9, 1.3], [0.9, 1.3], [-0.9, -1.3], [0.9, -1.3]]) g.add(box(0.3, 0.6, 0.6, 0x111111, x, 0.3, z)); return g; }
     const shapes = ['hatch', 'sedan', 'coupe', 'limo', 'coupe2']; const shape = o.shape || (o.taxi ? 'sedan' : shapes[Math.floor(Math.random() * shapes.length)]);
@@ -1529,11 +1540,11 @@
         const from = span ? (/^prop:(neon|bunting|banner|gantry)$/.test(kind) ? n : -1) : 0; if (from < 0) continue;
         let fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700) continue;
         const obstacle = () => {
-          if (kind !== 'prop:neon') return hit(fp, from);
-          // A neon sign may span the original road. Only its support posts
+          if (kind !== 'prop:neon' && kind !== 'prop:gantry') return hit(fp, from);
+          // A neon sign or a direction gantry may span the original road. Only its support posts
           // occupy car height; keep the sign but move posts out of new forks.
           let collision = -1;
-          ch.traverse((mesh) => { if (collision >= 0 || !mesh.isMesh || mesh.geometry.type !== 'BoxGeometry') return; const post = footprint(mesh); if (post) collision = hit(post, from); });
+          ch.traverse((mesh) => { if (collision >= 0 || !mesh.isMesh || mesh.geometry.type !== 'BoxGeometry' || (kind === 'prop:gantry' && !mesh.userData.post)) return; const post = footprint(mesh); if (post) collision = hit(post, from); });
           return collision;
         };
         let i = obstacle(); if (i < 0) continue;

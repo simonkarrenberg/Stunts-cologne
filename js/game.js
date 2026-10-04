@@ -714,14 +714,18 @@
       document.body.classList.add('alaaf'); setTimeout(() => document.body.classList.remove('alaaf'), 2400);
     }
   }
+  const loopHud = { inLoop: false, until: -1 }; // the fork banner right after a loop
   function updateHUD() {
     if ((hudQuietT -= 0.016) <= 0) hudQuiet();
     if (theme.elfUhrElf && careerChapter == null && !missionMode && (phase === 'race' || phase === 'countdown')) elfUhrElf();
     const activeRoute = routeFor(player);
     const here = track.samples[Math.floor(((player.s % track.length) + track.length) % track.length / track.ds) % track.samples.length]; // no 'einordnen' while upside down in a loop
-    const aheadFork = !activeRoute && !(here && here.kind === 'loop') && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < 100);
+    // after a loop the fork can come within a few car lengths (Poller: 23 m): the first sample out of the loop shows it, 150 m ahead, lower, for 2 s
+    const inLoop = !!(here && here.kind === 'loop'); if (inLoop) loopHud.inLoop = true; else if (loopHud.inLoop) { loopHud.inLoop = false; loopHud.until = raceTime + 2; }
+    const afterLoop = !inLoop && raceTime < loopHud.until;
+    const aheadFork = !activeRoute && !inLoop && track.routeGroups.find((g) => g.startS - player.s > 0 && g.startS - player.s < (afterLoop ? 150 : 100));
     const shortcutHint = $('#hudShortcut'); shortcutHint.hidden = phase === 'intro' || !activeRoute && (!aheadFork || (mission && mission.onFoot));
-    shortcutHint.classList.toggle('alternate', !!activeRoute && activeRoute.kind === 'alternate');
+    shortcutHint.classList.toggle('alternate', !!activeRoute && activeRoute.kind === 'alternate'); shortcutHint.classList.toggle('low', afterLoop && !activeRoute && !!aheadFork);
     if (activeRoute) shortcutHint.textContent = `${routeLabel(activeRoute)} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M${routePerks(activeRoute) ? ' · ' + routePerks(activeRoute) : ''}`;
     else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + (isMobile ? '' : ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`);
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
@@ -734,7 +738,7 @@
     $('#hudDeckel').textContent = deckel ? strokes(deckel) : '–';
     $('#hudWette').textContent = wette ? (wette.done ? (wette.won ? 'JEWONNE' : 'VERLORE') : `${wette.n}🍺 › ${wette.rival.name.toUpperCase().split(' ').pop()}`) : '–';
     if (mission) $('#hudAuftrag').textContent = missionHud(); else $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
-    if (kripo) $('#hudKripo').textContent = 'HINTER DIR!'; else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZER!' : '–';
+    if (kripo) $('#hudKripo').textContent = kripoHud(); else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZER!' : '–';
     if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${trackDef.laps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
       const ais = racers.filter((r) => r.isAI && !r.isCop); if (!ais.length) return; const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
@@ -853,7 +857,7 @@
   function startRaceNow(def) {
     buildScene(def);
     raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear(); pendingNote = noteShown = null;
-    raceTime = 0; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
+    raceTime = 0; loopHud.inLoop = false; loopHud.until = -1; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
@@ -1439,12 +1443,12 @@
   function startMission(def) {
     missionMode = true; missionDef = def; clearMission();
     startRace(Object.assign({}, def, { laps: 99 }), () => {
-    const B = tuenn.botengang; const k = Math.floor(Math.random() * B.what.length);
+    const B = tuenn.botengang, TM = trackDef.mission || {};
     const a = roadFrameAhead(player.s, 230 + Math.random() * 150, 45);
-    const WH = (trackDef.mission && trackDef.mission.where) || B.where, WT = trackDef.mission && trackDef.mission.what; // a track can bring its own places (Rosenmontag: Wagenbauhalle, Kostümverleih …)
-    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: WT ? WT[k % WT.length] : B.what[k], short: B.whatShort[k], pickName: pick(WH), dropName: pick(WH), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
+    const WH = TM.where || B.where, WT = TM.what ? TM.what : B.what, WS = TM.what ? TM.whatShort || [] : B.whatShort, k = Math.floor(Math.random() * WT.length); // every track brings its own places (Rheinauhafen: Lieferrampe am Schokoladenmuseum …); Streck des Tages and Baukasten use the generic ones
+    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: WT[k], short: WS[k] || 'PAKET', pickName: pick(WH), dropName: pick(WH), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
     if (mission.dropName === mission.pickName) mission.dropName = WH[(WH.indexOf(mission.pickName) + 1) % WH.length];
-    const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(a.f.T.x, a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring;
+    const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(-a.f.T.x, -a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring; // the sign faces the driver coming up the road
     setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pick(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
     });
   }
@@ -1474,14 +1478,14 @@
       mission.onFoot = true; mission.stage = 'walk'; player.v = 0; prompt(null); const f = TB.frameAt(track, player.s); const Bv = new THREE.Vector3(f.B.x, 0, f.B.z).normalize();
       const w = W.human({ h: 1.78, shirt: PLAYABLE[sel.driver].color || 0x14141a, pants: 0x2a2a34, hat: PLAYABLE[sel.driver].id === 'langer' ? 'fedora' : 'none', hatColor: 0x0a0a0a }); w.position.copy(player.mesh.position).addScaledVector(Bv, mission.side * 3.4); w.position.y = W.GROUND_Y; w.rotation.y = Math.atan2(f.T.x, f.T.z); scene.add(w); mission.walker = w;
       const d = TB.frameAt(track, mission.pickS + 22 + Math.random() * 14); const Bd = new THREE.Vector3(d.B.x, 0, d.B.z).normalize(); mission.doorPos = new THREE.Vector3(d.p.x, W.GROUND_Y, d.p.z).addScaledVector(Bd, mission.side * (ROAD_W + 4.3));
-      const door = dropMesh(mission.pickName); door.position.copy(mission.doorPos); door.scale.set(0.55, 1, 0.55); scene.add(door); mission.meshes.push(door); mission.door = door;
+      const door = dropMesh(mission.pickName); door.position.copy(mission.doorPos); door.lookAt(player.mesh.position.x, mission.doorPos.y, player.mesh.position.z); door.scale.set(0.55, 1, 0.55); scene.add(door); mission.meshes.push(door); mission.door = door;
       const pk = umschlagMesh(); pk.position.copy(mission.doorPos); pk.position.y += 0.4; scene.add(pk); mission.meshes.push(pk); mission.pkg = pk;
       scene.remove(mission.ring); sayMust(tuenn, pick(B.out), 3000); return;
     }
     if (mission.stage === 'walkback' && !$('#hudPrompt').hidden) { // back in: the drop-off appears, the Kripo too
       mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
       const b = roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
-      const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
+      const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(-b.f.T.x, -b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
       if (!kripo) startKripo(); sayMust(tuenn, placeArticles(pick(B.back).replace('{drop}', mission.dropName)), 3600);
     }
   }
@@ -1498,7 +1502,7 @@
       let ds = (bestI - i0) * track.ds; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L; if (Math.abs(ds) > 70) { pushed = true; if (mission.farCool <= 0) { mission.farCool = 6; sayMust(tuenn, pick(B.far), 2500); } }
       if (pushed) { const sI = Math.abs(ds) > 70 ? ((i0 + Math.sign(ds) * Math.round(70 / track.ds)) % n + n) % n : bestI; const qq = S[sI]; const bl2 = Math.hypot(qq.B.x, qq.B.z) || 1; w.position.x = qq.p.x + qq.B.x / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.x * along); w.position.z = qq.p.z + qq.B.z / bl2 * lat + (Math.abs(ds) > 70 ? 0 : qq.T.z * along); }
     }
-    if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pick(B.got), 3000); } }
+    if (mission.stage === 'walk') { mission.pkg.rotation.y += dt * 2; if (w.position.distanceTo(mission.doorPos) < 2.4) { mission.stage = 'walkback'; scene.remove(mission.pkg); scene.remove(mission.door); const cr = dropMesh('DAT AUTO'); cr.position.copy(car); cr.position.y = W.GROUND_Y + 0.1; cr.lookAt(w.position.x, cr.position.y, w.position.z); scene.add(cr); mission.meshes.push(cr); mission.carRing = cr; beep(1180, 0.08, 'square', 0.12); setTimeout(() => beep(1580, 0.12, 'square', 0.12), 90); sayMust(tuenn, pick(B.got), 3000); } }
   }
   function missionEnd(ok, why) {
     if (!mission || phase !== 'race') return; phase = 'finished'; prompt(null); const B = tuenn.botengang; player.finished = true; player.finishTime = raceTime;
@@ -1507,7 +1511,7 @@
     const headline = (ok ? B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate).replace('{where}', (trackDef && trackDef.where) || 'EN KÖLLE'); lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
     setTimeout(() => {
       if (phase === 'menu') return;
-      $('#resTitle').textContent = ok ? `BOTENGANG ERLEDIGT: ${m.short} BEIM ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
+      $('#resTitle').textContent = ok ? `BOTENGANG ERLEDIGT: ${m.short} ${({ f: "BEI D'R", p: 'BEI' })[D.placeGender(m.dropName).g] || 'BEIM'} ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
       $('#resTable').innerHTML = `<tr class="me"><td>${ok ? '✓' : '✗'}</td><td>DU</td><td>${D.CARS[sel.car].name}</td><td>${fmtTime(raceTime)}</td></tr>`;
       $('#resBest').textContent = ok ? 'pünktlich' : '–'; $('#resRecord').hidden = true;
       $('#resStats').innerHTML = `PAKET: <b>${m.short}</b> (${m.what}) · VON: <b>${m.pickName}</b> · NACH: <b>${m.dropName}</b> · KRIPO: <b>${why === 'caught' ? 'HÄT DICH JEKRIEGT' : ok ? 'ABJEHÄNGT' : 'NOCH DRAN'}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b>`;
@@ -1577,8 +1581,10 @@
     const g = new THREE.Group();
     const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.18, 6, 32), new THREE.MeshBasicMaterial({ color: 0xff3fa0, transparent: true, opacity: 0.85 })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.12; g.add(ring);
     const ring2 = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.12, 6, 32), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.7 })); ring2.rotation.x = Math.PI / 2; ring2.position.y = 0.12; g.add(ring2);
-    const sign = W.textPlane(name, '#ffffff', '#c1121f', 5, 1.0, true, { border: '#ffd23f', sizeK: 0.5 }); sign.position.y = 3.6; g.add(sign);
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.2, 6), new THREE.MeshBasicMaterial({ color: 0x555555 })); post.position.y = 1.6; g.add(post);
+    const sw = Math.min(10, Math.max(5, name.length * 0.3)); // long place names get a wider board, not smaller letters
+    const sign = W.textPlane(name, '#ffffff', '#c1121f', sw, 1.4, true, { border: '#ffd23f', sizeK: 0.5 }); sign.position.y = 4.0; g.add(sign);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(sw, 1.4, 0.08), new THREE.MeshBasicMaterial({ color: 0x3a1018 })); back.position.set(0, 4.0, -0.06); g.add(back); // the back is blank: no mirrored text
+    for (const x of [-sw / 2 + 0.3, sw / 2 - 0.3]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.4, 6), new THREE.MeshBasicMaterial({ color: 0x555555 })); post.position.set(x, 1.7, -0.06); g.add(post); }
     return g;
   }
   function roadFrameAhead(fromS, dist, clear) { // a flat, ordinary piece of road at least `dist` ahead of fromS; `clear` = no stunt within that many metres
@@ -1592,12 +1598,11 @@
   function kripoLine(list) { const t = pickNew(list); return [/^(Hier spricht|„)/.test(t) ? KRIPO : tuenn, t]; }
   // Klüngel jobs: the place names come with the right article (dat Büdche, de Pfandleihe, dä Spielclub),
   // and a {what} that ends up at the start of a sentence gets its capital letter
-  const PLACE_GENDER = { f: /PFANDLEIHE|BAR\b|KNEIPE|BUDE/, n: /BÜDCHEN|KINO|BRAUHAUS|KLEIN KÖLN|^SARTORY$|CAFÉ|HOTEL/, p: /SÖHNE/ };
   function placeArticles(text) {
-    const g = (name) => PLACE_GENDER.p.test(name) ? 'p' : PLACE_GENDER.f.test(name) ? 'f' : PLACE_GENDER.n.test(name) ? 'n' : 'm';
+    const g = (name) => D.placeGender(name).g; // the noun list lives in data.js (TUENN.placeGender)
     const NAME = "([A-ZÄÖÜ][A-ZÄÖÜ0-9É&,' -]*[A-ZÄÖÜ0-9É])";
     return text
-      .replace(new RegExp('\\bzum ' + NAME, 'g'), (m, n) => (g(n) === 'f' ? 'zur ' : g(n) === 'p' ? 'zu ' : 'zum ') + n)
+      .replace(new RegExp('\\b([Zz])um ' + NAME, 'g'), (m, z, n) => z + (g(n) === 'f' ? 'ur ' : g(n) === 'p' ? 'u ' : 'um ') + n) // also 'Zum {drop}' at the start of a sentence
       .replace(new RegExp('\\b(Der|Dä) ' + NAME, 'g'), (m, a, n) => ({ m: 'Dä ', n: 'Dat ', f: 'De ', p: 'De ' })[g(n)] + n)
       .replace(new RegExp('\\bAm ' + NAME, 'g'), (m, n) => (g(n) === 'f' || g(n) === 'p' ? "Bei d'r " : 'Am ') + n)
       .replace(/([.!?:] )([a-zäöü])/g, (m, a, b) => a + b.toUpperCase());
@@ -1607,7 +1612,7 @@
     const a = roadFrameAhead(player.s, 90 + Math.random() * 60), b = roadFrameAhead(a.s, 280 + Math.random() * 220);
     const lat = window.STUNTS_AUFTRAG ? 0 : (Math.random() - 0.5) * 5;
     const m1 = umschlagMesh(); const base = new THREE.Vector3(a.f.p.x, a.f.p.y, a.f.p.z).addScaledVector(new THREE.Vector3(a.f.B.x, a.f.B.y, a.f.B.z), lat).addScaledVector(new THREE.Vector3(a.f.N.x, a.f.N.y, a.f.N.z), 0.5); m1.position.copy(base); scene.add(m1);
-    const m2 = dropMesh(where); m2.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); m2.rotation.y = Math.atan2(b.f.T.x, b.f.T.z); m2.visible = false; scene.add(m2);
+    const m2 = dropMesh(where); m2.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); m2.rotation.y = Math.atan2(-b.f.T.x, -b.f.T.z); m2.visible = false; scene.add(m2);
     let dist = b.s - a.s; if (dist < 0) dist += track.length;
     auftrag = { stage: 'pickup', s1: a.s, lat, s2: b.s, m1, m2, base, what, where, timer: 40, carryTime: Math.round(dist / 13) + 10, phase: Math.random() * 6 };
     sayMust(tuenn, placeArticles(pick(A.start).replace('{what}', what).replace('{where}', where)), 4200);
@@ -1815,6 +1820,12 @@
     }
     if (mission) { if (ds < -170 || ds > 170) { kripo.s = ((player.s - 100) % L + L) % L; kripo.lat = 0; kripo.v = Math.max(15, player.v * 0.9); kripo.safeS = kripo.s; kripo.shortcut = -1; kripo.routePlan = null; kripo.prevRoadVy = 0; } }
     else if (kripoT > 55 || ds < -140) endKripo('giveup');
+  }
+  // the Kripo row tells the truth: how far behind (signed track gap), already past you, or lost in the Veedel (lostT)
+  function kripoHud() {
+    if (!kripo) return '–'; if (kripo.lostT > 0) return 'ABJEHÄNGT';
+    const L = track.length; let ds = player.s - kripo.s; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
+    const m = Math.round(ds / 5) * 5; return ds < 0 ? 'VÜR DIR' : isMobile ? `HINTER ${m} M` : `HINTER DIR (${m} M)`; // the phone's HUD slot is narrow: keep the metres, drop the words
   }
   let kripoEndT = -99;
   function endKripo(why) {

@@ -76,6 +76,7 @@
   const TRACKS = [
     {
       id: 'dom', where: 'AM DOM', name: 'Domblitz 4D', district: 'Dom & Rhein im Morgengrauen', tag: 'MORJENS', order: 2,
+      mission: { where: ['BÜDCHEN AM ALTER MAAT', 'HINTERTÜR GÜRZENICH', 'SOUVENIRLADEN DOMPLATTE', 'FISCHBRATEREI FRANKENWERFT', 'GEPÄCKAUFBEWAHRUNG HAUPTBAHNHOF', 'STEHCAFÉ AM HEUMARKT'] }, // Botengang places round the Dom (all invented businesses at real places)
       signs: [[0, 'RONCALLIPLATZ'], [1, 'TRANKGASSE'], [2, 'AM HOF'], [4, 'OBENMARSPFORTEN'], [5, 'ALTER MARKT'], [6, 'HEUMARKT'], [8, 'MARKMANNSGASSE'], [9, 'FRANKENWERFT'], [10, 'HEINRICH-BÖLL-PLATZ'], [11, 'HOHENZOLLERNBRÜCKE'], [12, 'KENNEDY-UFER'], [13, 'OTTOPLATZ'], [15, 'KENNEDY-UFER'], [17, 'RHEINBOULEVARD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Dom', 'Kolumba', 'Wallraf & Gürzenich', 'Alter Markt', 'Hohenzollernbrücke', 'Bahnhof Deutz', 'Rheinsprung'],
       diff: 2, laps: 3, scale: 1.45,
@@ -189,6 +190,7 @@
     },
     {
       id: 'rheinauhafen', where: 'AM RHEINAUHAFEN', name: 'Rheinauhafen 4D', district: 'Kranhäuser to the Limit', tag: 'ABEND', order: 6,
+      mission: { where: ['LIEFERRAMPE AM SCHOKOLADENMUSEUM', 'BOOTSHAUS AM BAYENTURM', 'BÜDCHEN AM CHLODWIGPLATZ', 'HAFENMEISTEREI ZOLLHAFEN', 'PFÖRTNER VUM KRANHAUS', 'KIOSK AM SEVERINSTOR'], what: ['ne Koffer. Schwer, unge nass. Frag nit.', 'e Kiste Schokolad. Angeblich.', 'e Fischernetz, zosammejeknüddelt. Do es wat dren.', 'ne Seesack vum Rheinschiffer. Rüch noh Diesel.'], whatShort: ['KOFFER', 'KISTE', 'NETZ', 'SEESACK'] }, // harbour jobs
       signs: [[0, 'IM ZOLLHAFEN'], [2, 'AGRIPPINAWERFT'], [4, 'AM SCHOKOLADENMUSEUM'], [5, 'RHEINUFERSTRASSE'], [8, 'SEVERINSTRASSE'], [9, 'CHLODWIGPLATZ'], [10, 'KARTÄUSERWALL'], [11, 'KAYGASSE'], [12, 'AM PANTALEONSBERG'], [14, 'SEVERINSWALL'], [16, 'BAYENSTRASSE'], [17, 'HARRY-BLUM-PLATZ'], [18, 'ANTWERPENER WERFT']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Kranhäuser', 'Schokoladenmuseum', 'St. Maria im Kapitol', 'Wasserturm', 'St. Pantaleon', 'Bottmühle', 'Bayenturm', 'Rheinsprung'],
       diff: 3, laps: 3, scale: 1.45,
@@ -230,6 +232,7 @@
         { t: 'straight', len: 12 }
       ],
       props: [
+        { type: 'gantry', seg: 6, u: 0.55, side: 1, dist: 0, fork: ['rheinauhafen-karolingerring'], dirs: ['← KAROLINGERRING', '↑'] }, // the fork comes right after the loop: say it before the loop
         { type: 'zockertisch', seg: 9, u: 0.25, side: 1, dist: 12, story: 'Am Hafe weed jezock, sick et der Hafe jitt. Die Kranhäuser hann se och verspillt. Zweimal.' },
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'crowd', seg: 0, u: 0.06, side: -1, dist: 10 },
@@ -289,6 +292,7 @@
     },
     {
       id: 'zoo', where: 'OP DER SCHÄL SICK', name: 'Schäl Sick Schraube', district: 'Deutz & Mülheim', tag: 'TAG', order: 3,
+      mission: { where: ['FUTTERKÜCHE AM ZOO', 'GONDELSTATION AM RHEINPARK', 'KIOSK AM TANZBRUNNEN', 'BOOTSVERLEIH MÜLHEIMER HAFEN', 'TRINKHALLE AM WIENER PLATZ', 'HINTERHOF DEUTZER FREIHEIT'] }, // Schäl Sick jobs
       signs: [[0, 'RIEHLER STRASSE'], [2, 'AM BOTANISCHEN GARTEN'], [5, 'KONRAD-ADENAUER-UFER'], [6, 'ZOOBRÜCKE'], [7, 'AUENWEG'], [8, 'MESSEPLATZ'], [9, 'DEUTZ-MÜLHEIMER STRASSE'], [10, 'SCHANZENSTRASSE'], [12, 'MÜLHEIMER UFER'], [13, 'MÜLHEIMER BRÜCKE'], [15, 'NIEHLER DAMM'], [17, 'NEUSSER STRASSE'], [19, 'NEUSSER WALL'], [20, 'RIEHLER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zoo & Flora', 'Bastei', 'Zoobrücke', 'Bahnhof Deutz', 'Rheinpark', 'E-Werk & Palladium', 'Mülheimer Hafen'],
       diff: 4, laps: 3, scale: 1.45,
@@ -385,6 +389,7 @@
     },
     {
       id: 'ehrenfeld', where: 'EN EHRENFELD', name: 'Ehrenfeld Tape Run', district: 'Venloer Straße zur blauen Stunde', tag: 'ABEND', order: 4,
+      mission: { where: ['PLATTENLADEN VENLOER STROSS', 'PROBERAUM AM BAHNHOF EHRENFELD', 'DÖNERBUDE AM NEPTUNPLATZ', 'HINTERHOFWERKSTATT KÖRNERSTROSS', 'SCHROTTHÄNDLER LIEBIGSTROSS', 'TÄTOWIERSTUDIO HELIOSSTROSS'] }, // Ehrenfeld jobs
       signs: [[0, 'VENLOER STRASSE'], [1, 'PIUSSTRASSE'], [3, 'LEOSTRASSE'], [5, 'GUTENBERGSTRASSE'], [7, 'INNERE KANALSTRASSE'], [9, 'SUBBELRATHER STRASSE'], [10, 'HORNSTRASSE'], [11, 'LIEBIGSTRASSE'], [12, 'HÜTTENSTRASSE'], [13, 'EHRENFELDGÜRTEL'], [14, 'KÖRNERSTRASSE'], [15, 'NEPTUNPLATZ'], [17, 'BARTHOLOMÄUS-SCHINK-STRASSE'], [18, 'HELIOSSTRASSE'], [20, 'VENLOER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Venloer Straße', 'Moschee', 'Schrottkunst-Hof', 'Bahnbögen', 'Neptunplatz', 'Helios-Turm', 'Vulkan'],
       diff: 2, laps: 3, scale: 1.45,
@@ -475,6 +480,7 @@
     },
     {
       id: 'kalk', where: 'OP DE RINGE', name: 'Chicago am Rhein', district: 'Ringe Nachtfahrt', tag: 'NACHT', order: 1,
+      mission: { where: ['NACHTPORTIER AM HANSARING', 'HINTERTÜR AM FRIESENPLATZ', 'PFANDLEIHE AM EIGELSTEIN', 'ECKKNEIPE AM RUDOLFPLATZ', 'TAXISTAND EBERTPLATZ', 'GARDEROBE AM HOHENZOLLERNRING'] }, // jobs on the Ringe, 1968
       signs: [[0, 'KAISER-WILHELM-RING'], [1, 'HOHENZOLLERNRING'], [2, 'RUDOLFPLATZ'], [3, 'HOHENZOLLERNRING'], [4, 'FRIESENSTRASSE'], [5, 'FRIESENPLATZ'], [6, 'KAISER-WILHELM-RING'], [8, 'HANSARING'], [11, 'EBERTPLATZ'], [13, 'NEUSSER STRASSE'], [14, 'EIGELSTEIN'], [15, 'MAYBACHSTRASSE'], [18, 'GEREONSWALL'], [19, 'GEREONSDRIESCH'], [20, 'CHRISTOPHSTRASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Residenz-Kino', 'St. Aposteln', 'Richmodisturm', 'Oper', 'Friesenstraße', 'Sartory', 'Hansaring', 'St. Agnes', 'Fort X', 'Güterbahnhof Gereon', 'St. Gereon'],
       diff: 5, laps: 3, scale: 1.45,
@@ -520,6 +526,7 @@
         { t: 'straight', len: 35 }
       ],
       props: [
+        { type: 'gantry', seg: 2, u: 0.46, side: 1, dist: 0, fork: ['kalk-von-werth-strasse'], dirs: ['↑', '→ VON-WERTH-STR'] }, // the fork comes right after the loop: say it before the loop
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'residenz', seg: 0, u: 0.12, side: -1, dist: 24, keep: 40, story: 'Hee fängt ming Tour an: Residenz-Kino, Christophstraße. 1961 stond ich zum erste Mol an ner Tür. Un ich stonn emmer noch.' },
         { type: 'neon', seg: 0, u: 0.1, side: 1, dist: 14, text: 'CHICAGO AM RHEIN', color: '#ff3b30' },
@@ -583,7 +590,7 @@
     },
     {
       id: 'zoch', where: 'EN DER ALTSTADT', name: 'Karneval Krawall', district: 'Altstadt Rallye', tag: 'TAG', order: 5,
-      mission: { where: ['WAGENBAUHALLE', 'KOSTÜMVERLEIH SEVERINSTROSS', 'ZOCHAUFSTELLUNG CHLODWIGPLATZ', 'KAMELLE-LAGER', 'BÜDCHEN AM WAIDMARKT', 'SITZUNGSSAAL GÜRZENICH'], what: ['e Kiste Strüßjer för der Prinz – un keiner darf se sinn.', 'dä Dreispitz vum Kommandant. Dä hät hä om Sitzungsdesch lijje losse.', 'e Sack Kamelle. Dä allerletzte. De Pänz waade.', 'de Pappnas för der Wagenengel. Ohne Pappnas kein Zoch.', 'e Paket mit Löcher. Et bewegt sich nit. Meistens.', 'et Bützje-Häzje för et Mariechen. Vörsichtig, dat es Jlas.', 'de Tröt vum Tambourmajor.'] }, // Rosenmontag courier jobs
+      mission: { where: ['WAGENBAUHALLE', 'KOSTÜMVERLEIH SEVERINSTROSS', 'ZOCHAUFSTELLUNG CHLODWIGPLATZ', 'KAMELLE-LAGER', 'BÜDCHEN AM WAIDMARKT', 'SITZUNGSSAAL GÜRZENICH'], what: ['e Kiste Strüßjer för der Prinz – un keiner darf se sinn.', 'dä Dreispitz vum Kommandant. Dä hät hä om Sitzungsdesch lijje losse.', 'e Sack Kamelle. Dä allerletzte. De Pänz waade.', 'de Pappnas för der Wagenengel. Ohne Pappnas kein Zoch.', 'e Paket mit Löcher. Et bewegt sich nit. Meistens.', 'et Bützje-Häzje för et Mariechen. Vörsichtig, dat es Jlas.', 'de Tröt vum Tambourmajor.'], whatShort: ['KISTE', 'DREISPITZ', 'SACK', 'PAPPNAS', 'PAKET', 'HÄZJE', 'TRÖT'] }, // Rosenmontag courier jobs
       signs: [[0, 'UBIERRING'], [1, 'CHLODWIGPLATZ'], [2, 'SEVERINSTRASSE'], [4, 'WAIDMARKT'], [5, 'MÜHLENBACH'], [6, 'HEUMARKT'], [7, 'GÜRZENICHSTRASSE'], [8, 'QUATERMARKT'], [9, 'ALTER MARKT'], [11, 'HOHE STRASSE'], [12, 'SCHILDERGASSE'], [13, 'NEUMARKT'], [14, 'APOSTELNSTRASSE'], [16, 'MITTELSTRASSE'], [17, 'HABSBURGERRING'], [18, 'HOHENSTAUFENRING'], [19, 'SACHSENRING'], [20, 'KAROLINGERRING']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Chlodwigplatz', 'Bottmühle', 'Severinstor', 'St. Maria im Kapitol', 'Gürzenich', 'Wallraf & Rathaus', 'Richmodisturm', 'St. Aposteln', 'Rudolfplatz'],
       diff: 3, laps: 3, scale: 1.45,
@@ -681,6 +688,7 @@
     },
     {
       id: 'poller', where: 'OP DE POLLER WIESE', name: 'Poller Wiesen Stunt-Park', district: 'Nachts op de Poller Wiesen', tag: 'NACHT', order: 7,
+      mission: { where: ['BOOTSSCHUPPEN AM DEUTZER HAFEN', 'BÜDCHEN AM OTTOPLATZ', 'WEETSCHAFF AM POLLER KIRCHWEG', 'LAGERHALLE DEUTZER WERFT', 'GRILLHÜTT OP DE POLLER WIESE', 'STELLWERK BAHNHOF DEUTZ'] }, // Deutz and Poll jobs
       signs: [[0, 'POLLER WIESEN'], [1, 'DEUTZER FREIHEIT'], [2, 'OTTOPLATZ'], [6, 'KENNEDY-UFER'], [8, 'DEUTZER WERFT'], [10, 'SIEGBURGER STRASSE'], [11, 'AM DEUTZER HAFEN'], [14, 'POLLER KIRCHWEG'], [16, 'WEIDENWEG'], [18, 'AUENWEG'], [23, 'RHEINPARKWEG'], [24, 'POLLER WIESEN']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Poller Wiesen', 'Deutzer Arena', 'Bahnhof Deutz', 'KölnTriangle', 'Deutzer Werft', 'Südbrücke', 'Rheinpark'],
       diff: 5, laps: 3, scale: 1.45,
@@ -728,6 +736,7 @@
         { t: 'straight', len: 70 }
       ],
       props: [
+        { type: 'gantry', seg: 9, u: 0.19, side: 1, dist: 0, fork: ['poller-schuette', 'poller-wiesenbogen'], dirs: ['← SIEGBURGER STR', '↑', '→ ALFRED-SCHÜTTE-ALLEE'] }, // the fork comes right after the loop: say it before the loop
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'tribuene', seg: 0, u: 0.3, side: -1, dist: 14, story: 'Poller Wiesen. Hee hann se fröher Fußball jespillt, jetz flieje hee Autos. Beides ohne Regeln.' },
         { type: 'crowd', seg: 0, u: 0.5, side: 1, dist: 10 },
@@ -780,6 +789,7 @@
     }
     ,{
       id: 'heist', where: 'ÜVVER DE ZOOBRÜCK', name: 'Domschatz-Raub 1975', district: 'Fluchtfahrt durch Chicago am Rhein', tag: 'NACHT', order: 8,
+      mission: { where: ['GOLDSCHMIEDE AM EIGELSTEIN', 'TELEFONZELLE AM EBERTPLATZ', 'FLUCHTGARAGE KUNIBERTSKLOSTERGASSE', 'HEHLERKELLER AM THEODOR-HEUSS-RING', 'BOOTSSTEG AN DER BASTEI', 'SCHLIESSFACH BAHNHOF DEUTZ'], what: ['de Monstranz us der Schatzkammer. En en Wolldeck jewickelt.', 'ne Bischofsstab. Passt jrad esu en der Kofferraum.', 'e Kästche met Edelsteine. Nit schöddele.', 'e Krützche us Jold. Klein, schwer, heiß.'], whatShort: ['MONSTRANZ', 'STAB', 'KÄSTCHE', 'KRÜTZCHE'] }, // 1975: the Domschatz has to go somewhere
       signs: [[0, 'TRANKGASSE'], [2, 'KUNIBERTSKLOSTERGASSE'], [4, 'EIGELSTEIN'], [5, 'EBERTPLATZ'], [6, 'NEUSSER WALL'], [7, 'THEODOR-HEUSS-RING'], [9, 'KONRAD-ADENAUER-UFER'], [10, 'ZOOBRÜCKE'], [11, 'AUENWEG'], [14, 'MESSEPLATZ'], [15, 'OTTOPLATZ'], [16, 'HOHENZOLLERNBRÜCKE'], [17, 'BISCHOFSGARTENSTRASSE'], [18, 'TRANKGASSE']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Domschatzkammer', 'Hauptbahnhof', 'St. Kunibert', 'Eigelstein', 'St. Agnes', 'Fort X', 'Bastei', 'Bahnhof Deutz', 'Hohenzollernbrücke'],
       diff: 4, laps: 3, scale: 1.4,
@@ -819,6 +829,7 @@
         { t: 'straight', len: 40 }
       ],
       props: [
+        { type: 'gantry', seg: 11, u: 0.47, side: 1, dist: 0, fork: ['heist-kennedy-ufer'], dirs: ['↑', '→ KENNEDY-UFER'] }, // the fork comes right after the loop: say it before the loop
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'dom', seg: 0, u: 0.1, side: -1, dist: 80, keep: 120, story: 'Domschatzkammer, November 1975. Drei Mann, et Jerüss huh, durch dä Lüftungsschaach, sechs Meter am Seil eraf. Ich hann et Seil jehalde. Also fast.' },
         { type: 'kripo', seg: 0, u: 0.25, side: 1, dist: 10, story: 'Kripo Köln. Die han schon jewartet. Die wisse alles. Nur nit, wo de hinfährs.' },
@@ -868,6 +879,7 @@
     },
     {
       id: 'zuelpicher', where: 'OP DER ZÜLPICHER', name: 'Zülpicher 11.11.', district: 'Kwartier Latäng um 11 Uhr 11', tag: 'TAG', order: 9,
+      mission: { where: ['STUDENTEKNEIPE ZÜLPICHER STROSS', 'MENSA-HINTEREINGANG', 'KOSTÜMLADEN AM BARBAROSSAPLATZ', 'BÜDCHEN AM AACHENER WEIHER', 'DRUCKEREI UNIVERSITÄTSSTROSS', 'WOHNHEIM LUXEMBURGER STROSS'], what: ['ne Sack Pappnase. Elf Stöck, wie söns.', 'de Strüßjer för et Dreigestirn. Nit knicke.', 'de Pappmask vum Prinz. Dä süht söns nix.', 'e Kostüm-Paket: Clown, Größe XXL.'], whatShort: ['SACK', 'STRÜSSJER', 'MASK', 'KOSTÜM'] }, // 11.11. jobs in the Kwartier Latäng
       signs: [[0, 'ZÜLPICHER STRASSE'], [1, 'ROONSTRASSE'], [2, 'BARBAROSSAPLATZ'], [3, 'ZÜLPICHER STRASSE'], [4, 'LUXEMBURGER STRASSE'], [5, 'UNIVERSITÄTSSTRASSE'], [6, 'ALBERTUS-MAGNUS-PLATZ'], [7, 'UNIVERSITÄTSSTRASSE'], [9, 'AACHENER STRASSE'], [13, 'RUDOLFPLATZ'], [14, 'HAHNENSTRASSE'], [15, 'NEUMARKT'], [17, 'MAURITIUSSTEINWEG']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Zülpicher Platz', 'Synagoge Roonstraße', 'Barbarossaplatz', 'St. Pantaleon', 'Uni', 'Aachener Weiher', 'Melaten', 'St. Aposteln', 'Richmodisturm', 'Wasserturm'],
       diff: 2, laps: 3, scale: 1.35,
@@ -908,6 +920,7 @@
         { t: 'straight', len: 60 }
       ],
       props: [
+        { type: 'gantry', seg: 5, u: 0.78, side: 1, dist: 0, fork: ['zuelpicher-mensa', 'zuelpicher-weiher'], dirs: ['← ZÜLPICHER WALL', '↑', '→ DÜRENER STR'] }, // the fork comes right after the loop: say it before the loop
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'crowd', seg: 0, u: 0.1, side: -1, dist: 10 }, { type: 'crowd', seg: 0, u: 0.14, side: 1, dist: 10 }, { type: 'crowd', seg: 0, u: 0.4, side: -1, dist: 10 },
         { type: 'crowd', seg: 0, u: 0.3, side: 1, dist: 12, keep: 30, story: 'Zülpicher Stroß. Tribün för de Studente. Die sitze hee seit dem ersten Semester. Immer noch.' },
@@ -959,6 +972,7 @@
     },
     {
       id: 'rodenkirchen', where: 'EN RODENKIRCHE', name: 'Rodenkirchen Rheinbad', district: 'Sommer am Rhing, Südbrücke bis Weiß', tag: 'TAG', order: 10,
+      mission: { where: ['EISDIELE MAIGLERSTROSS', 'STRANDBUDE WEISSER BOGEN', 'RUDERCLUB-STEG AM LEINPFAD', 'KASSE VUM RHEINBAD', 'CAMPINGPLATZ WEISS', 'GARTENLOKAL AN DER KAPELL'] }, // summer jobs on the Leinpfad
       signs: [[0, 'RODENKIRCHENER LEINPFAD'], [2, 'KIRCHSTRASSE'], [4, 'UFERSTRASSE'], [7, 'MAIGLERSTRASSE'], [9, 'WEISSER LEINPFAD'], [10, 'WEISSER HAUPTSTRASSE'], [11, 'WEISSER LEINPFAD'], [12, 'SÜRTHER LEINPFAD'], [16, 'MÜHLENGASSE'], [17, 'SÜRTHER HAUPTSTRASSE'], [19, 'RODENKIRCHENER LEINPFAD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Rheinuferweg', 'Alt St. Maternus', 'Rodenkirchener Brücke', 'Weiß', 'Rheinstrand', 'Sürther Bootshaus'],
       diff: 3, laps: 3, scale: 1.5,
@@ -1003,6 +1017,7 @@
         { t: 'straight', len: 40 }
       ],
       props: [
+        { type: 'gantry', seg: 4, u: 0.65, side: 1, dist: 0, fork: ['rodenkirchen-terrassen', 'rodenkirchen-weiss'], dirs: ['← WEISSER STR', '↑', '→ AUENWEG'] }, // the fork comes right after the loop: say it before the loop
         { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
         { type: 'crowd', seg: 0, u: 0.08, side: -1, dist: 10 },
         { type: 'rhineSide', seg: 0, u: 0.5, side: 1, dist: 150, l: 700, w: 220 },
@@ -1267,9 +1282,18 @@
     dailyDesc: 'Die Streck des Tages: jeden Tag würfelt der Klüngel eine neue Runde durch ein anderes Veedel. Bestzeiten gelten nur heute – morjen is et wieder wat anderes.',
     loading: ['Dä Lange kuckt dich an…', 'Der Köbes zapft. Einen Moment.', 'Die Ringe werden jefegt…', 'Klüngel Tom regelt dat mit der Straße…', 'Kölle wird jebaut. Dauert normal 2000 Johr.'],
     // Botengang: fetch something on foot, bring it somewhere by car, with the Kripo in the mirror. What it is stays open.
+    // the article of a place name: the end of its first word decides (WAGENBAUHALLE → de, KAMELLE-LAGER → dat, TAXISTAND → dä);
+    // whole names first (SARTORY), p = plural (HEHLER & SÖHNE). Unknown nouns count as masculine.
+    placeGender: {
+      f: ['HALLE', 'LEIHE', 'BAR', 'KNEIPE', 'BUDE', 'RAMPE', 'TÜR', 'UNG', 'EREI', 'WERKSTATT', 'GARAGE', 'WERFT', 'KAPELLE', 'SCHMIEDE', 'HÜTT', 'KÜCHE', 'STATION', 'ZELLE', 'DIELE', 'KASSE', 'GARDEROBE', 'WEETSCHAFF', 'MENSA'],
+      n: ['BÜDCHEN', 'KINO', 'HAUS', 'LAGER', 'CAFÉ', 'HOTEL', 'KONTOR', 'BÜRO', 'STUDIO', 'HEIM', 'WERK', 'LOKAL', 'FACH', 'SARTORY', 'KLEIN KÖLN'],
+      p: ['SÖHNE', 'BRÜDER'],
+      m: ['KIOSK', 'FRISEUR', 'PORTIER', 'PFÖRTNER', 'HÄNDLER', 'EINGANG', 'SAAL', 'VERLEIH', 'BAU', 'KELLER', 'HOF', 'STAND', 'STEG', 'SCHUPPEN', 'LADEN', 'RAUM', 'PLATZ', 'CLUB', 'TISCH', 'RING', 'LOVERS CLUB']
+    },
     botengang: {
       what: ['e Paket. Frag nit, wat drin is.', 'ne Koffer. Schwer. Vielleicht Kamelle.', 'e Kiste Kölsch. Angeblich.', 'en Umschlag vum Notar. Oder vum Zocker.', 'e Tüt vum Bäcker. Rievkooche, sacht er.', 'ne Hutschachtel. Vum Kommissar. Sacht Tom.', 'e Paket mit Löcher. Et bewegt sich nit. Meistens.'],
       whatShort: ['PAKET', 'KOFFER', 'KISTE', 'UMSCHLAG', 'TÜT', 'HUTSCHACHTEL', 'PAKET'],
+      // the generic places for tracks without their own mission.where (Streck des Tages, Baukasten)
       where: ['PFANDLEIHE', 'HEHLER & SÖHNE', 'NACHTPORTIER', 'SARTORY-HINTEREINGANG', 'BÜDCHEN AM RING', 'TRESORBAU', 'KIOSK HAUPTBAHNHOF', 'FRISEUR ZUM LANGEN'],
       brief: ['Botengang, Jung. Fahr zum {pick}, steig us, hol {what} Dann zum {drop}. Un wenn Blaulicht kütt: du kennst mich nit.', 'Kleiner Jefallen. {pick}: aussteijen, {what} Dann {drop}, pünktlich. Wat de Kripo will, weiß ich och nit.', 'Vielleicht kriminell, vielleicht nit. Am {pick} liegt {what} Bräng et zum {drop}. Fahr wie ne Kölsche Jung: schnell un unschuldig.'],
       out: ['Aussteijen. Zu Fuß, Jung, dat Auto bleibt hee. Un lauf, nit schlendern.', 'Motor us. Der Rest is Fußarbeit.'],
@@ -1382,5 +1406,15 @@
     slogans: ['KÖLLE ES KEI STADT. KÖLLE ES E JEFÖHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTT NOCH EMMER JOT JEJANGE!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DO KÜSS HEE NIT EREN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DAT POSTER HING ÖVVER DÄM BETT. JETZ HÄNGK ET OP DÄM RING.']
   };
 
-  root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN };
+  // 'm' | 'f' | 'n' | 'p' for a place name, from TUENN.placeGender; known = false when no listed noun matched (the tests want none of those)
+  function placeGender(name) {
+    const G = TUENN.placeGender, kinds = ['p', 'f', 'n', 'm'];
+    for (const k of kinds) if (G[k].includes(name)) return { g: k, known: true };
+    if (name.split(/[ ,&]+/).some((w) => G.p.includes(w))) return { g: 'p', known: true };
+    const head = name.split(/[ ,]/)[0].split('-').pop(); let best = null;
+    for (const k of kinds) for (const noun of G[k]) if (head.endsWith(noun) && (!best || noun.length > best.noun.length)) best = { g: k, noun };
+    return best ? { g: best.g, known: true } : { g: 'm', known: false };
+  }
+
+  root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN, placeGender };
 })(typeof window !== 'undefined' ? window : module.exports);

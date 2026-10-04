@@ -12,6 +12,8 @@ Auf allen zehn Strecken gibt es zusammen **52 fahrbare Nebenwege**, und jeder is
 
 **Grün** markiert Abkürzungen, **Blau** die breiteren Alternativen und **Weiß** die Hauptstrecke – in der Streckenvorschau und Minikarte, mit passenden Hinweisschildern vor den Gabelungen. Die Fahrbahnen bleiben richtige Straßen mit Asphalt oder Kopfsteinpflaster, Bordsteinen und Straßenlaternen. Die Schilder nennen ehrlich die gesparten oder zusätzlichen Meter. Vor der Einfahrt links oder rechts einordnen; mittig bleibst du auf der Hauptstrecke. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie bisher. In engen Gassen vom Gas gehen! Rivalen wählen ebenfalls unterschiedliche Wege und ändern ihre Entscheidung pro Runde. Einmal pro Gabelung und Runde gibt es einen Deckel-Strich, auch fürs Erkunden einer längeren Route: „Dä Köbes nennt dat Sightseeing.“
 
+Kommt eine Gabelung weniger als 150 m nach einem Looping, steht vor dem Looping eine **Schilderbrücke** („NOH DÄM LOOPING:“ mit je einer Tafel pro Arm, etwa ← Siegburger Str · ↑ · → Alfred-Schütte-Allee an den Poller Wiesen). Und wer aus dem Looping kommt, sieht das Einordnen-Schild sofort, zwei Sekunden lang tiefer und gelb umrandet.
+
 Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 52 „DAT NAVI BIN ICH“. Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
 
 Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten, keine Teleports. Runden, Platzierung, Geister, Replays und TV-Kameras berücksichtigen den gewählten Weg; Geister speichern die Straßen-IDs und finden ihre Straße auch nach Änderungen am Straßenkatalog wieder. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude, Schilderstützen und Wasser werden von den Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Nebenwege sind Spielstrecken, keine realen Verkehrswege.
@@ -223,7 +225,12 @@ zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für
   einsteigen. Zu Fuß bleibt man auf Straße und Bürgersteigen und höchstens 70 m vom Wagen weg. Ab da: Blaulicht. Die Kripo hängt dran und gibt auf einem Botengang nicht auf, die Uhr
   läuft. Pünktlich im Ablieferungs-Ring anhalten ohne erwischt zu werden: acht Striche, Schlagzeile
   „Kurier liefert Paket – Inhalt unbekannt“. Zu spät oder erwischt: drei Striche weg. Drei abgelieferte
-  Botengänge geben den Orden BOTE VUM RING.
+  Botengänge geben den Orden BOTE VUM RING. Jede Strecke schickt dich an ihre eigenen (erfundenen)
+  Adressen an echten Orten – im Rheinauhafen etwa zur Lieferrampe am Schokoladenmuseum oder zum
+  Bootshaus am Bayenturm, am Dom zum Büdchen am Alter Maat – mit dem richtigen Artikel („zur
+  Wagenbauhalle“, „zum Kamelle-Lager“). Die Schilder an Abhol- und Abliefer-Ring stehen dem
+  heranfahrenden Wagen zugewandt und lesen sich richtig herum. Die Kripo-Zeile sagt ehrlich, wie es
+  steht: „HINTER DIR (40 M)“, „VÜR DIR“ oder „ABJEHÄNGT“, sobald sie dich im Veedel verloren hat.
 - **Fußgänger am Zebrastreifen:** An jedem Übergang gehen ein bis zwei Kölner tatsächlich über die
   Straße. Kommt ein Auto näher, hüpfen sie zurück an den Bordstein, warten, bis es vorbei ist, und
   gehen dann weiter – vor jedem Auto, auch vor den Rivalen und dem Peterwagen. Das Klüngel-Telefon macht
