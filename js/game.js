@@ -869,6 +869,7 @@
     const dot = (r, col, rad) => { const f = racerFrame(r); x.beginPath(); x.arc(c.width - (f.p.x * miniScale + miniOff.x), c.height - (f.p.z * miniScale + miniOff.z), rad, 0, Math.PI * 2); x.fillStyle = col; x.fill(); x.strokeStyle = '#000'; x.lineWidth = 1; x.stroke(); };
     for (const r of racers) if (r.isAI) dot(r, '#ffd400', 2.5);
     if (kripo) dot(kripo, '#2060ff', 3.5);
+    if (lmTag && lmTag.t > 0 && Math.floor(lmTag.t * 5) % 2 === 0) { const mx = c.width - (lmTag.base.x * miniScale + miniOff.x), mz = c.height - (lmTag.base.z * miniScale + miniOff.z); x.fillStyle = '#ffd23f'; x.strokeStyle = '#000'; x.lineWidth = 2; x.strokeRect(mx - 4.5, mz - 4.5, 9, 9); x.fillRect(mx - 4.5, mz - 4.5, 9, 9); } // the landmark of the story being told
     dot(player, '#ff2a2a', 4);
     if (player2) dot(player2, '#4fd6ff', 4);
   }
@@ -990,9 +991,9 @@
     blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
     signals = (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
-    stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: p.userData.at * track.length, text: p.userData.story, hd: p.userData.storyHd || HD.get(p.userData.story) || '', tag: p.userData.storyTag || storyTag(p.userData.story, p.userData.type), told: kids && DRINK.test(p.userData.story) })); // Pänz: a drinking story is never told, so it keeps no flavour line waiting
+    stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: (p.userData.storyAt != null ? p.userData.storyAt : p.userData.at) * track.length, wz: WZ[p.userData.wz] ? p.userData.wz : '', prop: p, text: p.userData.story, hd: p.userData.storyHd || HD.get(p.userData.story) || '', tag: p.userData.storyTag || storyTag(p.userData.story, p.userData.type), told: kids && DRINK.test(p.userData.story) })); // Pänz: a drinking story is never told, so it keeps no flavour line waiting
     telefon = { ready: true, active: 0, used: 0 };
-    knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30;
+    knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30; lmTag = null;
     const idx = TRACKS.indexOf(trackDef);
     $('#hudTrack').textContent = careerChapter != null ? `KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ${missionMode ? 'BOTENGANG' : 'ZIEL: ' + goalText(tuenn.career[careerChapter].goal)}` : missionMode ? `BOTENGANG · ${trackDef.name.toUpperCase()}` : `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
     deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; promilleDone = false; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
@@ -1238,7 +1239,7 @@
     if (scenery && !paused) W.animate(t, dt, camPos, phase === 'race' || phase === 'countdown' || phase === 'finished' ? racers.map((r) => r.mesh.position).concat(kripo ? [kripo.mesh.position] : []) : null);
     if (confetti && player && player.frame) confetti.userData.update(dt, player.frame.pos);
     if (!paused && (phase === 'race' || phase === 'finished')) vergeDirt(dt);
-    updateCamera(dt);
+    updateCamera(dt); placeLandmarkTag();
     const cams = (player2 && camera2 && phase !== 'menu' && phase !== 'editor') ? [camera, camera2] : camera;
     if (pixelScale === 1) renderDirect(cams); else post.render(scene, cams);
     // the paper's photo: the player's longest flight of the race (a jump or a loop), else the finish
@@ -1275,6 +1276,7 @@
       for (const r of racers) placeRacer(r, dt);
       if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else updateAuftrag(dt); }
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
+      if (lmTag) lmTag.t -= dt; // the name tag's 4 s also run out after the finish line
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt; noteTick();
         if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
@@ -1287,8 +1289,8 @@
         // passed (also from a side street running beside it). A story missed now comes back next lap.
         // The Verzällcher journal gets the full story of every place you pass, also when the box was busy, on a phone
         // (where the story is only a one-line tag) or in WENIJ (the 10 s gap); dä Lange tells as many as fit, a missed one next lap
-        if (!demo) for (const st of stories) if (!st.logged && Math.abs(storyDs(st)) < 70) { st.logged = true; if (!(kids && DRINK.test(st.text))) rememberStory(st.text); } // the attract mode only logs what it tells; Pänz get no drinking stories
-        if (storyCool <= 0 && (msgTimer <= 0 || msgPrio === 0 && msgAge > 1.2) && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) { const ms = isMobile && chat > 0 ? 5000 : 6500; if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag })) { st.told = true; storyCool = chat === 0 ? 9 : ms / 1000 + 1; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
+        if (!demo) for (const st of stories) if (!st.logged && Math.abs(storyDs(st)) < 70) { st.logged = true; if (!(kids && DRINK.test(st.text))) rememberStory(st.text); if (st.wz) discoverWz(st.wz); } // the attract mode only logs what it tells; Pänz get no drinking stories
+        if (storyCool <= 0 && (msgTimer <= 0 || msgPrio === 0 && msgAge > 1.2) && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) { const ms = isMobile && chat > 0 ? 5000 : 6500; if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag })) { st.told = true; storyCool = chat === 0 ? 9 : ms / 1000 + 1; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); showLandmarkTag(st); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pickNew(tuenn.razziaEnd), 2500); } }
         else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pickNew(tuenn.razzia), 3500); }
@@ -1557,6 +1559,36 @@
     for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap') return false; }
     return !track.routeGroups.some((g) => g.startS - player.s > -10 && g.startS - player.s < 90);
   }
+  // ---------------- Wahrzeichen: a name tag over the landmark while its story is told, the album under REKORDE ----------------
+  // A told landmark story puts a pixel label with a thin pointer over its building for 4 s (its dot blinks on the minimap);
+  // passing it (the story's 70 m) puts it in the album, stuntskoelle.wahrzeichen. stats.roman counts the twelve Romanesque.
+  const WZ = D.WAHRZEICHEN || {};
+  let lmTag = null; const _tagV = new THREE.Vector3();
+  function showLandmarkTag(st) {
+    if (!st.wz || !st.prop || player2 || demo) return;
+    const p = st.prop; lmTag = { wz: st.wz, t: 4, name: WZ[st.wz].name, top: new THREE.Vector3(p.position.x, p.position.y + (p.userData.tagY || 8), p.position.z), base: p.position.clone(), anchor: new THREE.Vector3(), x: 0, y: 0, on: false };
+    $('#landmarkTag span').textContent = lmTag.name;
+  }
+  // the pointer's tip sits on the building's axis: at its top (at most 30 m up), or lower down the axis when the top is
+  // above the upper third of the screen (the HUD lives there); a building behind the camera hides the tag
+  function placeLandmarkTag() {
+    const el = $('#landmarkTag'); if (!el) return;
+    if (!lmTag || lmTag.t <= 0 || !camera || player2 || paused || !(phase === 'race' || phase === 'finished')) { if (!el.hidden) el.hidden = true; if (lmTag && (lmTag.t <= 0 || phase !== 'race' && phase !== 'finished')) lmTag = null; return; }
+    const w = window.innerWidth, h = window.innerHeight, minY = Math.max(el.offsetHeight + 40, h * 0.3);
+    const proj = (t) => { _tagV.lerpVectors(lmTag.top, lmTag.base, t); lmTag.anchor.copy(_tagV); _tagV.project(camera); return (1 - _tagV.y) / 2 * h; };
+    if (proj(0) < minY && proj(1) > minY) { let a = 0, b = 1; for (let k = 0; k < 10; k++) { const m = (a + b) / 2; if (proj(m) < minY) a = m; else b = m; } proj(b); }
+    else proj(0);
+    if (_tagV.z > 1 || _tagV.z < -1) { el.hidden = true; lmTag.on = false; return; } // behind the camera
+    el.hidden = false;
+    const half = el.offsetWidth / 2 + 64, x = Math.max(half, Math.min(w - half, (_tagV.x + 1) / 2 * w)), y = Math.max(minY, Math.min(h - 10, (1 - _tagV.y) / 2 * h)); // 64 px: clear of the button columns at the sides
+    el.style.left = x.toFixed(1) + 'px'; el.style.top = y.toFixed(1) + 'px'; el.classList.toggle('blink', lmTag.t < 0.6); lmTag.x = x; lmTag.y = y; lmTag.on = true;
+  }
+  function wzFound() { try { const a = JSON.parse(localStorage.getItem('stuntskoelle.wahrzeichen') || '[]'); return Array.isArray(a) ? a.filter((id) => typeof id === 'string' && WZ[id]) : []; } catch (e) { return []; } }
+  function discoverWz(id) {
+    if (!WZ[id] || (trackDef && trackDef.daily)) return false; const have = wzFound(); if (have.includes(id)) return false; have.push(id);
+    try { localStorage.setItem('stuntskoelle.wahrzeichen', JSON.stringify(have)); const st = getStats(); st.roman = have.filter((k) => WZ[k].roman).length; localStorage.setItem('stuntskoelle.stats', JSON.stringify(st)); } catch (e) { /* the album is a bonus */ }
+    return true;
+  }
   // every story Dä Lange has told, per track, to be read again under REKORDE
   function heardStories() { try { return JSON.parse(localStorage.getItem('stuntskoelle.verzaellcher') || '{}') || {}; } catch (e) { return {}; } }
   function rememberStory(text) {
@@ -1578,6 +1610,12 @@
     { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
       v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>${hdOn && HD.get(x) ? `<p class="hdl">${HD.get(x)}</p>` : ''}`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an de Plätze vörbei – dä Lange verzällt jet.</p>');
       box.appendChild(v); }
+    { const have = wzFound(), ids = Object.keys(WZ), rom = ids.filter((k) => WZ[k].roman), where = {}; // where to find what is still missing
+      for (const t of D.TRACKS) for (const p of t.props || []) { const k = p.wz || p.type; if (p.story && WZ[k] && !where[k]) where[k] = t.name.toUpperCase(); }
+      const a = document.createElement('div'); a.className = 'wzAlbum';
+      a.innerHTML = `<b class="ordenHead">WAHRZEICHEN ${have.length}/${ids.length} ENTDECKT</b><small class="wzRom">ZWÖLF ROMANISCHE KIRCHE: ${rom.filter((k) => have.includes(k)).length} / ${rom.length}</small>${hdOn ? '<small class="hdl">Wahrzeichen: entdeckt, wenn du an ihnen vorbeifährst</small>' : ''}<div class="wzGrid">` +
+        ids.map((k) => `<span class="wz${have.includes(k) ? ' on' : ''}${WZ[k].roman ? ' rom' : ''}">${have.includes(k) ? WZ[k].name : '? ? ?'}${have.includes(k) || !where[k] ? '' : `<i>${where[k]}</i>`}</span>`).join('') + '</div>';
+      box.appendChild(a); }
     $('#records').hidden = false;
   }
 
@@ -2487,7 +2525,7 @@
     if (SP.frameTile) { const tile = SP.frameTile([106, 63, 160]); for (const pnl of document.querySelectorAll('#menu .panel')) { pnl.style.borderImage = `url(${tile}) 8 repeat`; pnl.style.borderWidth = '8px'; pnl.style.borderStyle = 'solid'; } }
   }
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
-  window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
+  window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, wz: p.userData.wz || '', story: !!p.userData.story, parent: !!p.parent, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_MISSION = (t) => startMission(t != null ? allTracks()[t] : activeTrackDef()); window.STUNTS_CAREER = startCareer; window.STUNTS_CAREER_STATE = careerState; window.STUNTS_ACT = missionAction;
   window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; player.jumpLive = null; placeRacer(player, 1); } };
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
@@ -2508,7 +2546,8 @@
   // the message box: every line shown this race, the chatter setting (VILL / NORMAL / WENIJ or 0-2), the Hochdeutsch help, the place stories and the journal
   window.STUNTS_MSGLOG = () => msgLog.slice(); window.STUNTS_CHAT = (m) => { if (m != null) setChat(typeof m === 'string' ? CHAT.indexOf(m) : m, false); return CHAT[chat]; };
   window.STUNTS_HD = (on) => { if (on != null) setHd(on); return hdOn; }; window.STUNTS_JOURNAL = () => heardStories();
-  window.STUNTS_STORIES = () => stories.map((st) => ({ s: st.s, text: st.text, hd: st.hd, tag: st.tag, told: st.told, logged: !!st.logged }));
+  window.STUNTS_STORIES = () => stories.map((st) => ({ s: st.s, text: st.text, hd: st.hd, tag: st.tag, told: st.told, logged: !!st.logged, wz: st.wz, type: st.prop ? st.prop.userData.type : '', at: st.prop ? st.prop.userData.at * track.length : null, x: st.prop ? st.prop.position.x : null, z: st.prop ? st.prop.position.z : null, placed: !!(st.prop && st.prop.parent) }));
+  window.STUNTS_LANDMARK_TAG = () => lmTag && { name: lmTag.name, wz: lmTag.wz, t: lmTag.t, on: lmTag.on, x: lmTag.x, y: lmTag.y, anchor: lmTag.anchor.toArray() }; window.STUNTS_WAHRZEICHEN = () => wzFound(); // the tag over a told landmark, the album
   window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
   window.STUNTS_CAR_SCREEN = () => { if (!player || !player.mesh || !camera) return null; const v = player.mesh.position.clone().project(camera); return { x: (v.x + 1) / 2 * window.innerWidth, y: (1 - v.y) / 2 * window.innerHeight, mode: camMode }; }; // where the player's car is drawn, in CSS pixels
   window.STUNTS_SCENE = () => scene; window.STUNTS_SAY = (text, ms, must) => { quiet = 0; msgTimer = 0; return say(tuenn, text, ms || 3000, !!must); }; // a flavour line, as the radio or a rival would say it (must: a line the player needs)

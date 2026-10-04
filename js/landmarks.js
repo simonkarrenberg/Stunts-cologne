@@ -273,18 +273,20 @@
     wheel.name = 'Ottoplatz Schwungrad';
   });
 
-  register('palladium', 'Palladium · Schanzenstraße', 'https://www.palladium-koeln.de/', (g) => {
+  // A working concert hall in a former cable-works hall of the Carlswerk: fictional name, the real brick hall and street.
+  register('kabelwerk', 'Kabelwerk-Halle · Schanzenstraße', 'https://www.kuladig.de/Objektansicht/KLD-290500', (g) => {
     box(g, 39, 11, 41, BRICK, 0, 5.5, -3); roof(g, 40, 7, 42, 0x536467, 0, 11, -3);
     box(g, 17, 8, 34, 0xaa7055, 26, 4, -3); roof(g, 18, 4, 35, 0x536467, 26, 8, -3);
     box(g, 37, 4.5, 8, 0xa5684e, 0, 2.25, 20); box(g, 39, 0.6, 9, 0x454b4b, 0, 4.8, 20);
     for (const x of [-13, -6.5, 0, 6.5, 13]) { arch(g, 4, 6, x, 6, 17.6); box(g, 0.2, 5.5, 0.2, 0xada087, x, 9, 17.75); }
     for (const x of [-14, -7, 0, 7, 14]) window(g, 4, 2.7, x, 2, 24.1);
-    sign(g, 'PALLADIUM', 24, 0, 5.7, 24.2);
+    sign(g, 'KABELWERK-HALLE', 24, 0, 5.7, 24.2);
     for (let z = -18; z <= 12; z += 7.5) { arch(g, 3.2, 6, -19.55, 3, z, DARK, -Math.PI / 2); box(g, 1, 11, 1, 0xb67f60, -19.7, 5.5, z + 3); }
   });
 
-  // Twin gables, pale inset panels, round windows and the former water-tank tower.
-  register('ewerk', 'E-Werk · Schanzenstraße', 'https://www.e-werk-cologne.com/', (g) => {
+  // Mülheim's power station of 1904-05, today a working concert hall (fictional name, the real building and street):
+  // twin gables, pale inset panels, round windows and the former water-tank tower.
+  register('stromhalle', 'Stromhalle Mülheim · Schanzenstraße', 'https://www.kuladig.de/Objektansicht/KLD-290499', (g) => {
     for (const x of [-10, 10]) {
       box(g, 19, 13, 36, BRICK, x, 6.5, -1); roof(g, 20, 9, 37, SLATE, x, 13, -1);
       roof(g, 18, 8.4, 0.7, 0xcfc9b8, x, 13, 17.65);
@@ -296,7 +298,7 @@
       for (const dx of [-9, 9]) box(g, 1.1, 15, 1, BRICK, x + dx, 7.5, 17.6);
     }
     box(g, 35, 4, 7, BRICK, 0, 2, 21); box(g, 36, 0.6, 8, SLATE, 0, 4.2, 21);
-    sign(g, 'E-WERK', 18, 0, 5.5, 24.65);
+    sign(g, 'STROMHALLE', 18, 0, 5.5, 24.65);
     box(g, 7, 26, 7, BRICK, -24, 13, 7); cornice(g, 7, 7, 25, LIGHT, -24, 7);
     dome(g, 5, 5, 0x5b625d, -24, 26, 7); cyl(g, 1.8, 1.8, 3, 0x5b625d, -24, 32, 7, 8);
     cone(g, 2.8, 5, 0x5b625d, -24, 36, 7, 8);
@@ -627,7 +629,8 @@
     for (const x of [11, 16, 20]) for (const y of [3.5, 8]) window(g, 2, 2.8, x, y, 11.6);
   });
 
-  // The former Danziger Lagerhaus is nicknamed Siebengebirge but has NINE roof gables.
+  // The former Danziger Lagerhaus is nicknamed Siebengebirge after the seven gables on its street side; it has NINE roofs
+  // (https://www.kuladig.de/Objektansicht/O-71107-20130805-4), drawn here as nine gabled roof bays.
   register('siebengebirge', 'Siebengebirge · Rheinauhafen', 'https://www.rheinauhafen-koeln.de/architektur/das-siebengebirge', (g) => {
     const brick = 0xc5ac70, trim = 0xe0cca0;
     box(g, 72, 22, 21, brick); cornice(g, 72, 21, 7.2, trim); cornice(g, 72, 21, 21.8, trim);

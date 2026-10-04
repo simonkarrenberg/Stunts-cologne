@@ -1543,6 +1543,31 @@
         ch.position.y = s.p.y + 0.22;
       }
     }
+    // Wahrzeichen (GameData.WAHRZEICHEN): a church, tower or gate has its story told where it is what the driver sees.
+    // Its trigger is the circuit point nearest to the building, moved along the road (at most 120 m) to the closest stretch
+    // where no other church, tower or gate stands nearer than the landmark itself (40 m before the place, 20 m before and
+    // at it; at least at it) and the road is calm enough to tell it (no loop, jump or fork ahead, as game.js calmRoad).
+    // Any other place with a story (a hall, a bridge, a monument, a Köbes) is told at its nearest calm road point. Runs after
+    // clearTheStreets, on the final positions. Also: userData.wz (album id) and tagY (where the name tag points).
+    function storySpots(list) {
+      const WZ = GD().WAHRZEICHEN || {}, TALL = /^(kirche|turm|tor)$/, wzOf = (p) => WZ[p.userData.wz || p.userData.type];
+      const tall = list.filter((p) => p.parent && (p.userData.type === 'kirche' || (wzOf(p) && TALL.test(wzOf(p).kind))));
+      const wrap = (s) => ((s % L) + L) % L, bb = new THREE.Box3();
+      const nearest = (p, s) => { const f = TB.frameAt(track, wrap(s)), d = (o) => (o.position.x - f.p.x) ** 2 + (o.position.z - f.p.z) ** 2, own = d(p); return tall.every((o) => o === p || d(o) > own); };
+      const calm = (s) => { const i0 = Math.floor(wrap(s) / track.ds); for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap') return false; } return !(track.routeGroups || []).some((gr) => gr.startS - wrap(s) > -10 && gr.startS - wrap(s) < 90); };
+      // strict: nearest over the whole approach (40 m before, 20 m before, at the trigger); else at least at the trigger
+      const good = (p, s, strict, tallOne) => (!tallOne || (!strict || nearest(p, s - 40) && nearest(p, s - 20)) && nearest(p, s)) && [-40, -25, -10, 5].some((b) => calm(s + b));
+      for (const p of list) {
+        if (!p.userData.story || !p.parent) continue;
+        if (wzOf(p)) { p.userData.wz = p.userData.wz || p.userData.type; bb.setFromObject(p); p.userData.tagY = bb.isEmpty() ? 8 : Math.max(3, Math.min(bb.max.y - GROUND_Y, 30)); }
+        // the landmark's place on the road: the circuit point nearest to the building as it finally stands
+        let s0 = p.userData.at * L, dmin = Infinity; for (let i = 0; i < n; i++) { const dd = (S[i].p.x - p.position.x) ** 2 + (S[i].p.z - p.position.z) ** 2; if (dd < dmin) { dmin = dd; s0 = i * track.ds; } }
+        const tallOne = !!wzOf(p) && TALL.test(wzOf(p).kind); let best = null; // a hall or a bridge only needs a calm road; a church, tower or gate also has to be the nearest of its kind
+        for (const strict of tallOne ? [true, false] : [false]) for (let d = 0; d <= 112 && best == null; d += 2) { if (good(p, s0 + d, strict, tallOne)) best = s0 + d; else if (d && good(p, s0 - d, strict, tallOne)) best = s0 - d; }
+        if (best == null && root.STUNTS_AUDIT) console.warn('no story spot:', track.def.id, p.userData.wz || p.userData.type);
+        p.userData.storyAt = wrap(best == null ? s0 : best) / L;
+      }
+    }
     function clearTheStreets(group) {
       const lb = new THREE.Box3(), tb = new THREE.Box3(), inv = new THREE.Matrix4(), tm = new THREE.Matrix4(); const m = ROAD_W + 1.6;
       const footprint = (obj, buildingOnly) => {
@@ -1789,7 +1814,7 @@
       place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : !!prop.userData.landmarkName || FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
-      prop.userData.type = pd.type; prop.userData.at = at; if (pd.story) { prop.userData.story = pd.story; if (pd.hd) prop.userData.storyHd = pd.hd; if (pd.tag) prop.userData.storyTag = pd.tag; } propList.push(prop);
+      prop.userData.type = pd.type; prop.userData.at = at; if (pd.wz) prop.userData.wz = pd.wz; if (pd.story) { prop.userData.story = pd.story; if (pd.hd) prop.userData.storyHd = pd.hd; if (pd.tag) prop.userData.storyTag = pd.tag; } propList.push(prop);
       if (!pd.story && (pd.type === 'polizei' || pd.type === 'blitzer' || pd.type === 'kirche' || pd.type === 'tramline')) pendingStories.push([pd.type === 'tramline' ? 'tram' : pd.type, at * L, prop]);
       prop.userData.kind = 'prop:' + pd.type; g.add(prop);
       if (pd.type === 'rhine' || pd.type === 'rhineSide') clipWater(prop);
@@ -2219,6 +2244,7 @@
         if (near(ch.position.x, ch.position.z, ROAD_W + 8)) continue; g.remove(ch); wet++; }
       if (root.STUNTS_AUDIT && wet) console.log('dried up:', wet);
     }
+    storySpots(propList);
     if (root.STUNTS_AUDIT) root.STUNTS_AUDIT(g, track, { ROAD_W, GROUND_Y, WATER_Y });
     // batch everything static into one mesh per material (hundreds of draw calls -> a few dozen)
     const occluders = collectOccluders(g); // houses, trees, landmarks: what a camera must not sit in or look through

@@ -1,6 +1,7 @@
 // Hard limit: no real brands, clubs, companies or bands in the game's texts. Every string literal in js/*.js
 // and the visible text of index.html is checked against a denylist. The fictional stand-ins stay allowed:
-// KVK (tram livery), DÄ SCHNELLE (newspaper), Krachkeller (Tango's club), LamboGina, Klüngelkasse.
+// KVK (tram livery), DÄ SCHNELLE (newspaper), Krachkeller (Tango's club), LamboGina, Klüngelkasse,
+// Kabelwerk-Halle and Stromhalle Mülheim (the two working concert halls on the Schanzenstraße, real buildings).
 const { gameStrings } = require('./helpers');
 
 const DENY = [
@@ -12,6 +13,7 @@ const DENY = [
   /1\.\s?FC\b/, /FC Köln/i, /Effzeh/i, /Fortuna Köln/i, /Viktoria Köln/i, /Kölner Haie/i, /\bKEC\b/, /Bayer 04/, /Borussia/i, /Schalke/i,
   // real clubs and venues that are businesses
   /\bLuxor\b/i, /\bUnderground\b/, /Odonien/, /Artheater/i, /Gebäude 9/, /Bootshaus Deutz/i, /Gloria-?Theater/i,
+  /Palladium/i, /\bE-?Werk\b/i, /e-werk-cologne/i, // concert halls on the Schanzenstraße: in the game Kabelwerk-Halle and Stromhalle Mülheim
   // breweries and brewery taps
   /Früh Kölsch|Früh am Dom|Cölner Hofbräu/, /Gaffel/i, /Reissdorf/i, /\bSion\b/, /Päffgen/i, /Malzmühle/i, /Mühlen Kölsch/i, /Sünner/i, /\bGilden\b/i,
   /Küppers/i, /Peters Kölsch/i, /Schreckenskammer/i, /\bHellers\b/i, /Dom Kölsch/i, /Richmodis Kölsch/i, /Zunft Kölsch/i, /Brauhaus Quetsch/i,
@@ -24,7 +26,7 @@ module.exports = async function () {
   for (const s of strings) for (const re of DENY) if (re.test(s.text)) hits.push(`${s.file}:${s.line} ${re} in "${s.text.slice(0, 90)}"`);
   // the check itself must see the texts: a known line of each kind has to be found
   const seen = (re) => strings.some((s) => re.test(s.text));
-  const probe = [/BAHNGLEISE/, /Kölsches Grundgesetz/, /Dä Lange/].filter((re) => !seen(re)).map(String);
+  const probe = [/BAHNGLEISE/, /Kölsches Grundgesetz/, /Dä Lange/, /KABELWERK-HALLE/, /Stromhalle Mülheim/].filter((re) => !seen(re)).map(String);
   lines.push(`${strings.length} strings checked against ${DENY.length} names`);
   if (probe.length) lines.push('string scan missed known texts: ' + probe.join(', '));
   for (const h of hits.slice(0, 40)) lines.push(h);

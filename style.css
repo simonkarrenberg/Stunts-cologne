@@ -401,7 +401,7 @@ body.mobile #resPaper { max-width: 260px; } body.mobile #paperBtn { font-size: 7
 #demoCrawl { position: absolute; left: 50%; transform: translateX(-50%); width: min(720px, 90vw); text-align: center; color: var(--yellow); font-size: 14px; line-height: 2.1; text-shadow: 2px 2px 0 #000, 0 0 8px rgba(0,0,0,.8); animation: crawl 62s linear forwards; }
 #demoCrawl p { margin: 0 0 22px; } #demoCrawl p.big { font-size: 22px; color: #fff; text-shadow: 3px 3px 0 var(--red2), 0 0 14px var(--pink); }
 @keyframes crawl { from { top: 100%; } to { top: -160%; } }
-body.demo .hudStats, body.demo .hudDash, body.demo .hudBtns, body.demo .hudMini, body.demo #touch, body.demo .hudTitle, body.demo #msg { display: none !important; }
+body.demo .hudStats, body.demo .hudDash, body.demo .hudBtns, body.demo .hudMini, body.demo #touch, body.demo .hudTitle, body.demo #msg, body.demo #landmarkTag { display: none !important; }
 body.mobile .demoTop { font-size: 9px; top: 8px; } body.mobile #demoCrawl { font-size: 9px; line-height: 1.9; } body.mobile #demoCrawl p.big { font-size: 14px; }
 
 /* ---------- track intro card ---------- */
@@ -1037,3 +1037,21 @@ body.mobile #menu #quickStartBtn { font-size: var(--f); min-height: 38px; paddin
 }
 @media (max-width: 1100px) { .cabinetCrown .hiScore { display: none; } }
 @media (max-width: 650px) { .cabinetCrown .crownName { display: none; } }
+
+/* Wahrzeichen: the name of the landmark whose story is told, a pixel label with a thin pointer down to the building */
+#landmarkTag { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); padding-bottom: 22px; pointer-events: none; z-index: 6; white-space: nowrap; }
+#landmarkTag span { display: block; padding: 5px 8px 4px; background: #14121cee; color: var(--yellow); border: 2px solid var(--yellow); box-shadow: 3px 3px 0 #000; font-size: 9px; letter-spacing: .06em; text-shadow: 1px 1px 0 #000; }
+#landmarkTag::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 2px; height: 22px; margin-left: -1px; background: var(--yellow); box-shadow: 1px 0 0 #000; }
+#landmarkTag::before { content: ""; position: absolute; left: 50%; bottom: -3px; width: 6px; height: 6px; margin-left: -3px; background: var(--yellow); border: 1px solid #000; }
+#landmarkTag.blink { animation: lmBlink .2s steps(2) infinite; }
+@keyframes lmBlink { 50% { opacity: .25; } }
+body.bigtext #landmarkTag span { font-size: 12px; padding: 6px 10px 5px; } body.mobile.bigtext #landmarkTag span { font-size: 9px; padding: 4px 6px 3px; }
+body.mobile #landmarkTag { padding-bottom: 16px; } body.mobile #landmarkTag::after { height: 16px; } body.mobile #landmarkTag span { font-size: 7px; padding: 3px 5px 2px; }
+/* the album under REKORDE */
+.wzAlbum { margin-top: 14px; }
+.wzAlbum .wzRom { display: block; color: var(--cyan); font-size: 8px; margin: 2px 0 6px; }
+.wzGrid { display: flex; flex-wrap: wrap; gap: 4px; }
+.wz { display: inline-flex; flex-direction: column; padding: 3px 6px; font-size: 8px; border: 2px solid var(--line2); color: #6c7096; background: #0d0f20; }
+.wz i { font-style: normal; font-size: 7px; color: #50547a; }
+.wz.on { color: var(--cream); border-color: #8a8fc0; }
+.wz.rom { border-color: #7a6a2a; } .wz.rom.on { color: var(--yellow); border-color: var(--yellow); }

@@ -2,7 +2,25 @@
 
 ## Mehr Kölle: Bauwerke und Abkürzungen
 
-48 eigens modellierte Kölner Bauwerke und Denkmäler verteilen sich inzwischen auf 80 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, Palladium, E-Werk, Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Modelle ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen in den Katalogen `js/landmarks.js` und `js/wahrzeichen.js`.
+51 eigens modellierte Kölner Bauwerke und Denkmäler verteilen sich inzwischen auf 83 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, die Kabelwerk-Halle und die Stromhalle Mülheim (zwei heute bespielte Konzerthallen an der Schanzenstraße: echte Gebäude, erfundene Namen), Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Modelle ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen in den Katalogen `js/landmarks.js` und `js/wahrzeichen.js`.
+
+**Wahrzeichen mit Namensschild:** Erzählt Dä Lange die Geschichte eines Wahrzeichens, steht vier Sekunden lang ein
+Pixel-Schild mit dünnem Zeiger über dem Gebäude („GROSS ST. MARTIN“, „BAYENTURM · 1262“, „TÜNNES UN SCHÄL“), und sein
+Punkt blinkt auf der Minikarte. Wer an einem Wahrzeichen vorbeifährt, hat es entdeckt: Unter REKORDE steht das Album
+**WAHRZEICHEN 12/70 ENTDECKT** mit den gefundenen Namen und, für die fehlenden, der Strecke, auf der sie stehen. Alle
+**zwölf großen romanischen Kirchen** sind dabei – neu St. Andreas an der Komödienstraße (mit dem Grab des Albertus
+Magnus in der Krypta), St. Georg am Waidmarkt (gegründet von Erzbischof Anno) und das turmlose St. Cäcilien an der
+Cäcilienstraße (seit 1956 das Museum Schnütgen); Groß St. Martin hat jetzt eine eigene Geschichte. Alle zwölf gesehen:
+Orden **ZWÖLF ROMANISCHE**. Die Liste der Wahrzeichen steht in `WAHRZEICHEN` in `js/data.js`.
+
+**Geschichten dort, wo der Ort ist:** Eine Ortsgeschichte wird am Straßenpunkt erzählt, der dem Gebäude am nächsten
+liegt (höchstens 120 m davon entfernt, und dort, wo kein Looping, Sprung und keine Gabelung gleich folgt). Bei Kirchen,
+Türmen und Torburgen darf an dieser Stelle kein anderer Turm und keine andere Kirche näher stehen – so fällt die
+Wasserturm-Geschichte im Rheinauhafen nicht mehr neben einem anderen runden Turm. Die Faktenzeilen haben Quellen im
+Kommentar daneben; was sich nicht belegen ließ (ein Banküberfall mit Geiseln am Dom), erzählt Dä Lange als Gerücht
+(„Mer verzällt sich…“). Korrigiert: Am Domhof führt südlich am Dom entlang (nicht unter der Domplatte durch), das
+Siebengebirge im Rheinauhafen hat sieben Giebel zur Straße (daher der Name), aber neun Dächer, und der Nubbel brennt in der Nacht vor
+Aschermittwoch.
 
 Der zweite Ausbau ergänzt St. Agnes mit ihrem Turm ohne Spitze, das große Zehneck von St. Gereon, die Synagoge an der Roonstraße, den Richmodisturm mit seinen beiden Pferdeköpfen, Melatens historisches Tor II an der Aachener Straße und die Bottmühle ohne Mühlenflügel. Zehn zusätzliche Standorte und ein gezielter Austausch machen die Stadt genauer: St. Gereon ersetzt dort die bisherige allgemeine Kirchenkulisse. Melaten bleibt eine Sehenswürdigkeit am Straßenrand; die Rennstrecke führt nicht durch den Friedhof.
 
@@ -159,7 +177,7 @@ Der Gastgeber des Spiels ist **der Türsteher**, eine erfundene Figur von den K�
 Boulevardpresse Köln in den 60ern und 70ern: rund 50.000 Straftaten im Jahr, Zuhälter, Zocker,
 Hehler, Spielclubs, Boxer im „Klein Köln“ (Friesenstraße, seit 1926 mit Nachtlizenz und
 Wiegestation für Profiboxer), die Sartory-Säle, das Residenz-Kino an der Christophstraße, der
-Banküberfall am Dom und der Einbruch in die Domschatzkammer.
+die Legende vom Banküberfall am Dom (belegt ist sie nicht) und der echte Einbruch in die Domschatzkammer.
 
 Im Spiel: Die Strecke **Chicago am Rhein** führt als Nachttour über die Ringe (Residenz-Kino,
 Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** der Türsteher
@@ -237,9 +255,9 @@ zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für
   mindestens ein Stunt, Kulisse von einer der festen Strecken. Sie schließt sich garantiert (der
   Generator prüft das) und hat eigene Bestzeiten, die nur heute gelten. Wer auf allen Geräten dieselbe
   Streck fährt, kann Zeiten vergleichen.
-- **Orden:** Zwölf Orden hängen unter REKORDE hinter der Theke – Loopingkönig, Sprungkönig, Kurier vum
+- **Orden:** Die Orden hängen unter REKORDE hinter der Theke – Loopingkönig, Sprungkönig, Kurier vum
   Klüngel, Rheinbader, Blitzer-Abo, Durstlöscher, Abjehängt, Rekordhalter, Cup-Sieger, Nachtschwärmer,
-  Dat Dach, Tagesstreck. Die Zähler laufen über alle Rennen; ein neuer Orden wird im Ergebnis mit
+  Dat Dach, Tagesstreck, Zwölf Romanische und mehr. Die Zähler laufen über alle Rennen; ein neuer Orden wird im Ergebnis mit
   Fanfare verkündet.
 - **Vorstellung der Strecke:** Vor dem Countdown fliegt die Kamera vier Sekunden von hoch über der
   ersten Kurve hinunter hinter die Startaufstellung, mit Streckenname, Veedel, Runden und Kilometern
@@ -544,6 +562,12 @@ Autopilot-Rennen ohne Bild: Dom mit KÖLSCH-HÜLP (jede „Dä Lange verzällt�
 Rechner auf NORMAL (drei Runden, mindestens 80 % der Geschichten im Verzällcher, nichts doppelt) und die
 Zülpicher auf dem Handy auf WENIJ (höchstens eine Zeile pro 10 s, nichts doppelt, Ortsschilder, jede
 passierte Geschichte im Verzällcher). `koelsch-lint` lässt die Hochdeutsch-Felder (`hd`, `titleHd` …) in Ruhe.
+`story-spots` baut alle zehn Strecken: Jede Ortsgeschichte fällt höchstens 120 m vom Straßenpunkt, der ihrem Gebäude
+am nächsten ist; bei Kirchen, Türmen und Torburgen steht dort kein anderer Turm und keine andere Kirche näher (die
+Wasserturm-Geschichte im Rheinauhafen hat den Wasserturm als nächstes Wahrzeichen). `wahrzeichen` prüft, dass alle
+zwölf romanischen Kirchen mit Geschichte auf einer Strecke stehen, und am Dom (Rechner 1280×720 und Handy 844×390),
+dass beim Tünnes-un-Schäl-Verzällche `#landmarkTag` den Namen zeigt und sein Zeiger auf ±40 px am Denkmal endet;
+dazu das Album unter REKORDE. `brands` hält auch die echten Namen der beiden Schanzenstraßen-Hallen fern.
 
 ## Debug
 
@@ -560,7 +584,8 @@ springt im Replay an t, `STUNTS_REC(t)` liefert das aufgezeichnete Bild bei t, `
 den Geist auf Rundenzeit t, `STUNTS_OCC(a, b)` den ersten Treffer der Sichtschicht auf der Linie a–b.
 `STUNTS_MSGLOG()` listet jede Zeile des laufenden Rennens (Zeit, Sprecher, Text, Hochdeutsch, Ortsschild),
 `STUNTS_CHAT('WENIJ')` stellt das Geschwätz, `STUNTS_HD(true)` die Kölsch-Hülp um, `STUNTS_STORIES()` und
-`STUNTS_JOURNAL()` zeigen die Geschichten der Strecke und den Verzällcher. Ein von Playwright gesteuerter
+`STUNTS_JOURNAL()` zeigen die Geschichten der Strecke und den Verzällcher, `STUNTS_LANDMARK_TAG()` das
+Schild über dem Wahrzeichen der laufenden Geschichte und `STUNTS_WAHRZEICHEN()` das Album. Ein von Playwright gesteuerter
 Browser (`navigator.webdriver`) überspringt die Türkarten beim ersten Start, damit die Menütests klicken
 können; `STUNTS_ONBOARD = true` (vor dem Laden gesetzt) zeigt sie trotzdem.
 

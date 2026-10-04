@@ -67,7 +67,8 @@
   // https://buehnen.koeln/  https://www.bahnhof.de/koeln-messe-deutz
   // https://www.stadt-koeln.de/politik-und-verwaltung/presseservice/zukunft-des-fort-x-am-neusser-wall
   // https://www.stadt-koeln.de/mediaasset/content/pdf53/rundgang_agnesviertel.pdf
-  // https://www.e-werk-cologne.com/  https://www.palladium-koeln.de/
+  // Kabelwerk-Halle and Stromhalle Mülheim stand for two working concert halls on the Schanzenstraße (fictional names, real buildings):
+  // https://www.kuladig.de/Objektansicht/KLD-290500 (Carlswerk hall)  https://www.kuladig.de/Objektansicht/KLD-290499 (Mülheim power station, 1904-05)
   // https://www.koelntourismus.de/kunst-kultur/sehenswuerdigkeiten/detail/st-agnes
   // https://www.stgereon.de/kirchen/st-gereon/  https://www.sgk.de/gemeinde/standorte/
   // https://www.kuladig.de/Objektansicht/KLD-298065 (Richmodisturm, Neumarkt)
@@ -80,14 +81,15 @@
       signs: [[0, 'RONCALLIPLATZ'], [1, 'TRANKGASSE'], [2, 'AM HOF'], [4, 'OBENMARSPFORTEN'], [5, 'ALTER MARKT'], [6, 'HEUMARKT'], [8, 'MARKMANNSGASSE'], [9, 'FRANKENWERFT'], [10, 'HEINRICH-BÖLL-PLATZ'], [11, 'HOHENZOLLERNBRÜCKE'], [12, 'KENNEDY-UFER'], [13, 'OTTOPLATZ'], [15, 'KENNEDY-UFER'], [17, 'RHEINBOULEVARD']], // the real street at each stretch of the circuit (main-road name signs)
       waypoints: ['Dom', 'Kolumba', 'Wallraf & Gürzenich', 'Alter Markt', 'Hohenzollernbrücke', 'Bahnhof Deutz', 'Rheinsprung'],
       diff: 2, laps: 3, scale: 1.45,
-      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei; am Dreiwege-Fork wählst du die schmale Straße Am Domhof unter der Domplatte, die Hauptstrecke oder die weite Trankgasse. Dazu die Bechergasse am Looping vorbei, die Salzgasse zum Rhein, der Auenweg hinter der Messe und der Rheinsprung: Schäl kennt den Weg, die Tauben kennen dein Dach.',
+      desc: 'Im Morgengrauen vom Dom an Kolumba, Wallraf und Gürzenich vorbei; am Dreiwege-Fork wählst du die schmale Straße Am Domhof südlich am Dom vorbei, die Hauptstrecke oder die weite Trankgasse. Dazu die Bechergasse am Looping vorbei, die Salzgasse zum Rhein, der Auenweg hinter der Messe und der Rheinsprung: Schäl kennt den Weg, die Tauben kennen dein Dach.',
       shortcuts: [
         { id: 'dom-bechergasse', street: 'Bechergasse', type: 'bypass', from: { seg: 2, u: 0.95 }, to: { seg: 5, u: 0.8 }, side: 1, offset: 44, radius: 16, angle: 70, halfWidth: 3.4, surface: 'cobble', toward: 'ALTER MARKT', perks: ['koelsch'], note: 'Bechergass: vum Heinzelmännche stracks op der Aldermaat. Dä Looping es för Touriste, Jung.', hd: 'Bechergasse: vom Heinzelmännchenbrunnen direkt auf den Alter Markt. Der Looping ist für Touristen, Junge.' },
         { id: 'dom-salzgasse', street: 'Salzgasse', type: 'cut', from: { seg: 7, u: 0.4 }, to: { seg: 9, u: 0.2 }, halfWidth: 3.4, surface: 'cobble', toward: 'FRANKENWERFT', perks: ['koelsch', 'brauhaus', 'shakeKripo'], note: 'Salzgass, vum Heumaat an der Rhing. Zwei Kneipe en ener Gass, do verlööf sich och de Kripo.', hd: 'Salzgasse, vom Heumarkt an den Rhein. Zwei Kneipen in einer Gasse – da verläuft sich auch die Kripo.' },
         { id: 'dom-auenweg', street: 'Auenweg', type: 'parallel', from: { seg: 15, u: 0.78 }, to: { seg: 17, u: 0.4 }, side: 1, offset: 40, radius: 16, angle: 55, halfWidth: 4.6, surface: 'asphalt', toward: 'RHEINPARK', perks: ['trees', 'parked'], note: 'Auenweg, en Stroß hinger dem Ufer. Duurt länger, ävver do blitzt keiner.', hd: 'Auenweg, eine Straße hinter dem Ufer. Dauert länger, aber da blitzt keiner.' }
       ],
       branches: [
-        { id: 'dom-domhof', name: 'AM DOMHOF', street: 'Am Domhof', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 }, via: [{ x: 18, z: 187 }, { x: 38, z: 242 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'AM HOF', perks: [], note: 'Am Domhof, unger de Domplatte dörch. Kei Ampel, kei Tourist, nur der Dom drövver.', hd: 'Am Domhof, unter der Domplatte durch. Keine Ampel, kein Tourist, nur der Dom darüber.' },
+        // Am Domhof runs along the south side of the Dom and the Roncalliplatz, not under the Domplatte: https://www.openstreetmap.org/search?query=Am%20Domhof%2C%20K%C3%B6ln
+        { id: 'dom-domhof', name: 'AM DOMHOF', street: 'Am Domhof', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 }, via: [{ x: 18, z: 187 }, { x: 38, z: 242 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'AM HOF', perks: [], note: 'Am Domhof, söds am Dom lans. Kei Ampel, kei Tourist, nur der Dom nevvendran.', hd: 'Am Domhof, südlich am Dom entlang. Keine Ampel, kein Tourist, nur der Dom daneben.' },
         { id: 'dom-trankgasse', name: 'TRANKGASSE', street: 'Trankgasse', fork: 'dom-dreiwege', from: { seg: 0, u: 0.65 }, to: { seg: 2, u: 0.55 }, via: [{ x: -20, z: 186 }, { x: -37, z: 259 }, { x: 23, z: 322 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'AM HOF', perks: ['brauhaus', 'koelsch'], note: 'Trankgass: wigger eröm, ävver em Brauhaus am Eck steiht et Kölsch ald parat.', hd: 'Trankgasse: weiter herum, aber im Brauhaus an der Ecke steht das Kölsch schon bereit.' }
       ],
       theme: { sky: 0x5a78b8, fog: 0xffc4a0, ground: 0xa99b86, sun: 0xffd4a8, road: [0x6a6a70, 0x5c5c62], night: false, dawn: true, water: 0x5a7fb0, street: 'altstadt',
@@ -125,18 +127,22 @@
         { type: 'heinzelbrunnen', seg: 2, u: 0.5, side: 1, dist: 16, keep: 22, story: 'Heinzelmännchenbrunnen. Nachts han se jeschafft, bis de Frau vum Schneider Erbse jestreut hät. Seitdem schafft in Kölle keiner mieh nachts. Außer mir.', hd: 'Heinzelmännchenbrunnen. Nachts haben sie gearbeitet, bis die Frau vom Schneider Erbsen gestreut hat. Seitdem arbeitet in Köln keiner mehr nachts. Außer mir.' },
         { type: 'koelsch', seg: 2, u: 0.4, side: 1, dist: 18 },
         { type: 'billboard', seg: 2, u: 0.62, side: 1, dist: 14, text: 'BRAUHAUS AM DOM · SEIT 1904' },
-        { type: 'hbf', seg: 1, u: 0.5, side: -1, dist: 95, keep: 90, story: 'Hauptbahnhof. 1975: Banküberfall met Geiseln, direkt am Dom. Chicago am Rhein, Jung. Heut nur noch Taube un Verspätung.', hd: 'Hauptbahnhof. 1975: Banküberfall mit Geiseln, direkt am Dom. Chicago am Rhein, Junge. Heute nur noch Tauben und Verspätung.' },
+        // no source found for a 1975 hostage bank robbery at the Dom: told as a rumour (the theft from the Domschatzkammer in November 1975 is real: https://de.wikipedia.org/wiki/K%C3%B6lner_Dom)
+        { type: 'hbf', seg: 1, u: 0.5, side: -1, dist: 95, keep: 90, story: 'Hauptbahnhof. Mer verzällt sich, en de Siebzijer hätt et hee ens ene Banküberfall met Geiseln jejovve. Bewiese es nix. Sicher sin nur Taube un Verspätung.', hd: 'Hauptbahnhof. Man erzählt sich, in den Siebzigern habe es hier einmal einen Banküberfall mit Geiseln gegeben. Bewiesen ist nichts. Sicher sind nur Tauben und Verspätung.' },
         { type: 'museum', seg: 0, u: 0.85, side: 1, dist: 42 },
         { type: 'musicaldome', seg: 2, u: 0.3, side: 1, dist: 70 },
-        { type: 'kunibert', seg: 1, u: 0.85, side: -1, dist: 175, keep: 74, story: 'St. Kunibert am Rhing. Drei Türme, drei Chancen, sich zu verfahre. Schäl schafft alle.', hd: 'St. Kunibert am Rhein. Drei Türme, drei Chancen, sich zu verfahren. Schäl schafft alle.' },
-        { type: 'ursula', seg: 0, u: 0.18, side: 1, dist: 116, keep: 74, story: 'St. Ursula. Die Krone sitzt op dem Turm. Deine Krone liegt noch im Handschuhfach.', hd: 'St. Ursula. Die Krone sitzt oben auf dem Turm. Deine Krone liegt noch im Handschuhfach.' },
+        { type: 'kunibert', seg: 1, u: 0.3, side: 1, dist: 85, keep: 60, story: 'St. Kunibert am Rhing. Drei Türme, drei Chancen, sich zu verfahre. Schäl schafft alle.', hd: 'St. Kunibert am Rhein. Drei Türme, drei Chancen, sich zu verfahren. Schäl schafft alle.' },
+        { type: 'ursula', seg: 0, u: 0.18, side: 1, dist: 70, keep: 74, story: 'St. Ursula. Die Krone sitzt op dem Turm. Deine Krone liegt noch im Handschuhfach.', hd: 'St. Ursula. Die Krone sitzt oben auf dem Turm. Deine Krone liegt noch im Handschuhfach.' },
         { type: 'kolumba', seg: 2, u: 0.25, side: -1, dist: 72, keep: 62, story: 'Kolumba. Kunst hinger graue Backstein. Ding Bremsspur zählt nit als Ausstellung.', hd: 'Kolumba. Kunst hinter grauem Backstein. Deine Bremsspur zählt nicht als Ausstellung.' },
         { type: 'makk', seg: 4, u: 0.14, side: -1, dist: 114, keep: 72, story: 'MAKK: Museum für Angewandte Kunst Köln. Dein Spoiler gilt noch nit als Designklassiker.', hd: 'MAKK: Museum für Angewandte Kunst Köln. Dein Spoiler gilt noch nicht als Designklassiker.' },
         { type: 'wallraf', seg: 4, u: 0.75, side: -1, dist: 82, keep: 70, story: 'Wallraf-Richartz-Museum. Alte Meister drin, alte Fahrfehler draußen.', hd: 'Wallraf-Richartz-Museum. Alte Meister drinnen, alte Fahrfehler draußen.' },
         { type: 'overstolzenhaus', seg: 7, u: 0.6, side: -1, dist: 112, keep: 42, story: 'Overstolzenhaus an der Rheingasse. Treppen am Giebel, nit op der Fahrbahn. Schön auseinanderhalte.', hd: 'Overstolzenhaus an der Rheingasse. Treppen am Giebel, nicht auf der Fahrbahn. Schön auseinanderhalten.' },
         { type: 'guerzenich', seg: 5, u: 0.7, side: 1, dist: 132, keep: 82, story: 'Gürzenich. Gute Stube vun Kölle. Bitte vör dem Enparke der Motor us.', hd: 'Gürzenich, die gute Stube von Köln. Bitte vor dem Einparken den Motor aus.' },
         { type: 'mariakapitol', seg: 7, u: 0.2, side: -1, dist: 98, keep: 80 },
-        { type: 'stmartin', seg: 5, u: 0.5, side: -1, dist: 48, keep: 70 },
+        // Groß St. Martin: crossing tower with four corner turrets over the Fischmarkt, wrecked in the war, rebuilt (consecrated again 1985): https://de.wikipedia.org/wiki/Gro%C3%9F_St._Martin
+        { type: 'stmartin', seg: 5, u: 0.5, side: -1, dist: 48, keep: 70, story: 'Groß St. Martin am Fischmaat: dä Vierungsturm met sing vier Ecktürmcher. Em Kreech kapott, hück widder et Bild vun der Rhingfront.', hd: 'Groß St. Martin am Fischmarkt: der Vierungsturm mit seinen vier Ecktürmchen. Im Krieg zerstört, heute wieder das Bild der Rheinfront.' },
+        // St. Andreas by the Komödienstraße: Albertus Magnus lies in its crypt: https://de.wikipedia.org/wiki/St._Andreas_(K%C3%B6ln)
+        { type: 'andreas', seg: 0, u: 0.65, side: 1, dist: 80, keep: 60, story: 'St. Andreas an der Komödiestroß. En der Kryp litt dä Albertus Magnus bejrave – dä woss mieh als minge janze Stammdesch.', hd: 'St. Andreas an der Komödienstraße. In der Krypta liegt Albertus Magnus begraben – der wusste mehr als mein ganzer Stammtisch.' },
         { type: 'altstadt', seg: 4, u: 0.5, side: 1, dist: 24, seed: 3, n: 8 },
         { type: 'altstadt', seg: 7, u: 0.4, side: -1, dist: 24, seed: 8, n: 8 },
         { type: 'buedchen', seg: 7, u: 0.8, side: 1, dist: 11 },
@@ -258,14 +264,15 @@
         { type: 'rhine', seg: 3, u: 0.55, side: 0, dist: 0 },
         { type: 'boat', seg: 3, u: 0.5, side: 1, dist: 45 },
         { type: 'schoko', seg: 4, u: 0.5, side: 1, dist: 40, keep: 50 },
-        { type: 'mariakapitol', seg: 4, u: 0.25, side: -1, dist: 86, keep: 80, story: 'St. Maria im Kapitol. Hinger der Kirche jeht et ruhig zo. Bes do küss.', hd: 'St. Maria im Kapitol. Hinter der Kirche geht es ruhig zu. Bis du kommst.' },
+        { type: 'mariakapitol', seg: 4, u: 0.25, side: -1, dist: 86, keep: 80 }, // its story is told on the Zoch track: here the Malakoffturm stands in front of it
         { type: 'guerzenich', seg: 6, u: 0.3, side: 1, dist: 102, keep: 82 },
         { type: 'wasserturm', seg: 11, u: 0.55, side: -1, dist: 76, keep: 58, story: 'Der Wasserturm. Rundes Haus, runde Sache. Trotzdem keine Steilkurve, Jung.', hd: 'Der Wasserturm. Rundes Haus, runde Sache. Trotzdem keine Steilkurve, Junge.' },
         { type: 'pantaleon', seg: 12, u: 0.5, side: 1, dist: 94, keep: 80, story: 'St. Pantaleon. Dicke Mauern, ruhiger Hof. Genau dat Gegenteil vun ding Auto.', hd: 'St. Pantaleon. Dicke Mauern, ruhiger Hof. Genau das Gegenteil von deinem Auto.' },
         { type: 'severinsbruecke', seg: 4, u: 0.9, side: 1, dist: 150, face: false },
         { type: 'billboard', seg: 7, u: 0.5, side: 1, dist: 14, text: 'HALVE HAHN GRILL – SEIT 1928' },
         { type: 'malakoff', seg: 4, u: 0.25, side: 1, dist: 22, keep: 20, story: 'Malakoffturm. Fröher hät dä der Hafe bewaach, heut de Schokolad. Beides hann se mir nit anvertraut.', hd: 'Malakoffturm. Früher hat er den Hafen bewacht, heute die Schokolade. Beides hat man mir nicht anvertraut.' },
-        { type: 'siebengebirge', seg: 0, u: 0.65, side: -1, dist: 66, keep: 88, story: 'Siebengebirge. Neun Giebel, obwohl et sieben heißt. Schäl zählt nach. Seit drei Runden.', hd: 'Siebengebirge. Neun Giebel, obwohl es sieben heißt. Schäl zählt nach – seit drei Runden.' },
+        // the Danziger Lagerhaus (1909) is called Siebengebirge after the seven gables on its street side, yet it has nine roofs: https://www.kuladig.de/Objektansicht/O-71107-20130805-4
+        { type: 'siebengebirge', seg: 0, u: 0.65, side: -1, dist: 66, keep: 88, story: 'Siebengebirge. Sibbe Jievel noh der Stroß, dröm dä Name – ävver nüng Dächer drop. Schäl zällt noh. Zick drei Runde.', hd: 'Siebengebirge. Sieben Giebel zur Straße, daher der Name – aber neun Dächer obendrauf. Schäl zählt nach – seit drei Runden.' },
         { type: 'bayenturm', seg: 16, u: 0.35, side: 1, dist: 24, keep: 28, story: 'Bayenturm. 1262 hann de Kölsche hee der Erzbischof erusjeworfe. Der erste Türsteher-Job in Kölle. Ohne mich.', hd: 'Bayenturm. 1262 haben die Kölner hier den Erzbischof hinausgeworfen. Der erste Türsteher-Job in Köln. Ohne mich.' },
         { type: 'bottmuehle', seg: 16, u: 0.72, side: -1, dist: 66, keep: 44, story: 'Bottmühle am Severinswall. Früher Mühle, heute Jugendtreff. De Flügel sin weg, der runde Turm steht noch.', hd: 'Bottmühle am Severinswall. Früher Mühle, heute Jugendtreff. Die Flügel sind weg, der runde Turm steht noch.' },
         { type: 'severinstor', seg: 9, u: 0.5, side: 1, dist: 30 },
@@ -280,7 +287,7 @@
         { type: 'billboard', seg: 16, u: 0.8, side: 1, dist: 14, text: 'DÄ LANGE – KÖLSCH & KREDIT' },
         { type: 'haltestelle', seg: 18, u: 0.4, side: -1, dist: 10 },
         { type: 'ulrepforte', seg: 13, u: 0.5, side: -1, dist: 70, story: 'Ulrepforte. Hee sitze de Rote Funke. Die verteidije Kölle zick 1823 – vör allem jäje de Nüchternheit.', hd: 'Ulrepforte. Hier sitzen die Roten Funken. Die verteidigen Köln seit 1823 – vor allem gegen die Nüchternheit.' },
-        { type: 'stseverin', seg: 6, u: 0.5, side: -1, dist: 110, story: 'St. Severin, dat Hätz vum Vringsveedel. Wä dä Turm nit mieh sieht, es ze wick jefahre – oder en Düsseldorf.', hd: 'St. Severin, das Herz vom Severinsviertel. Wer den Turm nicht mehr sieht, ist zu weit gefahren – oder in Düsseldorf.' },
+        { type: 'stseverin', seg: 6, u: 0.5, side: -1, dist: 110 }, // its story is told on the Zoch track (Severinstraße): here the Malakoffturm stands in front of it
         { type: 'lyskirchen', seg: 2, u: 0.5, side: -1, dist: 70, story: 'Lyskirchen, de Kirch vun de Rheinschiffer. Die bedde zor Schiffermadonna. Ich bedde, dat dä Blitzer kapott es.', hd: 'Lyskirchen, die Kirche der Rheinschiffer. Die beten zur Schiffermadonna. Ich bete, dass der Blitzer kaputt ist.' },
         { type: 'hafenkran', seg: 2, u: 0.5, side: 1, dist: 32, tag: 'HAFENKRÄNE', story: 'Die ahle Hafenkräne stonn noch am Kai. Die hann mieh jehove als der Stadtrat je Verantwortung.', hd: 'Die alten Hafenkräne stehen noch am Kai. Die haben mehr gehoben als der Stadtrat je Verantwortung.' },
         { type: 'haltestelle', seg: 10, u: 0.25, side: 1, dist: 12 },
@@ -294,14 +301,14 @@
       id: 'zoo', where: 'OP DER SCHÄL SICK', name: 'Schäl Sick Schraube', district: 'Deutz & Mülheim', tag: 'TAG', order: 3,
       mission: { where: ['FUTTERKÜCHE AM ZOO', 'GONDELSTATION AM RHEINPARK', 'KIOSK AM TANZBRUNNEN', 'BOOTSVERLEIH MÜLHEIMER HAFEN', 'TRINKHALLE AM WIENER PLATZ', 'HINTERHOF DEUTZER FREIHEIT'] }, // Schäl Sick jobs
       signs: [[0, 'RIEHLER STRASSE'], [2, 'AM BOTANISCHEN GARTEN'], [5, 'KONRAD-ADENAUER-UFER'], [6, 'ZOOBRÜCKE'], [7, 'AUENWEG'], [8, 'MESSEPLATZ'], [9, 'DEUTZ-MÜLHEIMER STRASSE'], [10, 'SCHANZENSTRASSE'], [12, 'MÜLHEIMER UFER'], [13, 'MÜLHEIMER BRÜCKE'], [15, 'NIEHLER DAMM'], [17, 'NEUSSER STRASSE'], [19, 'NEUSSER WALL'], [20, 'RIEHLER STRASSE']], // the real street at each stretch of the circuit (main-road name signs)
-      waypoints: ['Zoo & Flora', 'Bastei', 'Zoobrücke', 'Bahnhof Deutz', 'Rheinpark', 'E-Werk & Palladium', 'Mülheimer Hafen'],
+      waypoints: ['Zoo & Flora', 'Bastei', 'Zoobrücke', 'Bahnhof Deutz', 'Rheinpark', 'Stromhalle & Kabelwerk-Halle', 'Mülheimer Hafen'],
       diff: 4, laps: 3, scale: 1.45,
-      desc: 'Vom Zoo und der Flora über die Zoobrücke nach Deutz, dann zu E-Werk und Palladium im Mülheimer Industrieviertel. Bastei, Rheinpark und Fort X säumen die Runde. Abkürzen geht über den Alten Stammheimer Weg, das Konrad-Adenauer-Ufer, den Auenweg und den Neusser Wall; wer Zeit hat, nimmt die Amsterdamer Straße an den Gleisen der Linie 16 entlang. Die Elefanten lachen trotzdem.',
+      desc: 'Vom Zoo und der Flora über die Zoobrücke nach Deutz, dann zur Stromhalle und zur Kabelwerk-Halle im Mülheimer Industrieviertel. Bastei, Rheinpark und Fort X säumen die Runde. Abkürzen geht über den Alten Stammheimer Weg, das Konrad-Adenauer-Ufer, den Auenweg und den Neusser Wall; wer Zeit hat, nimmt die Amsterdamer Straße an den Gleisen der Linie 16 entlang. Die Elefanten lachen trotzdem.',
       shortcuts: [
         { id: 'zoo-amsterdamer-strasse', street: 'Amsterdamer Straße', type: 'parallel', from: { seg: 0, u: 0.18 }, to: { seg: 0, u: 0.62 }, side: -1, offset: 45, radius: 16, angle: 55, halfWidth: 4.6, surface: 'asphalt', toward: 'NIEHL', perks: ['tram', 'parked'], note: 'Amsterdamer Stroß, ene Block wigger wie de Riehler. De Sechzehn rappelt nevvenher, un de Elefante sinn dich nit.', hd: 'Amsterdamer Straße, einen Block weiter als die Riehler. Die Linie 16 rattert nebenher, und die Elefanten sehen dich nicht.' },
         { id: 'zoo-alter-stammheimer-weg', street: 'Alter Stammheimer Weg', type: 'cut', from: { seg: 0, u: 0.88 }, to: { seg: 2, u: 0.25 }, halfWidth: 3.6, surface: 'asphalt', toward: 'FLORA', perks: ['parked'], note: 'Alter Stammheimer Wäch: vum Zoo-Engang tirek an et Flora-Tor. Hinger dir tröt d\'r Elefant, vür dir blöht et.', hd: 'Alter Stammheimer Weg: vom Zoo-Eingang direkt zum Flora-Tor. Hinter dir trötet der Elefant, vor dir blüht es.' },
         { id: 'zoo-konrad-adenauer-ufer', street: 'Konrad-Adenauer-Ufer', type: 'bypass', from: { seg: 2, u: 0.78 }, to: { seg: 5, u: 0.33 }, side: -1, offset: 45, radius: 20, angle: 60, halfWidth: 4.6, surface: 'asphalt', toward: 'BASTEI', perks: ['trees'], note: 'Am Rhing lans, unger de Zoobröck dörch. Kei Looping, kei Korkezieher, nur Möwe un de Bastei.', hd: 'Am Rhein entlang, unter der Zoobrücke durch. Kein Looping, kein Korkenzieher, nur Möwen und die Bastei.' },
-        { id: 'zoo-auenweg', street: 'Auenweg', type: 'cut', from: { seg: 8, u: 0.8 }, to: { seg: 12, u: 0.2 }, halfWidth: 4, surface: 'asphalt', toward: 'MÜLHEIMER HAFEN', perks: ['trees', 'parked'], note: 'Dä Auenweg: am Rheinpark lans bes an d\'r Mülheimer Hafe. Flach wie ene Bierdeckel, dä Berg am Palladium looße mer lijje.', hd: 'Der Auenweg: am Rheinpark entlang bis zum Mülheimer Hafen. Flach wie ein Bierdeckel, den Berg am Palladium lassen wir liegen.' },
+        { id: 'zoo-auenweg', street: 'Auenweg', type: 'cut', from: { seg: 8, u: 0.8 }, to: { seg: 12, u: 0.2 }, halfWidth: 4, surface: 'asphalt', toward: 'MÜLHEIMER HAFEN', perks: ['trees', 'parked'], note: 'Dä Auenweg: am Rheinpark lans bes an d\'r Mülheimer Hafe. Flach wie ene Bierdeckel, dä Berg an d\'r Kabelwerk-Hall looße mer lijje.', hd: 'Der Auenweg: am Rheinpark entlang bis zum Mülheimer Hafen. Flach wie ein Bierdeckel, den Berg an der Kabelwerk-Halle lassen wir liegen.' },
         { id: 'zoo-neusser-wall', street: 'Neusser Wall', type: 'cut', from: { seg: 15, u: 0.9 }, to: { seg: 20, u: 0.3 }, halfWidth: 3.8, surface: 'asphalt', toward: 'REICHENSPERGERPLATZ', perks: ['trees', 'parked'], note: 'Neusser Wall, op d\'r ahl preußische Festungslinie: am Fort X vörbei bes an d\'r Reichenspergerplatz. Et Büdche an d\'r Eck süht dich hück nit.', hd: 'Neusser Wall, auf der alten preußischen Festungslinie: am Fort X vorbei bis zum Reichenspergerplatz. Der Kiosk an der Ecke sieht dich heute nicht.' }
       ],
       theme: { sky: 0x5fa8ff, fog: 0xcfe6ff, ground: 0x5e9a4a, sun: 0xffffff, road: [0x585858, 0x4a4a4a], night: false, water: 0x3f7fc0, street: 'park',
@@ -343,8 +350,8 @@
         { type: 'bastei', seg: 5, u: 0.4, side: -1, dist: 98, keep: 58, story: 'Die Bastei am Rhing. Beste Aussicht. Außer auf ding Einparkversuch.', hd: 'Die Bastei am Rhein. Beste Aussicht. Außer auf deinen Einparkversuch.' },
         { type: 'deutzbahnhof', seg: 8, u: 0.25, side: -1, dist: 156, keep: 82 },
         { type: 'altheribert', seg: 8, u: 0.78, side: 1, dist: 94, keep: 68, story: 'Alt St. Heribert am Deutzer Ufer. Weißes Haus, ruhiger Hof. Lass de Reifen draußen.', hd: 'Alt St. Heribert am Deutzer Ufer. Weißes Haus, ruhiger Hof. Lass die Reifen draußen.' },
-        { type: 'palladium', seg: 10, u: 0.55, side: -1, dist: 88, keep: 80, story: 'Palladium. Heut spielst du die Vorband. Auf vier Zylinder.', hd: 'Palladium. Heute spielst du die Vorband. Auf vier Zylindern.' },
-        { type: 'ewerk', seg: 12, u: 0.25, side: 1, dist: 102, keep: 80, story: 'E-Werk. Strom för de Verstärker, Nitro för dich. Bitte nit vertausche.', hd: 'E-Werk. Strom für die Verstärker, Nitro für dich. Bitte nicht vertauschen.' },
+        { type: 'kabelwerk', seg: 10, u: 0.55, side: -1, dist: 88, keep: 80, story: 'Kabelwerk-Halle. Fröher Drohtseil un Kabel, hück Konzäätbühn. Hück spills du de Vörband – op vier Zylinder.', hd: 'Kabelwerk-Halle. Früher Drahtseile und Kabel, heute eine Konzertbühne. Heute spielst du die Vorband – auf vier Zylindern.' },
+        { type: 'stromhalle', seg: 12, u: 0.25, side: 1, dist: 102, keep: 80, story: 'Stromhalle Mülheim, 1905 als Elektrizitätswerk jebaut. Hück Strom för de Verstärker, Nitro för dich. Bitte nit vertausche.', hd: 'Stromhalle Mülheim, 1905 als Elektrizitätswerk gebaut. Heute Strom für die Verstärker, Nitro für dich. Bitte nicht vertauschen.' },
         { type: 'fortx', seg: 19, u: 0.5, side: -1, dist: 94, keep: 82, story: 'Fort X am Neusser Wall. Rosen oben, dicke Mauern unten. Beides bitte stehe losse.', hd: 'Fort X am Neusser Wall. Rosen oben, dicke Mauern unten. Beides bitte stehen lassen.' },
         { type: 'agnes', seg: 20, u: 0.55, side: -1, dist: 110, keep: 84, story: 'St. Agnes am Neusser Platz. Helle Fassade, großer Turm ohne Spitze: dat Wahrzeichen vum Agnesveedel.', hd: 'St. Agnes am Neusser Platz. Helle Fassade, großer Turm ohne Spitze: das Wahrzeichen vom Agnesviertel.' },
         { type: 'crowd', seg: 5, u: 0.3, side: 1, dist: 12 },
@@ -352,7 +359,7 @@
         { type: 'seilbahn', seg: 6, u: 0.15, side: 0, dist: 0 },
         { type: 'zoobruecke', seg: 6, u: 0.5, side: -1, dist: 44, face: false, story: 'Zoobrück. Drüvver de Autos, drunger de Schiffe, drüvver drüvver de Seilbahn. Kölle stapelt.', hd: 'Zoobrücke. Darüber die Autos, darunter die Schiffe, ganz oben die Seilbahn. Köln stapelt.' },
         { type: 'rhine', seg: 13, u: 0.5, side: 0, dist: 0 },
-        { type: 'suspension', seg: 13, u: 0.5, side: 1, dist: 60, face: false, story: 'Mülheimer Brück. Jrön wie de Hoffnung un jenau so oft jesperrt.', hd: 'Mülheimer Brücke. Grün wie die Hoffnung und genauso oft gesperrt.' },
+        { type: 'suspension', wz: 'muelheimerbruecke', seg: 13, u: 0.5, side: 1, dist: 60, face: false, story: 'Mülheimer Brück. Jrön wie de Hoffnung un jenau so oft jesperrt.', hd: 'Mülheimer Brücke. Grün wie die Hoffnung und genauso oft gesperrt.' },
         { type: 'boat', seg: 13, u: 0.4, side: -1, dist: 50 },
         { type: 'arena', seg: 8, u: 0.5, side: 1, dist: 110, keep: 80 },
         { type: 'park', seg: 8, u: 0.3, side: 1, dist: 40, seed: 5, w: 40, d: 40, keep: 30 },
@@ -548,7 +555,7 @@
         { type: 'fireworks', seg: 5, u: 0.5, side: 1, dist: 100, face: false },
         { type: 'hahnentor', seg: 2, u: 0.5, side: 1, dist: 26, keep: 40, story: 'Hahnentor, Rudolfplatz. Da kome früher de Könige durch. Heut de Jecke. Un du, wenn de nit bremst.', hd: 'Hahnentor, Rudolfplatz. Da kamen früher die Könige durch. Heute die Narren. Und du, wenn du nicht bremst.' },
         { type: 'aposteln', seg: 2, u: 0.5, side: -1, dist: 92, keep: 80, story: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens dat Radio runter.', hd: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens das Radio leiser.' },
-        { type: 'richmodisturm', seg: 2, u: 0.15, side: 1, dist: 78, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.', hd: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe schauen oben heraus. Die haben die beste Tribüne, ohne Eintritt.' },
+        { type: 'richmodisturm', seg: 5, u: 0.05, side: 1, dist: 55, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.', hd: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe schauen oben heraus. Die haben die beste Tribüne, ohne Eintritt.' },
         { type: 'oper', seg: 4, u: 0.15, side: 1, dist: 124, keep: 98, story: 'Die Oper am Offenbachplatz. Wenn dä Motor so singt, kriss de vielleicht e Engagement.', hd: 'Die Oper am Offenbachplatz. Wenn der Motor so singt, bekommst du vielleicht ein Engagement.' },
         { type: 'makk', seg: 4, u: 0.85, side: -1, dist: 110, keep: 72 },
         { type: 'ulrepforte', seg: 12, u: 0.5, side: -1, dist: 96, keep: 58, story: 'Ulrepforte mit Mühlenturm. Die Funken halten Wache. Du hältst hoffentlich die Spur.', hd: 'Ulrepforte mit Mühlenturm. Die Funken (das Traditionskorps im Karneval) halten Wache. Du hältst hoffentlich die Spur.' },
@@ -579,7 +586,7 @@
         { type: 'bude', seg: 21, u: 0.2, side: 1, dist: 11, text: 'CURRYWURST BEI JUPP' },
         { type: 'neon', seg: 21, u: 0.4, side: -1, dist: 14, text: 'ET HÄTT NOCH EMMER JOT JEJANGE', color: '#ffe7b0', light: false },
         { type: 'crowd', seg: 21, u: 0.8, side: -1, dist: 10 },
-        { type: 'roemerturm', seg: 4, u: 0.5, side: -1, dist: 68, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.', hd: 'Der Römerturm, zweitausend Jahre alt. Später war er ein Klo für die Nonnen. So geht es, wenn man zu lange stehen bleibt.' },
+        { type: 'roemerturm', seg: 6, u: 0.6, side: 1, dist: 40, story: 'Dä Römerturm, zweidausend Johr ahl. Späder wor dä e Klo för de Nonne. Su jeiht et, wenn mer ze lang stonn bliev.', hd: 'Der Römerturm, zweitausend Jahre alt. Später war er ein Klo für die Nonnen. So geht es, wenn man zu lange stehen bleibt.' },
         { type: 'gereonsmuehle', seg: 10, u: 0.5, side: 1, dist: 30, story: 'De Gereonsmühl. Fröher hät se hee Mähl jemahle. Hück mahlt nur noch dä Verkehr op dem Hansaring.', hd: 'Die Gereonsmühle. Früher wurde hier Mehl gemahlen. Heute mahlt nur noch der Verkehr auf dem Hansaring.' },
         { type: 'park', seg: 8, u: 0.3, side: 1, dist: 72, keep: 30, story: 'Klingelpütz. Do henge steiht dä Knast noch – ävver nit mieh lang, dann weed do ene Park. Ming Kumpels kenne dä Blick vun hinger Jitter.', hd: 'Klingelpütz. Da hinten steht das Gefängnis noch – aber nicht mehr lange, dann wird dort ein Park. Meine Kumpel kennen den Blick von hinter Gittern.' },
         { type: 'haltestelle', seg: 6, u: 0.15, side: -1, dist: 11 },
@@ -639,7 +646,7 @@
         { type: 'tribuene', seg: 9, u: 0.3, side: -1, dist: 12, keep: 30 },
         { type: 'zochwagen', seg: 13, u: 0.6, side: 1, dist: 13 },
         { type: 'tribuene', seg: 17, u: 0.5, side: -1, dist: 12, keep: 30 },
-        { type: 'stseverin', seg: 8, u: 0.5, side: 1, dist: 90, keep: 82 },
+        { type: 'stseverin', seg: 2, u: 0.55, side: -1, dist: 80, keep: 60, story: 'St. Severin, dat Hätz vum Vringsveedel. Wä dä Turm nit mieh sieht, es ze wick jefahre – oder en Düsseldorf.', hd: 'St. Severin, das Herz vom Severinsviertel. Wer den Turm nicht mehr sieht, ist zu weit gefahren – oder in Düsseldorf.' },
         { type: 'makk', seg: 13, u: 0.8, side: -1, dist: 116, keep: 72 },
         { type: 'bunting', seg: 0, u: 0.4, side: 0, dist: 0 },
         { type: 'billboard', seg: 0, u: 0.6, side: -1, dist: 14, text: 'KÖLLE ALAAF – KAMELLE!' },
@@ -657,7 +664,11 @@
         { type: 'reiter', seg: 5, u: 0.55, side: 1, dist: 18 },
         { type: 'rathaus', seg: 9, u: 0.5, side: -1, dist: 46, keep: 70, story: 'Rathaus. An Wieverfastelovend weed om Alter Maat öm elf Uhr elf opjemaht – un dann sin de Krawatte draan. Ming hät noch nie eine Wieverfastelovend üvverläv.', hd: 'Rathaus. An Weiberfastnacht wird am Alter Markt um elf Uhr elf eröffnet – und dann sind die Krawatten dran. Meine hat noch nie eine Weiberfastnacht überlebt.' },
         { type: 'stmartin', seg: 9, u: 0.85, side: 1, dist: 52, keep: 60 },
-        { type: 'mariakapitol', seg: 5, u: 0.35, side: -1, dist: 86, keep: 80 },
+        { type: 'mariakapitol', seg: 6, u: 0.75, side: 1, dist: 40, keep: 60, story: 'St. Maria im Kapitol. Hinger der Kirche jeht et ruhig zo. Bes do küss.', hd: 'St. Maria im Kapitol. Hinter der Kirche geht es ruhig zu. Bis du kommst.' },
+        // St. Georg at the Waidmarkt, founded by Archbishop Anno II in the 11th century: https://de.wikipedia.org/wiki/St._Georg_(K%C3%B6ln)
+        { type: 'georg', seg: 5, u: 0.15, side: -1, dist: 42, keep: 50, story: 'St. Georg am Waidmaat, jejründt vum Erzbischof Anno em elfte Johrhundert. Älder wie jede Ampel en Kölle.', hd: 'St. Georg am Waidmarkt, gegründet von Erzbischof Anno im elften Jahrhundert. Älter als jede Ampel in Köln.' },
+        // St. Cäcilien on the Cäcilienstraße: towerless, only a ridge turret; home of the Museum Schnütgen since 1956: https://de.wikipedia.org/wiki/St._C%C3%A4cilien_(K%C3%B6ln)
+        { type: 'caecilien', seg: 12, u: 0.6, side: 1, dist: 42, keep: 50, story: 'St. Cäcilien an der Cäcilienstroß. Kei Turm, nur e Dachreiterche – un drenne wohnt zick 1956 et Museum Schnütgen met Kunst usem Middelalter.', hd: 'St. Cäcilien an der Cäcilienstraße. Kein Turm, nur ein kleiner Dachreiter – und drinnen ist seit 1956 das Museum Schnütgen mit Kunst aus dem Mittelalter.' },
         { type: 'guerzenich', seg: 7, u: 0.5, side: -1, dist: 104, keep: 82, story: 'Gürzenich. Hee flieje Kamelle, draußen flieje Autos. Die Sitzungsleitung hat Fragen.', hd: 'Gürzenich. Drinnen fliegen Bonbons, draußen fliegen Autos. Die Sitzungsleitung hat Fragen.' },
         { type: 'wallraf', seg: 9, u: 0.25, side: -1, dist: 148, keep: 70 },
         { type: 'aposteln', seg: 13, u: 0.5, side: -1, dist: 88, keep: 80 },
@@ -765,7 +776,7 @@
         { type: 'boat', seg: 16, u: 0.4, side: 1, dist: 130 },
         { type: 'barge', seg: 16, u: 0.7, side: 1, dist: 110 },
         { type: 'litfass', seg: 16, u: 0.2, side: -1, dist: 10 },
-        { type: 'archbridge', seg: 16, u: 0.5, side: 1, dist: 230, face: false, story: 'Südbrück. Nur för de Zöch. Ich wollt mol drüvver, zo Fuß, nachts. Der Lokführer hät jewunke. Nit freundlich.', hd: 'Südbrücke. Nur für die Züge. Ich wollte mal hinüber, zu Fuß, nachts. Der Lokführer hat gewunken. Nicht freundlich.' },
+        { type: 'archbridge', wz: 'suedbruecke', seg: 16, u: 0.5, side: 1, dist: 230, face: false, story: 'Südbrück. Nur för de Zöch. Ich wollt mol drüvver, zo Fuß, nachts. Der Lokführer hät jewunke. Nit freundlich.', hd: 'Südbrücke. Nur für die Züge. Ich wollte mal hinüber, zu Fuß, nachts. Der Lokführer hat gewunken. Nicht freundlich.' },
         { type: 'fireworks', seg: 16, u: 0.5, side: 1, dist: 130, face: false },
         { type: 'neon', seg: 0, u: 0.6, side: -1, dist: 14, text: 'STUNT-PARK · NACHTSCHICHT', color: '#ff2d95' },
         { type: 'haltestelle', seg: 18, u: 0.5, side: -1, dist: 10 },
@@ -931,7 +942,7 @@
         { type: 'kirche', seg: 1, u: 0.5, side: 1, dist: 46, h: 34, color: 0x9a4a34 },
         { type: 'synagoge', seg: 0, u: 0.88, side: -1, dist: 88, keep: 78, story: 'Die Synagoge an der Roonstraße, gegenüber vom Rathenauplatz. Ihr markantes Dach und die Rundbogenfenster prägen das jüdische Gemeindezentrum.', hd: 'Die Synagoge in der Roonstraße am Rathenauplatz: markantes Dach, Rundbogenfenster – das Zentrum der jüdischen Gemeinde.' },
         { type: 'platz', seg: 2, u: 0.3, side: -1, dist: 21, seed: 4, keep: 16, story: 'Barbarossaplatz. Der schönste Platz vun Kölle, sagt keiner. Ävver de Bahn hält, un dat is hee schon vill.', hd: 'Barbarossaplatz. Der schönste Platz von Köln, sagt keiner. Aber die Bahn hält, und das ist hier schon viel.' },
-        { type: 'pantaleon', seg: 2, u: 0.65, side: -1, dist: 100, keep: 80, story: 'St. Pantaleon. Hier war schon Ruhe, als du noch keinen Führerschein hattest.', hd: 'St. Pantaleon. Hier war es schon still, bevor du deinen Führerschein hattest.' },
+        { type: 'pantaleon', seg: 4, u: 0.5, side: 1, dist: 45, keep: 60, story: 'St. Pantaleon. Hier war schon Ruhe, als du noch keinen Führerschein hattest.', hd: 'St. Pantaleon. Hier war es schon still, bevor du deinen Führerschein hattest.' },
         { type: 'neon', seg: 2, u: 0.6, side: 1, dist: 14, text: 'BÜTZJE-BAR · KOSTÜM-PFLICHT', color: '#ff2d95', light: false },
         { type: 'crowd', seg: 2, u: 0.85, side: -1, dist: 10 },
         { type: 'billboard', seg: 1, u: 0.5, side: 1, dist: 14, text: 'GLASVERBOT · ZÜLPICHER VIERTEL' }, { type: 'billboard', seg: 5, u: 0.3, side: -1, dist: 14, text: 'KEIN EINLASS – VEEDEL VOLL' },
@@ -940,7 +951,7 @@
         { type: 'buedchen', seg: 4, u: 0.4, side: 1, dist: 11 },
         { type: 'halle', seg: 5, u: 0.5, side: 1, dist: 60, keep: 60, story: 'Die Uni. Hee lernt mer, wie mer Kölsch bestellt, op Latein. Un wie mer et nit bezahlt, op Kölsch.', hd: 'Die Uni. Hier lernt man, wie man Kölsch auf Latein bestellt. Und wie man es auf Kölsch nicht bezahlt.' },
         { type: 'unikoeln', seg: 6, u: 0.4, side: 1, dist: 118, keep: 90, story: 'Hauptgebäude der Uni. Für diese Runde gibt es leider keine Leistungspunkte.', hd: 'Das Hauptgebäude der Uni. Für diese Runde gibt es leider keine Leistungspunkte.' },
-        { type: 'ulrepforte', seg: 2, u: 0.35, side: -1, dist: 98, keep: 58 },
+        { type: 'ulrepforte', seg: 4, u: 0.6, side: -1, dist: 70, keep: 58 },
         { type: 'kirche', seg: 6, u: 0.5, side: -1, dist: 48, h: 30 },
         { type: 'crowd', seg: 8, u: 0.4, side: 1, dist: 12, keep: 30, story: 'Mensa-Looping. Einmol rund, wie de Schlang an der Essensausgab. Nur schneller un ohne Erbsesupp.', hd: 'Mensa-Looping. Einmal rund wie die Schlange an der Essensausgabe. Nur schneller und ohne Erbsensuppe.' },
         { type: 'koelsch', seg: 8, u: 0.7, side: -1, dist: 18 },
@@ -1038,7 +1049,7 @@
         { type: 'tribuene', seg: 6, u: 0.4, side: -1, dist: 14, story: 'Strand-Looping. Oben der Himmel, unten der Rhing, dazwische du. Un e Kölsch, dat rausfällt.', hd: 'Strand-Looping. Oben der Himmel, unten der Rhein, dazwischen du. Und ein Kölsch, das herausfällt.' },
         { type: 'kirche', seg: 7, u: 0.5, side: -1, dist: 50, h: 30, color: 0xc4ad8c },
         { type: 'rhine', seg: 8, u: 0.5, side: 0, dist: 0 },
-        { type: 'suspension', seg: 8, u: 0.5, side: 1, dist: 60, face: false, story: 'Rodenkirchener Brück. Do drüvver jeit de A4 – vun Aachen bes noh Olpe. Hängebröck, wie en Kölle sich dat jehürt.', hd: 'Rodenkirchener Brücke. Darüber geht die A4 – von Aachen bis nach Olpe. Eine Hängebrücke, wie sich das in Köln gehört.' },
+        { type: 'suspension', wz: 'rodenkirchenerbruecke', seg: 8, u: 0.5, side: 1, dist: 60, face: false, story: 'Rodenkirchener Brück. Do drüvver jeit de A4 – vun Aachen bes noh Olpe. Hängebröck, wie en Kölle sich dat jehürt.', hd: 'Rodenkirchener Brücke. Darüber geht die A4 – von Aachen bis nach Olpe. Eine Hängebrücke, wie sich das in Köln gehört.' },
         { type: 'boat', seg: 8, u: 0.3, side: -1, dist: 55 }, { type: 'barge', seg: 8, u: 0.7, side: 1, dist: 70 },
         { type: 'row', seg: 10, u: 0.5, side: -1, dist: 24, style: 'wiederaufbau', seed: 3, n: 4, story: 'Weiß. Villa an Villa. Hee wohnt der Klüngel, wenn er in Rente is.', hd: 'Weiß. Villa an Villa. Hier wohnt der Klüngel, wenn er in Rente ist.' },
         { type: 'kirche', seg: 10, u: 0.8, side: -1, dist: 44, h: 26 },
@@ -1060,6 +1071,83 @@
       ]
     }
   ];
+
+  // ---------------- Wahrzeichen: the album under REKORDE and the name tags over a landmark when its story is told ----------------
+  // key: the prop type (or a prop's own wz id); name: the pixel tag; kind: kirche | turm | tor (what a driver takes for a
+  // church or tower: a landmark story is told where none of these is nearer than its own building) | haus | denkmal | bruecke | platz;
+  // roman: one of the twelve great Romanesque churches of Cologne (https://www.romanische-kirchen-koeln.de/)
+  const WAHRZEICHEN = {
+    dom: { name: 'KÖLNER DOM', kind: 'kirche' },
+    stmartin: { name: 'GROSS ST. MARTIN', kind: 'kirche', roman: true },
+    andreas: { name: 'ST. ANDREAS', kind: 'kirche', roman: true },
+    aposteln: { name: 'ST. APOSTELN', kind: 'kirche', roman: true },
+    caecilien: { name: 'ST. CÄCILIEN', kind: 'kirche', roman: true },
+    georg: { name: 'ST. GEORG', kind: 'kirche', roman: true },
+    gereon: { name: 'ST. GEREON', kind: 'kirche', roman: true },
+    kunibert: { name: 'ST. KUNIBERT', kind: 'kirche', roman: true },
+    mariakapitol: { name: 'ST. MARIA IM KAPITOL', kind: 'kirche', roman: true },
+    lyskirchen: { name: 'ST. MARIA IN LYSKIRCHEN', kind: 'kirche', roman: true },
+    pantaleon: { name: 'ST. PANTALEON', kind: 'kirche', roman: true },
+    stseverin: { name: 'ST. SEVERIN', kind: 'kirche', roman: true },
+    ursula: { name: 'ST. URSULA', kind: 'kirche', roman: true },
+    altheribert: { name: 'ALT ST. HERIBERT', kind: 'kirche' },
+    agnes: { name: 'ST. AGNES', kind: 'kirche' },
+    stclemens: { name: 'ST. CLEMENS', kind: 'kirche' },
+    altstmaternus: { name: 'ALT ST. MATERNUS', kind: 'kirche' },
+    synagoge: { name: 'SYNAGOGE ROONSTRASSE', kind: 'kirche' },
+    wasserturm: { name: 'WASSERTURM KAYGASSE', kind: 'turm' },
+    bayenturm: { name: 'BAYENTURM · 1262', kind: 'turm' },
+    malakoff: { name: 'MALAKOFFTURM', kind: 'turm' },
+    bottmuehle: { name: 'BOTTMÜHLE', kind: 'turm' },
+    richmodisturm: { name: 'RICHMODISTURM', kind: 'turm' },
+    roemerturm: { name: 'RÖMERTURM', kind: 'turm' },
+    gereonsmuehle: { name: 'GEREONSMÜHLE', kind: 'turm' },
+    messeturm: { name: 'MESSETURM · 1928', kind: 'turm' },
+    hahnentor: { name: 'HAHNENTORBURG', kind: 'tor' },
+    eigelsteintor: { name: 'EIGELSTEINTORBURG', kind: 'tor' },
+    severinstor: { name: 'SEVERINSTORBURG', kind: 'tor' },
+    ulrepforte: { name: 'ULREPFORTE', kind: 'tor' },
+    melaten: { name: 'MELATEN · TOR II', kind: 'tor' },
+    rathaus: { name: 'HISTORISCHES RATHAUS', kind: 'haus' },
+    guerzenich: { name: 'GÜRZENICH', kind: 'haus' },
+    overstolzenhaus: { name: 'OVERSTOLZENHAUS', kind: 'haus' },
+    stapelhaus: { name: 'STAPELHAUS', kind: 'haus' },
+    wallraf: { name: 'WALLRAF-RICHARTZ-MUSEUM', kind: 'haus' },
+    kolumba: { name: 'KOLUMBA', kind: 'haus' },
+    makk: { name: 'MAKK', kind: 'haus' },
+    oper: { name: 'OPER AM OFFENBACHPLATZ', kind: 'haus' },
+    hbf: { name: 'HAUPTBAHNHOF', kind: 'haus' },
+    deutzbahnhof: { name: 'BAHNHOF DEUTZ', kind: 'haus' },
+    kranhaus: { name: 'KRANHÄUSER', kind: 'haus' },
+    siebengebirge: { name: 'SIEBENGEBIRGE', kind: 'haus' },
+    hansahochhaus: { name: 'HANSAHOCHHAUS · 1925', kind: 'haus' },
+    koelnturm: { name: 'KÖLNTURM', kind: 'haus' },
+    herkuleshochhaus: { name: 'HERKULES-HOCHHAUS', kind: 'haus' },
+    hochbunker: { name: 'BUNKER KÖRNERSTRASSE', kind: 'haus' },
+    unikoeln: { name: 'UNI · HAUPTJEBÄUDE', kind: 'haus' },
+    oberlandesgericht: { name: 'OBERLANDESGERICHT', kind: 'haus' },
+    staatenhaus: { name: 'STAATENHAUS', kind: 'haus' },
+    kabelwerk: { name: 'KABELWERK-HALLE', kind: 'haus' },
+    stromhalle: { name: 'STROMHALLE MÜLHEIM', kind: 'haus' },
+    bastei: { name: 'BASTEI', kind: 'haus' },
+    fortx: { name: 'FORT X', kind: 'haus' },
+    butzweilerhof: { name: 'BUTZWEILERHOF', kind: 'haus' },
+    denkmal: { name: 'TÜNNES UN SCHÄL', kind: 'denkmal' },
+    heinzelbrunnen: { name: 'HEINZELMÄNNCHENBRUNNEN', kind: 'denkmal' },
+    kreuzblume: { name: 'KREUZBLUME', kind: 'denkmal' },
+    pegel: { name: 'KÖLNER PEGEL', kind: 'denkmal' },
+    janvonwerth: { name: 'JAN-VON-WERTH-BRUNNEN', kind: 'denkmal' },
+    reiter: { name: 'REITERSTANDBILDER', kind: 'denkmal' },
+    pollerkoepfe: { name: 'POLLER KÖPFE', kind: 'denkmal' },
+    hbarch: { name: 'HOHENZOLLERNBRÜCKE', kind: 'bruecke' },
+    zoobruecke: { name: 'ZOOBRÜCKE', kind: 'bruecke' },
+    muelheimerbruecke: { name: 'MÜLHEIMER BRÜCKE', kind: 'bruecke' },
+    rodenkirchenerbruecke: { name: 'RODENKIRCHENER BRÜCKE', kind: 'bruecke' },
+    suedbruecke: { name: 'SÜDBRÜCKE', kind: 'bruecke' },
+    drehbruecke: { name: 'DEUTZER DREHBRÜCKE', kind: 'bruecke' },
+    herkulesberg: { name: 'HERKULESBERG', kind: 'platz' },
+    rheinboulevard: { name: 'RHEINBOULEVARD', kind: 'platz' }
+  };
 
   // ---------------- the host: dä Lange, doorman of the Ringe (no real names) ----------------
   const TUENN = {
@@ -1129,7 +1217,7 @@
       'DÄ SCHNELLE: KÖLN – CHICAGO AM RHEIN! 50.000 Straftaten, e Drittel jeklärt.',
       'DÄ SCHNELLE: Domschatz jeklaut! Dä Lange hät e Alibi: Kölsch.',
       'DÄ SCHNELLE: MONSTRANZ FOTT – STEINE TAUCHEN WIEDER OP. Dä Lange: „Ich hann nix jesinn.“',
-      'DÄ SCHNELLE: Banküberfall am Dom! Geiseln, Kripo, Kamelle.',
+      'DÄ SCHNELLE: Banküberfall am Dom? Mer verzällt sich vill. Dä Lange: „Ich wor an der Dür.“', // a rumour, no source for a real one
       'DÄ SCHNELLE: Zocker verliert Villa in Marienburg. Jewinnt se an der Tür zurück.',
       'DÄ SCHNELLE: Boxnacht im Sartory – Sieger: dä Köbes met dem Kranz.',
       'DÄ SCHNELLE: Türsteher-Legende schreibt Kolumne. Redaktion hät Angst.',
@@ -1188,7 +1276,8 @@
     // place anecdotes: told when you pass a Brauhaus, Büdchen, Blitzer, church ... (the doorman knows every door in town)
     places: {
       // the street scenes of js/veedel.js
-      nubbel: [{ t: 'Dä Nubbel. Dä hängk övver dr Kneip, un an Aschermittwoch es hä schuld an allem. Praktisch.', hd: 'Der Nubbel, eine Strohpuppe. Er hängt über der Kneipe, und an Aschermittwoch ist er an allem schuld. Praktisch.' }, { t: 'Wer hät dat Kölsch jetrunke? Dä Nubbel. Wer hät dat Fenster kapott jemaat? Dä Nubbel. Ene jode Mann.', hd: 'Wer hat das Kölsch getrunken? Der Nubbel. Wer hat das Fenster kaputt gemacht? Der Nubbel. Ein guter Mann.' }],
+      // the Nubbel is burned on the night of Karnevalsdienstag, before Aschermittwoch: https://de.wikipedia.org/wiki/Nubbel
+      nubbel: [{ t: 'Dä Nubbel. Dä hängk övver dr Kneip, un en der Naach op Aschermettwoch weed hä verbrannt: Hä es jo an allem schuld. Praktisch.', hd: 'Der Nubbel, eine Strohpuppe. Er hängt über der Kneipe und wird in der Nacht vor Aschermittwoch (am Karnevalsdienstag) verbrannt: Er ist ja an allem schuld. Praktisch.' }, { t: 'Wer hät dat Kölsch jetrunke? Dä Nubbel. Wer hät dat Fenster kapott jemaat? Dä Nubbel. Ene jode Mann.', hd: 'Wer hat das Kölsch getrunken? Der Nubbel. Wer hat das Fenster kaputt gemacht? Der Nubbel. Ein guter Mann.' }],
       schunkeln: [{ t: 'Schunkele! Links, rächs, links. Wer nit schunkelt, weed nit jesinn.', hd: 'Schunkeln! Links, rechts, links. Wer nicht schunkelt, wird nicht gesehen.' }, { t: 'Die schunkele jetz seit elf Uhr elf. Dat es kein Tanz, dat es Ausdauersport.', hd: 'Die schunkeln jetzt seit elf Uhr elf. Das ist kein Tanz, das ist Ausdauersport.' }],
       dreigestirn: [{ t: 'Dat Dreijestirn: Prinz, Bauer, Jungfrau. Die Jungfrau hät ene Bart. Dat es Tradition, kein Fehler.', hd: 'Das Dreigestirn: Prinz, Bauer, Jungfrau. Die Jungfrau hat einen Bart. Das ist Tradition, kein Fehler.' }, { t: 'Dä Bauer hät dä Stadtschlüssel. Ich hann ihn ens jefrog, ob hä och die vum Büdchen hät. Nä.', hd: 'Der Bauer hat den Stadtschlüssel. Ich habe ihn mal gefragt, ob er auch den vom Kiosk hat. Nein.' }],
       kamellewagen: [{ t: 'Kamelle! Kopp enzeje, Jung. Die Bonbons kumme met hundert Sache.', hd: 'Bonbons! Kopf einziehen, Junge. Die Kamellen kommen mit hundert Sachen.' }, { t: 'Strüßjer un Kamelle. Wer zwei Tüte fängk, es Käpt\'n vum Veedel.', hd: 'Blumensträußchen und Bonbons. Wer zwei Tüten fängt, ist Kapitän vom Viertel.' }],
@@ -1267,6 +1356,7 @@
       { id: 'dach', name: 'DAT DACH', desc: 'Einmal op enem Dach jelandet', hd: 'Einmal auf einem Dach gelandet', stat: 'roofs', need: 1, color: 'r' },
       { id: 'tag', name: 'TAGESSTRECK', desc: '5 Strecken des Tages jefahre', hd: '5 Strecken des Tages gefahren', stat: 'daily', need: 5, color: 'g' },
       { id: 'zocker', name: 'ZOCKER', desc: '10 Spiele im Hinterzimmer', stat: 'club', need: 10, color: 'p' },
+      { id: 'romanisch', name: 'ZWÖLF ROMANISCHE', desc: 'All zwölf romanische Kirche vun Kölle jesinn', hd: 'Alle zwölf romanischen Kirchen Kölns gesehen', stat: 'roman', need: 12, color: 'y' },
       { id: 'veedel', name: 'VEEDELSKENNER', desc: '10 echte Seitenstroße jefahre', hd: 'Kenner der Viertel: 10 echte Seitenstraßen gefahren', stat: 'streets', need: 10, color: 'b' },
       { id: 'jasse', name: 'EN DE JASSE VERSCHWUNDE', desc: '3× de Kripo in ner Seitenstroß abjehängt', hd: 'In den Gassen verschwunden: 3× die Kripo in einer Seitenstraße abgehängt', stat: 'veedelEscapes', need: 3, color: 'g' },
       { id: 'bass', name: 'LAMBOGINA', desc: '5× dä Bass vum Titelleed im Rennen', hd: '5× den Bass vom Titellied im Rennen', stat: 'bassRuns', need: 5, color: 'w' },
@@ -1458,5 +1548,5 @@
     return best ? { g: best.g, known: true } : { g: 'm', known: false };
   }
 
-  root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN, placeGender };
+  root.GameData = { CARS, DRIVERS, RIVALS, TRACKS, TUENN, WAHRZEICHEN, placeGender };
 })(typeof window !== 'undefined' ? window : module.exports);

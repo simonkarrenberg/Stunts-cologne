@@ -2064,3 +2064,68 @@ World.registerLandmark('rheinboulevard', 'Rheinboulevard', 'https://www.stadt-ko
   }
   mergeBoxes(people);
 });
+
+// The last three of the twelve Romanesque churches (Groß St. Martin is World.P.stmartin in world.js).
+// All three are built along z with the west front (portal and name board) facing +z.
+
+// St. Andreas, Komödienstraße by the Dom: Romanesque nave and transept, the octagonal crossing tower with its
+// pointed slate helm, and the tall late-Gothic choir to the east with long lancet windows.
+World.registerLandmark('andreas', 'St. Andreas', 'https://de.wikipedia.org/wiki/St._Andreas_(K%C3%B6ln)', (g, o, k) => {
+  const TUFF = 0xbdae92, GOTH = 0xc9bd9f, ROOF = 0x48505b, HOLE = 0x2a3036;
+  k.nave(g, 15, 17, 30, 0, 8, TUFF, ROOF);
+  k.box(g, 30, 16, 12, TUFF, 0, 8, -13);
+  k.roof(g, 13, 7, 31, ROOF, 0, 16, -13).rotation.y = Math.PI / 2; // transept ridge across the nave
+  // Octagonal crossing tower: two arcaded storeys and the pointed helm.
+  k.cyl(g, 6.4, 6.4, 15, TUFF, 0, 16 + 7.5, -13, 8);
+  k.cornice(g, 11.5, 11.5, 30.6, k.TRIM, 0, -13);
+  for (let i = 0; i < 8; i++) {
+    const a = i * Math.PI / 4 + Math.PI / 8, r = 6.2;
+    k.arch(g, 2, 4.4, Math.sin(a) * r, 25, -13 + Math.cos(a) * r, HOLE, a);
+    k.arch(g, 1.6, 3, Math.sin(a) * r, 19.5, -13 + Math.cos(a) * r, 0x8f836c, a);
+  }
+  k.cone(g, 7.2, 13, ROOF, 0, 31 + 6.5, -13, 8).rotation.y = Math.PI / 8;
+  k.cross(g, 0, 45, -13);
+  // Tall Gothic choir with a five-sided end, higher than the old nave.
+  k.box(g, 13, 24, 16, GOTH, 0, 12, -27);
+  k.roof(g, 14, 8, 17, ROOF, 0, 24, -27);
+  k.cyl(g, 6.9, 6.9, 24, GOTH, 0, 12, -35, 10);
+  k.cone(g, 7.4, 8, ROOF, 0, 28, -35, 10);
+  for (const side of [-1, 1]) for (const z of [-31, -25, -20]) k.pointed(g, 2, 14, side * 6.55, 6, z, HOLE, side * Math.PI / 2);
+  for (const z of [-31, -25, -20]) for (const side of [-1, 1]) k.box(g, 1, 22, 1.2, k.TRIM, side * 6.9, 11, z + 3);
+  // West front on the Komödienstraße.
+  k.arch(g, 4, 7, 0, 0, 23.06); k.arch(g, 3, 3, 0, 10, 23.06, 0x8f836c);
+  k.sign(g, 'ST. ANDREAS', 12, 0, 8.2, 23.12);
+});
+
+// St. Georg, Waidmarkt: a low Romanesque columned basilica, the massive square west block that never got its
+// tower top (a flat slate pyramid instead), and the east choir with its round apse.
+World.registerLandmark('georg', 'St. Georg', 'https://de.wikipedia.org/wiki/St._Georg_(K%C3%B6ln)', (g, o, k) => {
+  const TUFF = 0xb9aa8c, WEST = 0xa89a7e, ROOF = 0x454c56, HOLE = 0x262b30;
+  k.nave(g, 14, 15, 26, 0, -2, TUFF, ROOF);
+  k.box(g, 12, 13, 10, TUFF, 0, 6.5, -19); k.roof(g, 13, 6, 11, ROOF, 0, 13, -19);
+  k.apse(g, 6, 12, 0, -24, TUFF, ROOF);
+  // The west block: thick walls, big round-arched windows on two levels, a low pyramid roof.
+  k.box(g, 20, 25, 15, WEST, 0, 12.5, 18);
+  k.cornice(g, 20, 15, 12, k.TRIM, 0, 18); k.cornice(g, 20, 15, 24.6, k.TRIM, 0, 18);
+  for (const x of [-5, 5]) { k.arch(g, 3.2, 7, x, 14.5, 25.56); k.arch(g, 2.6, 5, x, 3.5, 25.56, 0x8a7e66); }
+  for (const side of [-1, 1]) for (const z of [14, 22]) k.arch(g, 2.6, 6, side * 10.06, 15, z, HOLE, side * Math.PI / 2);
+  const pyr = k.cone(g, 13.5, 6, ROOF, 0, 25 + 3, 18, 4); pyr.rotation.y = Math.PI / 4; pyr.scale.z = 0.75;
+  k.cross(g, 0, 32, 18);
+  k.arch(g, 4.2, 6.5, 0, 0, 25.6);
+  k.sign(g, 'ST. GEORG', 11, 0, 23, 25.64);
+});
+
+// St. Cäcilien, Cäcilienstraße: a towerless Romanesque basilica with only a small ridge turret, the round west
+// window over the portal and the half-round east apse; today the medieval art museum lives inside.
+World.registerLandmark('caecilien', 'St. Cäcilien', 'https://de.wikipedia.org/wiki/St._C%C3%A4cilien_(K%C3%B6ln)', (g, o, k) => {
+  const TUFF = 0xc4b597, ROOF = 0x4c535c, HOLE = 0x283035;
+  k.nave(g, 14, 17, 34, 0, 0, TUFF, ROOF);
+  for (const side of [-1, 1]) { k.box(g, 4, 9, 30, TUFF, side * 9, 4.5, 1); k.roof(g, 4.8, 2.6, 30.6, ROOF, side * 9, 9, 1); } // low aisles
+  k.apse(g, 6.5, 15, 0, -18, TUFF, ROOF);
+  // Small ridge turret (Dachreiter) instead of a tower.
+  k.box(g, 2.4, 4, 2.4, k.LIGHT, 0, 25 + 2, -4); k.cone(g, 2, 5, ROOF, 0, 25 + 6.5, -4, 6); k.cross(g, 0, 35, -4);
+  // West front: a round window over the portal.
+  const ring = k.part(g, new THREE.TorusGeometry(2.4, 0.45, 5, 16), k.TRIM, 0, 12.5, 17.1);
+  const pane = k.cyl(g, 2.2, 2.2, 0.15, HOLE, 0, 12.5, 17.05, 16); pane.rotation.x = Math.PI / 2; ring.name = 'Westrose';
+  k.arch(g, 3.6, 6.5, 0, 0, 17.06); k.sign(g, 'ST. CÄCILIEN', 12, 0, 8, 17.12);
+});
