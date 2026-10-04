@@ -123,14 +123,14 @@ Banküberfall am Dom und der Einbruch in die Domschatzkammer.
 
 Im Spiel: Die Strecke **Chicago am Rhein** führt als Nachttour über die Ringe (Residenz-Kino,
 Friesenstraße, Klein Köln, Sartory, Lovers Club, Hansaring). An jedem Ort **verzällt** der Türsteher
-eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Du kütts hee nit rein!“,
+eine Anekdote. Er steht als Türsteher vor dem Lovers Club, sagt „Do küss hee nit eren!“,
 kommentiert das Rennen, und mit dem **Klüngel-Telefon** (K) ruft man einmal pro Runde seine
 Türsteher, die das Feld sechs Sekunden aufhalten. Dazu „Dä Schnelle“-Schlagzeilen, das Kölsche
 Grundgesetz, Boxnacht am Ring, Spiel-Club, Kripo Köln im 60er-Jahre-Streifenwagen.
 
 Die Charaktere sind gerundete Figuren mit Hüten, Bärten, Schals und Kölschgläsern, die
 Wagen echte 60er/70er-Karosserien aus Kölner Produktion (erfundene Namen, echte Silhouetten) plus Coupé und dem
-schwarzen Milieu-Benz.
+schwarzen Milieu-Schlitten.
 
 Hintergrund: [Klein Köln](https://de.wikipedia.org/wiki/Klein_K%C3%B6ln),
 [Chicago am Rhein (Doku)](https://www.fernsehserien.de/filme/chicago-am-rhein).
@@ -334,7 +334,7 @@ fahren neun weitere: Fräulein Anna, Klüngel Tom, Taxi Willi, Köbes Hermann un
 nicht genommen hast – ein Feld von zehn.
 
 Vier Wagen mit Tempo, Beschleunigung, Handling und Nitro: Niehl GT, Kapri 2.8i,
-Rheinland Rocket, Milieu-Benz 280 SE und der weiße LamboGina Contessa (Keil, Klappscheinwerfer,
+Rheinland Rocket, Milieu-Schlitten 280 SE und der weiße LamboGina Contessa (Keil, Klappscheinwerfer,
 Heckflügel, das Poster aus dem Kinderzimmer) — echte Karosserien mit Klarlack, Chrom und
 Himmelsspiegelung.
 
@@ -450,6 +450,10 @@ eigenen Browser. Die Skripte liegen in `test/`, jede Datei liefert `{ ok, lines 
 `node test/run.js map-routes,streets` startet nur die Dateien mit diesen Namensanfängen. In GitHub
 Actions laufen die langsamen Browser-Prüfungen als fünf parallele Jobs; Pages wird erst
 veröffentlicht, wenn alle grün sind.
+Zwei Prüfungen brauchen keinen Browser: `brands` liest jeden String in `js/*.js` und den Text von
+`index.html` gegen eine Liste echter Marken, Clubs, Firmen und Brauereien (erlaubt sind nur die
+erfundenen: KVK, DÄ SCHNELLE, Krachkeller …), `koelsch-lint` hält das Kölsch auf einer Linie
+(der/d'r für männlich, de für weiblich, et für sächlich; do küss, ich hann, emmer).
 
 ## Debug
 
@@ -460,4 +464,4 @@ platzierten Wahrzeichen und `STUNTS_FREECAM = { pos: [x,y,z], look: [x,y,z] }` s
 auf langsamen Maschinen), `STUNTS_FIELD()` liefert Position, Runde und Zustand aller acht Wagen,
 `STUNTS_FRAME(s)` das Streckenkoordinatensystem samt Segmentart an Position s.
 
-*Et hätt noch immer jot jejange.*
+*Et hätt noch emmer jot jejange.*

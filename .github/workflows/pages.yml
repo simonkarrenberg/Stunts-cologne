@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: ['map-routes', 'race', 'passport,mission', 'cop-routes,bass-recharge', 'landmarks,menu-links,shortcuts,streets']
+        suite: ['map-routes', 'race', 'passport,mission', 'cop-routes,bass-recharge', 'landmarks,menu-links,shortcuts,streets,brands,koelsch-lint']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

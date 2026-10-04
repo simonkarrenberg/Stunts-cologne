@@ -13,6 +13,19 @@
   const PEOPLE = { tom: { name: 'Klüngel Tom', emoji: '🤵' }, schael: { name: 'Schäl', emoji: '😏' }, langer: { name: 'Dä Lange', emoji: '🎩' }, koebes: { name: 'Köbes Hermann', emoji: '🍺' }, tango: { name: 'Tango', emoji: '🎸' }, taesch: { name: 'Täsch', emoji: '💪' }, willi: { name: 'Taxi Willi', emoji: '🚕' } };
 
   // ---------------- room ----------------
+  // a tiny 3×5 bitmap font for the painted signs (canvas text at 6 px turns to mush); centred on cx, top at y
+  const GLYPH = { A: '010101111101101', C: '011100100100011', D: '110101101101110', E: '111100110100111', F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111',
+    J: '001001001101010', K: '101101110101101', N: '10011101101110011001', O: '010101101101010', R: '110101110101101', T: '111010010010010', U: '101101101101111', ',': '00011' };
+  function pixText(x, text, cx, y, color) {
+    const w = (ch) => ch === ' ' ? 2 : (GLYPH[ch === 'Ö' ? 'O' : ch] || GLYPH.O).length / 5;
+    const total = [...text].reduce((t, ch) => t + w(ch) + 1, -1); let px = Math.round(cx - total / 2); x.fillStyle = color;
+    for (const ch of text) {
+      const g = GLYPH[ch === 'Ö' ? 'O' : ch], cw = w(ch);
+      if (g) for (let i = 0; i < g.length; i++) if (g[i] === '1') x.fillRect(px + i % cw, y + Math.floor(i / cw), 1, 1);
+      if (ch === 'Ö') { x.fillRect(px, y - 2, 1, 1); x.fillRect(px + 2, y - 2, 1, 1); }
+      px += cw + 1;
+    }
+  }
   function drawRoom() {
     const c = $('#clubRoom'); const W = 320, H = 180; c.width = W; c.height = H; const x = c.getContext('2d');
     x.fillStyle = '#0d0a14'; x.fillRect(0, 0, W, H);
@@ -23,8 +36,9 @@
     // door with curtain and PRIVAT sign
     x.fillStyle = '#1a1016'; x.fillRect(268, 20, 40, 100); x.fillStyle = '#6a1a2a'; for (let i = 0; i < 40; i += 5) { x.fillStyle = (i / 5) % 2 ? '#6a1a2a' : '#7c2436'; x.fillRect(268 + i, 20, 5, 100); }
     x.fillStyle = '#f4efe0'; x.fillRect(272, 8, 32, 9); x.fillStyle = '#111'; x.font = '7px monospace'; x.fillText('PRIVAT', 275, 15);
-    // poster: KEIN KREDIT
-    x.fillStyle = '#e8dcc0'; x.fillRect(24, 26, 44, 30); x.fillStyle = '#c1121f'; x.fillRect(26, 28, 40, 8); x.fillStyle = '#fff'; x.font = '6px monospace'; x.fillText('KEIN KREDIT', 27, 34); x.fillStyle = '#333'; x.fillText('AUCH NIT FÖR', 27, 44); x.fillText('DICH, JUNG', 27, 52);
+    // poster: KEIN KREDIT – low on the left wall, where the game cards of the lobby do not cover it, in a crisp 3×5 pixel font
+    x.fillStyle = '#000'; x.fillRect(5, 89, 50, 26); x.fillStyle = '#e8dcc0'; x.fillRect(4, 88, 50, 26); x.fillStyle = '#c1121f'; x.fillRect(6, 90, 46, 8);
+    pixText(x, 'KEIN KREDIT', 29, 92, '#fff'); pixText(x, 'AUCH NIT FÖR', 29, 101, '#222'); pixText(x, 'DICH, JUNG', 29, 108, '#222');
     // bar shelf with bottles and a Kölsch crate
     x.fillStyle = '#3a2416'; x.fillRect(90, 60, 70, 3); for (let i = 0; i < 6; i++) { x.fillStyle = ['#2a6a3a', '#6a4a2a', '#8a2a2a', '#2a4a7a', '#9a8a4a', '#3a3a3a'][i]; x.fillRect(94 + i * 11, 44, 6, 16); x.fillStyle = '#ddd'; x.fillRect(96 + i * 11, 41, 2, 3); }
     x.fillStyle = '#c1121f'; x.fillRect(200, 100, 40, 20); x.fillStyle = '#ffd400'; x.font = '6px monospace'; x.fillText('KÖLSCH', 206, 113);
@@ -290,7 +304,7 @@
     K.stage = 'ende'; const ranked = [0, 1, 2, 3].map((p) => ({ p, r: rankDice(K.players[p]) })).sort((a, b) => b.r[0] - a.r[0] || b.r[1] - a.r[1]);
     const winner = ranked[0].p, loser = ranked[ranked.length - 1].p; const strokes = winner === 0 ? 3 : loser === 0 ? -1 : 0;
     knobelnRender(); $('#clubMid').insertAdjacentHTML('afterbegin', `<div class="skatInfo big">${KP[winner]} JEWINNT MIT ${ranked[0].r[2]} · ${KP[loser]} ZAHLT${strokes ? ' · ' + (strokes > 0 ? '+' : '') + strokes + ' STRICHE' : ''}</div>`);
-    if (strokes > 0) pay(strokes, pick(L.win)); else if (strokes < 0) pay(strokes, pick(L.lose)); else say('langer', `${KP[loser]} zahlt. Du kütts jrad so davon.`); ctx.stat && ctx.stat('club', 1);
+    if (strokes > 0) pay(strokes, pick(L.win)); else if (strokes < 0) pay(strokes, pick(L.lose)); else say('langer', `${KP[loser]} zahlt. Do küss jrad su dovun.`); ctx.stat && ctx.stat('club', 1);
   }
 
   // ---------------- open / close ----------------

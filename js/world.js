@@ -2205,7 +2205,7 @@
 
   // ------------------------------------------------ cars ----
   // Side-profile definitions (z along the car, y up), extruded across the width with bevelled edges.
-  // 1960s/70s Cologne: Ford Capri & Taunus were built here; the black Benz is the Milieu-Benz of the Ringe.
+  // 1960s/70s Cologne: Ford Capri & Taunus were built here; the long black saloon is the Milieu-Schlitten of the Ringe.
   const PROFILES = {
     hatch:  { L: 3.9, W: 1.72, pts: [[1.95, 0.32], [1.95, 0.62], [1.7, 0.78], [0.55, 0.86], [0.2, 1.35], [-0.9, 1.4], [-1.5, 1.35], [-1.85, 0.9], [-1.95, 0.5], [-1.95, 0.32]], ws: [0.55, 0.86, 0.2, 1.35], rw: [-1.5, 1.35, -1.85, 0.9] },
     coupe:  { L: 4.4, W: 1.76, pts: [[2.2, 0.3], [2.2, 0.58], [1.95, 0.7], [0.75, 0.78], [0.35, 1.28], [-0.55, 1.32], [-1.3, 1.1], [-1.9, 0.86], [-2.2, 0.8], [-2.2, 0.3]], ws: [0.75, 0.78, 0.35, 1.28], rw: [-0.55, 1.32, -1.3, 1.1] },

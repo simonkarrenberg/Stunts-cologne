@@ -4102,7 +4102,7 @@ Veedel.define('rievkoochebud', { name: 'Rievkoochebud', kind: 'strasse', w: 4, d
 // turntable under three ceiling spots, the white wedge (the game's own LamboGina Contessa) turns once every twelve
 // seconds. A salesman in a cream suit, pink tie, shades, moustache and a proper Vokuhila waves the drivers in
 // (harder when a car comes by) and turns after every car that passes. On the back wall the synthwave poster
-// "DÄ WEISSE KEIL VUN KÖLLE", in the window "FINANZIERUNG? ET HÄTT NOCH IMMER JOT JEJANGE", a standee
+// "DÄ WEISSE KEIL VUN KÖLLE", in the window "FINANZIERUNG? ET HÄTT NOCH EMMER JOT JEJANGE", a standee
 // "PREIS AUF ANFRAGE", potted palms, a pennant string under the roof edge (the used-car lot never quite left)
 // and a bunch of opening-day balloons at the door. Outside, a Pänz in a red cagoule presses his hands to the
 // window: the wedge from the poster over his bed, for real. Round the back: the Werkstatt door, the air con.
@@ -4278,7 +4278,7 @@ Veedel.define('autohausgina', { name: 'Autohaus Gina', kind: 'lambogina', w: 12,
   const BX = -4.15, BZ = 2.52;
   for (const sx of [-1, 1]) K.box(S, 0.012, RY - (FH + 2.98), 0.012, STEEL, BX + sx * 0.85, (RY + FH + 2.98) / 2, BZ);
   K.text(S, 'FINANZIERUNG?', { fg: '#ffffff', bg: '#ff2d95', w: 2.0, h: 0.36, x: BX, y: FH + 2.8, z: BZ, glow: night, sizeK: 0.7 });
-  K.text(S, 'ET HÄTT NOCH IMMER JOT JEJANGE', { fg: '#1a1a2a', bg: '#ffffff', border: '#00e5ff', w: 2.3, h: 0.26, x: BX, y: FH + 2.45, z: BZ, glow: night, sizeK: 0.5 });
+  K.text(S, 'ET HÄTT NOCH EMMER JOT JEJANGE', { fg: '#1a1a2a', bg: '#ffffff', border: '#00e5ff', w: 2.3, h: 0.26, x: BX, y: FH + 2.45, z: BZ, glow: night, sizeK: 0.5 });
   // round the back: the Werkstatt door
   K.box(S, 3.0, 2.7, 0.04, 0x8a8a94, -2.6, 1.35, ZB - 0.02);
   for (let k = 1; k < 5; k++) K.box(S, 3.0, 0.03, 0.012, 0x5a5a64, -2.6, k * 0.54, ZB - 0.046);

@@ -1,7 +1,7 @@
 /* Kölle 4D – car bodies.
  * Every car is lofted from rounded cross-sections (superellipses) along a side profile,
  * so the bodies have real curvature: a Taunus hatch, a Capri fastback, a Manta-style coupé,
- * a low sports coupé and the long W108 Milieu-Benz. Paint is clearcoated and reflects the
+ * a low sports coupé and the long W108 Milieu-Schlitten. Paint is clearcoated and reflects the
  * sky through an environment map handed in by the game (World.setEnv). */
 (function () {
   'use strict';

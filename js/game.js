@@ -12,7 +12,7 @@
   const G = 9.81;
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   // on the 1968/1975 tracks nothing from later decades: no opera renovation jokes, no LamboGina radio, no Miami palms
-  const ERA_LATER = /Oper|LamboGina|Palme|Miami|KVK|Hochwasser|Tauben/;
+  const ERA_LATER = /Oper|LamboGina|Palme|Miami|KVK|Linie 16|Bahn streik|Hochwasser|Tauben/;
   const eraLines = (arr) => { if (!theme || !theme.era) return arr; const ok = arr.filter((t) => !ERA_LATER.test(t)); return ok.length ? ok : arr; };
   // pick without repeating the last few lines of the same list (heist calls, Kripo restarts)
   const recent = new Map(); const pickNew = (arr) => { const seen = recent.get(arr) || []; const fresh = arr.filter((x) => !seen.includes(x)); const t = pick(fresh.length ? fresh : arr); seen.push(t); while (seen.length > Math.max(0, arr.length - 1)) seen.shift(); recent.set(arr, seen); return t; };
@@ -27,6 +27,7 @@
   let renderer, scene, camera, track, trackDef, theme, road, scenery, confetti, sunLight, hemi, carLight, post, pixelScale = 3, pmrem = null, envTex = null;
   let racers = [], player = null, raceTime = 0, countdown = 0, phase = 'menu'; // menu | countdown | race | finished | editor
   let camMode = 0, camPos = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0), camLook = new THREE.Vector3();
+  let msgPrio = 0; // what the message box shows now: 0 flavour, 1 a side-street note or place story (told once), 2 a line the player needs (sayMust)
   let lastT = 0, msgTimer = 0, tvCam = null, tvTimer = 0, shake = 0, lastPos = null;
   let radioTimer = 45, storyCool = 0, eventTimer = 30, blitzers = [], knoellchen = 0, koelsch = 0, flashTimer = 0, signals = [];
   let stories = [], telefon = { ready: true, active: 0, used: 0 };
@@ -219,7 +220,7 @@
     if (!voice.list || voice.list.length < 2) return;
     const i = voice.list.indexOf(voice.de); voice.de = voice.list[(i + 1) % voice.list.length];
     try { localStorage.setItem('stuntskoelle.voiceName', voice.de.name); } catch (e) { /* ignore */ }
-    updateVoiceUI(); if (!voice.on) toggleVoice(); else speak(pick(['Ich bin dä Lange. Kölle, Jung, dat is e Jeföhl.', 'Et hätt noch immer jot jejange. Sagt der Türsteher.', 'Drink doch ene met, un dann fahr.']), 0.55, 0.92, true, 'Dä Lange');
+    updateVoiceUI(); if (!voice.on) toggleVoice(); else speak(pick(['Ich bin dä Lange. Kölle, Jung, dat is e Jeföhl.', 'Et hätt noch emmer jot jejange. Sagt der Türsteher.', 'Drink doch ene met, un dann fahr.']), 0.55, 0.92, true, 'Dä Lange');
   }
   // the browser's German voices speak Hochdeutsch; a phonetic pass pushes them towards the Veedel:
   // isch statt ich, -isch statt -ig, dat/wat/et, a softer g, no clipped endings
@@ -286,7 +287,7 @@
     $('#msgWho').textContent = `${who.emoji || '🏁'} ${who.name}`;
     $('#msgText').textContent = text;
     $('#msg').classList.remove('open'); $('#msg').classList.add('show');
-    msgTimer = (ms || 3500) / 1000;
+    msgTimer = (ms || 3500) / 1000; msgPrio = must ? 2 : 0;
     return true;
   }
 
@@ -300,7 +301,7 @@
   function sameRoad(a, b) { return (a.shortcut == null ? -1 : a.shortcut) === (b.shortcut == null ? -1 : b.shortcut); }
   // Real side streets: what kind of branch it is, and how tight its corners are (for the AI's braking)
   const ROUTE_KIND = { cut: 'ABKÜRZUNG', parallel: 'PARALLELSTROSS', bypass: 'UMJEHUNG' };
-  const ROUTE_PERK = { koelsch: 'KÖLSCH', market: 'MARKT', parked: 'FALSCHPARKER', shakeKripo: 'KRIPO-FREI', tram: 'KVB-GLEISE', brauhaus: 'BRAUHAUS', kiosk: 'BÜDCHEN' };
+  const ROUTE_PERK = { koelsch: 'KÖLSCH', market: 'MARKT', parked: 'FALSCHPARKER', shakeKripo: 'KRIPO-FREI', tram: 'BAHNGLEISE', brauhaus: 'BRAUHAUS', kiosk: 'BÜDCHEN' };
   function routeLabel(q) { return `${q.street.toUpperCase()} · ${q.kind === 'alternate' ? 'PANORAMA' : ROUTE_KIND[q.type] || 'ABKÜRZUNG'}${q.surface === 'cobble' ? ' · KOPPSTEIN' : ''}`; }
   function routePerks(q) { return (q.perks || []).map((k) => ROUTE_PERK[k]).filter(Boolean).join(' · '); }
   function routeMaxCurv(q) { if (q._maxCurv == null) { let m = 0.001; for (const sm of q.samples) m = Math.max(m, Math.abs(sm.curv || 0)); q._maxCurv = m; } return q._maxCurv; }
@@ -362,7 +363,7 @@
     if (next >= route.endS || next < route.startS) {
       const forward = next >= route.endS;
       r.s = (forward ? route.endS : route.startS) + (next - (forward ? route.endS : route.startS)) / scale;
-      r.shortcut = -1; r.prevRoadVy = 0;
+      r.shortcut = -1; r.prevRoadVy = 0; if (r === player) noteTick();
       const discovered = forward && r === player && discoverRoute(route);
       const key = r.lap + ':' + (route.fork || route.id);
       if (forward && r === player && !r.shortcutsDone.has(key)) {
@@ -371,13 +372,30 @@
         const message = lines ? pick(lines).replace('{street}', route.street).replace('{m}', Math.round(Math.abs(route.saved))) : route.saved > 0 ? `${route.name}: ${Math.round(route.saved)} Meter jespart. Dat steht nit im Stadtplan, Jung.` : `${route.name}: ${Math.round(-route.saved)} Meter extra. Dä Köbes nennt dat Sightseeing.`;
         say(tuenn, message + (discovered ? ' Neuer Stempel im Veedels-Pass!' : ''), 3200);
       }
-    } else r.s = next;
+    } else { r.s = next; if (r === player && pendingNote) tellNote(); }
   }
   function getVeedel() { try { const ids = JSON.parse(localStorage.getItem('stuntskoelle.veedel') || '[]'); return Array.isArray(ids) ? ids.filter((id) => typeof id === 'string') : []; } catch (e) { return []; } }
   // the player turns into a side street: the Kripo follows when it is close behind, otherwise it loses you in the Veedel
+  // Dä Lange's side-street notes: queued on entry, told while the player is still in that street (they push a
+  // flavour line aside, never a line the player needs), marked told only once heard, and taken off the box on leaving
+  let pendingNote = null, noteShown = null;
+  const streetKey = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/^(da|de|der|die|d'r)\s+/, '').replace(/\balte?r?\b|\bahle?\b/g, 'ahl').replace(/rhein/g, 'rhing').replace(/strasse|stross/g, 'str').replace(/gasse/g, 'gass').replace(/\bwa+ch\b/g, 'weg');
+  function noteText(q) { const st = q.street || q.name || ''; return st && !streetKey(q.note).startsWith(streetKey(st)) ? `${st}: ${q.note}` : q.note; } // 'Bechergass: …' needs no 'Bechergasse: ' in front
+  function tellNote() {
+    const q = pendingNote; if (!q || phase !== 'race') return;
+    if (!player || player.shortcut !== q.index || notesTold.has(q.id) || kripo) { pendingNote = null; return; } // left the street unheard: next lap
+    if (kids && DRINK.test(q.note)) { notesTold.add(q.id); pendingNote = null; return; }
+    if (msgTimer > 0 && msgPrio > 0) return; // wait behind a line the player needs
+    msgTimer = 0; quiet = 0;
+    if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, noteText(q), 5500)) { notesTold.add(q.id); pendingNote = null; msgPrio = 1; noteShown = { index: q.index, text: $('#msgText').textContent }; }
+  }
+  function noteTick() {
+    if (pendingNote) tellNote();
+    if (noteShown && (!player || player.shortcut !== noteShown.index)) { if (msgTimer > 0 && msgPrio === 1 && $('#msgText').textContent === noteShown.text) { msgTimer = 0; msgPrio = 0; $('#msg').classList.remove('show', 'open'); } noteShown = null; }
+  }
   function enterRoute(q) {
     // the first time per race in a real side street: Dä Lange tells what that street is (its researched note)
-    if (q.note && !notesTold.has(q.id) && !kripo) { notesTold.add(q.id); quiet = 0; say({ name: 'Dä Lange verzällt', emoji: '🎩' }, `${q.street || q.name}: ${q.note}`, 5500); }
+    if (q.note && !notesTold.has(q.id) && !kripo) { pendingNote = q; tellNote(); }
     if (!kripo) return;
     const L = track.length; let behind = player.s - kripo.s; if (behind > L / 2) behind -= L; if (behind < -L / 2) behind += L;
     if ((q.perks || []).includes('shakeKripo') || behind > 45 || behind < -10) {
@@ -459,7 +477,7 @@
         if (r.bumpT > 0) r.bumpT -= dt;
       }
       if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
-      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
+      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pick(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
       advanceRacer(r, r.v * dt);
       const f2 = racerFrame(r);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
@@ -834,17 +852,17 @@
   document.addEventListener('pointerdown', (e) => { if (phase === 'intro' && !paused && !(e.target.closest && e.target.closest('button, a, input'))) introT = 99; });
   function startRaceNow(def) {
     buildScene(def);
-    raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear();
+    raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear(); pendingNote = noteShown = null;
     raceTime = 0; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
     { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
-    const hour = new Date().getHours(); const dayLines = tuenn.daytime[hour >= 22 || hour < 5 ? 'night' : hour < 10 ? 'morning' : hour < 17 ? 'day' : 'evening'];
+    const { hour, dayLines } = sceneHour();
     const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
     introLinePending = !!theme.intro; // said when the race starts, however slow the flyover
     if (!theme.intro && sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pick(tuenn.scene[sceneKey]), 4000); }, 7000);
-    sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
+    sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (!(demo || greeted++) || Math.random() < 0.35 ? pick(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pick(tuenn.door) : pick(tuenn.intro)), 3800);
     $('#hudTel').textContent = telLabel();
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     if (isMobile) { camMode = 0; tvCam = null; }
@@ -881,7 +899,7 @@
     const out = [], g = careerChapter != null && tuenn.career[careerChapter] && tuenn.career[careerChapter].goal;
     if (g && g.place && place > g.place) out.push(`Du wors ${place}. – för et Kapitel bruchs de Platz ${g.place} oder besser.`);
     if (crashes >= 3) { const cnt = {}; for (const s0 of crashAt) { const nm = streetAt(s0); if (nm) cnt[nm] = (cnt[nm] || 0) + 1; } const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
-      out.push(`Du bes ${crashes}× vun dä Stroß avjekumme${top && top[1] >= 2 ? ', meist op dä ' + top[0].replace(/STRASSE$/, 'STROSS') : ''}.`); out.push('Tipp: Vür dä Kurv dä Fooß vum Jas' + (isMobile ? '.' : ' – un R brängk dich zeröck op de Stroß.')); }
+      out.push(`Du bes ${crashes}× vun der Stroß avjekumme${top && top[1] >= 2 ? ', meist op der ' + top[0].replace(/STRASSE$/, 'STROSS') : ''}.`); out.push('Tipp: Vür der Kurv der Fooß vum Jas' + (isMobile ? '.' : ' – un R brängk dich zeröck op de Stroß.')); }
     else if (!won && place > 3) out.push('Tipp: SHIFT jitt Turbo – un dä lädt sich em Drift widder op.');
     return out;
   }
@@ -1037,7 +1055,7 @@
       if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else updateAuftrag(dt); }
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
       if (phase === 'race') {
-        radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt;
+        radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt; noteTick();
         if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
         if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 60 + Math.random() * 35; const roll = Math.random(); const radio = eraLines(tuenn.radio || []);
           if (theme.confetti && tuenn.jeck && roll < 0.5) say(tuenn, pickNew(tuenn.jeck), 3400);
@@ -1046,7 +1064,7 @@
           else say({ name: 'Kölsches Grundgesetz', emoji: '📜' }, pickNew(tuenn.grundgesetz), 3500); }
         // Dä Lange's place stories: one is told whenever the box is free and the place is just ahead or just
         // passed (also from a side street running beside it). A story missed now comes back next lap.
-        if (storyCool <= 0 && msgTimer <= 0 && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -40 && ds < 70) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 6500)) { st.told = true; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
+        if (storyCool <= 0 && msgTimer <= 0 && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; let ds = player.s - st.s; if (ds > track.length / 2) ds -= track.length; if (ds < -track.length / 2) ds += track.length; if (ds > -40 && ds < 70) { quiet = 0; if (say({ name: 'Dä Lange verzällt', emoji: '🎩' }, st.text, 6500)) { st.told = true; msgPrio = 1; storyCool = 9; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
         if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pick(tuenn.razziaEnd), 2500); } }
         else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); }
@@ -1299,10 +1317,10 @@
       box.appendChild(div);
     });
     { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
-      grid.innerHTML = '<b class="ordenHead">ORDEN OP DÄ DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${kids && o.id === 'stammgast' ? 'KAMELLE-KÖNIG' : o.name}</b><small>${kids ? kidsText(o.desc) : o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
+      grid.innerHTML = '<b class="ordenHead">ORDEN OP DER DECKEL · ' + have.length + ' / ' + tuenn.orden.length + '</b>' + tuenn.orden.map((o) => `<div class="orden ${have.includes(o.id) ? 'on' : ''}"><canvas></canvas><b>${kids && o.id === 'stammgast' ? 'KAMELLE-KÖNIG' : o.name}</b><small>${kids ? kidsText(o.desc) : o.desc}</small><i>${Math.min(o.need, st[o.stat] || 0)} / ${o.need}</i></div>`).join('');
       grid.querySelectorAll('.orden canvas').forEach((c, i) => medalIcon(c, tuenn.orden[i].color, 3)); box.appendChild(grid); }
     { const heard = heardStories(), n = Object.values(heard).reduce((a, l) => a + l.length, 0); const v = document.createElement('div'); v.className = 'verz';
-      v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an dä Plätze vorbei – dä Lange verzällt jet.</p>');
+      v.innerHTML = `<b class="ordenHead">DÄ LANGE SING VERZÄLLCHER · ${n}</b>` + (n ? TRACKS.filter((t) => (heard[t.id] || []).length).map((t) => `<details><summary>${t.name.toUpperCase()} · ${heard[t.id].length}</summary>${heard[t.id].map((x) => `<p>„${x}“</p>`).join('')}</details>`).join('') : '<p>Noch nix jehört. Fahr ens langsam an de Plätze vörbei – dä Lange verzällt jet.</p>');
       box.appendChild(v); }
     $('#records').hidden = false;
   }
@@ -1581,7 +1599,7 @@
     return text
       .replace(new RegExp('\\bzum ' + NAME, 'g'), (m, n) => (g(n) === 'f' ? 'zur ' : g(n) === 'p' ? 'zu ' : 'zum ') + n)
       .replace(new RegExp('\\b(Der|Dä) ' + NAME, 'g'), (m, a, n) => ({ m: 'Dä ', n: 'Dat ', f: 'De ', p: 'De ' })[g(n)] + n)
-      .replace(new RegExp('\\bAm ' + NAME, 'g'), (m, n) => (g(n) === 'f' || g(n) === 'p' ? 'Bei dr ' : 'Am ') + n)
+      .replace(new RegExp('\\bAm ' + NAME, 'g'), (m, n) => (g(n) === 'f' || g(n) === 'p' ? "Bei d'r " : 'Am ') + n)
       .replace(/([.!?:] )([a-zäöü])/g, (m, a, b) => a + b.toUpperCase());
   }
   function startAuftrag() {
@@ -1626,6 +1644,21 @@
     }
   }
 
+  // the time of day comes from the scene, not from the player's clock: dawn = morning, dusk = evening, night = night.
+  // The real hour is named only when it fits the scene; otherwise an hour that does. The first race opens with it (the attract demo does not count).
+  let greeted = 0;
+  function sceneHour() {
+    const slot = theme.dawn ? 'morning' : theme.dusk || theme.sunset ? 'evening' : theme.night ? 'night' : 'day';
+    const h = new Date().getHours(), clock = h >= 22 || h < 5 ? 'night' : h < 10 ? 'morning' : h < 17 ? 'day' : 'evening';
+    const hour = theme.elfUhrElf ? 11 : clock === slot ? h : { morning: 6, day: 14, evening: 19, night: 2 }[slot];
+    return { slot, hour, dayLines: tuenn.daytime[slot] };
+  }
+  // the paper's date: era tracks print today's day in their year, the others leave the year out (the paper costs 1 DM)
+  const WEEKDAY = ['SONNDACH', 'MONDACH', 'DINSDACH', 'METTWOCH', 'DONNERSDACH', 'FRIDDACH', 'SAMSDACH'];
+  function paperDate(now) {
+    now = now || new Date(); const d = theme.elfUhrElf ? new Date(now.getFullYear(), 10, 11) : new Date(theme.era || now.getFullYear(), now.getMonth(), now.getDate());
+    return `${WEEKDAY[d.getDay()]}, ${d.getDate()}.${d.getMonth() + 1}.${theme.era ? d.getFullYear() : ''}`;
+  }
   // ---------------- DÄ SCHNELLE front page: the finish photo as tomorrow's paper ----------------
   function drawFrontPage(headline, place, order) {
     const c = $('#resPaper'); if (!c) return; const W2 = 560, H2 = 400; c.width = W2; c.height = H2; const x = c.getContext('2d');
@@ -1633,7 +1666,7 @@
     x.fillStyle = '#e6dcc2'; for (let i = 0; i < 40; i++) x.fillRect(Math.random() * W2, Math.random() * H2, 2, 1);
     x.fillStyle = '#c1121f'; x.fillRect(14, 14, W2 - 28, 54);
     x.fillStyle = '#fff'; x.font = 'bold 40px Impact, "Arial Narrow", sans-serif'; x.textBaseline = 'middle'; x.fillText('DÄ SCHNELLE', 26, 42);
-    x.font = '11px "Courier New", monospace'; x.textAlign = 'right'; x.fillText('KÖLNS SCHNELLSTES BLATT · 1 DM', W2 - 24, 32); x.fillText(new Date().toLocaleDateString('de-DE'), W2 - 24, 52); x.textAlign = 'left';
+    x.font = '11px "Courier New", monospace'; x.textAlign = 'right'; x.fillText('KÖLNS SCHNELLSTES BLATT · 1 DM', W2 - 24, 32); x.fillText(paperDate(), W2 - 24, 52); x.textAlign = 'left';
     x.fillStyle = '#111'; x.fillRect(14, 74, W2 - 28, 2);
     const words = headline.replace(/^DÄ SCHNELLE:\s*/, '').toUpperCase().split(' '); const lines = []; let cur = ''; x.font = 'bold 26px Impact, "Arial Narrow", sans-serif';
     for (const w of words) { const t = cur ? cur + ' ' + w : w; if (x.measureText(t).width > W2 - 40 && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur);
@@ -1647,7 +1680,7 @@
     line('AUS DEM POLIZEIBERICHT', true); line(`Platz ${place} von ${order.length}`); line(`Zeit ${fmtTime(player.finishTime)}`); line(`Fahrer: ${PLAYABLE[sel.driver].name}`); line(`Karre: ${D.CARS[sel.car].name}`); sy += 6;
     line(`Knöllchen: ${knoellchen}`); line(`Kölsch: ${koelsch}`); line(`Deckel: ${deckel} Striche`); if (auftragDone || auftragFail) line(`Klüngel: ${auftragDone} erledigt`); if (kripoSeen) line(`Kripo: ${kripoCaught ? 'erwischt' : 'abjehängt'}`); sy += 6;
     line('WETTER', true); line(theme.night ? 'Nacht, Neon, 11°' : theme.wet ? 'Regen, nasse Ringe' : theme.dawn ? 'Morgengrauen, 8°' : theme.dusk || theme.sunset ? 'Blaue Stunde, 17°' : 'Sonne, Kölsch kalt');
-    { x.fillStyle = '#c1121f'; const q = 'DÄ LANGE: „' + pick(['Ich hann nix jesinn.', 'Kein Kommentar. Kölsch?', 'Dat wor Klüngel, kein Verbreche.', 'Man kennt sich.', 'Ich wor an dr Dür. De janze Zick.']) + '“'; let fs = 13; do { x.font = `bold ${fs}px "Courier New", monospace`; fs--; } while (x.measureText(q).width > pw && fs > 8); x.fillText(q, 20, py + ph + 34); } // stays under the photo, clear of the WETTER column
+    { x.fillStyle = '#c1121f'; const q = 'DÄ LANGE: „' + pick(['Ich hann nix jesinn.', 'Kein Kommentar. Kölsch?', 'Dat wor Klüngel, kein Verbreche.', 'Man kennt sich.', 'Ich wor an d\'r Dür. De janze Zick.']) + '“'; let fs = 13; do { x.font = `bold ${fs}px "Courier New", monospace`; fs--; } while (x.measureText(q).width > pw && fs > 8); x.fillText(q, 20, py + ph + 34); } // stays under the photo, clear of the WETTER column
     x.fillStyle = '#111'; x.font = '9px "Courier New", monospace'; x.textAlign = 'center'; x.fillText('DÄ SCHNELLE · Klüngel-Presse Köln-Ehrenfeld · Alle Angaben ohne Jewähr, alle Namen un Blätter erfunden', W2 / 2, H2 - 14); x.textAlign = 'left';
   }
   function shareFrontPage() {
@@ -2091,7 +2124,7 @@
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   window.STUNTS_AUDIO = () => ({ state: audio.ctx ? audio.ctx.state : 'none', engine: audio.gain ? audio.gain.gain.value : 0, chip: music.chip ? music.chip.g.gain.value : null, song: music.el ? !music.el.paused : false, paused });
   window.STUNTS_CAR_SCREEN = () => { if (!player || !player.mesh || !camera) return null; const v = player.mesh.position.clone().project(camera); return { x: (v.x + 1) / 2 * window.innerWidth, y: (1 - v.y) / 2 * window.innerHeight, mode: camMode }; }; // where the player's car is drawn, in CSS pixels
-  window.STUNTS_SCENE = () => scene;
+  window.STUNTS_SCENE = () => scene; window.STUNTS_SAY = (text, ms) => { quiet = 0; msgTimer = 0; return say(tuenn, text, ms || 3000); }; // a flavour line, as the radio or a rival would say it
   window.STUNTS_RAZZIA = () => { razzia = 8; razziaBlink = 0; sayMust(tuenn, pick(tuenn.razzia), 3500); };
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pick(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
