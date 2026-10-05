@@ -725,7 +725,7 @@ body.mobile.replaying .hudBtns, body.mobile.replaying .hudStats, body.mobile.rep
 #pause p { font-size: 12px; line-height: 1.7; max-width: 560px; margin: 0; }
 #pause .pauseBtns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 #pause button { background: var(--red2); color: #fff; border: 3px solid #000; box-shadow: 4px 4px 0 #000; padding: 14px 18px; font-size: 11px; }
-#pause #pauseQuit { background: #2a2f55; }
+#pause #pauseQuit { background: #2a2f55; } #pause #pauseGhost { background: #23284a; color: #dde6ff; } #pause #pauseGhost[hidden] { display: none; }
 #pause small { font-size: 9px; color: #bbb; line-height: 1.8; }
 body.mobile #pause small { display: none; }
 #controlsCard { position: fixed; left: 50%; top: 58%; transform: translate(-50%, 0); z-index: 12; background: rgba(8, 10, 26, 0.88); border: 3px solid var(--yellow); box-shadow: 5px 5px 0 #000; padding: 12px 20px; text-align: center; color: #fff; pointer-events: none; }
@@ -1055,3 +1055,45 @@ body.mobile #landmarkTag { padding-bottom: 16px; } body.mobile #landmarkTag::aft
 .wz i { font-style: normal; font-size: 7px; color: #50547a; }
 .wz.on { color: var(--cream); border-color: #8a8fc0; }
 .wz.rom { border-color: #7a6a2a; } .wz.rom.on { color: var(--yellow); border-color: var(--yellow); }
+
+/* race modes beside JETZ FAHREN: MODUS · RUNDEN · KLÜNGEL · GEIST (a caption over the value, like the cabinet's switch labels) */
+#menu .raceOpts { display: flex; gap: 6px; align-items: stretch; min-width: 0; }
+#menu .raceOpts button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 42px; padding: 5px 10px; border: 2px solid #7a6266; border-radius: 4px; background: linear-gradient(#383846, #1a1c27); color: #f4ead0; font-size: 9px; line-height: 1; white-space: nowrap; cursor: pointer; box-shadow: inset 0 1px 0 #ffffff22, 0 3px 0 #06070b; }
+#menu .raceOpts button[hidden] { display: none; }
+#menu .raceOpts button i { font-style: normal; font-size: 7px; color: #8cd5b5; letter-spacing: .1em; }
+#menu .raceOpts button b { color: var(--yellow); font-weight: normal; }
+#menu .raceOpts button:hover, #menu .raceOpts button:focus-visible { border-color: #f2bd5c; }
+#menu .raceOpts button:active { transform: translateY(2px); box-shadow: inset 0 1px 0 #ffffff22, 0 1px 0 #06070b; }
+body[data-mode="tt"] #menu #modeBtn b { color: var(--cyan); } body[data-mode="tour"] #menu #modeBtn b { color: #6ffc95; }
+body.bigtext #menu .raceOpts button { font-size: 11px; } body.bigtext #menu .raceOpts button i { font-size: 9px; }
+/* the phone: the values only, one swipeable row between the edge and JETZ FAHREN (the carousel already shows the track) */
+body.mobile #menu #quickTrack { display: none; }
+body.mobile #menu .raceOpts { flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; gap: 5px; }
+body.mobile #menu .raceOpts::-webkit-scrollbar { display: none; }
+body.mobile #menu .raceOpts button { flex: none; min-height: 38px; padding: 4px 9px; font-size: var(--f); }
+body.mobile #menu .raceOpts button { flex-direction: row; gap: 6px; }
+body.mobile #menu .raceOpts button i { font-size: var(--f); letter-spacing: 0; }
+body.mobile #menu #modeBtn i, body.mobile #menu #ghostBtn.vs i { display: none; }
+body.mobile #menu #quickStartBtn { flex: none; }
+
+/* split times next to BESTE: green when faster than the ghost, red when slower */
+.hudStats #hudSplit.faster { color: #6ffc95; } .hudStats #hudSplit.slower { color: #ff6b6b; }
+
+/* the results: GEIST SPEICHERN FÖR …, the ZEITFAHREN board, the STADTRUNDFAHRT postcard */
+.ghostRow { margin: 0 0 8px; } .ghostRow:has(> button[hidden]) { display: none; }
+.ghostRow button { background: #23284a; color: #dde6ff; border: 2px solid #9fb4ff; box-shadow: 3px 3px 0 #000; padding: 7px 10px; font-size: 8px; cursor: pointer; }
+.ghostRow button:disabled { opacity: .75; cursor: default; }
+#results.compact .ghostRow { order: 1; } #results.compact .postcard { order: 2; }
+#results.tour .resLeft > table, #results.tour .resLeft > p.small, #results.tour #resRecord, #results.tour #replayBtn { display: none; }
+.postcard { position: relative; margin: 6px 4px 12px; padding: 12px 78px 12px 14px; background: #f4efe0; color: #2a2230; border: 3px solid #000; box-shadow: 5px 5px 0 #000; transform: rotate(-1deg); }
+.postcard::before { content: ""; position: absolute; top: 12px; bottom: 12px; right: 68px; width: 2px; background: #c1121f; opacity: .6; } /* the card's divider, beside the stamp and clear of the list */
+.postcard::after { content: "KÖLLE\A 1989"; white-space: pre; position: absolute; top: 10px; right: 10px; width: 46px; padding: 8px 0; text-align: center; font-size: 7px; line-height: 1.6; color: #fff; background: #c1121f; border: 3px dotted #f4efe0; outline: 2px solid #c1121f; }
+.postcard b { display: block; font-size: 13px; color: #c1121f; letter-spacing: .06em; }
+.postcard small { display: block; margin: 4px 0 6px; font-size: 7px; color: #5a4f60; }
+.postcard ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 18px; font-size: 8px; line-height: 1.7; }
+.postcard i { font-style: normal; font-size: 8px; }
+body.mobile .postcard { padding: 8px 60px 8px 10px; } body.mobile .postcard::before { display: none; } body.mobile .postcard b { font-size: 10px; } body.mobile .postcard ol { font-size: 7px; line-height: 1.5; }
+.recBoard { display: block; margin-top: 6px; font-size: 8px; color: var(--cyan); }
+.recGhosts { display: block; margin-top: 6px; font-size: 8px; color: #b8c4ff; }
+#ghostExportHint { flex: 1; font-size: 8px; color: #b9b2a4; align-self: center; }
+.saveRow + .saveRow { margin-top: 6px; }

@@ -148,6 +148,34 @@ einzeiliges Ortsschild („📍 BARBAROSSAPLATZ – tipp för mieh“, ein Tipp 
 Geschichte eines Ortes, an dem man vorbeifährt, landet ganz im Verzällcher unter REKORDE – auch wenn das
 Kästchen gerade belegt war.
 
+**Rennarten: MODUS · RUNDEN · KLÜNGEL.** In der JETZ-FAHREN-Leiste (Rechner und Handy) stehen drei Schalter.
+**MODUS: RENNEN** ist das gewohnte Rennen gegen neun Fahrer. **ZEITFAHREN** ist eine ehrliche Uhr: keine
+Rivalen, keine Blitzer (auch keine Rotlichtblitzer), keine Razzia, keine Kripo, kein Klüngel-Auftrag, keine
+Zufallsereignisse und niemand auf den Zebrastreifen – nur du und ein großer, deutlich sichtbarer Geist. Jede
+Strecke hat dafür eine eigene Bestenliste, und jeder Eintrag sagt **MIT** oder **OHNE NEBENSTROSSE**.
+**STADTRUNDFAHRT** ist zum Gucken: keine Rivalen, keine Blitzer, höchstens 60 km/h, und Dä Lange erzählt
+jede Geschichte der Strecke der Reihe nach, mit Namensschild am Wahrzeichen und, mit KÖLSCH-HÜLP, auf
+Hochdeutsch darunter. Hängt er mit dem Erzählen hinterher, rollt der Wagen langsamer, bis er fertig ist;
+Loopings, Korkenzieher und Sprünge schafft die Rundfahrt auch mit 60 km/h (Striche und Orden gibt es dafür nicht). Am Ende kommt eine Postkarte
+„JRÖÖSS US KÖLLE!“ mit allen Sehenswürdigkeiten. **RUNDEN: 1 / 3** – eine Runde passt in die Pause oder an die
+Haltestelle. **KLÜNGEL: AN / AUS** (nur im RENNEN): Mit AN warten die Gegner auf dich, wenn du hinten liegst –
+das gibt es nur noch für LEICHT und MITTEL; SCHWER und EXPERTE fahren immer ein ehrliches Feld, und AUS
+schaltet das Gummiband ganz ab. Rekorde zählen getrennt nach Modus und Rundenzahl
+(`stuntskoelle.rec.<strecke>.race3`, `….tt1` …); alte Bestzeiten werden beim ersten Start (und beim Übernehmen
+eines alten Deckel-Codes) zu RENNEN über die drei Runden der Strecke. Karriere, Cup, Botengang und Vorspann
+bleiben immer RENNEN über die normalen Runden.
+
+**Zwischenzeiten und Geister mit Namen (Papa gegen Pänz).** Vier Messpunkte pro Runde (ein Viertel, die Hälfte,
+drei Viertel, die Ziellinie): Neben BESTE steht die **ZWESCHEZICK** (auf dem Handy SPLIT, fünf Sekunden lang)
+als Abstand zum Geist, grün bei −0.17, rot bei +0.42. Ohne Geist zählt die beste Runde des laufenden Rennens.
+Auf dem Ergebnis speichert **👻 GEIST SPEICHERN FÖR …** die beste Runde unter drei Buchstaben. Danach bietet die
+Leiste im Menü **GEIST: DING BESTE / GEGEN PAP FAHRE / AUS**; der Geist fährt in dem Wagen, in dem er gefahren
+ist, und die Titelseite meldet „PÄN SCHLÄT PAP ÖM 3,3 SEKUNDE“. **G** (auf dem Handy: GEIST in der Pause) blendet den
+Geist im Rennen aus und ein (die Zwischenzeiten bleiben). Unter REKORDE macht **GEIST ALS CODE** aus dem Rekord-Geist der gewählten Strecke
+einen kurzen Code (K4G1…, ein paar Kilobyte); am anderen Gerät in dasselbe Feld einfügen und ÜBERNEHMEN – dann
+steht dort GEGEN [NAME] FAHRE. Geister mit Namen werden genauso klein gepackt gespeichert (ein paar Kilobyte je
+Runde, acht Namen pro Strecke); ein Name ohne Buchstaben heißt DU, und ein kaputter Code wird höflich abgelehnt.
+
 **KÖLSCH-HÜLP: AUS / AN.** Kölsch bleibt die Sprache des Spiels. Mit KÖLSCH-HÜLP steht unter jeder
 Geschichte, jeder Notiz zu einer Seitenstraße, jeder Ortsanekdote, dem Pausenspruch, den Orden und den
 Verzällcher-Einträgen eine kleine graue Zeile auf Hochdeutsch (das Feld `hd` der Zeile; Zeilen ohne `hd`
@@ -438,7 +466,8 @@ Standorten (beide Seiten, drei Höhen) einen mit freier Sicht und schneiden weit
 Bild rückt; im Tunnel fahren sie mit.
 
 **Geist:** deine beste Runde fährt beim nächsten Rennen als durchsichtiger Geisterwagen mit, im
-Wagen, mit dem du sie gefahren bist, und über Sprünge in der aufgezeichneten Höhe.
+Wagen, mit dem du sie gefahren bist, und über Sprünge in der aufgezeichneten Höhe. Gespeicherte Geister
+mit Namen und die Zwischenzeiten stehen oben bei den Rennarten.
 
 **2 Spieler** an einer Tastatur (nicht am Handy): im Menü 👥 2 SPIELER einschalten. Oben P1
 mit Pfeiltasten + Shift, unten P2 mit W/A/S/D + Q. V wechselt die Kamera von P2. Das Feld
@@ -568,6 +597,13 @@ Wasserturm-Geschichte im Rheinauhafen hat den Wasserturm als nächstes Wahrzeich
 zwölf romanischen Kirchen mit Geschichte auf einer Strecke stehen, und am Dom (Rechner 1280×720 und Handy 844×390),
 dass beim Tünnes-un-Schäl-Verzällche `#landmarkTag` den Namen zeigt und sein Zeiger auf ±40 px am Denkmal endet;
 dazu das Album unter REKORDE. `brands` hält auch die echten Namen der beiden Schanzenstraßen-Hallen fern.
+`modes-ghosts` prüft die Rennarten: ein alter Rekord wird zu RENNEN · 3 RUNDEN; mit SCHWER ist das Gummiband
+jedes Rivalen 1, mit LEICHT warten sie, mit KLÜNGEL: AUS nicht; drei Runden Poller Wiesen zeigen in Runde 2 an
+allen vier Messpunkten einen Abstand mit Vorzeichen in `#hudSplit`; GEIST SPEICHERN FÖR PAP, im Menü GEGEN PAP
+FAHRE, der Geist im eigenen Wagen, G blendet ihn aus, die Titelseite „PÄN SCHLÄT PAP …“, der Geist als K4G1-Code
+in einem anderen Browser; ZEITFAHREN über eine Runde Poller Wiesen ohne Rivalen, Blitzer, Kripo, Auftrag, Razzia
+und Fußgänger, mit Rekord unter `….tt1`; STADTRUNDFAHRT über eine Runde Kalk mit jeder Geschichte in
+Streckenreihenfolge, nie über 60 km/h, und der Postkarte.
 
 ## Debug
 
@@ -585,7 +621,10 @@ den Geist auf Rundenzeit t, `STUNTS_OCC(a, b)` den ersten Treffer der Sichtschic
 `STUNTS_MSGLOG()` listet jede Zeile des laufenden Rennens (Zeit, Sprecher, Text, Hochdeutsch, Ortsschild),
 `STUNTS_CHAT('WENIJ')` stellt das Geschwätz, `STUNTS_HD(true)` die Kölsch-Hülp um, `STUNTS_STORIES()` und
 `STUNTS_JOURNAL()` zeigen die Geschichten der Strecke und den Verzällcher, `STUNTS_LANDMARK_TAG()` das
-Schild über dem Wahrzeichen der laufenden Geschichte und `STUNTS_WAHRZEICHEN()` das Album. Ein von Playwright gesteuerter
+Schild über dem Wahrzeichen der laufenden Geschichte und `STUNTS_WAHRZEICHEN()` das Album.
+`STUNTS_MODE('ZEITFAHREN', 1, false)` stellt Modus, Runden und Klüngel (und zeigt, was im laufenden Rennen
+gilt: Blitzer, Kripo, Fußgänger, Feld), `STUNTS_SPLITS()` die Zwischenzeiten, `STUNTS_GHOSTS(id)` die Geister
+einer Strecke, `STUNTS_EXPORT_GHOST(id)` und `STUNTS_IMPORT(code)` den Geist als Code. Ein von Playwright gesteuerter
 Browser (`navigator.webdriver`) überspringt die Türkarten beim ersten Start, damit die Menütests klicken
 können; `STUNTS_ONBOARD = true` (vor dem Laden gesetzt) zeigt sie trotzdem.
 

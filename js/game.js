@@ -49,7 +49,17 @@
   const REC_HZ = 20, REC_CAP = 30 * 60 * REC_HZ, REC_F = 8;
   const rec = { buf: null, t: new Float64Array(REC_CAP), n: 0, head: 0, stride: REC_F, acc: 0, cars: [] };
   const replay = { on: false, time: 0, speed: 1, paused: false, camIdx: -1, cams: [], mode: 0 };
-  let ghost = null, ghostData = null;                              // best-lap ghost
+  let ghost = null, ghostData = null, ghostHidden = false;          // best-lap ghost (G hides it, the splits stay)
+  // race modes (menu: MODUS, RUNDEN, KLÜNGEL): RENNEN = the field of ten; ZEITFAHREN = alone against the clock and the ghost
+  // (no rivals, Blitzer, Razzia, Kripo, Auftrag or pedestrians); STADTRUNDFAHRT = no rivals or Blitzer, 60 km/h and every
+  // story in track order. 1 or 3 laps. Cup, career, Botengang and the attract demo are always RENNEN over the track's laps.
+  const MODES = ['RENNEN', 'ZEITFAHREN', 'STADTRUNDFAHRT'], MODE_KEY = ['race', 'tt', 'tour'], TOUR_V = 16.6; // 60 km/h
+  const raceOpts = { mode: 0, laps: 3, kluengel: true };
+  try { const o = JSON.parse(localStorage.getItem('stuntskoelle.mode') || 'null'); if (o) { raceOpts.mode = clamp(o.mode | 0, 0, 2); raceOpts.laps = o.laps === 1 ? 1 : 3; raceOpts.kluengel = o.kluengel !== false; } } catch (e) { /* ignore */ }
+  let raceMode = 0, raceLaps = 3; // the race being driven
+  const tourRide = (r) => raceMode === 2 && !!r && !r.isAI && !r.isCop; // the Stadtrundfahrt's own rules apply to the players' cars
+  // split times: four checkpoints per lap (a quarter, half, three quarters, the line), compared with the ghost or the race's best lap
+  const CP = [0.25, 0.5, 0.75, 1]; let splitLog = [], splitShow = null;
   const voice = { on: true, ready: false, de: null, list: [] };
   const input = { gas: 0, brake: 0, steer: 0, turbo: 0 };
   const keys = {};
@@ -311,7 +321,7 @@
     if (race && saidRace.has(text) && (!must || chat === 2)) return false; // no line twice in one race
     if (race && !must && !ex.story && (chat === 2 || storyNear())) return false; // WENIJ: no flavour; a place just ahead keeps the box free for its story
     if (race && !must && (ex.story ? msgTimer > 0 && !(msgPrio === 0 && msgAge > 1.2) : msgTimer > 0 || quiet > 0)) return false; // a story pushes a flavour line aside once it has been read a moment
-    if (start && chat === 2 && chatClock - lastLineT < 10) { if (must) { mustQ.push({ who, text, ms, ex, at: chatClock }); if (mustQ.length > 3) { const i = mustQ.findIndex((q) => q.ex.small); mustQ.splice(Math.max(0, i), 1); } } return false; }
+    if (start && chat === 2 && chatClock - lastLineT < 10 && !(ex.story && raceMode === 2)) { if (must) { mustQ.push({ who, text, ms, ex, at: chatClock }); if (mustQ.length > 3) { const i = mustQ.findIndex((q) => q.ex.small); mustQ.splice(Math.max(0, i), 1); } } return false; }
     if (race) quiet = CHAT_QUIET[chat][isMobile ? 1 : 0]; // on a phone the box covers the road: fewer lines
     if (phase === 'race' || phase === 'countdown' || phase === 'intro' || phase === 'finished') { const v = VOICES[who.name] || [0.8, 1]; speak(text, v[0], v[1], who === tuenn, who.name); }
     const tag = ex.tag && isMobile && chat > 0 ? ex.tag : ''; // phone: a story is a one-line place tag, a tap opens the whole text
@@ -331,6 +341,17 @@
     if (mustQ.length) mustQ = mustQ.filter((q) => chatClock - q.at <= (q.ex.small ? 8 : 15));
     if (mustQ.length && chatClock - lastLineT >= 10 && !storyReady()) { const i = mustQ.findIndex((q) => !q.ex.small), q = mustQ.splice(Math.max(0, i), 1)[0]; say(q.who, q.text, q.ms, true, q.ex); }
   }
+  // STADTRUNDFAHRT: every story, in track order, each when its place is at most 40 m ahead (or already passed) and the box is free
+  // of anything but flavour; a story that is still waiting at the line is told there before the postcard comes
+  function tourStory() {
+    const st = stories.find((x) => !x.told); if (!st || (msgTimer > 0 && msgPrio > 0) || paused) return;
+    const at = (player.lap - 1) * track.length + player.s; if (!player.finished && st.s - at > 40) return;
+    const ms = isMobile && chat > 0 ? 5000 : 6500; msgTimer = 0;
+    if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag }) || saidRace.has(st.text)) { st.told = true; storyCool = ms / 1000; rememberStory(st.text); showLandmarkTag(st); if (st.wz) discoverWz(st.wz); }
+  }
+  // the tour bus slows to 30 km/h while dä Lange is still telling about a place it has passed by more than 40 m
+  function tourCap(r) { if (r !== player || r.finished) return TOUR_V; const st = stories.find((x) => !x.told); return st && (r.lap - 1) * track.length + r.s - st.s > 40 ? 8.4 : TOUR_V; }
+  const tourPending = () => stories.some((x) => !x.told) || msgTimer > 0.5;
   function storyReady() { if (phase !== 'race' || storyCool > 0 || !player || player.air) return false; for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) return calmRoad(); } return false; }
   function chatReset() { saidRace.clear(); recent.clear(); msgLog.length = 0; mustQ = []; chatClock = 0; lastLineT = -99; msgAge = 0; }
   // a place story just ahead (or just passed and still untold): flavour lines keep quiet
@@ -408,7 +429,7 @@
     let route = routeFor(r);
     if (!route && distance > 0 && !r.air && !r.finished) {
       route = track.shortcuts.find((q) => (r.isCop ? r.routePlan === q.index : !r.isAI || r.branchPlan === q.index) && r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8);
-      if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.routePlan = null; r.safeS = route.resetS + 18; if (r === player) enterRoute(route); } // respawn() subtracts 18 m
+      if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.routePlan = null; r.safeS = route.resetS + 18; r.usedSide = true; if (r === player) enterRoute(route); } // respawn() subtracts 18 m
     }
     if (!route) { r.s += distance; return; }
     const scale = (route.endS - route.startS) / route.length;
@@ -465,7 +486,8 @@
       finished: false, finishTime: null, laps: [], lapStart: 0, prevRoadVy: 0, wasInLoop: false,
       steerVis: 0, aiTimer: 0, aiSlow: 1, jumpStartS: 0, bestLap: null, wobblePhase: Math.random() * 10, laneBias: 0,
       turbo: 0.5, turboOn: false, damage: 0, skill: driver.skill, wobble: driver.wobble,
-      shortcut: -1, shortcutsDone: new Set(), routeSeed: 0, branchPlan: -1, branchKey: '', routePlan: null
+      shortcut: -1, shortcutsDone: new Set(), routeSeed: 0, branchPlan: -1, branchKey: '', routePlan: null,
+      sp: [], cpNext: 0, bestSp: null, usedSide: false, band: 1
     };
   }
   // Back on the road after a crash, on the centre line. On the main road: where the car crashed, at least 20 m past
@@ -523,13 +545,14 @@
     r.turboWasOn = r.turboOn;
     const topMul = (1 - r.damage * 0.2) * (r.turboOn ? 1.18 : 1);
     if (!r.air) {
-      const slope = f.T.y;
+      const slope = tourRide(r) && f.kind === 'loop' ? 0 : f.T.y; // the Stadtrundfahrt rolls through a loop or a corkscrew at 60 km/h
       // on the verge (gravel, grass, sidewalk): wheels spin, heavy drag, 40 % grip; the same rules for every car
       const verge = r.onVerge = Math.abs(r.lat) > roadWidth;
       let a = ctl.gas * car.accel * (r.turboOn ? 1.9 : 1) * (verge ? 0.5 : 1) - ctl.brake * (r.v > 0.5 ? car.brake : -car.accel * 0.4) - G * slope * 0.9;
       a -= r.v * Math.abs(r.v) * 0.004 + (ctl.gas > 0 ? 0 : 0.8) * Math.sign(r.v) + (verge ? r.v * 0.35 + 3 * Math.sign(r.v) : 0);
       r.v += a * dt;
       r.v = clamp(r.v, -8, car.top * topMul * (1.0 + (slope < 0 ? 0.15 : 0)));
+      if (tourRide(r)) { const cap = tourCap(r); r.tourV = r.tourV == null ? cap : r.tourV > cap ? Math.max(cap, r.tourV - 5 * dt) : Math.min(cap, r.tourV + 3 * dt); r.v = Math.min(r.v, r.tourV); if (f.kind === 'loop') r.v = Math.max(r.v, 8); } // nobody stands upside down
       const bankAssist = Math.min(1, Math.abs(f.roll) / (25 * Math.PI / 180)) * 0.6;
       const onRoute = routeFor(r);
       const gripAcc = 24 * car.grip * (1 + bankAssist) * (onRoute && onRoute.surface === 'cobble' ? 0.85 : 1) * (verge ? 0.4 : 1); // Kopfsteinpflaster: less grip
@@ -546,12 +569,12 @@
         }
         if (r.bumpT > 0) r.bumpT -= dt;
       }
-      if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21) { crash(r, 'loop'); return; } }
-      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pickNew(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } }
+      if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21 && !tourRide(r)) { crash(r, 'loop'); return; } }
+      else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pickNew(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player && !tourRide(r)) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } } // the Stadtrundfahrt carries you round: no Deckel, no Orden
       advanceRacer(r, r.v * dt);
       const f2 = racerFrame(r);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
-        const a0 = f.rampAngle; r.air = true; r.y = Math.max(f.p.y, track.samples[f.index].p.y) + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; // launch from the ramp lip, not from the lerp down into the gap r.v = Math.max(r.v * Math.cos(a0), 4); r.jumpStartS = r.s;
+        const a0 = f.rampAngle; r.air = true; r.y = Math.max(f.p.y, track.samples[f.index].p.y) + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; if (tourRide(r)) r.vy = Math.max(r.vy, tourHop(r)); // launch from the ramp lip, not from the lerp down into the gap r.v = Math.max(r.v * Math.cos(a0), 4); r.jumpStartS = r.s;
       } else if (f2.kind === 'gap') { r.air = true; r.y = roadY; r.vy = 0; }
       else {
         const roadVy = r.v * f2.T.y;
@@ -567,12 +590,12 @@
       const landing = f2.kind !== 'gap' && f2.kind !== 'ramp';
       r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt; r.jumpLive.peak = Math.max(r.jumpLive.peak, r.y);
       const ry = f2.p.y;
-      if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over) { crash(r, 'roof'); return; } }
+      if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over && !tourRide(r)) { crash(r, 'roof'); return; } }
       else if (r.y <= ry + 0.12) {
         r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y; endJump(r);
         if (Math.abs(r.lat) > roadWidth + vergeAt(r, f2, r.lat)) { crash(r, 'off'); return; } // a landing on the verge is rough but survivable
         if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
-        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pickNew(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
+        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pickNew(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player && !tourRide(r)) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
         r.vy = 0;
       }
       if (r.y - ry > 60) { crash(r, 'off'); return; }
@@ -580,14 +603,41 @@
     if (r.s >= track.length) {
       r.s -= track.length; r.safeS = Math.max(0, r.safeS - track.length);
       const lapTime = raceTime - r.lapStart; r.lapStart = raceTime; r.laps.push(lapTime);
-      if (r.bestLap == null || lapTime < r.bestLap) r.bestLap = lapTime;
-      r.lap++;
-      if (r.lap > trackDef.laps) { r.finished = true; r.finishTime = raceTime; r.lap = trackDef.laps; }
-      else if (!r.isAI) { sayMust(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === trackDef.laps ? 1 : 0))], 2500); if (r === player) { telefon.ready = true; $('#hudTel').textContent = telLabel(); } }
+      if (r === player && !mission) lapSplit(r, lapTime);
+      if (r.bestLap == null || lapTime < r.bestLap) { r.bestLap = lapTime; if (r === player && r.sp.length === 4) r.bestSp = r.sp.slice(); }
+      r.lap++; if (r === player) { r.sp = []; r.cpNext = 0; }
+      if (r.lap > raceLaps) { r.finished = true; r.finishTime = raceTime; r.lap = raceLaps; }
+      else if (!r.isAI) { sayMust(tuenn, tuenn.lap[Math.min(tuenn.lap.length - 1, r.lap - 2 + (r.lap === raceLaps ? 1 : 0))], 2500); if (r === player) { telefon.ready = true; $('#hudTel').textContent = telLabel(); } }
     }
+    if (r === player && !mission && !r.finished) splitTick(r);
     r.steerVis += (ctl.steer - r.steerVis) * Math.min(1, dt * 10);
+    if (r.v > (r.vMax || 0)) r.vMax = r.v; // the top speed of the race (the Stadtrundfahrt's 60 km/h are checked against it)
   }
 
+  // STADTRUNDFAHRT: at 60 km/h the tour still clears a jump – it takes off as steeply as the gap (or the house) asks for
+  function tourHop(r) {
+    let d = 0; while (d < 240 && TB.frameAt(track, r.s + d).kind === 'gap') d += 1;
+    const land = TB.frameAt(track, r.s + d + 3), T = (d + 6) / Math.max(6, r.v);
+    return (land.p.y - r.y + 0.5 * G * T * T) / T;
+  }
+  // split times: a checkpoint passed this lap (the line itself is counted by lapSplit)
+  function splitTick(r) {
+    const L = track.length;
+    while (r.cpNext < 3 && r.s >= CP[r.cpNext] * L && r.s < CP[r.cpNext] * L + L / 4) { r.sp[r.cpNext] = raceTime - r.lapStart; showSplit(r.cpNext); r.cpNext++; }
+  }
+  function lapSplit(r, lapTime) { while (r.cpNext < 3) { r.sp[r.cpNext] = null; r.cpNext++; } r.sp[3] = lapTime; showSplit(3); }
+  // what a split is compared with: a named ghost (Papa gegen Pänz) always, otherwise the faster of the own ghost and this race's best lap
+  function splitRef() {
+    const g = ghostData && ghostData.sp && ghostData.sp.length === 4 ? ghostData : null, mine = player.bestSp && player.bestLap != null ? { time: player.bestLap, sp: player.bestSp } : null;
+    if (g && (g.name || !mine || g.time <= mine.time)) return g.sp; return mine ? mine.sp : null;
+  }
+  function showSplit(k) {
+    const t = player.sp[k]; if (t == null) return; const ref = splitRef(), d = ref && ref[k] != null ? t - ref[k] : null;
+    splitShow = { k, d, until: raceTime + 5 }; splitLog.push({ lap: player.lap, cp: k + 1, t: +t.toFixed(2), d: d == null ? null : +d.toFixed(2) });
+    const el = $('#hudSplit'); if (!el) return;
+    el.textContent = d == null ? `${k + 1}/4 ${fmtTime(t)}` : `${k + 1}/4 ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(2)}`;
+    el.classList.toggle('faster', d != null && d < 0); el.classList.toggle('slower', d != null && d >= 0);
+  }
   function aiControl(r, dt) {
     const activeRoute = routeFor(r);
     if (activeRoute) {
@@ -607,8 +657,10 @@
     r.aiTimer -= dt;
     if (r.aiTimer <= 0) { r.aiTimer = 4 + Math.random() * 8; r.aiSlow = Math.random() < r.wobble * 0.6 ? 0.55 + Math.random() * 0.3 : 1; r.laneBias = (Math.random() - 0.5) * 6; }
     const i = Math.floor(((r.s % track.length) + track.length) % track.length / track.ds) % track.samples.length;
-    let band = 1;
-    if (r.isAI && player && !player.finished && phase === 'race') { const L = track.length; const gap = (r.s + r.lap * L) - (player.s + player.lap * L); const k = [0.22, 0.14, 0.07, 0.025][PLAYABLE[sel.driver].diffN || 0]; band = clamp(1 - gap / 300 * k, 1 - k * 0.9, 1 + k * 0.5); }
+    // the rubber band (KLÜNGEL: AN) only for LEICHT and MITTEL; SCHWER and EXPERTE race an honest field
+    let band = 1; const diffN = PLAYABLE[sel.driver].diffN || 0;
+    if (r.isAI && player && !player.finished && phase === 'race' && raceOpts.kluengel && diffN < 2) { const L = track.length; const gap = (r.s + r.lap * L) - (player.s + player.lap * L); const k = [0.22, 0.14][diffN]; band = clamp(1 - gap / 300 * k, 1 - k * 0.9, 1 + k * 0.5); }
+    r.band = band;
     const target = Math.min(r.car.top * r.skill * (r.isCop ? 1.05 : 0.95), track.safe[i] * (0.86 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * (razzia > 0 && r !== player2 ? 0.62 : 1) * band;
     let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     let wantLat = Math.sin(raceTime * 0.7 + r.wobblePhase) * r.wobble * 2 + r.laneBias * 0.5;
@@ -882,7 +934,7 @@
   function hudQuiet() {
     hudQuietT = 0.5; // desktop too: ZEIT, RUNDE, POS always; the rest only while it has something to say
     if (!hudRows) hudRows = Array.from(document.querySelectorAll('.hudStats > div')).map((d) => ({ d, b: d.querySelector('b') }));
-    for (const r of hudRows) { const t = r.b.textContent.trim(); r.d.classList.toggle('quiet', t === '–' || t === '' || /^--/.test(t) || r.b.id === 'hudTel' && t === telLabel() && !kripo || r.b.id === 'hudBeste' && isMobile || mission && /^hud(Runde|Pos|Beste)$/.test(r.b.id)); } // a Botengang has no laps or places
+    for (const r of hudRows) { const t = r.b.textContent.trim(); r.d.classList.toggle('quiet', t === '–' || t === '' || /^--/.test(t) || r.b.id === 'hudTel' && t === telLabel() && !kripo || r.b.id === 'hudBeste' && isMobile || mission && /^hud(Runde|Pos|Beste|Split)$/.test(r.b.id) || r.b.id === 'hudPos' && racers.length < 2 || raceMode === 2 && /^hud(Beste|Split)$/.test(r.b.id)); } // a Botengang has no laps or places, a lone run no places
   }
   // Zülpicher 11.11.: a clock from 11:10:45; at 11:11:00 the Session opens
   let elfDone = false;
@@ -910,7 +962,8 @@
     if (activeRoute) shortcutHint.textContent = `${routeLabel(activeRoute)} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M${routePerks(activeRoute) ? ' · ' + routePerks(activeRoute) : ''}`;
     else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + (isMobile ? '' : ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`);
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
-    $('#hudRunde').textContent = `${player.lap} / ${trackDef.laps}`;
+    $('#hudRunde').textContent = `${player.lap} / ${raceLaps}`;
+    if (splitShow && isMobile && raceTime > splitShow.until) { splitShow = null; $('#hudSplit').textContent = '–'; } // the phone shows a split for 5 s
     $('#hudZeit').textContent = fmtTime(raceTime);
     $('#hudBeste').textContent = fmtTime(player.bestLap);
     const pos = standings().indexOf(player) + 1;
@@ -920,11 +973,11 @@
     $('#hudWette').textContent = wette ? (wette.done ? (wette.won ? 'JEWONNE' : 'VERLORE') : `${wette.n}🍺 › ${wette.rival.name.toUpperCase().split(' ').pop()}`) : '–';
     if (mission) $('#hudAuftrag').textContent = missionHud(); else $('#hudAuftrag').textContent = auftrag ? (auftrag.stage === 'pickup' ? `HOLEN: ${Math.max(0, Math.round(auftrag.timer))} S` : `› ${auftrag.where} ${Math.max(0, Math.round(auftrag.timer))} S`) : auftragDone ? `${auftragDone} ERLEDIGT` : '–';
     if (kripo) $('#hudKripo').textContent = kripoHud(); else $('#hudKripo').textContent = kripoSeen ? 'ABJEHÄNGT' : knoellchen >= 2 ? 'NOCH 1 BLITZER!' : '–';
-    if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${trackDef.laps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
+    if (player2) { $('#speed2').textContent = String(Math.round(Math.abs(player2.v) * 3.6)).padStart(3, '0'); $('#pos2').textContent = `POS ${standings().indexOf(player2) + 1}/${racers.length} · RUNDE ${player2.lap}/${raceLaps}`; const t2 = $('#turboBar2').children; for (let i = 0; i < t2.length; i++) t2[i].className = (i / t2.length) < player2.turbo ? 'on' : ''; }
     if (lastPos !== null && lastPos !== pos && phase === 'race' && raceTime > 3 && msgTimer <= 0) {
-      const ais = racers.filter((r) => r.isAI && !r.isCop); if (!ais.length) return; const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
+      const ais = racers.filter((r) => r.isAI && !r.isCop); if (ais.length) { const byTuenn = Math.random() < 0.5; const other = pick(ais).driver;
       if (pos < lastPos) { say(byTuenn ? tuenn : other, byTuenn ? pickNew(tuenn.overtake) : pickNew(other.lines.overtaken), 2200); addDeckel(1); }
-      else say(byTuenn ? tuenn : other, byTuenn ? pickNew(tuenn.overtaken) : pickNew(other.lines.overtake), 2200);
+      else say(byTuenn ? tuenn : other, byTuenn ? pickNew(tuenn.overtaken) : pickNew(other.lines.overtake), 2200); } // no rivals (two players alone): the rest of the HUD still runs
     }
     lastPos = pos;
     const tb = $('#turboBar').children, db = $('#dmgBar').children;
@@ -940,6 +993,7 @@
   function activeTrackDef() { return allTracks()[sel.track] || TRACKS[0]; }
   function buildScene(def) {
     trackDef = def || activeTrackDef();
+    { const forced = cup.on || careerChapter != null || missionMode || demo; raceMode = forced ? 0 : raceOpts.mode; raceLaps = forced ? trackDef.laps : raceOpts.laps; }
     theme = trackDef.theme; theme.kids = kids; // the scenery builds its Kamelle versions from this
     track = TB.buildTrack(trackDef);
     track.shortcuts = window.Shortcuts.buildRoutes(track);
@@ -972,7 +1026,7 @@
       if (!camera2) camera2 = new THREE.PerspectiveCamera(70, 1, 1.0, 4000);
       document.body.classList.add('split');
     } else { document.body.classList.remove('split'); player.name = 'DU'; }
-    const others = missionMode ? [] : D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 8 : 9); // a field of ten (none on a Botengang)
+    const others = missionMode || raceMode !== 0 ? [] : D.DRIVERS.filter((d) => d !== me && !(player2 && d === player2.driver)).slice(0, player2 ? 8 : 9); // a field of ten (none on a Botengang)
     others.forEach((d, i) => {
       const base = D.CARS.find((c) => c.id === d.car) || D.CARS[1];
       const cdef = Object.assign({}, base, { color: d.color, plate: 'K-' + d.name.slice(0, 2).toUpperCase() + ' ' + (i + 1) });
@@ -988,22 +1042,38 @@
     for (const v of views) { v.pos.set(0, 5, -15); v.up.set(0, 1, 0); v.look.set(0, 0, 10); v.tv = null; }
     buildMinimap(); lastPos = null;
     recReset(); loadGhost(); buildOccluders();
-    blitzers = scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 }));
-    signals = (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
+    blitzers = raceMode !== 0 ? [] : scenery.props.filter((p) => p.userData.type === 'blitzer').map((p) => ({ s: p.userData.at * track.length, flash: p.userData.flash, cool: 0 })); // ZEITFAHREN and STADTRUNDFAHRT: no Blitzer, no Rotlichtblitzer
+    signals = raceMode !== 0 ? [] : (scenery.signals || []).map((sg) => Object.assign({ cool: 0 }, sg));
+    if (raceMode === 1) scenery.group.traverse((o) => { if (o.userData.walker) o.visible = false; }); // ZEITFAHREN: nobody on the zebra crossings
     // dä Lange "verzällt": anecdotes when you pass the places of his night tour
     stories = scenery.props.filter((p) => p.userData.story).map((p) => ({ s: (p.userData.storyAt != null ? p.userData.storyAt : p.userData.at) * track.length, wz: WZ[p.userData.wz] ? p.userData.wz : '', prop: p, text: p.userData.story, hd: p.userData.storyHd || HD.get(p.userData.story) || '', tag: p.userData.storyTag || storyTag(p.userData.story, p.userData.type), told: kids && DRINK.test(p.userData.story) })); // Pänz: a drinking story is never told, so it keeps no flavour line waiting
+    if (raceMode === 2) stories.sort((a, b) => a.s - b.s); // the Stadtrundfahrt tells them in track order
     telefon = { ready: true, active: 0, used: 0 };
     knoellchen = 0; koelsch = 0; radioTimer = 45; storyCool = 0; eventTimer = 30; lmTag = null;
     const idx = TRACKS.indexOf(trackDef);
-    $('#hudTrack').textContent = careerChapter != null ? `KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ${missionMode ? 'BOTENGANG' : 'ZIEL: ' + goalText(tuenn.career[careerChapter].goal)}` : missionMode ? `BOTENGANG · ${trackDef.name.toUpperCase()}` : `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})`;
+    $('#hudTrack').textContent = careerChapter != null ? `KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ${missionMode ? 'BOTENGANG' : 'ZIEL: ' + goalText(tuenn.career[careerChapter].goal)}` : missionMode ? `BOTENGANG · ${trackDef.name.toUpperCase()}` : `${cup.on ? 'CUP ' + (cup.i + 1) + '/' + TRACKS.length + ' · ' : idx >= 0 ? idx + 1 + '. ' : ''}${trackDef.name.toUpperCase()} (${(trackDef.tag || 'BAUKASTEN')})${raceMode ? ' · ' + MODES[raceMode] : ''}`;
+    splitLog = []; splitShow = null; ghostHidden = false; { const el = $('#hudSplit'); el.textContent = '–'; el.classList.remove('faster', 'slower'); }
     deckel = 0; kripo = null; kripoSeen = false; kripoCaught = false; crashes = 0; waterCrashes = 0; wette = null; lastLapSeen = 1; kripoHitCool = 0; razzia = 0; promille = 0; promilleDone = false; koelschLap = 0; $('#flash').style.background = ''; buildPickups();
     endAuftrag(); auftragT = window.STUNTS_AUFTRAG ? 6 : 30 + Math.random() * 25; auftragDone = 0; auftragFail = 0; lastShot = null; airShot = null; airBest = 0; airNow = 0; airShotT = -9;
   }
-  function bestKey() { return `stuntskoelle.best.${trackDef.id}`; }
-  function getBest(def) { try { const v = localStorage.getItem(`stuntskoelle.best.${(def || trackDef).id}`); return v ? parseFloat(v) : null; } catch (e) { return null; } }
-  function setBest(t) { try { localStorage.setItem(bestKey(), String(t)); } catch (e) { /* ignore */ } }
-  function getRecords(def) { try { return JSON.parse(localStorage.getItem(`stuntskoelle.rec.${def.id}`) || '[]'); } catch (e) { return []; } }
-  function addRecord(def, entry) { const list = getRecords(def); list.push(entry); list.sort((a, b) => a.time - b.time); try { localStorage.setItem(`stuntskoelle.rec.${def.id}`, JSON.stringify(list.slice(0, 5))); } catch (e) { /* ignore */ } }
+  // records per track, mode and laps: stuntskoelle.rec.<track>.<race|tt|tour><laps> (the top five) and stuntskoelle.best.<…> (the best time)
+  const boardKey = (kind, def, m, l) => `stuntskoelle.${kind}.${def.id}.${MODE_KEY[m == null ? raceMode : m]}${l == null ? raceLaps : l}`;
+  function getBest(def, m, l) { try { const v = localStorage.getItem(boardKey('best', def || trackDef, m, l)); return v ? parseFloat(v) : null; } catch (e) { return null; } }
+  function setBest(t) { try { localStorage.setItem(boardKey('best', trackDef), String(t)); } catch (e) { /* ignore */ } }
+  function getRecords(def, m, l) { try { const a = JSON.parse(localStorage.getItem(boardKey('rec', def, m, l)) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+  function addRecord(def, entry) { const list = getRecords(def); list.push(entry); list.sort((a, b) => a.time - b.time); try { localStorage.setItem(boardKey('rec', def), JSON.stringify(list.slice(0, 5))); } catch (e) { /* ignore */ } }
+  // a save from before the modes kept one board per track: it becomes the track's RENNEN board over its own laps (also from an old Deckel code)
+  function migrateRecords() {
+    try {
+      const keys = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^stuntskoelle\.(rec|best)\.[^.]+$/.test(k)) keys.push(k); }
+      for (const k of keys) {
+        const [, kind, id] = k.split('.'), def = allTracks().find((t) => t.id === id) || { id, laps: 3 }, nk = boardKey(kind, def, 0, def.laps || 3), old = localStorage.getItem(k), cur = localStorage.getItem(nk);
+        if (kind === 'best') { const a = parseFloat(old), b = parseFloat(cur); if (isFinite(a) || isFinite(b)) localStorage.setItem(nk, String(isFinite(b) && !(a < b) ? b : a)); }
+        else { let list = []; try { list = [].concat(JSON.parse(old || '[]'), JSON.parse(cur || '[]')).filter((r) => r && isFinite(r.time)); } catch (e) { /* a broken board is dropped */ } const seen = new Set(); list = list.filter((r) => { const key = r.date + ':' + r.time; if (seen.has(key)) return false; seen.add(key); return true; }).sort((a, b) => a.time - b.time); localStorage.setItem(nk, JSON.stringify(list.slice(0, 5))); }
+        localStorage.removeItem(k);
+      }
+    } catch (e) { /* the records are a bonus */ }
+  }
 
   // ---------------- race flow ----------------
   let cdShown = -1;
@@ -1043,7 +1113,7 @@
     buildScene(def); chatReset();
     raceStunts = 0; hookSaid = 0; dropSaid = riseSaid = -99; lamboLines = 0; elfDone = false; jeckSaid = 0; crashLog = []; crashAt = []; helpSaid = -99; notesTold.clear(); pendingNote = noteShown = null;
     raceTime = 0; raceTicks = 0; simAcc = 0; loopHud.inLoop = false; loopHud.until = -1; countdown = 4.2; phase = 'intro'; introT = quickAgain ? 99 : 0; quickAgain = false; hornCool = 0; newOrden = []; perf.frames = 0; // NOCHMAL: straight to the countdown
-    { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${trackDef.laps} RUNDEN · ${(track.length * trackDef.laps / 1000).toFixed(1)} KM` + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
+    { const c = $('#introCard'); c.hidden = false; c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; $('#introName').textContent = trackDef.name.toUpperCase(); $('#introSub').textContent = missionMode ? 'BOTENGANG · ABHOLEN, ABLIEFERN, NIT ERWISCHE LASSE' + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title}` : '') : `${raceMode ? MODES[raceMode] + ' · ' : ''}${(trackDef.district || 'Klüngel-Baukasten').toUpperCase()} · ${raceLaps} ${raceLaps > 1 ? 'RUNDEN' : 'RUNDE'} · ${(track.length * raceLaps / 1000).toFixed(1)} KM` + (ghostData && ghostData.name ? ` · GEGEN ${ghostData.name}` : '') + (careerChapter != null ? ` · KAPITEL ${careerChapter + 1}: ${tuenn.career[careerChapter].title} · ZIEL: ${goalText(tuenn.career[careerChapter].goal)}` : ''); } perf.since = 0; perf.wait = 3;
     musicPlay();
     $('#menu').hidden = true; $('#hud').hidden = false; $('#results').hidden = true; $('#editor').hidden = true; $('#touch').hidden = !isTouch;
     document.body.classList.add('racing'); document.body.classList.remove('resultsOpen', 'replaying');
@@ -1051,33 +1121,41 @@
     const sceneKey = theme.dawn ? 'dawn' : theme.dusk ? 'dusk' : theme.night ? 'night' : null;
     introLinePending = !!theme.intro; // said when the race starts, however slow the flyover
     if (!theme.intro && sceneKey && tuenn.scene && tuenn.scene[sceneKey]) setTimeout(() => { if (phase === 'race' || phase === 'countdown') sayMust(tuenn, pickNew(tuenn.scene[sceneKey]), 4000, { small: true }); }, 7000);
-    sayMust(tuenn, ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : (!(demo || greeted++) || Math.random() < 0.35 ? pickNew(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pickNew(tuenn.door) : pickNew(tuenn.intro)), 3800, { small: true });
+    sayMust(tuenn, raceMode === 2 ? pickNew(tuenn.modes.tour) : ghostData && ghostData.name ? tuenn.modes.ghost.replace('{name}', ghostData.name).replace('{t}', fmtTime(ghostData.time)) : ghostData ? `Ding beste Rund (${fmtTime(ghostData.time)}) fährt als Geist mit. Fang se, Jung!` : raceMode === 1 ? pickNew(tuenn.modes.tt) : (!(demo || greeted++) || Math.random() < 0.35 ? pickNew(dayLines).replace('{h}', String(hour)) : Math.random() < 0.5 ? pickNew(tuenn.door) : pickNew(tuenn.intro)), 3800, { small: true });
     $('#hudTel').textContent = telLabel();
     if (tilt.mode > 0) { tiltListen(); setTimeout(tiltCalibrate, 1500); }
     if (isMobile) { camMode = 0; tvCam = null; }
     setTimeout(() => { const ais = racers.filter((r) => r.isAI && !r.isCop); if (phase !== 'menu' && ais.length) { const d = pick(ais).driver; sayMust(d, pickNew(d.lines.start), 2500, { small: true }); } }, 3900);
-    setTimeout(() => { if (phase === 'race' && !player2) offerWette(); }, 9000);
+    setTimeout(() => { if (phase === 'race' && !player2 && !raceMode) offerWette(); }, 9000);
     cdShown = -1;
     if (introT >= 99) { for (const r of racers) placeRacer(r, 1 / 60); updateCamera(1 / 60); tick(SIM_DT); } // NOCHMAL: no flyover, the camera sits behind the car and the countdown runs at once
   }
   // arcade name entry: three letters on the record table, like on every cabinet in 1989
   const NE_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ-. ';
-  const nameEntry = { on: false, cur: 0, letters: ['K', 'Ö', 'L'], def: null, date: 0 };
+  const nameEntry = { on: false, cur: 0, letters: ['K', 'Ö', 'L'], def: null, date: 0, key: '', rec: false, ghost: false }; // rec: a top-five time; ghost: GEIST SPEICHERN FÖR …
   function savedInitials() { try { return localStorage.getItem('stuntskoelle.initials') || ''; } catch (e) { return ''; } }
   function neRender() { document.querySelectorAll('#nameEntry .neCol span').forEach((el, i) => { el.textContent = nameEntry.letters[i] === ' ' ? '_' : nameEntry.letters[i]; el.classList.toggle('on', i === nameEntry.cur); }); }
   function offerNameEntry(def, entry) {
     const box = $('#nameEntry'); nameEntry.on = false; box.hidden = true;
+    neTitle(false); nameEntry.rec = nameEntry.ghost = false;
     if (player2 || def.daily || !getRecords(def).some((r) => r.date === entry.date)) return; // only when the time made the top five
-    const saved = savedInitials(); if (saved.length === 3) nameEntry.letters = saved.split('');
-    nameEntry.on = true; nameEntry.cur = 0; nameEntry.def = def; nameEntry.date = entry.date; box.hidden = false; neRender();
+    neOpen(); nameEntry.rec = true; nameEntry.def = def; nameEntry.date = entry.date; nameEntry.key = boardKey('rec', def);
+  }
+  function neOpen() {
+    const box = $('#nameEntry'), saved = savedInitials(); if (saved.length === 3) nameEntry.letters = saved.split('');
+    nameEntry.on = true; nameEntry.cur = 0; box.hidden = false; neRender();
     box.querySelector('small').textContent = isTouch || isMobile ? '▲▼ Buchstabe · OK' : '▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch';
   }
+  function neTitle(ghostToo) { $('#nameEntry b').innerHTML = ghostToo ? (nameEntry.rec ? 'DING NAME FÖR DE TAFEL UN DER GEIST<i class="gl">dein Name für Tafel und Geist</i>' : 'GEIST SPEICHERN FÖR …<i class="gl">Geist speichern für …</i>') : 'DING NAME FÖR DE TAFEL<i class="gl">dein Name für die Tafel</i>'; }
+  // GEIST SPEICHERN FÖR …: the same three letters; with a top-five time open, one OK names both
+  function ghostSaveAsk() { if (!raceGhost || phase !== 'finished') return; if (!nameEntry.on) neOpen(); nameEntry.ghost = true; neTitle(true); $('#ghostSaveBtn').hidden = true; } // the button comes back with JESPEICHERT
   function neStep(i, d) { const k = NE_ABC.indexOf(nameEntry.letters[i]); nameEntry.letters[i] = NE_ABC[(Math.max(0, k) + d + NE_ABC.length) % NE_ABC.length]; nameEntry.cur = i; neRender(); }
   function neDone() {
     if (!nameEntry.on) return; nameEntry.on = false; const name = nameEntry.letters.join('').replace(/\s+$/, '') || 'DU';
     try { localStorage.setItem('stuntskoelle.initials', nameEntry.letters.join('')); } catch (e) { /* ignore */ }
-    const list = getRecords(nameEntry.def); const r = list.find((x) => x.date === nameEntry.date); if (r) { r.name = name; try { localStorage.setItem(`stuntskoelle.rec.${nameEntry.def.id}`, JSON.stringify(list)); } catch (e) { /* ignore */ } }
-    $('#nameEntry').hidden = true;
+    if (nameEntry.rec) { let list = []; try { list = JSON.parse(localStorage.getItem(nameEntry.key) || '[]'); } catch (e) { /* ignore */ } const r = list.find((x) => x.date === nameEntry.date); if (r) { r.name = name; try { localStorage.setItem(nameEntry.key, JSON.stringify(list)); } catch (e) { /* ignore */ } } }
+    if (nameEntry.ghost) { $('#ghostSaveBtn').hidden = false; saveNamedGhost(name); }
+    nameEntry.rec = nameEntry.ghost = false; $('#nameEntry').hidden = true;
   }
   document.querySelectorAll('#nameEntry .neCol button').forEach((b) => b.addEventListener('click', () => neStep(+b.dataset.i, +b.dataset.d)));
   document.querySelectorAll('#nameEntry .neCol span').forEach((el) => el.addEventListener('click', () => neStep(+el.dataset.i, 1)));
@@ -1095,42 +1173,55 @@
   function finishRace() {
     phase = 'finished';
     // project finishing times for cars still out on the track
-    for (const r of racers) if (!r.finished) { const remaining = (trackDef.laps + 1) * track.length - (r.lap * track.length + r.s); r.finishTime = raceTime + remaining / Math.max(25, Math.abs(r.v) + 20); r.projected = true; }
+    for (const r of racers) if (!r.finished) { const remaining = (raceLaps + 1) * track.length - (r.lap * track.length + r.s); r.finishTime = raceTime + remaining / Math.max(25, Math.abs(r.v) + 20); r.projected = true; }
     const order = racers.slice().sort((a, b) => a.finishTime - b.finishTime);
     const place = order.indexOf(player) + 1;
-    const won = place === 1;
-    const best = getBest(); const record = best == null || player.finishTime < best;
+    const won = place === 1, tt = raceMode === 1, tour = raceMode === 2;
+    const best = tour ? null : getBest(); const record = !tour && (best == null || player.finishTime < best);
     if (record) setBest(player.finishTime);
-    saveGhost();
-    { const entry = { name: savedInitials() || PLAYABLE[sel.driver].name + ' (DU)', car: D.CARS[sel.car].name, time: player.finishTime, date: Date.now() }; addRecord(trackDef, entry); offerNameEntry(trackDef, entry); }
+    raceGhost = null; if (!tour) saveGhost(); // the Stadtrundfahrt is no lap to chase
+    const entry = { name: savedInitials() || PLAYABLE[sel.driver].name + ' (DU)', car: D.CARS[sel.car].name, time: player.finishTime, date: Date.now(), side: !!player.usedSide }; // side: MIT/OHNE NEBENSTROSSE
+    if (!tour) { addRecord(trackDef, entry); offerNameEntry(trackDef, entry); } else { nameEntry.on = false; $('#nameEntry').hidden = true; }
     if (theme.confetti && won) tusch(); else fanfare(won); shotWanted = true;
     if (auftrag) endAuftrag();
     if (kripo) endKripo('finish');
     if (wette && !wette.done) { wette.done = true; wette.won = order.indexOf(wette.rival.r) > order.indexOf(player); if (wette.won) addDeckel(wette.n * 2); else deckel = Math.max(0, deckel - wette.n); }
     const total = deckelTotal(deckel); const rank = deckelRank(total);
     try { const hs = parseInt(localStorage.getItem('stuntskoelle.hiscore') || '0') || 0; if (deckel > hs) localStorage.setItem('stuntskoelle.hiscore', String(deckel)); } catch (e) { /* ignore */ }
-    const headline = expressHeadline(place, won, record, order); lastHeadline = headline; lastPlace = place;
-    if (won && theme.confetti) bumpStat('sessionWins'); { const anna = racers.find((r) => r.isAI && r.driver && r.driver.id === 'anna'); if (anna && order.indexOf(player) < order.indexOf(anna)) bumpStat('annaBeaten'); }
-    if (knoellchen) bumpStat('knoellchen', knoellchen); else if (!player2) bumpStat('cleanRaces'); if (koelsch) bumpStat('koelsch', koelsch); if (record) bumpStat('records'); if (won && theme.night) bumpStat('nightWins'); if (trackDef.daily) bumpStat('daily'); newOrden = checkOrden();
+    const sights = tour ? tourSights() : [];
+    const headline = tour ? `DÄ SCHNELLE: STADTRUNDFAHRT MET DÄM LANGE – ${sights.length} SEHENSWÜRDIGKEITE, NULL KNÖLLCHE` : expressHeadline(place, won, record, order); lastHeadline = headline; lastPlace = place;
+    if (won && theme.confetti && !raceMode) bumpStat('sessionWins'); { const anna = racers.find((r) => r.isAI && r.driver && r.driver.id === 'anna'); if (anna && order.indexOf(player) < order.indexOf(anna)) bumpStat('annaBeaten'); }
+    if (knoellchen) bumpStat('knoellchen', knoellchen); else if (!player2 && !raceMode) bumpStat('cleanRaces'); /* without Blitzer a clean race proves nothing */ if (koelsch) bumpStat('koelsch', koelsch); if (record) bumpStat('records'); if (won && theme.night && !raceMode) bumpStat('nightWins'); if (trackDef.daily) bumpStat('daily'); newOrden = checkOrden();
     if (cup.on) { order.forEach((r, i) => { cup.pts[r.name] = (cup.pts[r.name] || 0) + (CUP_PTS[i] || 0); }); cup.i++; try { localStorage.setItem('stuntskoelle.cup', JSON.stringify(cup)); } catch (e) { /* ignore */ } }
     setTimeout(() => {
       if (phase === 'menu') return; // the attract mode went back to the menu meanwhile
-      { const w = player2 ? [] : whyLines(place, won); $('#resWhy').hidden = !w.length; $('#resWhy').innerHTML = w.map((x) => `<span>${x}</span>`).join(''); }
+      $('#results').classList.toggle('tt', tt); $('#results').classList.toggle('tour', tour);
+      { const w = player2 || tour ? [] : whyLines(place, won); $('#resWhy').hidden = !w.length; $('#resWhy').innerHTML = w.map((x) => `<span>${x}</span>`).join(''); }
       $('#resTitle').textContent = player2 ? (order.indexOf(player) < order.indexOf(player2) ? `P1 SCHLÄGT P2! PLATZ ${place} GEGEN ${order.indexOf(player2) + 1}.` : `P2 SCHLÄGT P1! PLATZ ${order.indexOf(player2) + 1} GEGEN ${place}.`) : won ? (theme.heist ? 'JEWONNE! ICH HANN NIX JESINN.' : theme.era ? 'JEWONNE! DÄ RING JEHÖRT DIR.' : 'JEWONNE! KÖLLE ALAAF!') : place === 2 ? 'ZWEITER. FAST, JUNG.' : `PLATZ ${place}. ET KÜTT WIE ET KÜTT.`;
+      if (!player2 && tt) $('#resTitle').textContent = `ZEITFAHREN: ${fmtTime(player.finishTime)}` + (record ? ' – NEUE BESTZEIT!' : best != null ? ` – ${(player.finishTime - best).toFixed(2)} S HINGER DER BESTZEIT` : '');
+      if (!player2 && tour) $('#resTitle').textContent = 'STADTRUNDFAHRT – JRÖÖSS US KÖLLE!';
+      { const pc = $('#resPostcard'); pc.hidden = !tour; if (tour) pc.innerHTML = `<b>JRÖÖSS US KÖLLE!</b><small>${trackDef.name.toUpperCase()} · ${raceLaps} ${raceLaps > 1 ? 'RUNDEN' : 'RUNDE'} · DÄ LANGE HÄT DIR JEZEICH:</small><ol>${sights.map((x) => `<li>${x}</li>`).join('')}</ol><i>${sights.length ? '' : 'Nix jesinn? Dann nohmol, un langsam.'}</i>`; }
       const tb = $('#resTable'); tb.innerHTML = '';
-      order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
+      if (tt && !player2) { // ZEITFAHREN: the track's own board, MIT or OHNE NEBENSTROSSE
+        const list = getRecords(trackDef), mine = list.findIndex((r) => r.date === entry.date);
+        list.forEach((r, i) => { const tr = document.createElement('tr'); if (i === mine) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car} · ${r.side ? 'MIT' : 'OHNE'} NEBENSTROSSE</td><td>${fmtTime(r.time)}</td>`; tb.appendChild(tr); });
+        if (mine < 0) { const tr = document.createElement('tr'); tr.className = 'me'; tr.innerHTML = `<td>–</td><td>DU</td><td>${entry.car} · ${entry.side ? 'MIT' : 'OHNE'} NEBENSTROSSE</td><td>${fmtTime(entry.time)}</td>`; tb.appendChild(tr); }
+      } else order.forEach((r, i) => { const tr = document.createElement('tr'); if (r === player || r === player2) tr.className = 'me'; tr.innerHTML = `<td>${i + 1}.</td><td>${r.name}</td><td>${r.car.name}</td><td>${fmtTime(r.finishTime)}${r.projected ? '*' : ''}</td>`; tb.appendChild(tr); });
       $('#resBest').textContent = fmtTime(player.bestLap);
-      $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 40} DM, Klüngel Tom regelt dat) · ${kids ? 'KAMELLE' : 'KÖLSCH'} UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} ${kids ? 'Kamelle' : 'Kölsch'}) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: op Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
+      if (raceMode) $('#resStats').innerHTML = `${MODES[raceMode]} · ${raceLaps} ${raceLaps > 1 ? 'RUNDEN' : 'RUNDE'} · RUNDE: <b>${player.laps.map(fmtTime).join(' · ')}</b> · ${player.usedSide ? 'MET NEBENSTROSSE' : 'OHNE NEBENSTROSSE'} · SCHADEN: <b>${Math.round(player.damage * 100)} %</b>`;
+      else $('#resStats').innerHTML = (auftragDone || auftragFail ? `KLÜNGEL-AUFTRÄGE: <b>${auftragDone}</b> erledigt${auftragFail ? `, <b>${auftragFail}</b> vermasselt` : ''} · ` : '') + `KNÖLLCHEN: <b>${knoellchen}</b> (${knoellchen * 40} DM, Klüngel Tom regelt dat) · ${kids ? 'KAMELLE' : 'KÖLSCH'} UNTERWEGS: <b>${koelsch}</b> · KLÜNGEL-TELEFON: <b>${telefon.used}×</b> (schuldest ihm ${telefon.used} ${kids ? 'Kamelle' : 'Kölsch'}) · SCHADEN: <b>${Math.round(player.damage * 100)} %</b> · ${knoellchen > 2 ? 'Führerschein: op Deckel.' : knoellchen ? 'Führerschein: noch da.' : 'Kein Blitzer erwischt. Verdächtig.'}`;
       $('#resRecord').hidden = !record;
       $('#resExpress').textContent = headline.replace(/^DÄ SCHNELLE:\s*/, ''); drawFrontPage(headline, place, order);
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes(deckel)}</b> (${deckel} Striche) · GESAMT: <b>${total}</b> – <b>${rank}</b>` + (wette ? ` · WETTE: <b>${wette.won ? 'JEWONNE' : 'VERLORE'}</b> (${wette.n} Kölsch ${wette.won ? 'für dich' : 'für dä Lange'})` : '') + (kripoSeen ? ` · KRIPO: <b>${kripoCaught ? 'HÄT DICH JEKRIEGT' : 'ABJEHÄNGT'}</b>` : '');
       if (wette) { const wl = pick(wette.won ? tuenn.wette.won : tuenn.wette.lost).replace('{r}', wette.rival.name).replace('{n}', String(wette.n)); $('#resTuenn').textContent = wl; }
       renderCup(order);
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = ordenItems(newOrden); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
-      if (!wette) $('#resTuenn').textContent = newOrden.length ? pick(tuenn.ordenLine).replace('{name}', newOrden[0].name) : record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
+      if (!wette && raceMode) $('#resTuenn').textContent = tour ? pick(tuenn.modes.tourEnd) : record ? pick(tuenn.modes.ttRecord) : pick(tuenn.modes.ttSlow);
+      else if (!wette) $('#resTuenn').textContent = newOrden.length ? pick(tuenn.ordenLine).replace('{name}', newOrden[0].name) : record ? pick(tuenn.record) : won ? pick(tuenn.win) : pick(tuenn.lose);
       if (careerChapter != null) { const g = tuenn.career[careerChapter].goal; applyCareerResult(g.place ? place <= g.place : g.win ? won : g.stunts ? raceStunts >= g.stunts : g.koelsch ? koelsch >= g.koelsch : g.auftrag ? auftragDone >= g.auftrag : true, place); }
-      const rd = order[won ? 1 : 0].driver;
-      $('#resRival').textContent = `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“`;
+      const rv = order.find((r) => r.isAI && (!won || r !== order[0])), rd = rv && rv.driver; // a lone run has no rival to speak
+      $('#resRival').textContent = rd ? `${rd.name}: „${pick(won ? rd.lines.lose : rd.lines.win)}“` : '';
+      { const gb = $('#ghostSaveBtn'); gb.hidden = !raceGhost || !!player2 || !!trackDef.daily; gb.disabled = false; gb.textContent = '👻 GEIST SPEICHERN FÖR …'; }
       resLayout(); $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1200);
   }
@@ -1146,10 +1237,13 @@
   // ---------------- pause: P, Esc or ☰ while racing (also in the flyover and the countdown); the world and the sound stand still until LOSS JONN ----------------
   let paused = false;
   const racing = () => phase === 'race' || phase === 'countdown' || phase === 'intro';
+  // G or GEIST in the pause: the ghost on and off; its splits stay
+  function toggleGhost() { ghostHidden = !ghostHidden; if (ghost && ghostHidden) ghost.visible = false; ghostPauseLabel(); }
+  function ghostPauseLabel() { const b = $('#pauseGhost'); b.hidden = !ghost; keyLabel('#pauseGhost', ghostHidden ? 'GEIST: AUS' : 'GEIST: AN', 'G'); }
   function setPause(on) {
     const was = paused; paused = !!on && racing(); $('#pause').hidden = !paused; document.body.classList.toggle('paused', paused);
     if (paused !== was) pauseAudio(paused);
-    if (paused) { if ('speechSynthesis' in window) speechSynthesis.cancel(); fingers.clear(); mouseKey = null; touchSync(); const pl = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']), t = lineT(pl), h = (pl && pl.hd) || ''; $('#pauseLine').textContent = kids ? kidsText(t) : t; $('#pauseHd').textContent = kids ? kidsText(h) : h; $('#pauseHd').hidden = !(hdOn && h); $('#pauseKeysHd').hidden = !hdOn || isMobile; }
+    if (paused) { ghostPauseLabel(); if ('speechSynthesis' in window) speechSynthesis.cancel(); fingers.clear(); mouseKey = null; touchSync(); const pl = pick(tuenn.pause || ['Dä Lange drink e Kölsch. Mer waade.']), t = lineT(pl), h = (pl && pl.hd) || ''; $('#pauseLine').textContent = kids ? kidsText(t) : t; $('#pauseHd').textContent = kids ? kidsText(h) : h; $('#pauseHd').hidden = !(hdOn && h); $('#pauseKeysHd').hidden = !hdOn || isMobile; }
   }
   // a phone call or the pause: engine, chiptune and song fall silent and the audio clock stops; LOSS JONN (a tap or a key, as iOS wants) brings them back
   function pauseAudio(on) {
@@ -1261,7 +1355,7 @@
       if (countdown <= 0.2) { cd.textContent = tuenn.countdown[3]; if (cdShown !== 3) { beep(880, 0.5, 'square', 0.2); cdShown = 3; } }
       else if (idx >= 0 && idx < 3) { cd.textContent = tuenn.countdown[idx]; if (cdShown !== idx) { beep(440, 0.15); cdShown = idx; } }
       cd.hidden = false;
-      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(theme.intro), 4200, { small: true }); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
+      if (countdown <= 0) { phase = 'race'; $('#controlsCard').hidden = true; if (introLinePending) { introLinePending = false; setTimeout(() => { if (phase === 'race') sayMust(tuenn, pickNew(theme.intro), 4200, { small: true }); }, 1500); } setTimeout(() => { cd.hidden = true; }, 700); if (theme.heist && !raceMode) setTimeout(() => { if (phase === 'race' && !kripo) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3800); } }, 5000); }
       for (const r of racers) placeRacer(r, dt);
       if (draw) updateHUD();
     } else if (phase === 'race' || phase === 'finished') {
@@ -1274,13 +1368,13 @@
       for (const r of racers) if (r.isAI) updateRacer(r, dt, r.finished ? { gas: 0, brake: 0.3, steer: 0, turbo: 0 } : aiControl(r, dt));
       for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) collide(racers[i], racers[j], dt);
       for (const r of racers) placeRacer(r, dt);
-      if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else updateAuftrag(dt); }
+      if (phase === 'race') { updatePickups(dt); updateKripo(dt); if (mission) updateMission(dt); else if (!raceMode) updateAuftrag(dt); } // ZEITFAHREN and STADTRUNDFAHRT: no Klüngel-Auftrag
       if (demo) { demoT += dt; if (demoT > 75 || phase === 'finished') { toMenu(); return; } }
       if (lmTag) lmTag.t -= dt; // the name tag's 4 s also run out after the finish line
       if (phase === 'race') {
         radioTimer -= dt; eventTimer -= dt; storyCool -= dt; quiet -= dt; noteTick();
-        if (theme.heist && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
-        if (radioTimer <= 0 && msgTimer <= 0) { radioTimer = 60 + Math.random() * 35; const roll = Math.random(); const radio = eraLines(tuenn.radio || []);
+        if (theme.heist && !raceMode && !kripo && raceTime > 8 && raceTime - kripoEndT > 25 && !player.finished) { knoellchen = 3; startKripo(); sayMust(tuenn, pickNew(tuenn.heist), 3200); } // on the heist the Kripo never gives up for long
+        if (radioTimer <= 0 && msgTimer <= 0 && raceMode !== 2) { radioTimer = 60 + Math.random() * 35; const roll = Math.random(); const radio = eraLines(tuenn.radio || []);
           if (theme.confetti && tuenn.jeck && roll < 0.5) say(tuenn, pickNew(tuenn.jeck), 3400);
           else if (roll < 0.38) say({ name: 'DÄ SCHNELLE', emoji: '📰' }, pickNew(eraLines(tuenn.express)).replace('DÄ SCHNELLE: ', ''), 3500);
           else if (roll < 0.72 && radio.length) say({ name: 'Radio Kölle', emoji: '📻' }, pickNew(radio).replace('RADIO KÖLLE: ', ''), 3800);
@@ -1290,11 +1384,13 @@
         // The Verzällcher journal gets the full story of every place you pass, also when the box was busy, on a phone
         // (where the story is only a one-line tag) or in WENIJ (the 10 s gap); dä Lange tells as many as fit, a missed one next lap
         if (!demo) for (const st of stories) if (!st.logged && Math.abs(storyDs(st)) < 70) { st.logged = true; if (!(kids && DRINK.test(st.text))) rememberStory(st.text); if (st.wz) discoverWz(st.wz); } // the attract mode only logs what it tells; Pänz get no drinking stories
-        if (storyCool <= 0 && (msgTimer <= 0 || msgPrio === 0 && msgAge > 1.2) && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) { const ms = isMobile && chat > 0 ? 5000 : 6500; if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag })) { st.told = true; storyCool = chat === 0 ? 9 : ms / 1000 + 1; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); showLandmarkTag(st); } break; } }
+        if (raceMode === 2) tourStory();
+        else if (storyCool <= 0 && (msgTimer <= 0 || msgPrio === 0 && msgAge > 1.2) && !player.air && calmRoad()) for (const st of stories) { if (st.told) continue; const ds = -storyDs(st); if (ds > -40 && ds < 70) { const ms = isMobile && chat > 0 ? 5000 : 6500; if (say(VERZ, st.text, ms, false, { story: true, hd: st.hd, tag: st.tag })) { st.told = true; storyCool = chat === 0 ? 9 : ms / 1000 + 1; radioTimer = Math.max(radioTimer, 20); rememberStory(st.text); showLandmarkTag(st); } break; } }
         if (telefon.active > 0) telefon.active -= dt; if (hornCool > 0) hornCool -= dt;
-        if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pickNew(tuenn.razziaEnd), 2500); } }
+        if (raceMode) { /* ZEITFAHREN and STADTRUNDFAHRT: no Razzia, no random events */ }
+        else if (razzia > 0) { razzia -= dt; razziaBlink += dt; if (razziaBlink > 0.45) { razziaBlink = 0; beep(Math.floor(razzia * 2) % 2 ? 700 : 940, 0.2, 'square', 0.05); const fl = $('#flash'); fl.style.background = '#2060ff'; fl.style.opacity = '0.35'; setTimeout(() => { fl.style.opacity = '0'; }, 120); } if (razzia <= 0) { $('#flash').style.background = ''; sayMust(tuenn, pickNew(tuenn.razziaEnd), 2500); } }
         else if (eventTimer <= 0 && msgTimer <= 0 && Math.random() < 0.22 && raceTime > 20 && !kripo) { eventTimer = 30 + Math.random() * 20; razzia = 8; razziaBlink = 0; sayMust(tuenn, pickNew(tuenn.razzia), 3500); }
-        if (eventTimer <= 0 && msgTimer <= 0) { eventTimer = 26 + Math.random() * 18; const ev = pickNew(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
+        if (eventTimer <= 0 && msgTimer <= 0 && !raceMode) { eventTimer = 26 + Math.random() * 18; const ev = pickNew(tuenn.events); say(tuenn, ev, 3000); if (ev.includes('Kölsch')) { koelsch++; player.turbo = Math.min(1, player.turbo + 0.35); } }
         for (const b of blitzers) {
           b.cool -= dt; if (b.flash) b.flash.material.opacity = Math.max(0, b.flash.material.opacity - dt * 3);
           let ds = player.s - b.s; if (ds > track.length / 2) ds -= track.length;
@@ -1312,7 +1408,8 @@
         if (flashTimer > 0) { flashTimer -= dt; $('#flash').style.opacity = String(Math.max(0, flashTimer * 3)); }
       }
       if (player2 && phase === 'race') { const first = [player, player2].filter((r) => r.finished); if (first.length === 1) { if (!first[0].waitT) first[0].waitT = raceTime; else if (raceTime - first[0].waitT > 20) { const o = first[0] === player ? player2 : player; o.finished = true; o.finishTime = raceTime + 5; o.projected = true; } } }
-      if (player.finished && (!player2 || player2.finished) && phase === 'race') finishRace();
+      if (player.finished && raceMode === 2 && phase === 'race') tourStory(); // the last stories of the tour are told at the line
+      if (player.finished && (!player2 || player2.finished) && phase === 'race' && !(raceMode === 2 && tourPending() && raceTime - player.finishTime < 60)) finishRace();
       if (draw) { if (phase === 'race') updateHUD(); drawMinimap(); audioEngine(Math.abs(player.v), ctl.gas, player.turboOn); }
     } else if (phase === 'replay') {
       replayStep(dt);
@@ -1436,6 +1533,7 @@
     if (e.code === 'KeyM') toggleMute();
     if (e.code === 'KeyR' && phase === 'race' && player.crashed <= 0) { crash(player, 'off'); player.crashed = 0.6; player.resetHere = true; } // back onto the road where you are, no 20 m for free
     if (e.code === 'KeyK' && phase === 'race') tuennsTelefon();
+    if (e.code === 'KeyG' && ghost && racing()) toggleGhost();
     if (e.code === 'Escape') toMenu();
     if (e.code === 'Enter' && phase === 'finished') $('#againBtn').onclick();
   });
@@ -1499,10 +1597,10 @@
     all.forEach((t, i) => {
       const row = document.createElement('div'); row.className = 'trackRow' + (sel.track === i ? ' active' : '');
       const pips = [1, 2, 3, 4, 5].map((k) => `<b class="${k <= (t.diff || 1) ? 'on' : ''}"></b>`).join('');
-      const best = getBest(t), oc = document.createElement('canvas'), tr = trackOutline(t, oc, 110, 62);
+      const best = raceOpts.mode === 2 ? null : getBest(t, raceOpts.mode, raceOpts.laps), oc = document.createElement('canvas'), tr = trackOutline(t, oc, 110, 62); // the best time of the chosen mode and laps
       row.innerHTML = `<span class="p1">${sel.track === i ? 'P1' : t.fromLink ? '🔗' : i + 1}</span><canvas class="thumb"></canvas><div class="info"><b>${t.name.toUpperCase()}</b><span class="sub">${(t.district || 'Klüngel-Baukasten').toUpperCase()}</span><span class="wp">${(t.waypoints || ['Eigene Streck']).join(' – ').toUpperCase()}</span><span class="chips">${trackChips(t).map((c) => `<i>${c}</i>`).join('')}</span><span class="pips">${pips}</span></div><div class="map"><canvas class="outline"></canvas><span class="km"></span>${best ? `<span class="best">${fmtTime(best)}</span>` : ''}</div>`;
       SP.thumb(t, row.querySelector('.thumb'), 192, 72); row.querySelector('.outline').replaceWith(oc); oc.className = 'outline';
-      row.querySelector('.km').textContent = (tr.length * t.laps / 1000).toFixed(1) + ' KM';
+      row.querySelector('.km').textContent = (tr.length * raceOpts.laps / 1000).toFixed(1) + ' KM';
       row.onclick = () => { sel.track = i; onTrackChange(); };
       tl.appendChild(row);
     });
@@ -1523,14 +1621,26 @@
     const explored = routePassport(t);
     $('#trackRoutes').textContent = routes.length ? `VEEDELS-PASS ${explored.size}/${routes.length} · ${forks ? forks + ' DREI-WEGE-GABELUNG' + (forks > 1 ? 'EN' : '') + ' · ' : ''}GRÜN = ABKÜRZUNG · BLAU = PANORAMAROUTE · WEISS = HAUPTSTRECKE. ` + routes.map((r) => `${explored.has(r.id) ? '✓ ' : ''}${r.name} (${routeDelta(r)})`).join(' · ') + '. Vor dem Schild links/rechts einordnen; mittig bleibst du auf der Hauptstrecke.' : '';
     $('#quickTrack').textContent = t.name.toUpperCase();
-    { const e = easyPick(); $('#easySub').textContent = e.first ? `${e.def.name.toUpperCase()} · ${PLAYABLE[e.driver].name.toUpperCase()} · ${PLAYABLE[e.driver].diff}` : `NOCHMAL: ${e.def.name.toUpperCase()}`; }
+    { const e = easyPick(); $('#easySub').textContent = e.first ? `${e.def.name.toUpperCase()} · ${PLAYABLE[e.driver].name.toUpperCase()} · ${PLAYABLE[e.driver].diff}` : `NOCHMAL: ${e.def.name.toUpperCase()}` + (raceOpts.mode ? ' · ' + MODES[raceOpts.mode] : '') + (raceOpts.laps === 1 ? ' · 1 RUNDE' : ''); } // the one-tap start drives the chosen MODUS and RUNDEN too
     $('#langerQuote').textContent = '„' + pick(tuenn.intro) + '“';
     $('#slogan').textContent = tuenn.slogans[Math.floor(Date.now() / 86400000) % tuenn.slogans.length];
     try { const pad = (v) => String(Math.max(0, v | 0)).padStart(6, '0'); const tot0 = parseInt(localStorage.getItem('stuntskoelle.deckel') || '0') || 0; const hs = parseInt(localStorage.getItem('stuntskoelle.hiscore') || '0') || 0; if ($('#hs1')) { $('#hs1').textContent = pad(tot0 * 100); $('#hsTop').textContent = pad(Math.max(hs * 100, 471100)); $('#hsCredit').textContent = String(1 + Math.min(98, Math.floor(tot0 / 11))).padStart(2, '0'); } } catch (e) { /* ignore */ }
     try { const tot = parseInt(localStorage.getItem('stuntskoelle.deckel') || '0') || 0; const wins = parseInt(localStorage.getItem('stuntskoelle.cupwins') || '0') || 0; const q = document.querySelector('.bannerQuote .q'); if (q && tot > 0) q.innerHTML = `DING DECKEL: ${tot} STRICHE<br>${deckelRank(tot)}${wins ? ' · ' + wins + '× CUP' : ''}<span>– der Köbes</span>`; } catch (e) { /* ignore */ }
     $('#tipp').textContent = pick(tuenn.tips);
-    labelBtn($('#careerBtn'), careerLabel());
+    labelBtn($('#careerBtn'), careerLabel()); applyRaceOpts();
     try { localStorage.setItem('stuntskoelle.sel', JSON.stringify(sel)); } catch (e) { /* ignore */ }
+  }
+  // ---------------- MODUS · RUNDEN · KLÜNGEL · GEIST: the race settings beside JETZ FAHREN ----------------
+  function saveRaceOpts() { try { localStorage.setItem('stuntskoelle.mode', JSON.stringify(raceOpts)); } catch (e) { /* ignore */ } }
+  const optLabel = (id, cap, val) => { const b = $(id); b.querySelector('i').textContent = cap; b.querySelector('b').textContent = val; b.setAttribute('aria-label', cap + ': ' + val); };
+  // the ghosts a track can race against: the own best lap (''), the named ones, and none ('-')
+  function ghostChoices(def) { const names = Object.keys(namedGhosts(def)).sort(); return ownGhost(def) || names.length ? (ownGhost(def) ? [''] : []).concat(names, ['-']) : []; }
+  function applyRaceOpts() {
+    optLabel('#modeBtn', 'MODUS', MODES[raceOpts.mode]); optLabel('#lapsBtn', 'RUNDEN', String(raceOpts.laps)); optLabel('#kluengelBtn', 'KLÜNGEL', raceOpts.kluengel ? 'AN' : 'AUS');
+    $('#kluengelBtn').hidden = raceOpts.mode !== 0; // the rubber band is a RENNEN thing
+    const def = activeTrackDef(), ch = ghostChoices(def); $('#ghostBtn').hidden = !ch.length || raceOpts.mode === 2;
+    if (ch.length) { let pk = ghostPick(def); if (!ch.includes(pk)) pk = ch[0]; optLabel('#ghostBtn', 'GEIST', pk === '-' ? 'AUS' : pk ? `GEGEN ${pk} FAHRE` : 'DING BESTE'); $('#ghostBtn').classList.toggle('vs', !!pk && pk !== '-'); }
+    document.body.dataset.mode = MODE_KEY[raceOpts.mode]; $('#startBtn').textContent = `${MODES[raceOpts.mode]} STARTEN`;
   }
   function onTrackChange() { renderMenu(); }
   // the plain icons of a track for the menu: what is on it, not where
@@ -1599,9 +1709,11 @@
   function showRecords() {
     const box = $('#recordsList'); box.innerHTML = '';
     TRACKS.concat(daily ? [daily] : []).forEach((t, i) => {
-      const recs = getRecords(t);
+      // one board per mode and laps (RENNEN and ZEITFAHREN, 3 and 1); ZEITFAHREN says MIT or OHNE NEBENSTROSSE
+      const boards = []; for (const m of [0, 1]) for (const l of [t.laps || 3, 1].filter((x, k, a) => a.indexOf(x) === k)) { const recs = getRecords(t, m, l); if (recs.length) boards.push({ m, l, recs }); }
+      const named = namedGhosts(t), gn = Object.keys(named).sort((a, b) => named[a].time - named[b].time);
       const div = document.createElement('div'); div.className = 'recTrack';
-      div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (recs.length ? '<ol>' + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>' : '<p>Noch keine Zeit. Dä Lange wartet.</p>');
+      div.innerHTML = `<b>${i + 1}. ${t.name.toUpperCase()}</b>` + (boards.length ? boards.map(({ m, l, recs }) => `<small class="recBoard">${MODES[m]} · ${l} ${l > 1 ? 'RUNDEN' : 'RUNDE'}</small><ol>` + recs.map((r) => `<li><span>${r.name}</span><span>${r.car}${m === 1 ? ` · ${r.side ? 'MIT' : 'OHNE'} NEBENSTROSSE` : ''}</span><span>${fmtTime(r.time)}</span></li>`).join('') + '</ol>').join('') : '<p>Noch keine Zeit. Dä Lange wartet.</p>') + (gn.length ? `<small class="recGhosts">👻 GEISTER: ${gn.map((n) => `${n} ${fmtTime(named[n].time)}`).join(' · ')}</small>` : '');
       box.appendChild(div);
     });
     { const st = getStats(), have = getOrden(); const grid = document.createElement('div'); grid.className = 'ordenGrid';
@@ -1837,10 +1949,11 @@
     const json = JSON.stringify(data); const b64 = btoa(unescape(encodeURIComponent(json))); return 'K4D1.' + b64;
   }
   function importSave(code) {
-    code = (code || '').trim(); if (!code.startsWith('K4D1.')) return 'Dat is kein Deckel-Code.';
+    code = (code || '').trim(); if (code.startsWith('K4G1.')) return importGhost(code); // a record ghost from another device
+    if (!code.startsWith('K4D1.')) return 'Dat is kein Deckel-Code.';
     let data; try { data = JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); } catch (e) { return 'Code kaputt. Nochmal kopieren.'; }
     let n = 0; try { for (const k of Object.keys(data)) if (k.startsWith('stuntskoelle.') && !SAVE_SKIP.test(k)) { localStorage.setItem(k, String(data[k])); n++; } } catch (e) { return 'Speichern jing nit.'; }
-    renderMenu(); return `${n} Einträge übernommen. Der Deckel hängt jetzt hee.`;
+    migrateRecords(); renderMenu(); return `${n} Einträge übernommen. Der Deckel hängt jetzt hee.`;
   }
 
   // ---------------- Karriere: die Nachtschicht ----------------
@@ -2118,6 +2231,7 @@
     }
   }
   function startKripo() {
+    if (raceMode) return; // ZEITFAHREN and STADTRUNDFAHRT: no Kripo
     if (careerChapter === 0 && !mission && !theme.heist) return; // chapter 1 is for learning to drive, not for police chases
     kripoSeen = true; kripoT = 0; kripoHitCool = 3;
     const base = D.CARS.find((c) => c.id === 'special') || D.CARS[0];
@@ -2184,9 +2298,20 @@
     const r = pick(cands); wette = { rival: { name: r.driver.name, r }, n: 1 + Math.floor(Math.random() * 3), done: false, won: false };
     sayMust(tuenn, pickNew(tuenn.wette.offer).replace('{r}', r.driver.name).replace('{n}', String(wette.n)), 4200);
   }
+  // the sights of a Stadtrundfahrt for the postcard: every place whose story was told, in track order
+  function tourSights() { const out = []; for (const st of stories) if (st.told && !PLACE_LINES.has(st.text) && !(kids && DRINK.test(st.text))) { /* the places, not a loop or a Blitzer */ const n = st.wz && WZ[st.wz] ? WZ[st.wz].name : st.tag; if (n && !out.includes(n)) out.push(n); } return out; }
+  // racing a named ghost: PAPA SCHLÄT PÄNZ ÖM 0,8 SEKUNDE
+  function ghostHeadline() {
+    if (!ghostData || !ghostData.name || player2 || player.bestLap == null) return null;
+    const me = (savedInitials() || '').trim() || 'DU', g = ghostData.name, d = player.bestLap - ghostData.time, sec = Math.abs(d).toFixed(1).replace('.', ','), unit = 'SEKUNDE';
+    if (me === g) return d < 0 ? `DÄ SCHNELLE: ${me} SCHLÄT SINGE EIJENE GEIST ÖM ${sec} ${unit}` : `DÄ SCHNELLE: DÄ GEIST VUN ${g} ES ${sec} ${unit} FLÖCKER`;
+    return d < 0 ? `DÄ SCHNELLE: ${me === 'DU' ? 'DU SCHLÄS' : me + ' SCHLÄT'} ${g} ÖM ${sec} ${unit}` : `DÄ SCHNELLE: ${g} SCHLÄT ${me === 'DU' ? 'DICH' : me} ÖM ${sec} ${unit}`;
+  }
   function expressHeadline(place, won, record, order) {
+    const gh = ghostHeadline(); if (gh) return gh;
     const E = tuenn.express2; const car = D.CARS[sel.car].name.toUpperCase(); const fill = (t) => t.replace('{car}', car).replace('{where}', trackDef.where || 'EN KÖLLE').replace('{track}', trackDef.name.toUpperCase()).replace('{n}', String(knoellchen)).replace('{p}', String(place));
     if (record && won) return fill(E.record);
+    if (raceMode === 1 && E.tt) return fill(E.tt); // ZEITFAHREN: nobody to beat but the clock
     if (kripoCaught) return fill(E.kripoCaught);
     if (won) return fill(E.win);
     if (kripoSeen) return fill(E.kripo);
@@ -2295,10 +2420,27 @@
     for (const id of [a, b]) { const q = track.shortcuts[id]; if (q && s >= q.startS && s <= q.endS) return id; }
     return -1;
   }
+  // the own best-lap ghost of a track (stuntskoelle.ghost.<id>), the named ones (stuntskoelle.ghosts.<id>: { PAP: ghost, … })
+  // and which one a track races against (stuntskoelle.ghostPick: { <id>: '' own | name | '-' none })
   function ghostKey() { return `stuntskoelle.ghost.${trackDef.id}`; }
+  const readJson = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  const ownGhost = (def) => { const g = readJson(`stuntskoelle.ghost.${def.id}`, null); return g && g.t && g.t.length > 10 ? g : null; };
+  const namedGhosts = (def) => { const m = readJson(`stuntskoelle.ghosts.${def.id}`, {}); return m && typeof m === 'object' && !Array.isArray(m) ? m : {}; };
+  const ghostPick = (def) => { const m = readJson('stuntskoelle.ghostPick', {}); return (m && typeof m[def.id] === 'string') ? m[def.id] : ''; };
+  function setGhostPick(def, pk) { const m = readJson('stuntskoelle.ghostPick', {}) || {}; m[def.id] = pk; try { localStorage.setItem('stuntskoelle.ghostPick', JSON.stringify(m)); } catch (e) { /* ignore */ } }
+  // the time a ghost passed each checkpoint (from its samples; the line is its lap time)
+  function ghostSplits(g) {
+    const L = track.length, out = CP.slice(0, 3).map((f) => { const c = f * L; for (let i = 1; i < g.s.length; i++) if (g.s[i - 1] < c && g.s[i] >= c && g.s[i] - g.s[i - 1] < L / 2) return g.t[i - 1] + (g.t[i] - g.t[i - 1]) * (c - g.s[i - 1]) / Math.max(1e-6, g.s[i] - g.s[i - 1]); return null; });
+    out.push(g.time); return out;
+  }
   function loadGhost() {
     ghostData = null; if (ghost) { scene.remove(ghost); ghost = null; }
-    try { const g = JSON.parse(localStorage.getItem(ghostKey()) || 'null'); if (g && g.t && g.t.length > 10) ghostData = g; } catch (e) { /* ignore */ }
+    let pk = ghostPick(trackDef); const ch = ghostChoices(trackDef); if (ch.length && !ch.includes(pk)) pk = ch[0]; // as the menu shows it
+    if (pk === '-' || raceMode === 2) return; // GEIST: AUS; the Stadtrundfahrt races nobody
+    const named = pk ? namedGhosts(trackDef)[pk] : null;
+    const ng = named && (named.t ? named : unpackGhost(named)); // stored packed (an older save: the samples)
+    ghostData = ng && ng.t && ng.t.length > 10 ? Object.assign({}, ng, { name: pk }) : ownGhost(trackDef);
+    if (ghostData && !pk) delete ghostData.name;
     // side streets are stored by number: remap them by their id, so a ghost survives a changed street catalogue;
     // an old ghost without ids that used a side street cannot be trusted any more and is dropped
     if (ghostData && (ghostData.routes || []).some((r) => r != null && r >= 0)) {
@@ -2307,15 +2449,18 @@
       else ghostData.routes = ghostData.routes.map((r) => r != null && r >= 0 ? now.indexOf(ghostData.routeIds[r]) : r);
     }
     if (!ghostData) return;
+    ghostData.sp = ghostSplits(ghostData);
     const car = D.CARS.find((c) => c.id === ghostData.car) || (player && player.car) || D.CARS[0]; // the car that drove the lap, in ghost colours
-    ghost = W.buildCar(Object.assign({}, car, { color: 0xdde6ff, stripe: 0x9fb4ff, plate: 'GEIST' }), false);
-    ghost.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; const cl = ms.map((m) => { const c = m.clone(); c.transparent = true; c.opacity = 0.35; c.depthWrite = false; return c; }); o.material = Array.isArray(o.material) ? cl : cl[0]; } });
+    ghost = W.buildCar(Object.assign({}, car, { color: 0xdde6ff, stripe: 0x9fb4ff, plate: ghostData.name ? 'K-' + ghostData.name : 'GEIST' }), false);
+    const big = raceMode === 1; // ZEITFAHREN: a big, bright ghost, the only other car on the road
+    ghost.traverse((o) => { if (o.isMesh) { const ms = Array.isArray(o.material) ? o.material : [o.material]; const cl = ms.map((m) => { const c = m.clone(); c.transparent = true; c.opacity = big ? 0.6 : 0.35; c.depthWrite = false; return c; }); o.material = Array.isArray(o.material) ? cl : cl[0]; } });
+    if (big) ghost.scale.setScalar(1.12);
     scene.add(ghost);
   }
   function updateGhost(ahead) { // ahead: the ghost is drawn between two steps, like the cars
     if (!ghostData || !ghost) return;
     const t = raceTime + (ahead || 0) - player.lapStart; const T = ghostData.t; if (t > T[T.length - 1]) { ghost.visible = false; return; }
-    ghost.visible = phase === 'race';
+    ghost.visible = phase === 'race' && !ghostHidden;
     let lo = 0, hi = T.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (T[mid] < t) lo = mid + 1; else hi = mid; } const i = Math.max(0, lo - 1); const u = clamp((t - T[i]) / Math.max(1e-3, T[i + 1] - T[i]), 0, 1);
     const s = ghostData.s[i] + (ghostData.s[Math.min(i + 1, T.length - 1)] - ghostData.s[i]) * u, lat = ghostData.l[i] + (ghostData.l[Math.min(i + 1, T.length - 1)] - ghostData.l[i]) * u;
     const routes = ghostData.routes || [], route = playbackRoute(s, routes[i], routes[Math.min(i + 1, T.length - 1)]);
@@ -2328,15 +2473,64 @@
     }
     const right = new THREE.Vector3().crossVectors(N, Tt).normalize(); _m.makeBasis(right, N, Tt); ghost.quaternion.setFromRotationMatrix(_m);
   }
-  function saveGhost() {
-    if (!player.bestLap || player.laps.length === 0 || rec.n < 10) return;
-    const old = ghostData; if (old && old.time <= player.bestLap + 0.01) return;
-    // find the best lap window in the recording (the player is racer 0)
-    let start = 0; let bestIdx = player.laps.indexOf(player.bestLap); for (let k = 0; k < bestIdx; k++) start += player.laps[k];
+  // the race's best lap out of the recording (the player is racer 0), as a ghost
+  function bestLapGhost() {
+    if (!player.bestLap || player.laps.length === 0 || rec.n < 10) return null;
+    let start = 0; const bestIdx = player.laps.indexOf(player.bestLap); for (let k = 0; k < bestIdx; k++) start += player.laps[k];
     const end = start + player.bestLap; const t = [], sArr = [], l = [], routes = [], y = [];
     for (let i = 0; i < rec.n; i++) { const tt = recT(i); if (tt < start || tt > end) continue; const o = recAt(i), F = rec.buf; t.push(Math.round((tt - start) * 100) / 100); sArr.push(Math.round((F[o] % track.length) * 10) / 10); l.push(Math.round(F[o + 1] * 10) / 10); routes.push(F[o + 5]); y.push(F[o + 2] > -900 ? Math.round(F[o + 2] * 10) / 10 : null); }
-    if (t.length < 10) return;
-    try { localStorage.setItem(ghostKey(), JSON.stringify({ time: player.bestLap, car: player.car && player.car.id, t, s: sArr, l, y, routes, routeIds: (track.shortcuts || []).map((r) => r.id) })); } catch (e) { /* ignore */ }
+    if (t.length < 10) return null;
+    return { time: player.bestLap, car: player.car && player.car.id, t, s: sArr, l, y, routes, routeIds: (track.shortcuts || []).map((r) => r.id) };
+  }
+  let raceGhost = null; // this race's best lap, for GEIST SPEICHERN FÖR …
+  function saveGhost() {
+    const g = raceGhost = bestLapGhost(); if (!g) return;
+    const old = ownGhost(trackDef); if (old && old.time <= g.time + 0.01) return;
+    try { localStorage.setItem(ghostKey(), JSON.stringify(g)); } catch (e) { /* ignore */ }
+  }
+  // GEIST SPEICHERN FÖR …: the race's best lap under three letters, packed small (a lap is a few KB, so eight names fit); a name keeps its faster lap
+  function saveNamedGhost(name) {
+    const btn = $('#ghostSaveBtn'); if (!raceGhost || !trackDef || trackDef.daily) return false; name = ghostName(name);
+    const all = namedGhosts(trackDef), had = all[name];
+    if (had && had.time <= raceGhost.time + 0.01) { btn.textContent = `👻 ${name} HÄT SCHON ${fmtTime(had.time)}`; return false; }
+    all[name] = packGhost(raceGhost, trackDef.id, name); const names = Object.keys(all).sort((a, b) => all[a].time - all[b].time); for (const k of names.slice(8)) delete all[k]; // eight names per track
+    try { localStorage.setItem(`stuntskoelle.ghosts.${trackDef.id}`, JSON.stringify(all)); } catch (e) { btn.textContent = '👻 DO ES KEI PLATZ MIH'; return false; }
+    btn.textContent = `👻 JESPEICHERT: ${name}`; btn.disabled = true; return true;
+  }
+  // a ghost's name: up to three letters of the name entry with at least one letter in it (so it never reads as GEIST: AUS)
+  function ghostName(raw) { const n = String(raw || '').toUpperCase().split('').filter((ch) => NE_ABC.includes(ch)).join('').trim().slice(0, 3).trim(); return /[A-ZÄÖÜ]/.test(n) ? n : 'DU'; }
+  // a ghost packed small, for the named ghosts and the K4G1 code: 10 samples a second, metres in decimetres as steps, the flights as runs, the side streets as ranges
+  function packGhost(g, id, name) {
+    const hz = 10, n = Math.floor(g.time * hz) + 1, s = [], l = [], a = [], r = []; let i = 0, ps = 0, run = null, rr = null;
+    for (let k = 0; k < n; k++) {
+      const t = k / hz; while (i < g.t.length - 2 && g.t[i + 1] < t) i++; const j = Math.min(i + 1, g.t.length - 1), u = clamp((t - g.t[i]) / Math.max(1e-3, g.t[j] - g.t[i]), 0, 1);
+      const sv = Math.round((g.s[i] + (g.s[j] - g.s[i]) * u) * 10); s.push(sv - ps); ps = sv; l.push(Math.round((g.l[i] + (g.l[j] - g.l[i]) * u) * 10));
+      const ya = g.y && g.y[i], yb = g.y && g.y[j]; if (ya != null && yb != null) { if (!run) a.push(run = [k]); run.push(Math.round((ya + (yb - ya) * u) * 10)); } else run = null;
+      const ro = (g.routes || [])[u < 0.5 ? i : j]; const rid = ro != null && ro >= 0 ? ro : -1; if (!rr || rr[2] !== rid) { rr = [k, k, rid]; if (rid >= 0) r.push(rr); } else rr[1] = k;
+    }
+    return { v: 1, id, name, time: g.time, car: g.car, hz, s, l, a, r, ids: g.routeIds || [] };
+  }
+  // back to samples; anything broken (a code from elsewhere) gives null
+  function unpackGhost(c) {
+    if (!c || typeof c !== 'object' || !Array.isArray(c.s) || c.s.length < 10 || !Array.isArray(c.l) || !(+c.hz > 0) || !(+c.time > 0)) return null;
+    const hz = +c.hz, t = [], s = [], l = [], y = [], routes = []; let acc = 0;
+    c.s.forEach((d, k) => { acc += +d || 0; t.push(Math.round(k / hz * 100) / 100); s.push(acc / 10); l.push((+c.l[k] || 0) / 10); y.push(null); routes.push(-1); });
+    for (const run of Array.isArray(c.a) ? c.a : []) if (Array.isArray(run)) for (let k = 1; k < run.length; k++) { const at = (run[0] | 0) + k - 1; if (at >= 0 && at < y.length && isFinite(run[k])) y[at] = run[k] / 10; }
+    for (const q of Array.isArray(c.r) ? c.r : []) if (Array.isArray(q)) for (let k = Math.max(0, q[0] | 0); k <= (q[1] | 0) && k < routes.length; k++) routes[k] = q[2] | 0;
+    return { time: +c.time, car: String(c.car || ''), t, s, l, y, routes, routeIds: Array.isArray(c.ids) ? c.ids.map(String) : [] };
+  }
+  // a record ghost as a code (K4G1.…) for the Deckel box, so a lap fits a message
+  function exportGhost(def) {
+    const g = ownGhost(def); if (!g) return null;
+    return 'K4G1.' + btoa(unescape(encodeURIComponent(JSON.stringify(packGhost(g, def.id, ghostName(savedInitials()))))));
+  }
+  function importGhost(code) {
+    let c; try { c = JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); } catch (e) { return 'Code kaputt. Nochmal kopieren.'; }
+    const def = c && allTracks().find((t) => t.id === c.id), g = unpackGhost(c); if (!def || !g) return 'Dä Geist kennt hee kei Streck.';
+    const name = ghostName(c.name), all = namedGhosts(def); all[name] = packGhost(g, def.id, name);
+    try { localStorage.setItem(`stuntskoelle.ghosts.${def.id}`, JSON.stringify(all)); } catch (e) { return 'Speichern jing nit.'; }
+    setGhostPick(def, name); renderMenu();
+    return `Dä Geist vun ${name} (${fmtTime(g.time)}) op ${def.name} es do. Em Menü: GEGEN ${name} FAHRE.`;
   }
 
   // ---------------- share links for Baukasten tracks ----------------
@@ -2391,7 +2585,7 @@
   function init() {
     try { const s = JSON.parse(localStorage.getItem('stuntskoelle.sel')); if (s) Object.assign(sel, s); } catch (e) { /* ignore */ }
     try { customTracks = JSON.parse(localStorage.getItem('stuntskoelle.custom') || '[]'); } catch (e) { customTracks = []; }
-    daily = dailyDef(0); sel.track = clamp(sel.track | 0, 0, allTracks().length - 1); sel.car = clamp(sel.car | 0, 0, D.CARS.length - 1); sel.driver = clamp(sel.driver | 0, 0, PLAYABLE.length - 1);
+    daily = dailyDef(0); migrateRecords(); sel.track = clamp(sel.track | 0, 0, allTracks().length - 1); sel.car = clamp(sel.car | 0, 0, D.CARS.length - 1); sel.driver = clamp(sel.driver | 0, 0, PLAYABLE.length - 1);
     renderer = new THREE.WebGLRenderer({ antialias: true, canvas: $('#gl'), powerPreference: 'high-performance' });
     renderer.info.autoReset = false;
     renderer.shadowMap.enabled = !isMobile; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -2408,6 +2602,12 @@
     renderMenu();
     $('#startBtn').onclick = () => { cup.on = false; careerChapter = null; missionMode = false; lockLandscape(); startRace(); };
     $('#quickStartBtn').onclick = () => $('#startBtn').click();
+    $('#modeBtn').onclick = () => { raceOpts.mode = (raceOpts.mode + 1) % MODES.length; saveRaceOpts(); renderMenu(); };
+    $('#lapsBtn').onclick = () => { raceOpts.laps = raceOpts.laps === 3 ? 1 : 3; saveRaceOpts(); renderMenu(); };
+    $('#kluengelBtn').onclick = () => { raceOpts.kluengel = !raceOpts.kluengel; saveRaceOpts(); applyRaceOpts(); };
+    $('#ghostBtn').onclick = () => { const def = activeTrackDef(), ch = ghostChoices(def); if (!ch.length) return; const i = Math.max(0, ch.indexOf(ghostPick(def))); setGhostPick(def, ch[(i + 1) % ch.length]); applyRaceOpts(); };
+    $('#ghostSaveBtn').onclick = ghostSaveAsk;
+    $('#ghostExport').onclick = () => { const def = activeTrackDef(), c = exportGhost(def); if (!c) { $('#saveMsg').textContent = `Op ${def.name} häs de noch kei Rund jefahre.`; return; } $('#saveCode').value = c; $('#saveMsg').textContent = `Dä Geist vun ${def.name} als Code. Am andere Jerät ÜBERNEHMEN drücke.`; if (navigator.clipboard) navigator.clipboard.writeText(c).catch(() => {}); };
     $('#easyBtn').onclick = easyGo; $('#moreBtn').onclick = () => setMore(!document.body.classList.contains('menuMore'));
     $('#trackMore').addEventListener('toggle', () => document.body.classList.toggle('trackDetails', $('#trackMore').open));
     keyLabel('#againBtn', 'NOCHMAL', 'ENTER'); keyLabel('#menuBtn', 'MENÜ', 'ESC'); keyLabel('#pauseGo', 'LOSS JONN', 'ENTER'); keyLabel('#pauseRestart', 'NEU STARTE', 'BACKSPACE'); keyLabel('#pauseQuit', 'MENÜ', 'ESC');
@@ -2429,7 +2629,7 @@
     $('#msg').onclick = () => { const m = $('#msg'); if (!document.body.classList.contains('mobile') || !m.classList.contains('show')) return; if (m.classList.toggle('open')) msgTimer = Math.max(msgTimer, m.classList.contains('tagged') ? 12 : 6); }; // phone: the one-line ticker opens on a tap
     { const mini = document.querySelector('.hudMini'); if (isMobile) mini.title = 'Kaat (tippen: jrößer)'; try { mini.classList.toggle('open', localStorage.getItem('stuntskoelle.minimap') === 'open'); } catch (e) { /* ignore */ } // phone: the map is folded to a thumbnail until tapped
       mini.onclick = () => { if (!document.body.classList.contains('mobile')) return; const on = mini.classList.toggle('open'); try { localStorage.setItem('stuntskoelle.minimap', on ? 'open' : 'folded'); } catch (e) { /* ignore */ } }; }
-    $('#pauseGo').onclick = () => setPause(false); $('#pauseRestart').onclick = quickRestart; $('#pauseQuit').onclick = toMenu;
+    $('#pauseGo').onclick = () => setPause(false); $('#pauseRestart').onclick = quickRestart; $('#pauseQuit').onclick = toMenu; $('#pauseGhost').onclick = toggleGhost;
     document.addEventListener('visibilitychange', () => { if (document.hidden && racing() && !demo) setPause(true); }); // phone call, app switch: also in the flyover and the countdown
     $('#pixBtn').onclick = cyclePixel;
     $('#editorBtn').onclick = openEditor;
@@ -2531,7 +2731,7 @@
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
-  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash, onVerge: !!player.onVerge, laps: player.laps.slice(), jumps: (player.jumps || []).slice() }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash, onVerge: !!player.onVerge, vMax: player.vMax || 0, laps: player.laps.slice(), jumps: (player.jumps || []).slice() }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
   window.STUNTS_ROUTES = () => track ? track.shortcuts.map(({ samples, ...r }) => r) : [];
   window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; updateRacer(player, SIM_DT, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, SIM_DT) : input)); placeRacer(player, SIM_DT); recordFrame(SIM_DT); } updateHUD(); return window.STUNTS_DEBUG(); }; // n steps of 1/60 s, each as two fixed steps
   window.STUNTS_REPLAY_AT = (t) => { startReplay(); replay.time = t; replay.paused = true; replayStep(0); return window.STUNTS_DEBUG(); };
@@ -2540,7 +2740,7 @@
   window.STUNTS_CAM_STEPS = (n) => { for (let i = 0; i < n; i++) { window.STUNTS_DRIVE_STEPS(1); updateCamera(1 / 60); } return { pos: camera.position.toArray(), mode: camMode }; };
   window.STUNTS_REPLAY_CAM = (t, m, settle) => { if (phase !== 'replay') startReplay(); replay.mode = m || 0; replay.paused = false; replay.speed = 1; replay.time = Math.max(0, t - (settle || 0) / 60); replayStep(0); for (let i = 0; i < (settle || 0); i++) { replayStep(1 / 60); updateCamera(1 / 60); } replay.paused = true; replayStep(0); updateCamera(1 / 60); return { time: replay.time, pos: camera.position.toArray(), speedo: $('#speed').textContent, label: $('#replayTime').textContent }; };
   window.STUNTS_REC = (t) => { if (!rec.n) return null; let i = 0; for (let k = 1; k < rec.n; k++) if (Math.abs(recT(k) - t) < Math.abs(recT(i) - t)) i = k; const o = recAt(i); return { t: recT(i), v: rec.buf[o + 6], y: rec.buf[o + 2] > -900 ? rec.buf[o + 2] : null, n: rec.n, first: recT(0), last: recT(rec.n - 1), cars: rec.cars.slice() }; };
-  window.STUNTS_GHOST = (t) => { if (!ghost) return null; if (t != null) updateGhost(t - (raceTime - player.lapStart)); return { pos: ghost.position.toArray(), visible: ghost.visible, n: ghostData.t.length, time: ghostData.time, car: ghostData.car }; };
+  window.STUNTS_GHOST = (t) => { if (!ghost) return null; if (t != null) updateGhost(t - (raceTime - player.lapStart)); return { pos: ghost.position.toArray(), visible: ghost.visible, n: ghostData.t.length, time: ghostData.time, car: ghostData.car, name: ghostData.name || '', opacity: (() => { let o = null; ghost.traverse((m) => { if (o == null && m.isMesh) o = (Array.isArray(m.material) ? m.material[0] : m.material).opacity; }); return o; })() }; };
   window.STUNTS_CAM = () => camera; window.STUNTS_OCC = (a, b) => a ? occHit(new THREE.Vector3(...a), new THREE.Vector3(...b)) : { boxes: occ.n, cells: occ.cells.size }; /* with two points: the layer's first hit on that line */ window.STUNTS_STATIC = () => [road, scenery && scenery.group].filter(Boolean);
   window.STUNTS_SET_CAM = (m) => { camMode = m; };
   // the message box: every line shown this race, the chatter setting (VILL / NORMAL / WENIJ or 0-2), the Hochdeutsch help, the place stories and the journal
@@ -2555,12 +2755,17 @@
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pickNew(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind, verge: (track.samples[f.index].vg || []).slice(), edge: ROAD_W + 1.6 }; };
-  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan }));
+  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan, band: r.band }));
   window.STUNTS_FIELD_SETUP = (s, v) => { racers.forEach((r, i) => { r.s = r.isAI ? s - i * 7 : 6; r.v = r.isAI ? v : 0; r.lat = 0; r.shortcut = -1; r.branchPlan = -1; r.routePlan = null; r.branchKey = ''; r.safeS = r.s; r.air = false; r.vy = 0; r.prevRoadVy = 0; r.crashed = 0; r.finished = false; placeRacer(r, 1); }); return window.STUNTS_FIELD(); };
   window.STUNTS_FIELD_STEPS = (n) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; for (const r of racers) if (r.isAI && !r.finished) { updateRacer(r, SIM_DT, aiControl(r, SIM_DT)); placeRacer(r, SIM_DT); } for (let a = 0; a < racers.length; a++) for (let b = a + 1; b < racers.length; b++) collide(racers[a], racers[b], SIM_DT); } return window.STUNTS_FIELD(); };
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
-  window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.shortcut = -1; r.lap = trackDef.laps; r.s = track.length - 3; r.v = 30; } };
+  // race modes and ghosts: set MODUS / RUNDEN / KLÜNGEL (any left out stays), the split times of this race, the ghosts of a track
+  window.STUNTS_MODE = (mode, laps, kluengel) => { if (mode != null) raceOpts.mode = typeof mode === 'string' ? Math.max(0, MODES.indexOf(mode)) : clamp(mode | 0, 0, 2); if (laps != null) raceOpts.laps = laps === 1 ? 1 : 3; if (kluengel != null) raceOpts.kluengel = !!kluengel; saveRaceOpts(); if (phase === 'menu') renderMenu(); return { mode: MODES[raceOpts.mode], laps: raceOpts.laps, kluengel: raceOpts.kluengel, raceMode: MODES[raceMode], raceLaps, blitzers: blitzers.length, signals: signals.length, kripo: !!kripo, kripoSeen, auftrag: !!auftrag, razzia, walkersShown: scenery ? (() => { let n = 0; scenery.group.traverse((o) => { if (o.userData.walker && o.visible) n++; }); return n; })() : null, racers: racers.length }; };
+  window.STUNTS_SPLITS = () => ({ log: splitLog.slice(), hud: $('#hudSplit').textContent, ref: player && splitRef(), ghost: ghostData && { name: ghostData.name || '', time: ghostData.time, car: ghostData.car, sp: ghostData.sp } });
+  window.STUNTS_GHOSTS = (id) => { const def = allTracks().find((t) => t.id === id) || activeTrackDef(); return { own: !!ownGhost(def), named: Object.keys(namedGhosts(def)), pick: ghostPick(def), choices: ghostChoices(def), code: (exportGhost(def) || '').length }; };
+  window.STUNTS_EXPORT_GHOST = (id) => exportGhost(allTracks().find((t) => t.id === id) || activeTrackDef()); window.STUNTS_IMPORT = (code) => importSave(code);
+  window.STUNTS_FINISH = () => { for (const r of [player, player2]) if (r) { r.shortcut = -1; r.lap = raceLaps; r.s = track.length - 3; r.v = 30; } };
   if (typeof THREE === 'undefined') {
     document.body.innerHTML = '<div style="color:#fff;font:20px sans-serif;padding:40px">Three.js konnte nicht geladen werden. Dä Lange sagt: Internet anmachen, Jung.</div>';
   } else {

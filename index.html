@@ -96,7 +96,7 @@
     <span class="copy">© 1989 KLÜNGEL AMUSEMENTS · KÖLN-EHRENFELD · LIZENZIERT VOM TÜRSTEHER · FOR AMUSEMENT ONLY · <a href="rechtliches.html">IMPRESSUM &amp; DATENSCHUTZ</a></span>
   </footer>
   </div>
-  <div class="quickStart"><span id="quickTrack"></span><button id="quickStartBtn">JETZ FAHREN ↗</button></div>
+  <div class="quickStart"><span id="quickTrack"></span><div class="raceOpts" role="group" aria-label="Rennart"><button id="modeBtn" type="button"><i>MODUS</i><b>RENNEN</b></button><button id="lapsBtn" type="button"><i>RUNDEN</i><b>3</b></button><button id="kluengelBtn" type="button"><i>KLÜNGEL</i><b>AN</b></button><button id="ghostBtn" type="button" hidden><i>GEIST</i><b>DING BESTE</b></button></div><button id="quickStartBtn">JETZ FAHREN ↗</button></div>
 </div>
 
 <!-- ============ NEU EN KÖLLE? (first start: Dä Lange's four door cards) ============ -->
@@ -132,7 +132,7 @@
   <div class="modal">
     <h2>🏆 REKORDE &amp; ORDEN – TOP ZEITEN IN KÖLN</h2>
     <div id="recordsList"></div>
-    <div class="saveBox"><b>DECKEL MITNEHMEN – FÖR ET HANDY VUM ENKEL</b><small>Striche, Orden, Karriere, Rekorde un eigene Strecken als Code zum anderen Handy oder Rechner tragen.</small><div class="saveRow"><button id="saveExport">CODE ERZEUGEN</button><textarea id="saveCode" rows="2" placeholder="K4D1.…"></textarea><button id="saveImport">ÜBERNEHMEN</button></div><small id="saveMsg"></small></div>
+    <div class="saveBox"><b>DECKEL MITNEHMEN – FÖR ET HANDY VUM ENKEL</b><small>Striche, Orden, Karriere, Rekorde un eigene Strecken als Code zum anderen Handy oder Rechner tragen.</small><div class="saveRow"><button id="saveExport">CODE ERZEUGEN</button><textarea id="saveCode" rows="2" placeholder="K4D1.…"></textarea><button id="saveImport">ÜBERNEHMEN</button></div><div class="saveRow"><button id="ghostExport">GEIST ALS CODE</button><small id="ghostExportHint">Dä Rekord-Geist vun der jewählte Streck als Code – drüvve ÜBERNEHMEN, un et heiß: GEGEN … FAHRE.</small></div><small id="saveMsg"></small></div>
     <button id="recordsClose">ZURÜCK</button>
   </div>
 </div>
@@ -173,6 +173,7 @@
     <div><span>ZEIT</span><b id="hudZeit">0:00.00</b></div>
     <div><span>RUNDE</span><b id="hudRunde">1 / 3</b></div>
     <div><span>BESTE</span><b id="hudBeste">--:--.--</b></div>
+    <div class="split"><span data-m="SPLIT">ZWESCHEZICK</span><b id="hudSplit">–</b></div>
     <div><span>POS</span><b id="hudPos">8 / 8</b></div>
     <div><span>KNÖLLCHEN</span><b id="hudKn">–</b></div>
     <div><span data-m="TEL">KLÜNGEL-TELEFON</span><b id="hudTel">K = ANRUFEN</b></div>
@@ -188,7 +189,7 @@
   <div id="wrongway" hidden>FALSCHE RICHTUNG, JUNG!</div>
   <button id="hudPrompt" hidden>E · AUSSTEIJEN</button>
   <div id="controlsCard" hidden><b>SU FÄHRS DE</b><p id="controlsText"></p></div>
-  <div id="pause" hidden><b>PAUSE</b><p id="pauseLine"></p><p id="pauseHd" class="hdl" hidden></p><div class="pauseBtns"><button id="pauseGo"><span>LOSS JONN (ENTER)</span><i>weiter</i></button><button id="pauseRestart"><span>NEU STARTE (BACKSPACE)</span><i>neu starten</i></button><button id="pauseQuit"><span>MENÜ (ESC)</span><i>zum Menü</i></button></div><small><kbd>↑</kbd> JAS · <kbd>↓</kbd> BREMS · <kbd>←</kbd> <kbd>→</kbd> LENKE · <kbd>SHIFT</kbd> TURBO · <kbd>R</kbd> ZERÖCK OP DE STROSS · <kbd>P</kbd> PAUS<br><kbd>F</kbd> PIXEL · <kbd>C</kbd> KAMERA · <kbd>H</kbd> HUPE · <kbd>K</kbd> KLÜNGEL-TELEFON · <kbd>E</kbd> AUS-/EINSTEIJE · <kbd>M</kbd> TON · <kbd>BACKSPACE</kbd> NEU STARTE</small><small id="pauseKeysHd" class="hdl" hidden>↑ Gas · ↓ Bremse · ← → lenken · R zurück auf die Straße · P Pause · E aus-/einsteigen · Backspace neu starten</small></div>
+  <div id="pause" hidden><b>PAUSE</b><p id="pauseLine"></p><p id="pauseHd" class="hdl" hidden></p><div class="pauseBtns"><button id="pauseGo"><span>LOSS JONN (ENTER)</span><i>weiter</i></button><button id="pauseRestart"><span>NEU STARTE (BACKSPACE)</span><i>neu starten</i></button><button id="pauseQuit"><span>MENÜ (ESC)</span><i>zum Menü</i></button><button id="pauseGhost" hidden><span>GEIST: AN (G)</span><i>Geist ein/aus</i></button></div><small><kbd>↑</kbd> JAS · <kbd>↓</kbd> BREMS · <kbd>←</kbd> <kbd>→</kbd> LENKE · <kbd>SHIFT</kbd> TURBO · <kbd>R</kbd> ZERÖCK OP DE STROSS · <kbd>P</kbd> PAUS<br><kbd>F</kbd> PIXEL · <kbd>C</kbd> KAMERA · <kbd>H</kbd> HUPE · <kbd>K</kbd> KLÜNGEL-TELEFON · <kbd>E</kbd> AUS-/EINSTEIJE · <kbd>M</kbd> TON · <kbd>G</kbd> GEIST · <kbd>BACKSPACE</kbd> NEU STARTE</small><small id="pauseKeysHd" class="hdl" hidden>↑ Gas · ↓ Bremse · ← → lenken · R zurück auf die Straße · P Pause · E aus-/einsteigen · G Geist ein/aus · Backspace neu starten</small></div>
   <div id="msg" title="Tippen: janze Nachricht"><div id="msgWho"></div><div id="msgTag"></div><div id="msgText"></div><div id="msgHd" hidden></div></div>
   <div class="hudDash2"><div class="speedBox"><b id="speed2">000</b><span>KM/H</span></div><div class="barBox"><span>TURBO</span><div id="turboBar2" class="bar turbo"></div></div><div id="pos2" class="pos2"></div></div>
   <div id="introCard" hidden><b id="introName"></b><span id="introSub"></span></div>
@@ -231,6 +232,8 @@
       <p id="resWhy" class="resWhy" hidden></p>
       <div id="resRecord" class="record" hidden>🏆 NEUE BESTZEIT! Dat kütt op der Bierdeckel.</div>
       <div id="nameEntry" class="nameEntry" hidden><b>DING NAME FÖR DE TAFEL<i class="gl">dein Name für die Tafel</i></b><div class="neRow"><div class="neCol"><button data-i="0" data-d="1">▲</button><span data-i="0">A</span><button data-i="0" data-d="-1">▼</button></div><div class="neCol"><button data-i="1" data-d="1">▲</button><span data-i="1">A</span><button data-i="1" data-d="-1">▼</button></div><div class="neCol"><button data-i="2" data-d="1">▲</button><span data-i="2">A</span><button data-i="2" data-d="-1">▼</button></div><button id="neOk">OK</button></div><small>▲▼ Buchstabe · ◀▶ Stelle · ENTER fäädisch</small></div>
+    <div class="ghostRow"><button id="ghostSaveBtn" type="button" hidden>👻 GEIST SPEICHERN FÖR …</button></div>
+    <div id="resPostcard" class="postcard" hidden></div>
     <div id="resOrden" class="record orden" hidden></div>
       <div id="resExpress" class="express"></div>
       <table><tbody id="resTable"></tbody></table>

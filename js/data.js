@@ -1491,7 +1491,20 @@
       recordsBtn: 'REKORDE = Bestzeiten, Orden, gehörte Geschichten und den Spielstand mitnehmen',
       demoBtn: 'VORSPANN = das Spiel fährt sich selbst und erzählt die Geschichte von Chicago am Rhein',
       cupBtn: 'KÖLSCH-CUP = alle Strecken nacheinander, Punkte für jeden Platz',
-      jukeBtn: 'LAMBOGINA = das Titellied im Menü an/aus. Der weiße Keil dazu ist der Traumwagen, den die Karriere freischaltet'
+      jukeBtn: 'LAMBOGINA = das Titellied im Menü an/aus. Der weiße Keil dazu ist der Traumwagen, den die Karriere freischaltet',
+      modeBtn: 'MODUS = RENNEN gegen neun Fahrer · ZEITFAHREN allein gegen Uhr und Geist (ohne Blitzer, Kripo, Razzia, Aufträge, Fußgänger) · STADTRUNDFAHRT mit 60 km/h und allen Geschichten',
+      lapsBtn: 'RUNDEN = 1 Runde für die Pause an der Haltestelle oder 3 wie immer; jede Rundenzahl hat ihre eigenen Rekorde',
+      kluengelBtn: 'KLÜNGEL = die Gegner warten auf dich, wenn du hinten liegst (nur bei LEICHT und MITTEL); AUS = ehrliches Rennen',
+      ghostBtn: 'GEIST = gegen deine beste Runde fahren, gegen einen gespeicherten Geist (Papa gegen Pänz) oder ganz ohne. Im Rennen blendet G ihn aus'
+    },
+    // the race modes: what dä Lange says at the start of a ZEITFAHREN or a STADTRUNDFAHRT and on the results
+    modes: {
+      tt: ['Zeitfahre: nur du, de Uhr un dinge Geist. Kei Klüngel, kei Kripo, kei Blitzer.', 'Dä Lange hält de Stoppuhr. Ehrlich – dat eine Mol.'],
+      tour: ['Stadtrundfahrt met däm Lange: sechzig Sache, un ich verzäll dir jet vun jedem Eck.', 'Langsam, Jung. Mer sin nit op der Flucht, mer sin op Besichtigung.'],
+      ttRecord: ['Bestzeit! Ohne Klüngel, ohne Windschatte – dat es ehrlich verdeent.', 'Dä Geist kann sich verstecke. Neue Bestzeit!'],
+      ttSlow: ['De Uhr lüch nit. Nohmol, un dismol met mih Jas.', 'Dä Geist wor flöcker. Dä hät och kei Jewiss.'],
+      tourEnd: ['Dat wor Kölle. Schriev ens en Kaat noh Hus.', 'Un? Schön, oder? Kölle es e Jeföhl.'],
+      ghost: '{name} fährt als Geist met ({t}). Zeich, wat de kanns!'
     },
     promilleEnd: ['Wieder nüchtern. Sagt der Türsteher. Also nit janz.'],
     // Kripo Kölle: the Streifewage that shows up after three Knöllchen
@@ -1533,7 +1546,8 @@
       last: 'DÄ SCHNELLE: LETZTER PLATZ – „ICH HANN MIR DE KÖLSCH-STÄND ANJEKUCK“',
       koelsch: 'DÄ SCHNELLE: {n} KÖLSCH IM VORBEIFAHRE – KÖBES: „DER HÄT NIT MOL JEBREMST“',
       podium: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT EN NEUE HOFFNUNG',
-      default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN'
+      default: 'DÄ SCHNELLE: PLATZ {p} – KÖLLE HÄT SCHLIMMERES JESINN',
+      tt: 'DÄ SCHNELLE: ALLEIN JÄJE DE UHR – {car} DRIEHT SINGE RUNDE {where}, DE STOPPUHR HÄT JEWONNE'
     },
     slogans: ['KÖLLE ES KEI STADT. KÖLLE ES E JEFÖHL.', 'WILLKOMME IN KÖLN. GAS, HÄTZ UN VERSTAND – DAT ES KÖLLE 4D.', 'ET HÄTT NOCH EMMER JOT JEJANGE!', 'WENN ET NACHT WIRD IN KÖLLE, VERZÄLLT DÄ LANGE VUM RING.', 'CHICAGO AM RHEIN, 1968. DO KÜSS HEE NIT EREN.', 'LAMBOGINA · 130 BPM · DÄ WEISSE KEIL VUN KÖLLE.', 'NACHTS OP DÄM RING: NEON, BASS UN EN WEISSE LAMBOGINA.', 'DAT POSTER HING ÖVVER DÄM BETT. JETZ HÄNGK ET OP DÄM RING.']
   };
