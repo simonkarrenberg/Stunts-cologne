@@ -1,13 +1,40 @@
 # KÖLLE 4D — Chicago am Rhein
 
+## Neu: Heimspill in Müngersdorf und der Ring von 1968 als Häuserschlucht
+
+**Heimspill – met der Linie 1 noh Müngersdorf** ist die elfte Strecke: Samstag, 15:30, Heimspiel. Vom Hahnentor am
+Rudolfplatz geht es mit der Linie 1 (Straßenbahn „1 SONDERZUG STADION“) die Aachener Straße hinaus, links der Aachener
+Weiher, rechts Melaten, an der Haltestelle Stadion, der Bierbud („BRATWURSCH · KÖLSCH“) und dem Stadiontor vorbei, wo
+Dä Lange steht: „Du küss hee nit eren – ohne Dauerkaat!“ Eine Steilkurve führt um die Stadionschüssel mit ihren vier
+Ecktürmen, ein Sprung geht über die vollgeparkte Jahnwiese, ein Looping zwischen zwei Flutlichtmasten. Am Stadion gibt
+es eine **Drei-Wege-Gabelung**: der schmale **Olympiaweg** durch den Sportpark, die Hauptstrecke oder die weite
+**Militärringstraße** zum Adenauerweiher. Danach geht es durch den Stadtwald (mit Ziegen am Tierpark) über die Dürener
+Straße in Lindenthal, den Lindenthalgürtel und den Sülzgürtel, die Berrenrather Straße in Sülz und die Zülpicher
+Straße unter der Bahnbrücke am Bahnhof Süd durch, über den Habsburgerring zurück zum Rudolfplatz. Die Schilder nennen
+für jeden Abschnitt die echte Straße, in der echten Reihenfolge (die Gürtel-Kreuzungen wie die Haltestellen der Linie
+13). Nebenwege: die **Stolberger Straße** einen Block neben der Aachener Straße und, am Gürtel, gleich die **Zülpicher
+Straße** bis zum Weyertal statt des Bogens über die Berrenrather. Die Fans tragen schlichtes Rot und Weiß – kein
+Vereinsname, kein Wappen, kein Sponsor. Der **Botengang** auf dieser Strecke heißt **ANSTOSS EN ZEHN MINUTTE**: Die
+Dauerkarte von Köbes Hermann liegt im Büdchen an der Berrenrather Straße; abholen, zu Fuß zurück zum Auto und vor dem
+Anpfiff ans Stadiontor bringen. Wer es schafft, steht in Dä Schnelle: „KURIER RETTET ANSTOSS – SÜDKURV KOMPLETT“.
+
+**Chicago am Rhein (1968)** ist jetzt eine Schlucht aus Fassaden statt einer Parklandschaft: geschlossene vier- bis
+fünfstöckige Häuserzeilen mit Schaufenstern, Kinos mit Vordach („LICHTSPIELE“, „HEUTE: WESTERN“) und Bars mit
+Neon-Schreibschrift („TANZ-BAR“, „BAR · DANCING“, „WEINSTUBE“, „KÖLSCH VOM FASS“ mit erfundenen Brauereien), daneben das
+kleine Schild „SPERRSTUNDE 1 UHR“. Steht ein Büdchen oder ein Streifenwagen auf dem Bürgersteig, tritt das Haus dahinter
+zurück; die Leuchtschilder hängen an der Fassade. Die Straßenbahnschienen liegen in der Mitte der Straße, Rasen gibt es
+nur noch an den echten Ring-Plätzen. Jede Neonfarbe auf dem Ring rastet auf die Farben der Zeit ein (`theme.neon`: Rot,
+Warmweiß, Gelb, Blau; auch die Suchscheinwerfer am Start), und Szenen aus späteren Jahrzehnten (LamboGina,
+Paketdienst, Junggesellinnenabschied) und die Kölner Lichter (seit 2001) kommen auf der 1968er-Strecke nicht mehr vor.
+
 ## Mehr Kölle: Bauwerke und Abkürzungen
 
-51 eigens modellierte Kölner Bauwerke und Denkmäler verteilen sich inzwischen auf 83 Plätze in den zehn Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, die Kabelwerk-Halle und die Stromhalle Mülheim (zwei heute bespielte Konzerthallen an der Schanzenstraße: echte Gebäude, erfundene Namen), Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Modelle ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen in den Katalogen `js/landmarks.js` und `js/wahrzeichen.js`.
+51 eigens modellierte Kölner Bauwerke und Denkmäler verteilen sich inzwischen auf 84 Plätze in den elf Karten. Dazu gehören St. Aposteln, St. Kunibert, St. Maria im Kapitol, St. Pantaleon, Gürzenich, Wallraf-Richartz-Museum, Kolumba, Oper am Offenbachplatz, Wasserturm Kaygasse, Fort X, Bahnhof Messe/Deutz, die Kabelwerk-Halle und die Stromhalle Mülheim (zwei heute bespielte Konzerthallen an der Schanzenstraße: echte Gebäude, erfundene Namen), Bastei, Neptunbad, Alt St. Maternus und das Hauptgebäude der Universität. Die Modelle ergänzen die bisherigen Wahrzeichen und Veedelsdetails; ihre Architekturquellen stehen in den Katalogen `js/landmarks.js` und `js/wahrzeichen.js`.
 
 **Wahrzeichen mit Namensschild:** Erzählt Dä Lange die Geschichte eines Wahrzeichens, steht vier Sekunden lang ein
 Pixel-Schild mit dünnem Zeiger über dem Gebäude („GROSS ST. MARTIN“, „BAYENTURM · 1262“, „TÜNNES UN SCHÄL“), und sein
 Punkt blinkt auf der Minikarte. Wer an einem Wahrzeichen vorbeifährt, hat es entdeckt: Unter REKORDE steht das Album
-**WAHRZEICHEN 12/70 ENTDECKT** mit den gefundenen Namen und, für die fehlenden, der Strecke, auf der sie stehen. Alle
+**WAHRZEICHEN 12/71 ENTDECKT** mit den gefundenen Namen und, für die fehlenden, der Strecke, auf der sie stehen. Alle
 **zwölf großen romanischen Kirchen** sind dabei – neu St. Andreas an der Komödienstraße (mit dem Grab des Albertus
 Magnus in der Krypta), St. Georg am Waidmarkt (gegründet von Erzbischof Anno) und das turmlose St. Cäcilien an der
 Cäcilienstraße (seit 1956 das Museum Schnütgen); Groß St. Martin hat jetzt eine eigene Geschichte. Alle zwölf gesehen:
@@ -26,13 +53,13 @@ Der zweite Ausbau ergänzt St. Agnes mit ihrem Turm ohne Spitze, das große Zehn
 
 Neu dabei sind unter anderem Overstolzenhaus, St. Ursula, MAKK, Alt St. Heribert und das gelbe Siebengebirge im Rheinauhafen. Der Butzweilerhof bekommt einen ausdrücklich als Ossendorfer Gastauftritt gekennzeichneten Platz. Dazu kommen Kreuzblume, Stapelhaus, Kölner Pegel, Römerturm, Gereonsmühle, Ulrepforte, St. Severin, St. Maria in Lyskirchen, St. Clemens, Oberlandesgericht, Staatenhaus, Herkulesberg und Rheinboulevard. Ulrepforte und St. Severin haben jeweils ein gemeinsames, eindeutiges Modell statt doppelter Varianten.
 
-Auf allen zehn Strecken gibt es zusammen **52 fahrbare Nebenwege**, und jeder ist eine **echte Kölner Straße**: 40 Abkürzungen, Parallelstraßen und Umgehungen (zum Beispiel Friesenwall-Gereonswall-Von-Werth-Straße an den Ringen, Salzgasse und Bechergasse in der Altstadt, Machabäerstraße und Thürmchenswall beim Domschatz-Raub, Kyffhäuserstraße und Mittelstraße am Zülpicher Platz, Severinswall und Roonstraße beim Zoch) und zwölf Straßen an **sechs Drei-Wege-Gabelungen** – am Dom (Am Domhof / Trankgasse), an den Ringen (Friesenwall / Flandrische Straße), im Rheinauhafen (Bayenwerft / Am Bayenturm), auf den Poller Wiesen (Siegburger Straße / Alfred-Schütte-Allee), an der Zülpicher Straße (Zülpicher Wall / Dürener Straße) und in Rodenkirchen (Auenweg / Weißer Straße). Jede Straße wurde auf Namen, Schreibweise, Stadtteil und Lage zu den Orten der Strecke geprüft; erfundene Gassennamen gibt es nicht mehr. Jede Gabelung bietet die Hauptstrecke, eine engere Abkürzung und eine breitere Panoramaroute; alle drei treffen sich wieder. Die Hauptstraßen-Schilder am Rand nennen für jeden Abschnitt die echte Straße (`signs` in `js/data.js`).
+Auf allen elf Strecken gibt es zusammen **56 fahrbare Nebenwege**, und jeder ist eine **echte Kölner Straße**: 42 Abkürzungen, Parallelstraßen und Umgehungen (zum Beispiel Friesenwall-Gereonswall-Von-Werth-Straße an den Ringen, Salzgasse und Bechergasse in der Altstadt, Machabäerstraße und Thürmchenswall beim Domschatz-Raub, Kyffhäuserstraße und Mittelstraße am Zülpicher Platz, Severinswall und Roonstraße beim Zoch) und vierzehn Straßen an **sieben Drei-Wege-Gabelungen** – am Dom (Am Domhof / Trankgasse), an den Ringen (Friesenwall / Flandrische Straße), im Rheinauhafen (Bayenwerft / Am Bayenturm), auf den Poller Wiesen (Siegburger Straße / Alfred-Schütte-Allee), an der Zülpicher Straße (Zülpicher Wall / Dürener Straße) in Rodenkirchen (Auenweg / Weißer Straße) und am Stadion in Müngersdorf (Olympiaweg / Militärringstraße). Jede Straße wurde auf Namen, Schreibweise, Stadtteil und Lage zu den Orten der Strecke geprüft; erfundene Gassennamen gibt es nicht mehr. Jede Gabelung bietet die Hauptstrecke, eine engere Abkürzung und eine breitere Panoramaroute; alle drei treffen sich wieder. Die Hauptstraßen-Schilder am Rand nennen für jeden Abschnitt die echte Straße (`signs` in `js/data.js`).
 
 **Grün** markiert Abkürzungen, **Blau** die breiteren Alternativen und **Weiß** die Hauptstrecke – in der Streckenvorschau und Minikarte, mit passenden Hinweisschildern vor den Gabelungen. Die Fahrbahnen bleiben richtige Straßen mit Asphalt oder Kopfsteinpflaster, Bordsteinen und Straßenlaternen. Die Schilder nennen ehrlich die gesparten oder zusätzlichen Meter. Vor der Einfahrt links oder rechts einordnen; mittig bleibst du auf der Hauptstrecke. Keine zusätzliche Taste: Tastatur, Touch und Neigen funktionieren wie bisher. In engen Gassen vom Gas gehen! Rivalen wählen ebenfalls unterschiedliche Wege und ändern ihre Entscheidung pro Runde. Einmal pro Gabelung und Runde gibt es einen Deckel-Strich, auch fürs Erkunden einer längeren Route: „Dä Köbes nennt dat Sightseeing.“
 
 Kommt eine Gabelung weniger als 150 m nach einem Looping, steht vor dem Looping eine **Schilderbrücke** („NOH DÄM LOOPING:“ mit je einer Tafel pro Arm, etwa ← Siegburger Str · ↑ · → Alfred-Schütte-Allee an den Poller Wiesen). Und wer aus dem Looping kommt, sieht das Einordnen-Schild sofort, zwei Sekunden lang tiefer und gelb umrandet.
 
-Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 52 „DAT NAVI BIN ICH“. Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
+Der **Veedels-Pass** im Streckenmenü zeigt entdeckte Nebenwege. Erst eine vollständig gefahrene Straße zählt; Wiederholungen und Resets erzeugen keine zusätzlichen Stempel. Beide Arme einer Gabelung sind eigene Entdeckungen. Nach zehn Straßen gibt es den bestehenden Orden „VEEDELSKENNER“, nach allen 56 „DAT NAVI BIN ICH“ (die Zahl folgt den Strecken). Ältere Veedel-Spielstände bleiben erhalten, und die vorhandenen Export-/Import-Knöpfe nehmen den Pass mit.
 
 Das sind durchgehend fahrbare Nebenwege mit echten Ein- und Ausfahrten, keine Teleports. Runden, Platzierung, Geister, Replays und TV-Kameras berücksichtigen den gewählten Weg; Geister speichern die Straßen-IDs und finden ihre Straße auch nach Änderungen am Straßenkatalog wieder. Ein Reset bringt dich vor die Einfahrt zurück. Gebäude, Schilderstützen und Wasser werden von den Fahrwegen ferngehalten. Die Stadt bleibt eine verdichtete Arcade-Kulisse: Die Nebenwege sind Spielstrecken, keine realen Verkehrswege.
 
@@ -48,7 +75,7 @@ npx playwright install chromium
 npm test
 ```
 
-Die Geometrieprüfungen kontrollieren kontinuierliche Nebenwege, echte Längenunterschiede, getrennte Straßen, sichere Gabelungen und unveränderte alte Routen. Die Browserprüfungen lenken über echte Tastatureingaben in alle 29 Einfahrten, fahren jede Straße vollständig ab und prüfen Wiedereinfahrt, Rundenstand, jeden Reset, Replay und gespeicherten Geist. An Drei-Wege-Gabelungen werden beide Abzweige, die mittige Hauptstrecke und natürliche KI-Routenwahl geprüft. Jeder geplante Wahrzeichen-Standort muss den Kulissenaufbau überstehen; Modelle werden auf gültige Geometrie, Bodenhöhe und Quellenangaben geprüft. Dazu kommen freie Fahrbahnen bis zum Rand der breiteren Straßen, getrennte Gebäudegrundrisse, Botengang, Rennstart und Ergebnisbildschirm, Handy-Menü, Streckenlinks und Offline-Neustart. Pull Requests werden geprüft; Pages wird erst nach erfolgreichen Tests veröffentlicht.
+Die Geometrieprüfungen kontrollieren kontinuierliche Nebenwege, echte Längenunterschiede, getrennte Straßen, sichere Gabelungen und unveränderte alte Routen. Die Browserprüfungen lenken über echte Tastatureingaben in alle 29 Einfahrten, fahren jede Straße vollständig ab und prüfen Wiedereinfahrt, Rundenstand, jeden Reset, Replay und gespeicherten Geist. An Drei-Wege-Gabelungen werden beide Abzweige, die mittige Hauptstrecke und natürliche KI-Routenwahl geprüft. Jeder geplante Wahrzeichen-Standort muss den Kulissenaufbau überstehen; Modelle werden auf gültige Geometrie, Bodenhöhe und Quellenangaben geprüft. Dazu kommen freie Fahrbahnen bis zum Rand der breiteren Straßen, getrennte Gebäudegrundrisse, Botengang, Rennstart und Ergebnisbildschirm, Handy-Menü, Streckenlinks und Offline-Neustart. `test/canyon.test.js` zählt, was an den Geraden des 1968er-Rings steht (mindestens 80 % Häuser und Fassaden, unter 10 % Rasen und Bäume) und prüft die Neonfarben gegen `theme.neon` sowie alle leuchtenden Farben der gebauten Szene (kein Miami-Pink, -Violett oder -Cyan, auch nicht an Lovers Club, Residenz oder Klein Köln); `test/heimspill.test.js` prüft Straßenfolge, Gabelung und Nebenwege der Heimspill-Strecke, lässt den Autopiloten drei Runden fahren, im Botengang die Dauerkarte von Sülz bis vor das Stadiontor fahren (schneller als die Uhr) und den Botengang mit Restzeit am Stadiontor enden. Pull Requests werden geprüft; Pages wird erst nach erfolgreichen Tests veröffentlicht.
 
 Ein kleiner, browserbasierter **Stunts (4D Sports Driving)**-Klon im Pixel-Art-Look, nur eben in **Kölle**.
 Loopings über der Zoobrücke, Sprünge über das Hafenbecken zwischen den Kranhäusern,
@@ -302,7 +329,7 @@ zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für
   spielen: ein Demo-Rennen aus der Fernsehkamera, dazu rollt die Geschichte von Chicago am Rhein über
   das Bild („KÖLN, 1968. Die Ringe glühen…“), oben blinkt „INSERT COIN“. Jede Taste oder ein Tipp
   holt zurück ins Menü; der Knopf „VORSPANN“ startet ihn sofort.
-- **Streck des Tages:** Unter den zehn Strecken steht jeden Tag eine elfte, die der Klüngel aus dem
+- **Streck des Tages:** Unter den elf Strecken steht jeden Tag eine zwölfte, die der Klüngel aus dem
   Datum würfelt: 15 bis 25 Baukasten-Teile durch ein zufälliges Veedel (Nippes, Sülz, Kalk, Porz…),
   mindestens ein Stunt, Kulisse von einer der festen Strecken. Sie schließt sich garantiert (der
   Generator prüft das) und hat eigene Bestzeiten, die nur heute gelten. Wer auf allen Geräten dieselbe
@@ -370,7 +397,7 @@ zum ersten Mal in eine echte Seitenstraße ein, erzählt Dä Lange, was das für
   dein Bierdeckel-Rang, und der Spruch des Tages wechselt täglich.
 - **Teilen:** Im Ergebnis ein Knopf „TEILEN“ – schickt Platz, Zeit und „Dä Schnelle“-Schlagzeile samt Link
   per WhatsApp & Co. (Web Share API, sonst Zwischenablage).
-- **Kölsch-Cup:** Alle zehn Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
+- **Kölsch-Cup:** Alle elf Strecken nacheinander, Punkte 12-10-8-6-5-4-3-2-1-1 für alle zehn Fahrer,
   Cup-Tabelle im Ergebnis, Siegerehrung vom Türsteher.
 
 ## Musik: LamboGina
@@ -417,11 +444,12 @@ M schaltet Motor und Musik stumm.
 | 8 | Domschatz-Raub 1975 | Nacht, Regen | Domschatzkammer – Hauptbahnhof (Sprung über die Gleise) – Eigelstein – Ebertplatz (Looping) – Zoobrücke – Rheinpark (Korkenzieher) – Hohenzollernbrücke | Die Kripo hängt ab der ersten Sekunde im Rückspiegel; Fluchtfahrt durch Chicago am Rhein mit Pfandleihe, Hehler und Zockern. |
 | 9 | Zülpicher 11.11. | Tag, Konfetti | Zülpicher Platz – Barbarossaplatz – Luxemburger Straße (Sprung über die Kneipen) – Uni (Mensa-Looping) – Aachener Weiher – Unterführung – Hohenstaufenring | Elfter im Elften im Kwartier Latäng: doppelt so viele Kölsch auf der Strecke, also Schlangenlinie für alle. |
 | 10 | Rodenkirchen Rheinbad | Sommertag | Rheinuferweg – Rheinarm (Sprung) – Rheinstrand (Looping) – Rodenkirchener Brücke – Weiß (Sprung) – Sürther Bootshaus (Korkenzieher) | Drei Sprünge übers Wasser, Strandbar, Fähre, Villen in Weiß. Wer zu kurz springt, badet. |
+| 11 | Heimspill – met der Linie 1 noh Müngersdorf | Samstag, 15:30 | Hahnentor – Aachener Straße (Aachener Weiher, Melaten, Linie 1) – Stadion Müngersdorf (Steilkurve) – Jahnwiese (Sprung über den Parkplatz, Looping zwischen Flutlichtmasten) – Stadtwald – Dürener Straße – Lindenthalgürtel – Sülzgürtel – Berrenrather Straße – Zülpicher Straße (unter der Bahn am Bahnhof Süd) – Habsburgerring – Rudolfplatz | Heimspiel: Fans in Rot und Weiß, Bierbud, Sonderzug, Dä Lange am Stadiontor, eine Ziege im Stadtwald; Drei-Wege-Gabelung am Stadion; Botengang ANSTOSS EN ZEHN MINUTTE. |
 
 Die Reihenfolge der Wahrzeichen folgt der echten Stadt: auf den Ringen von Süd nach Nord, am Dom
 über die Hohenzollernbrücke nach Deutz, auf der Schäl Sick über die Zoobrücke hin und die
 Mülheimer Brücke zurück, im Rheinauhafen vom Lagerhaus bis zum Bayenturm. Loopings und Sprünge
-sind natürlich Stunts, keine Kölner Verkehrsplanung. Fünf der zehn Strecken spielen abends,
+sind natürlich Stunts, keine Kölner Verkehrsplanung. Fünf der elf Strecken spielen abends,
 nachts oder im Morgengrauen; der Türsteher hat zu jeder Tageszeit einen Spruch.
 
 Straßen sehen aus wie in Köln: rot-weiße Bordsteine auf voller Länge (als eigenes, ungetextes

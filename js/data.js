@@ -503,6 +503,11 @@
         { id: 'kalk-rudolfplatz', name: 'FLANDRISCHE STRASSE', street: 'Flandrische Straße', fork: 'kalk-dreiwege', from: { seg: 0, u: 0.45 }, to: { seg: 2, u: 0.25 }, via: [{ x: -20, z: 114 }, { x: -37, z: 193 }, { x: 13, z: 260 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'AACHENER STRASSE', perks: ['parked'], note: 'Flandrische Stroß, hinger de Hüüser vum Ring durch et Belgische Veedel. Dauert länger, ävver do kennt dich keiner.', hd: 'Flandrische Straße, hinter den Häusern vom Ring durch das Belgische Viertel. Dauert länger, aber da kennt dich keiner.' }
       ],
       theme: { sky: 0x070a24, fog: 0x2a1a4a, ground: 0x23232e, sun: 0x9fb4ff, road: [0x2c2e3a, 0x25272f], night: true, wet: true, water: 0x102040, street: 'gruenderzeit', catenary: true, era: 1968, canyon: true,
+        neon: ['#ff3b30', '#ffe7b0', '#ffd400', '#4da3ff'], // the Ring's neon of 1968: red, warm white, yellow and blue (no Miami pink or cyan); world.js snaps every neon to this list
+        // the canyon of façades (world.js, theme.canyon): every third house a cinema or a bar; the breweries are invented
+        venues: [{ kind: 'kino', text: 'LICHTSPIELE', sub: 'HEUTE: WESTERN', color: '#ffe7b0' }, { kind: 'kino', text: 'LICHTSPIELE', sub: 'HEUTE: KRIMI · 22 UHR', color: '#ff3b30' },
+          { kind: 'bar', text: 'TANZ-BAR', color: '#ff3b30' }, { kind: 'bar', text: 'BAR · DANCING', color: '#4da3ff' }, { kind: 'bar', text: 'WEINSTUBE', color: '#ffd400' },
+          { kind: 'bar', text: 'KÖLSCH VOM FASS', sub: 'RINGE KÖLSCH', color: '#ffe7b0' }, { kind: 'bar', text: 'KÖLSCH VOM FASS', sub: 'HÄTZ KÖLSCH', color: '#ff3b30' }, { kind: 'bar', text: 'NACHTBAR', color: '#4da3ff' }],
         streets: ['HOHENZOLLERNRING', 'FRIESENSTRASSE', 'CHRISTOPHSTRASSE', 'FRIESENPLATZ', 'HANSARING', 'KAISER-WILHELM-RING', 'EBERTPLATZ', 'RUDOLFPLATZ', 'GEREONSTRASSE', 'GEREONSWALL'],
         shops: ['BOXKELLER', 'TANZ LOKAL', 'KIOSK', 'BRAUHAUS', 'NACHTCAFÉ', 'HERRENCLUB', 'IMBISS', 'BAR ZUM LANGEN', 'BILLARD', 'TRINKHALLE', 'BEAT-KELLER', 'KÖLSCH', 'TANZ-BAR', 'BAR · DANCING', 'WEINSTUBE', 'LICHTSPIELE', 'KLÜNGEL & CO', 'KLÜNGELKASSE KÖLN', 'KVK'],
         posters: ['BOXKELLER', 'DÄ LANGE LIVE', 'KÖLSCH-NACHT', 'HEUTE: WESTERN', 'FC HEIMSPIEL', 'TANZ-TEE 17 UHR'],
@@ -552,7 +557,6 @@
         { type: 'bude', seg: 0, u: 0.5, side: 1, dist: 11, text: 'NACHTIMBISS · HALVE HAHN' },
         { type: 'zeppelin', seg: 0, u: 0.5, side: 1, dist: 60, face: false },
         { type: 'rain', seg: 0, u: 0.5, side: 0, dist: 0, face: false },
-        { type: 'fireworks', seg: 5, u: 0.5, side: 1, dist: 100, face: false },
         { type: 'hahnentor', seg: 2, u: 0.5, side: 1, dist: 26, keep: 40, story: 'Hahnentor, Rudolfplatz. Da kome früher de Könige durch. Heut de Jecke. Un du, wenn de nit bremst.', hd: 'Hahnentor, Rudolfplatz. Da kamen früher die Könige durch. Heute die Narren. Und du, wenn du nicht bremst.' },
         { type: 'aposteln', seg: 2, u: 0.5, side: -1, dist: 92, keep: 80, story: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens dat Radio runter.', hd: 'St. Aposteln am Neumarkt. Draußen viel Verkehr, drinnen Ruhe. Dreh wenigstens das Radio leiser.' },
         { type: 'richmodisturm', seg: 5, u: 0.05, side: 1, dist: 55, keep: 32, story: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe gucke oben raus. Die hann de beste Tribün, ohne Eintritt.', hd: 'Richmodisturm am Neumarkt. Zwei weiße Pferdeköpfe schauen oben heraus. Die haben die beste Tribüne, ohne Eintritt.' },
@@ -1069,6 +1073,113 @@
         { type: 'flag', seg: 15, u: 0.25, side: 1, dist: 12 },
         { type: 'haltestelle', seg: 19, u: 0.6, side: -1, dist: 13 }
       ]
+    },
+    {
+      // Heimspill: Saturday 15:30, matchday. From the Hahnentor out the Aachener Straße with the Linie 1, past the Aachener Weiher and
+      // Melaten, round the stadium bowl at Müngersdorf, over the Jahnwiese and through the Stadtwald, back through Lindenthal
+      // (Dürener Straße, Lindenthalgürtel) and Sülz (Sülzgürtel, Berrenrather Straße) and down the Zülpicher Straße to the Ring.
+      // The order of the Gürtel crossings follows the stops of the Linie 13 (Dürener Str./Gürtel, Zülpicher Str./Gürtel,
+      // Berrenrather Str./Gürtel, Sülzgürtel); Olympiaweg and the Jahnwiese are in the Sportpark Müngersdorf, which borders the
+      // Stadtwald with the Adenauerweiher. No crest, no club name, no sponsor: the fans wear plain red and white.
+      id: 'heimspill', where: 'NOH MÜNGERSDORF', name: 'Heimspill – met der Linie 1 noh Müngersdorf', district: 'Samsdachs halv vier: Aachener Stroß, Stadion, Sülz', tag: 'TAG', order: 11,
+      mission: { where: ['BÜDCHEN AN DER BERRENRATHER', 'STADIONTOR WEST', 'BIERBUD AN DER JAHNWIESE', 'KIOSK AM AACHENER WEIHER', 'FANKNEIPE AN DER ZÜLPICHER', 'HALTESTELLE STADION'],
+        // the scripted Botengang of this track (game.js startMission): the season ticket from a Büdchen in Sülz to the stadium gate before kick-off
+        botengang: { title: 'ANSTOSS EN ZEHN MINUTTE', side: 1, pick: { seg: 18, u: 0.58, name: 'BÜDCHEN AN DER BERRENRATHER' }, drop: { seg: 4, u: 0.86, name: 'STADIONTOR WEST' },
+          what: 'de Dauerkaat vum Köbes Hermann.', short: 'DAUERKAAT',
+          brief: 'Dä Köbes Hermann steiht am Stadiontor, un sing Dauerkaat litt noch em Büdche an der Berrenrather. Ohne Kaat looß ich keiner eren, och dä nit. Fahr noh Sülz, hol se, un bräng se noh Müngersdorf, bevör dä Schiri pief.',
+          back: 'Do häs se! Jetz noh Müngersdorf, de Südkurv waat. Un de Kripo es och unterwägs, wie et ussüht.',
+          done: 'Am Tor, met der Dauerkaat. Dä Köbes es dren, de Südkurv es komplett. Jetz weed jesunge.',
+          headline: 'DÄ SCHNELLE: KURIER RETTET ANSTOSS – SÜDKURV KOMPLETT' } },
+      signs: [[0, 'AACHENER STRASSE'], [6, 'JAHNWIESE'], [11, 'STADTWALD'], [13, 'DÜRENER STRASSE'], [14, 'LINDENTHALGÜRTEL'], [16, 'SÜLZGÜRTEL'], [17, 'BERRENRATHER STRASSE'], [19, 'ZÜLPICHER STRASSE'], [22, 'HABSBURGERRING'], [24, 'RUDOLFPLATZ']], // the real street at each stretch of the circuit (main-road name signs)
+      waypoints: ['Hahnentor', 'Aachener Weiher', 'Melaten', 'Stadion Müngersdorf', 'Jahnwiese', 'Stadtwald', 'Lindenthal', 'Sülz', 'Bahnhof Süd'],
+      diff: 3, laps: 3, scale: 1.4,
+      parkSegs: [5, 6, 7, 8, 9, 10, 11, 12], // stadium bowl, Jahnwiese, Sportpark and Stadtwald: trees and meadows instead of street walls (a track's own segments, so not in the theme a daily track borrows)
+      desc: 'Samstag, 15:30, Heimspiel: vom Hahnentor mit der Linie 1 die Aachener Straße hinaus, am Aachener Weiher und an Melaten vorbei, in der Steilkurve um das Stadion, mit einem Sprung über den Parkplatz auf der Jahnwiese und einem Looping zwischen zwei Flutlichtmasten. Am Stadion drei Wege: der schmale Olympiaweg, der Hauptkurs oder die weite Militärringstraße am Adenauerweiher. Durch den Stadtwald zurück über die Dürener Straße in Lindenthal, den Gürtel und die Berrenrather Straße in Sülz, unter der Bahn an der Zülpicher Straße durch zum Ring. Die Stolberger Straße läuft neben der Aachener Straße her, und wer schlau ist, nimmt am Gürtel gleich die Zülpicher Straße. Im Botengang muss eine Dauerkarte vor dem Anstoß ans Stadiontor.',
+      shortcuts: [
+        // Stolberger Straße: Braunsfeld and Müngersdorf, one block north of the Aachener Straße
+        { id: 'heimspill-stolberger-strasse', street: 'Stolberger Straße', type: 'parallel', from: { seg: 2, u: 0.9 }, to: { seg: 4, u: 0.8 }, side: 1, offset: 44, radius: 20, angle: 55, halfWidth: 4.2, surface: 'asphalt', toward: 'MÜNGERSDORF', perks: ['parked'], note: 'Stolberger Stroß, ene Block hinger der Aachener. Do fährt kei Sonderzug, do steiht kei Fan, do kütt mer flöck noh Müngersdorf.', hd: 'Stolberger Straße, einen Block hinter der Aachener. Da fährt kein Sonderzug, da steht kein Fan, da kommt man schnell nach Müngersdorf.' },
+        // the Zülpicher Straße crosses the Gürtel between the Lindenthalgürtel and the Sülzgürtel and runs east to the Weyertal, where the Berrenrather joins it
+        { id: 'heimspill-zuelpicher-strasse', street: 'Zülpicher Straße', type: 'cut', from: { seg: 15, u: 0.75 }, to: { seg: 19, u: 0.3 }, halfWidth: 3.8, surface: 'asphalt', toward: 'WEYERTAL', perks: ['koelsch', 'parked'], note: 'Am Gürtel links en de Zülpicher, stracks bes an et Weyertal. De Berrenrather looße mer de Kinderwage.', hd: 'Am Gürtel links in die Zülpicher, direkt bis zum Weyertal. Die Berrenrather lassen wir den Kinderwagen.' }
+      ],
+      branches: [
+        { id: 'heimspill-olympiaweg', name: 'OLYMPIAWEG', street: 'Olympiaweg', fork: 'heimspill-dreiwege', from: { seg: 10, u: 0.4 }, to: { seg: 12, u: 0.6 }, via: [{ x: 262, z: 570 }, { x: 295, z: 515 }], halfWidth: 3.4, style: 'shortcut', surface: 'asphalt', toward: 'STADTWALD', perks: [], note: 'Olympiaweg, quer durch dä Sportpark, am Stadionbad vorbei. Schmal, ävver de Fans looße dich durch.', hd: 'Olympiaweg, quer durch den Sportpark, am Stadionbad vorbei. Schmal, aber die Fans lassen dich durch.' },
+        { id: 'heimspill-militaerring', name: 'MILITÄRRINGSTRASSE', street: 'Militärringstraße', fork: 'heimspill-dreiwege', from: { seg: 10, u: 0.4 }, to: { seg: 12, u: 0.6 }, via: [{ x: 255, z: 636 }, { x: 322, z: 645 }, { x: 352, z: 585 }, { x: 346, z: 510 }], halfWidth: 4.7, style: 'scenic', surface: 'asphalt', toward: 'ADENAUERWEIHER', perks: ['trees'], note: 'Militärringstroß, öm de Jahnwiese eröm an de Adenauerweiher. Wigger, ävver do steiht kei Fan em Wääch.', hd: 'Militärringstraße, um die Jahnwiese herum zum Adenauerweiher. Weiter, aber da steht kein Fan im Weg.' }
+      ],
+      theme: { sky: 0x7fb0e8, fog: 0xe0e4ec, ground: 0x6f9a52, sun: 0xfff2d8, road: [0x5a5a5a, 0x4c4c4c], night: false, water: 0x4a7aa8, street: 'gruenderzeit', lawn: true, catenary: true, matchday: true,
+        streets: ['AACHENER STRASSE', 'DÜRENER STRASSE', 'BERRENRATHER STRASSE', 'ZÜLPICHER STRASSE', 'WEYERTAL', 'SÜLZGÜRTEL', 'HABSBURGERRING', 'STOLBERGER STRASSE'],
+        shops: ['KÖLSCH', 'BRATWURSCH', 'FANKNEIPE', 'KIOSK', 'BÄCKEREI JÜPP', 'TRINKHALLE', 'SCHALS · MÜTZE', 'RUT UN WIESS', 'METZGEREI', 'LOTTO · TOTO'],
+        posters: ['HEIMSPILL 15:30', 'RUT UN WIESS', 'SONDERZUG STADION', 'KÖLSCH VUM FASS', 'AUSWÄRTS? NÄ!'],
+        far: [{ type: 'dom', angle: 225, dist: 220 }, { type: 'colonius', angle: 250, dist: 200 }],
+        intro: ['Samsdach, halv vier. Ganz Kölle es rut un wieß, un du fährs met der Linie 1 öm de Wett.', 'Heimspill. Fuffzigdausend jonn noh Müngersdorf, un du bes dä Einzige, dä et eilig hät.', 'Aachener Stroß, Sonderzug, Schals us em Finster. Hee jitt et kei Auswärtsfahrt, nur Heimspill.'] },
+      segments: [
+        { t: 'straight', len: 120 },
+        { t: 'curve', angle: -20, r: 120 },
+        { t: 'straight', len: 90 },
+        { t: 'curve', angle: 20, r: 120 },
+        { t: 'straight', len: 120 },
+        { t: 'curve', angle: 90, r: 55, bank: 15 },
+        { t: 'straight', len: 40 },
+        { t: 'jump', ramp: 26, angle: 15, gap: 30, over: 'parkplatz', overH: 1.8 }, // the cars on the meadow are lower than a Büdchen
+        { t: 'straight', len: 60 },
+        { t: 'loop', r: 13, shift: 14 },
+        { t: 'straight', len: 60 },
+        { t: 'curve', angle: 90, r: 45 },
+        { t: 'straight', len: 100 },
+        { t: 'straight', len: 80 },
+        { t: 'curve', angle: -90, r: 35 },
+        { t: 'straight', len: 50 },
+        { t: 'straight', len: 40 },
+        { t: 'curve', angle: 135, r: 35 },
+        { t: 'straight', len: 100 },
+        { t: 'straight', len: 60 },
+        { t: 'dip', len: 40, pitch: 10 },
+        { t: 'straight', len: 50 },
+        { t: 'curve', angle: 45, r: 40 },
+        { t: 'straight', len: 100 },
+        { t: 'curve', angle: 90, r: 40 },
+        { t: 'straight', len: 41 }
+      ],
+      props: [
+        { type: 'gantry', seg: 8, u: 0.55, side: 1, dist: 0, fork: ['heimspill-olympiaweg', 'heimspill-militaerring'], dirs: ['← OLYMPIAWEG', '↑', '→ MILITÄRRING'] }, // the fork comes right after the loop: say it before the loop
+        { type: 'tuenn', seg: 0, u: 0.02, side: 1, dist: 9 },
+        { type: 'crowd', seg: 0, u: 0.07, side: -1, dist: 10 }, { type: 'crowd', seg: 0, u: 0.1, side: 1, dist: 10 },
+        { type: 'hahnentor', seg: 0, u: 0.14, side: -1, dist: 28, keep: 40, story: 'Hahnentor am Rudolfplatz. Samsdachs öm drei sammelt sich hee de Südkurv, un dann jeiht et met der Linie 1 noh Müngersdorf. Rut un wieß bes an der Horizont.', hd: 'Hahnentor am Rudolfplatz. Samstags um drei sammelt sich hier die Südkurve, und dann geht es mit der Linie 1 nach Müngersdorf. Rot und weiß bis zum Horizont.' },
+        { type: 'flag', seg: 0, u: 0.3, side: 1, dist: 11, a: 0xc1121f, b: 0xffffff }, { type: 'flag', seg: 0, u: 0.5, side: -1, dist: 11, a: 0xc1121f, b: 0xffffff },
+        { type: 'haltestelle', seg: 0, u: 0.42, side: -1, dist: 11 },
+        { type: 'tramline', seg: 0, u: 0.62, side: -1, dist: 15, len: 110, face: false, line: '1 SONDERZUG STADION' },
+        { type: 'koelsch', seg: 0, u: 0.8, side: 1, dist: 18 },
+        { type: 'pond', seg: 1, u: 0.6, side: -1, dist: 50, seed: 3, scale: 1.6, lawn: true, keep: 44, story: 'Aachener Weiher. Vör em Spill jrillt hee halv Lindenthal, noh em Spill singk hee halv Kölle. Un de Ände han Dauerkaat.', hd: 'Aachener Weiher. Vor dem Spiel grillt hier halb Lindenthal, nach dem Spiel singt hier halb Köln. Und die Enten haben eine Dauerkarte.' },
+        { type: 'melaten', seg: 2, u: 0.35, side: 1, dist: 36, keep: 30, story: 'Melaten. Hinger dem ahle Tor litt ene stille Ort, un mänche Fan hät do sing Ehrenplatz. Hee weed nit jehup, hee weed jejrööß.', hd: 'Melaten. Hinter dem alten Tor liegt ein stiller Ort, und mancher Fan hat dort seinen Ehrenplatz. Hier wird nicht gehupt, hier wird gegrüßt.' },
+        { type: 'crowd', seg: 2, u: 0.8, side: -1, dist: 10 },
+        { type: 'haltestelle', seg: 4, u: 0.3, side: -1, dist: 11, story: 'Haltestell Stadion. Dä Sonderzug es su voll, do passt nit ens mieh ene Schal eren. Un trotzdem singk dä janze Waggon.', hd: 'Haltestelle Stadion. Der Sonderzug ist so voll, da passt nicht einmal mehr ein Schal hinein. Und trotzdem singt der ganze Wagen.' },
+        { type: 'tram', seg: 4, u: 0.42, side: -1, dist: 15, line: '1 SONDERZUG STADION' },
+        { type: 'bude', seg: 4, u: 0.58, side: -1, dist: 11, text: 'BRATWURSCH · KÖLSCH', story: 'De Bierbud an der Aachener: Bratwursch, Kölsch un de Uffstellung. Dä Köbes hee weiß se vür dem Trainer.', hd: 'Die Bierbude an der Aachener: Bratwurst, Kölsch und die Aufstellung. Der Köbes hier kennt sie vor dem Trainer.' },
+        { type: 'crowd', seg: 4, u: 0.68, side: -1, dist: 10 }, { type: 'crowd', seg: 4, u: 0.74, side: 1, dist: 10 },
+        { type: 'stadiontor', seg: 4, u: 0.9, side: -1, dist: 17, keep: 16, face: true },
+        { type: 'tuenn', seg: 4, u: 0.86, side: -1, dist: 9.5, tag: 'STADIONTOR', story: 'Am Stadiontor stonn ich, wie fröher am Ring: Du küss hee nit eren – ohne Dauerkaat!', hd: 'Am Stadiontor stehe ich, wie früher am Ring: Du kommst hier nicht rein – ohne Dauerkarte!' },
+        { type: 'stadion', seg: 5, u: 0.5, side: -1, dist: 96, scale: 0.62, keep: 84, story: 'Müngersdorf. Vier Türm, fuffzigdausend Hätze, un et Leed us der Südkurv hürt mer bes an der Dom. Dreimol eröm, dann bes de eine vun uns.', hd: 'Müngersdorf. Vier Türme, fünfzigtausend Herzen, und das Lied aus der Südkurve hört man bis zum Dom. Dreimal herum, dann bist du einer von uns.' },
+        { type: 'crowd', seg: 5, u: 0.25, side: 1, dist: 11 }, { type: 'crowd', seg: 5, u: 0.7, side: 1, dist: 11 },
+        { type: 'flag', seg: 5, u: 0.45, side: 1, dist: 12, a: 0xc1121f, b: 0xffffff },
+        { type: 'billboard', seg: 6, u: 0.2, side: 1, dist: 14, text: 'PARKPLATZ JAHNWIESE · VOLL', story: 'De Jahnwiese. Unger der Woch Fußball för jeder, samsdachs Parkplatz för all. Dä Parkplatz es voll, also flieje mer drüvver, un dann dörch zwei Flutleechmaste wie de Eckentürm am Stadion.', hd: 'Die Jahnwiese. Unter der Woche Fußball für alle, samstags Parkplatz für alle. Der Parkplatz ist voll, also fliegen wir drüber, und dann durch zwei Flutlichtmasten wie die Ecktürme am Stadion.' },
+        { type: 'geissbock', seg: 8, u: 0.4, side: 1, dist: 17 },
+        { type: 'flutmast', seg: 9, u: 0.05, side: -1, dist: 14 },
+        { type: 'flutmast', seg: 9, u: 0.05, side: 1, dist: 34 },
+        { type: 'grove', seg: 12, u: 0.25, side: -1, dist: 26, seed: 4, keep: 22 },
+        { type: 'geissbock', seg: 12, u: 0.9, side: -1, dist: 16, story: 'Stadtwald, am Tierpark. Do jrasen de Jeiße, ejal wie et em Stadion steiht. Die sin entspannter wie de janze Südkurv.', hd: 'Stadtwald, am Tierpark. Da grasen die Ziegen, egal wie es im Stadion steht. Die sind entspannter als die ganze Südkurve.' },
+        { type: 'grove', seg: 12, u: 0.65, side: -1, dist: 30, seed: 9, keep: 22 },
+        { type: 'pond', seg: 12, u: 0.6, side: 1, dist: 78, seed: 6, scale: 1.3, keep: 30, story: 'Dä Adenauerweiher. Do henge rudere se Boot, wann de Sonn schingk. Hück schingk se, ävver alles es em Stadion.', hd: 'Der Adenauerweiher. Da hinten rudern sie Boot, wenn die Sonne scheint. Heute scheint sie, aber alles ist im Stadion.' },
+        { type: 'cafe', seg: 13, u: 0.45, side: 1, dist: 15, story: 'Lindenthal, Dürener Stroß. Hee wohne de Dokter un de Professore. Samsdachs hängk och do ene rut-wieße Schal am Balkon.', hd: 'Lindenthal, Dürener Straße. Hier wohnen die Ärzte und die Professoren. Samstags hängt auch da ein rot-weißer Schal am Balkon.' },
+        { type: 'tram', seg: 15, u: 0.5, side: 1, dist: 13, line: '13 SÜLZGÜRTEL' },
+        { type: 'crowd', seg: 16, u: 0.5, side: 1, dist: 10 },
+        { type: 'buedchen', seg: 18, u: 0.66, side: 1, dist: 11.5, story: 'Sülz, Berrenrather Stroß. Am Büdche weed samsdachs mieh üvver de Uffstellung jesproche wie em Rothuus üvver dä Haushalt.', hd: 'Sülz, Berrenrather Straße. Am Kiosk wird samstags mehr über die Aufstellung geredet als im Rathaus über den Haushalt.' },
+        { type: 'crowd', seg: 18, u: 0.3, side: -1, dist: 10 }, { type: 'flag', seg: 18, u: 0.45, side: -1, dist: 11, a: 0xc1121f, b: 0xffffff },
+        { type: 'billboard', seg: 19, u: 0.4, side: 1, dist: 14, text: 'RUT UN WIESS · HEIMSPILL 15:30' },
+        { type: 'bahnbruecke', seg: 20, u: 0.5, side: 1, dist: 0, face: false, story: 'Unger der Bahn bei Süd. Wann hee ene Zoch drüvver rattert un unge de Fans singe, verstehste dä eije Motor nit mieh.', hd: 'Unter der Bahn am Bahnhof Süd. Wenn hier ein Zug drüber rattert und unten die Fans singen, verstehst du den eigenen Motor nicht mehr.' },
+        { type: 'crowd', seg: 21, u: 0.5, side: -1, dist: 10 },
+        { type: 'haltestelle', seg: 23, u: 0.4, side: 1, dist: 11 },
+        { type: 'koelsch', seg: 23, u: 0.7, side: -1, dist: 18 },
+        { type: 'platz', seg: 24, u: 0.5, side: -1, dist: 22, seed: 5, keep: 16, story: 'Rudolfplatz. Noh em Spill es hee de Theke vun Kölle: Wer jewonne hät, singk, wer verlore hät, singk lauter.', hd: 'Rudolfplatz. Nach dem Spiel ist hier die Theke von Köln: Wer gewonnen hat, singt, wer verloren hat, singt lauter.' }
+      ]
     }
   ];
 
@@ -1108,6 +1219,7 @@
     severinstor: { name: 'SEVERINSTORBURG', kind: 'tor' },
     ulrepforte: { name: 'ULREPFORTE', kind: 'tor' },
     melaten: { name: 'MELATEN · TOR II', kind: 'tor' },
+    stadion: { name: 'STADION MÜNGERSDORF', kind: 'haus' },
     rathaus: { name: 'HISTORISCHES RATHAUS', kind: 'haus' },
     guerzenich: { name: 'GÜRZENICH', kind: 'haus' },
     overstolzenhaus: { name: 'OVERSTOLZENHAUS', kind: 'haus' },
@@ -1150,6 +1262,7 @@
   };
 
   // ---------------- the host: dä Lange, doorman of the Ringe (no real names) ----------------
+  const ROUTE_COUNT = TRACKS.reduce((n, t) => n + (t.shortcuts || []).length + (t.branches || []).length, 0); // every side street and fork arm (the tests check that each one builds)
   const TUENN = {
     name: 'Dä Lange', emoji: '🎩',
     intro: [
@@ -1368,7 +1481,7 @@
       { id: 'mariechen', name: 'BÜTZJE VUM MARIECHEN', desc: '5× vür dem Fräulein Anna em Ziel', hd: 'Küsschen vom Mariechen: 5× vor Fräulein Anna im Ziel', stat: 'annaBeaten', need: 5, color: 'b' },
       { id: 'bote', name: 'BOTE VUM RING', desc: '3 Botengänge abjeliefert', hd: 'Bote vom Ring: 3 Botengänge abgeliefert', stat: 'boten', need: 3, color: 'o' },
       { id: 'legende', name: 'LEGENDE VUM RING', desc: 'Die Nachtschicht beendet', stat: 'career', need: 1, color: 'w' },
-      { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: 'Alle 52 Nebenwege entdeckt', hd: 'Das Navi bin ich: alle 52 Nebenwege entdeckt', stat: 'streetsFound', need: 52, color: 'b' }
+      { id: 'stadtplan', name: 'DAT NAVI BIN ICH', desc: `Alle ${ROUTE_COUNT} Nebenwege entdeckt`, hd: `Das Navi bin ich: alle ${ROUTE_COUNT} Nebenwege entdeckt`, stat: 'streetsFound', need: ROUTE_COUNT, color: 'b' }
     ],
     ordenLine: ['Neuer Orden op der Deckel: {name}. Dat hängt jetz hinger der Theke.', 'Orden! {name}. Der Köbes klatscht. Einmal.', '{name}, Jung. Dat schreib ich in de Zeitung.'],
     // the daily track: a random Veedel and a name for it
@@ -1380,8 +1493,8 @@
     // the article of a place name: the end of its first word decides (WAGENBAUHALLE → de, KAMELLE-LAGER → dat, TAXISTAND → dä);
     // whole names first (SARTORY), p = plural (HEHLER & SÖHNE). Unknown nouns count as masculine.
     placeGender: {
-      f: ['HALLE', 'LEIHE', 'BAR', 'KNEIPE', 'BUDE', 'RAMPE', 'TÜR', 'UNG', 'EREI', 'WERKSTATT', 'GARAGE', 'WERFT', 'KAPELLE', 'SCHMIEDE', 'HÜTT', 'KÜCHE', 'STATION', 'ZELLE', 'DIELE', 'KASSE', 'GARDEROBE', 'WEETSCHAFF', 'MENSA'],
-      n: ['BÜDCHEN', 'KINO', 'HAUS', 'LAGER', 'CAFÉ', 'HOTEL', 'KONTOR', 'BÜRO', 'STUDIO', 'HEIM', 'WERK', 'LOKAL', 'FACH', 'SARTORY', 'KLEIN KÖLN'],
+      f: ['HALLE', 'LEIHE', 'BAR', 'KNEIPE', 'BUDE', 'BUD', 'STELLE', 'RAMPE', 'TÜR', 'UNG', 'EREI', 'WERKSTATT', 'GARAGE', 'WERFT', 'KAPELLE', 'SCHMIEDE', 'HÜTT', 'KÜCHE', 'STATION', 'ZELLE', 'DIELE', 'KASSE', 'GARDEROBE', 'WEETSCHAFF', 'MENSA'],
+      n: ['BÜDCHEN', 'TOR', 'KINO', 'HAUS', 'LAGER', 'CAFÉ', 'HOTEL', 'KONTOR', 'BÜRO', 'STUDIO', 'HEIM', 'WERK', 'LOKAL', 'FACH', 'SARTORY', 'KLEIN KÖLN'],
       p: ['SÖHNE', 'BRÜDER'],
       m: ['KIOSK', 'FRISEUR', 'PORTIER', 'PFÖRTNER', 'HÄNDLER', 'EINGANG', 'SAAL', 'VERLEIH', 'BAU', 'KELLER', 'HOF', 'STAND', 'STEG', 'SCHUPPEN', 'LADEN', 'RAUM', 'PLATZ', 'CLUB', 'TISCH', 'RING', 'LOVERS CLUB']
     },

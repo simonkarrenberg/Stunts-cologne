@@ -38,7 +38,7 @@
   let deckel = 0, pickups = [], kripo = null, kripoT = 0, kripoHitCool = 0, sirenT = 0, wette = null, crashes = 0, waterCrashes = 0, kripoCaught = false, kripoSeen = false, lastLapSeen = 1, pickT = 0;
   const cup = { on: false, i: 0, pts: {} }; const CUP_PTS = [12, 10, 8, 6, 5, 4, 3, 2, 1, 1];
   const KRIPO = { name: 'Kripo Kölle', emoji: '🚓' };
-  let razzia = 0, razziaBlink = 0, promille = 0, promilleDone = false, koelschLap = 0, lastHeadline = '', lastPlace = 0;
+  let razzia = 0, razziaBlink = 0, promille = 0, promilleDone = false, koelschLap = 0, lastHeadline = '', lastPlace = 0, missionLog = null;
   // Klüngel-Auftrag (courier job for dä Lange), the DÄ SCHNELLE front page photo and the arcade attract mode
   let demoPrevCam = 0, daily = null, introT = 0, hornCool = 0, newOrden = [];
   // Botengang missions (on foot and back in the car with the Kripo behind) and the Karriere (Nachtschicht)
@@ -2004,17 +2004,18 @@
   // ---------------- Botengang: fetch something on foot, deliver it by car, the Kripo behind you ----------------
   function goalText(g) { return g.place ? `TOP ${g.place}` : g.win ? 'SIEG' : g.stunts ? `${g.stunts} STUNTS` : g.koelsch ? `${g.koelsch} KÖLSCH` : g.auftrag ? `${g.auftrag} AUFTRAG` : 'ANKOMMEN'; }
   function startMission(def) {
-    missionMode = true; missionDef = def; clearMission();
+    missionMode = true; missionDef = def; clearMission(); missionLog = null;
     startRace(Object.assign({}, def, { laps: 99 }), () => {
-    const B = tuenn.botengang, TM = trackDef.mission || {};
-    const a = roadFrameAhead(player.s, 230 + Math.random() * 150, 45);
+    const B = tuenn.botengang, TM = trackDef.mission || {}, FX = TM.botengang; // FX: a track's own scripted Botengang (Heimspill: the season ticket from Sülz to the stadium gate)
+    const a = FX ? { s: segS(FX.pick), f: TB.frameAt(track, segS(FX.pick)) } : roadFrameAhead(player.s, 230 + Math.random() * 150, 45);
     const WH = TM.where || B.where, WT = TM.what ? TM.what : B.what, WS = TM.what ? TM.whatShort || [] : B.whatShort, k = Math.floor(Math.random() * WT.length); // every track brings its own places (Rheinauhafen: Lieferrampe am Schokoladenmuseum …); Streck des Tages and Baukasten use the generic ones
-    mission = { stage: 'drive1', pickS: a.s, side: Math.random() < 0.5 ? 1 : -1, what: WT[k], short: WS[k] || 'PAKET', pickName: pick(WH), dropName: pick(WH), timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
+    mission = { stage: 'drive1', pickS: a.s, side: FX ? FX.side || 1 : Math.random() < 0.5 ? 1 : -1, what: FX ? FX.what : WT[k], short: FX ? FX.short : WS[k] || 'PAKET', pickName: FX ? FX.pick.name : pick(WH), dropName: FX ? FX.drop.name : pick(WH), fixed: FX || null, timer: 0, onFoot: false, walker: null, meshes: [], farCool: 0 };
     if (mission.dropName === mission.pickName) mission.dropName = WH[(WH.indexOf(mission.pickName) + 1) % WH.length];
     const ring = dropMesh('ABHOLEN · ' + mission.pickName); ring.position.set(a.f.p.x, a.f.p.y + 0.1, a.f.p.z); ring.rotation.y = Math.atan2(-a.f.T.x, -a.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring = ring; // the sign faces the driver coming up the road
-    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, placeArticles(pickNew(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
+    setTimeout(() => { if (mission && phase !== 'menu') sayMust(tuenn, FX ? `${FX.title}! ${FX.brief}` : placeArticles(pickNew(B.brief).replace('{pick}', mission.pickName).replace('{what}', mission.what).replace('{drop}', mission.dropName)), 5200); }, 7600);
     });
   }
+  function segS(ref) { const S = track.samples; let i0 = -1, i1 = -1; for (let i = 0; i < S.length; i++) if (S[i].seg === ref.seg) { if (i0 < 0) i0 = i; i1 = i; } return i0 < 0 ? 0 : (i0 + (i1 + 1 - i0) * (ref.u == null ? 0.5 : ref.u)) * track.ds; } // a { seg, u } place on the circuit, in metres
   function clearMission() { if (mission) { for (const m of mission.meshes) scene && scene.remove(m); if (mission.walker && scene) scene.remove(mission.walker); } mission = null; $('#hudPrompt').hidden = true; }
   function missionHud() {
     const L = track.length; const dist = (sTarget) => { let d = sTarget - player.s; if (d < 0) d += L; return Math.round(d); };
@@ -2047,9 +2048,9 @@
     }
     if (mission.stage === 'walkback' && !$('#hudPrompt').hidden) { // back in: the drop-off appears, the Kripo too
       mission.onFoot = false; mission.stage = 'drive2'; prompt(null); scene.remove(mission.walker); mission.walker = null; if (mission.carRing) scene.remove(mission.carRing);
-      const b = roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
+      const b = mission.fixed ? { s: segS(mission.fixed.drop), f: TB.frameAt(track, segS(mission.fixed.drop)) } : roadFrameAhead(player.s, 420 + Math.random() * 260, 30); mission.dropS = b.s; let dist = b.s - player.s; if (dist < 0) dist += track.length; mission.timer = Math.round(dist / 12) + 25;
       const ring = dropMesh('ABLIEFERN · ' + mission.dropName); ring.position.set(b.f.p.x, b.f.p.y + 0.1, b.f.p.z); ring.rotation.y = Math.atan2(-b.f.T.x, -b.f.T.z); scene.add(ring); mission.meshes.push(ring); mission.ring2 = ring;
-      if (!kripo) startKripo(); sayMust(tuenn, placeArticles(pickNew(B.back).replace('{drop}', mission.dropName)), 3600);
+      if (!kripo) startKripo(); sayMust(tuenn, mission.fixed && mission.fixed.back ? mission.fixed.back : placeArticles(pickNew(B.back).replace('{drop}', mission.dropName)), 3600);
     }
   }
   function walkStep(dt) {
@@ -2071,10 +2072,11 @@
     if (!mission || phase !== 'race') return; phase = 'finished'; prompt(null); const B = tuenn.botengang; player.finished = true; player.finishTime = raceTime;
     if (kripo) endKripo('finish'); const m = mission; clearMission(); mission = null;
     const strokes = ok ? 8 : -3; addDeckel(strokes); const total = deckelTotal(deckel); if (ok) bumpStat('boten'); newOrden = checkOrden();
-    const headline = (ok ? B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate).replace('{where}', (trackDef && trackDef.where) || 'EN KÖLLE'); lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
+    const FX = m.fixed || {}, headline = (ok ? FX.headline || B.headlineDone : why === 'caught' ? B.headlineCaught : B.headlineLate).replace('{where}', (trackDef && trackDef.where) || 'EN KÖLLE'); lastHeadline = headline; lastPlace = ok ? 1 : 10; shotWanted = true; fanfare(ok);
+    missionLog = { ok, why: why || '', timer: Math.round(m.timer * 10) / 10, title: FX.title || '', headline }; // what the tests read after the end (STUNTS_MISSION_LOG)
     setTimeout(() => {
       if (phase === 'menu') return;
-      $('#resTitle').textContent = ok ? `BOTENGANG ERLEDIGT: ${m.short} ${({ f: "BEI D'R", p: 'BEI' })[D.placeGender(m.dropName).g] || 'BEIM'} ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
+      $('#resTitle').textContent = ok && FX.title ? `${FX.title}: JESCHAFFT! ${m.short} ${({ f: "BEI D'R", p: 'BEI' })[D.placeGender(m.dropName).g] || 'BEIM'} ${m.dropName}.` : ok ? `BOTENGANG ERLEDIGT: ${m.short} ${({ f: "BEI D'R", p: 'BEI' })[D.placeGender(m.dropName).g] || 'BEIM'} ${m.dropName}.` : why === 'caught' ? 'BOTENGANG VERMASSELT: DIE KRIPO HÄT DICH.' : 'BOTENGANG VERMASSELT: ZU SPÄT.';
       $('#resTable').innerHTML = `<tr class="me"><td>${ok ? '✓' : '✗'}</td><td>DU</td><td>${D.CARS[sel.car].name}</td><td>${fmtTime(raceTime)}</td></tr>`;
       $('#resBest').textContent = ok ? 'pünktlich' : '–'; $('#resRecord').hidden = true;
       $('#resStats').innerHTML = `PAKET: <b>${m.short}</b> (${m.what}) · VON: <b>${m.pickName}</b> · NACH: <b>${m.dropName}</b> · KRIPO: <b>${why === 'caught' ? 'HÄT DICH JEKRIEGT' : ok ? 'ABJEHÄNGT' : 'NOCH DRAN'}</b> · SCHADEN: <b>${Math.round(player.damage * 100)} %</b>`;
@@ -2082,7 +2084,7 @@
       $('#resDeckel').innerHTML = `BIERDECKEL: <b>${strokes > 0 ? '+' : ''}${strokes}</b> Striche · GESAMT: <b>${total}</b> – <b>${deckelRank(total)}</b>`;
       $('#resCup').hidden = true; againLabel(careerChapter != null ? (ok ? 'NÄCHSTES KAPITEL' : 'KAPITEL NOCHMAL') : 'NOCHMAL');
       { const ob = $('#resOrden'); ob.hidden = !newOrden.length; if (newOrden.length) { ob.innerHTML = ordenItems(newOrden); ob.querySelectorAll('canvas').forEach((c, i) => medalIcon(c, newOrden[i].color, 2)); } }
-      $('#resTuenn').textContent = placeArticles(pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName)); $('#resRival').textContent = '';
+      $('#resTuenn').textContent = ok && FX.done ? FX.done : placeArticles(pick(ok ? B.done : why === 'caught' ? B.caught : B.late).replace('{drop}', m.dropName)); $('#resRival').textContent = '';
       if (careerChapter != null) applyCareerResult(ok, 1);
       resLayout(); $('#results').hidden = false; document.body.classList.add('resultsOpen');
     }, 1400);
@@ -2875,6 +2877,7 @@
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, wz: p.userData.wz || '', story: !!p.userData.story, parent: !!p.parent, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_MISSION = (t) => startMission(t != null ? allTracks()[t] : activeTrackDef()); window.STUNTS_CAREER = startCareer; window.STUNTS_CAREER_STATE = careerState; window.STUNTS_ACT = missionAction;
   window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; player.jumpLive = null; player.yaw = 0; player.steerIn = 0; player.zoneLeft = null; player.airLat = 0; placeRacer(player, 1); } };
+  window.STUNTS_MISSION_LOG = () => missionLog; // how the last Botengang ended: ok, why, the timer left, a scripted one's title, the headline
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;

@@ -224,7 +224,9 @@
     if (opts.border) { x.fillStyle = opts.border; x.fillRect(0, 0, c.width, 8); x.fillRect(0, c.height - 8, c.width, 8); x.fillRect(0, 0, 8, c.height); x.fillRect(c.width - 8, 0, 8, c.height); }
     x.fillStyle = fg;
     let size = Math.round(c.height * (opts.sizeK || 0.55));
-    const setFont = () => { x.font = `bold ${size}px "Press Start 2P", "Koelle Symbols", Impact, "Arial Black", sans-serif`; };
+    // script: the neon handwriting of a 1960s bar or cinema (a cursive face with a glow round the tube); otherwise the pixel font
+    const setFont = () => { x.font = opts.script ? `italic bold ${size}px "Brush Script MT", "Segoe Script", "URW Chancery L", "Z003", cursive` : `bold ${size}px "Press Start 2P", "Koelle Symbols", Impact, "Arial Black", sans-serif`; };
+    if (opts.script) { size = Math.round(size * 1.25); x.shadowColor = fg; x.shadowBlur = Math.max(4, Math.round(c.height * 0.12)); }
     setFont();
     x.textAlign = 'center'; x.textBaseline = 'middle';
     while (x.measureText(text).width > c.width * 0.9 && size > 6) { size -= 1; setFont(); }
@@ -250,8 +252,8 @@
   }
   function textPlane(text, fg, bg, w, h, emissive, opts) {
     const t = textTexture(text, fg, bg, w, h, opts);
-    const key = 'tp' + t.uuid + (emissive ? 'e' : 'l');
-    if (!matCache.has(key)) matCache.set(key, emissive ? new THREE.MeshBasicMaterial({ map: t, side: THREE.DoubleSide }) : new THREE.MeshLambertMaterial({ map: t, side: THREE.DoubleSide }));
+    const key = 'tp' + t.uuid + (emissive ? 'e' : 'l') + (opts && opts.front ? 'f' : ''), side = opts && opts.front ? THREE.FrontSide : THREE.DoubleSide; // front: one-sided, so a sign seen from behind does not read in mirror writing
+    if (!matCache.has(key)) matCache.set(key, emissive ? new THREE.MeshBasicMaterial({ map: t, side }) : new THREE.MeshLambertMaterial({ map: t, side }));
     return new THREE.Mesh(new THREE.PlaneGeometry(w, h), matCache.get(key));
   }
 
@@ -305,7 +307,7 @@
     }
     // Miami-Vice neon strip along the roof line at night
     if (opts.night && seed % 3 === 0) {
-      const nc = [0xff2d95, 0x00e5ff, 0xc04dff, 0xffd400][seed % 4];
+      const nc = neonCol(THEME.neon ? THEME.neon[seed % THEME.neon.length] : [0xff2d95, 0x00e5ff, 0xc04dff, 0xffd400][seed % 4]); // Miami colours, but period neon on an era track
       addm(g, new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.18, 0.18), bmat(nc))).position.set(0, h + 0.1, d / 2 + 0.1);
       addm(g, new THREE.Mesh(new THREE.BoxGeometry(0.18, h, 0.18), bmat(nc))).position.set(-w / 2 - 0.05, h / 2, d / 2 + 0.1);
       addm(g, new THREE.Mesh(new THREE.BoxGeometry(0.18, h, 0.18), bmat(nc))).position.set(w / 2 + 0.05, h / 2, d / 2 + 0.1);
@@ -321,6 +323,28 @@
       // shop window
       g.add(box(sw - 1, 2.0, 0.15, opts.night ? 0xffe8a0 : 0x9fd3ff, 0, 1.5, d / 2 + 0.02));
       g.add(box(0.9, 2.1, 0.12, 0x5a3a2a, sw / 2 - 0.2, 1.1, d / 2 + 0.05));
+    }
+    // a Ring venue of 1968 (theme.canyon): a cinema marquee with today's film, or a bar's neon script over the door and the
+    // small SPERRSTUNDE plate beside it. The neon takes the period colours (neonCol).
+    if (opts.venue) {
+      const v = opts.venue, z = d / 2, nc = neonCss(v.color || '#ffe7b0'), night = !!opts.night;
+      g.add(box(w - 0.8, 2.5, 0.15, night ? 0xffdc98 : 0x8fb0c8, 0, 1.45, z + 0.03)); // the lit ground floor: glass doors and foyer
+      g.add(box(1.2, 2.2, 0.12, 0x3a2416, w / 2 - 1.4, 1.1, z + 0.12));
+      if (v.kind === 'kino') {
+        const cw = Math.min(w - 0.8, 10);
+        g.add(box(cw, 1.6, 2.8, 0x16141c, 0, 3.7, z + 1.4)); // the marquee over the sidewalk
+        const t = textPlane(v.text, nc, '#120c08', cw, 0.95, true, { border: nc, sizeK: 0.6, script: true }); t.position.set(0, 4.05, z + 2.82); g.add(t);
+        const f = textPlane(v.sub || 'HEUTE: WESTERN', '#141414', '#fff0c8', cw - 0.6, 0.55, night, { sizeK: 0.62 }); f.position.set(0, 3.25, z + 2.82); g.add(f);
+        for (let bx = -cw / 2 + 0.3; bx <= cw / 2 - 0.2; bx += 0.6) { const bulb = box(0.14, 0.14, 0.14, 0xfff0c0, bx, 2.88, z + 2.8); if (night) bulb.material = bmat(neonCol(0xffe7b0)); g.add(bulb); } // bulbs along the edge
+        if (night) g.add(glow(cw + 3, 6, neonCol(v.color || '#ffe7b0'), 0, z + 3));
+        for (const sd of [1, -1]) { const blade = textPlane('KINO', nc, '#120c08', 2.6, 0.9, true, { border: nc, sizeK: 0.62, front: true }); blade.position.set(-w / 2 + 0.9 + sd * 0.03, h * 0.62, z + 1.2); blade.rotation.y = sd * Math.PI / 2; g.add(blade); } // a blade sign over the sidewalk, readable from both ends of the street
+      } else {
+        const sw = Math.min(w - 1.6, 8);
+        const t = textPlane(v.text, nc, '#0b0812', sw, 1.25, true, { border: nc, script: true, sizeK: 0.58 }); t.position.set(-0.4, 3.75, z + 0.14); g.add(t);
+        if (v.sub) { const b = textPlane(v.sub, '#f6eedc', '#6a1a14', sw * 0.8, 0.42, night, { sizeK: 0.62 }); b.position.set(-0.4, 2.95, z + 0.13); g.add(b); }
+        const sp = textPlane('SPERRSTUNDE 1 UHR', '#1a1a1a', '#f2eedf', 1.5, 0.34, false, { sizeK: 0.52, border: '#1a1a1a' }); sp.position.set(w / 2 - 1.4, 2.5, z + 0.14); g.add(sp);
+        if (night) g.add(glow(sw + 4, 5, neonCol(v.color || '#ff3b30'), 0, z + 2));
+      }
     }
     // balconies for Gründerzeit
     if (opts.balconies) {
@@ -529,10 +553,20 @@
   // LamboGina: everything that pumps with the song's kick (reset for every new scene)
   const beatFx = { mats: new Set(), glows: new Set(), lights: [] };
   const glowCache = new Map();
+  // Neon on an era track (theme.neon, the period palette: on the 1968 Ring red, warm white, yellow and blue): every neon
+  // colour snaps to the nearest colour of that list, so no pink or cyan of the 1980s glows over the Ring. NEON_USED keeps
+  // what this scene asked for (the period test reads it via World.neonUsed).
+  const NEON_USED = new Set();
+  function neonCol(c) {
+    let col = new THREE.Color(c);
+    if (THEME && THEME.neon && THEME.neon.length) { let best = null, bd = Infinity; for (const p of THEME.neon) { const q = new THREE.Color(p), d = (q.r - col.r) ** 2 + (q.g - col.g) ** 2 + (q.b - col.b) ** 2; if (d < bd) { bd = d; best = q; } } col = best; }
+    NEON_USED.add('#' + col.getHexString()); return col.getHex();
+  }
+  const neonCss = (c) => '#' + new THREE.Color(neonCol(c)).getHexString();
   function glowMat(color) { const k = 'g' + color; if (!glowCache.has(k)) glowCache.set(k, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.11, blending: THREE.AdditiveBlending, depthWrite: false })); return glowCache.get(k); }
   function glow(w, d, color, x, z) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), glowMat(color)); m.rotation.x = -Math.PI / 2; m.position.set(x || 0, 0.12, z || 0); return m; }
   P.neon = (o) => {
-    const g = new THREE.Group(); const col = o.color || '#ff2d95';
+    const g = new THREE.Group(); const col = neonCss(o.color || '#ff2d95');
     const w = o.small ? 9 : 18, h = o.small ? 2.4 : 4;
     const s = textPlane(o.text, col, '#0a0a18', w, h, true, { border: col });
     s.position.y = o.small ? 4.2 : 6; g.add(s); beatFx.mats.add(s.material);
@@ -731,6 +765,11 @@
     { shirt: 0x1a1a1a, pants: 0x1a1a1a, hat: 'tricorn', hatColor: 0x1a1a1a, scarf: 0xc1121f }, { shirt: 0xd21f2b, dress: 0xd21f2b, scarf: 0x111111 },
     { shirt: 0xf4f4f2, pants: 0xc1121f, koelsch: true, hat: 'cap', hatColor: 0xc1121f }, { shirt: 0x2a2a2a, dress: 0x2a2a2a, scarf: 0xffffff }
   ];
+  // matchday: plain red and white scarves, shirts and caps (no crest, no name, no sponsor on anything)
+  const FAN_OUTFITS = [
+    { shirt: 0xc1121f, pants: 0x2a2a34, scarf: 0xffffff }, { shirt: 0xffffff, pants: 0x3a4a6a, scarf: 0xc1121f }, { shirt: 0xc1121f, pants: 0x3a4a6a, scarf: 0xffffff, hat: 'cap', hatColor: 0xffffff },
+    { shirt: 0xf4f4f0, pants: 0x2a2a30, scarf: 0xc1121f, koelsch: true }, { shirt: 0xffffff, pants: 0x2a2a34, scarf: 0xc1121f, hat: 'cap', hatColor: 0xc1121f }, { shirt: 0xc1121f, dress: 0xffffff, scarf: 0xffffff }
+  ];
   P.figure = (h, coat, hat, skin) => human({ h: 1.75 * (h || 0.55) / 0.55 * 0.55, shirt: coat, pants: coat === 0x1a1a1a ? 0x1a1a1a : 0x2a2a34, hat: hat ? 'fedora' : 'none', hatColor: hat, skin: skin });
   P.human = human;
   P.tuenn = () => { const g = human({ h: 2.1, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true, shades: true, koelsch: true, wave: true, coat: true, age: 1, moustache: 0x2a2a2a, tie: 0x8a1a1a, heavy: true, smile: 0.5 }); g.userData.wave = true; animated.push(g);
@@ -768,7 +807,43 @@
       addm(g, new THREE.Mesh(new THREE.SphereGeometry(3, 8, 8), bmat(0xff3333))).position.set(x, 74, z);
     }
     const s = textPlane('MÜNGERSDORFER STADION', '#c1121f', '#ffffff', 60, 6, night); s.position.set(0, 26, 62); g.add(s);
+    if (fl && fl.scale) g.scale.setScalar(fl.scale); // Heimspill drives round it: a smaller bowl beside the road, the far one on the skyline stays full size
     g.userData.kind = 'prop:stadion'; return g; };
+  // ---- Heimspill (matchday at Müngersdorf): the gate, the floodlight masts at the loop, the Jahnwiese goat, a railway bridge ----
+  // No crest, no club name, no sponsor: red and white, a turnstile and a doorman are enough.
+  P.stadiontor = (o) => { // the west gate: two brick pillars, a red-white bar across, turnstiles, ticket windows and a hand-painted board
+    const g = new THREE.Group(), RED = 0xc1121f, WHITE = 0xf4f4f0;
+    for (const x of [-6, 6]) { g.add(box(1.6, 5.2, 1.6, 0x8a4a3a, x, 2.6, 0)); g.add(box(1.9, 0.4, 1.9, 0xb8a88f, x, 5.4, 0)); }
+    for (let k = 0; k < 8; k++) g.add(box(1.5, 0.9, 0.5, k % 2 ? WHITE : RED, -5.25 + k * 1.5, 4.6, 0)); // the bar over the gate, rut un wieß
+    const sign = textPlane((o && o.text) || 'EINGANG WEST · BLOCK S', '#ffffff', '#c1121f', 9, 1.1, THEME.night, { border: '#ffffff', sizeK: 0.5 }); sign.position.set(0, 4.6, 0.27); g.add(sign);
+    for (const x of [-3, -1, 1, 3]) { g.add(box(0.7, 1.1, 0.7, 0x6a6a72, x, 0.55, 0)); g.add(box(0.06, 0.06, 1.0, 0xc8c8cc, x + 0.36, 0.9, 0)); } // turnstiles
+    g.add(box(4, 2.6, 2.4, WHITE, 9.5, 1.3, -0.6)); const kasse = textPlane('KASSE · STEHPLATZ', '#c1121f', '#ffffff', 3.6, 0.6, false, { sizeK: 0.55 }); kasse.position.set(9.5, 2.2, 0.62); g.add(kasse);
+    g.add(box(3.2, 1.0, 0.1, 0x2a3a50, 9.5, 1.3, 0.62));
+    const board = textPlane('AUSVERKAUFT', '#ffffff', '#1a1a1a', 4, 0.7, false, { sizeK: 0.6 }); board.position.set(-9.5, 1.6, 0.1); g.add(board); g.add(box(0.12, 1.6, 0.12, 0x5a3a20, -9.5, 0.8, -0.05));
+    return g; };
+  P.flutmast = () => { // a floodlight mast like the stadium's corner towers: a tall white pylon, the lamp head at the top
+    const g = new THREE.Group(), night = THEME.night || THEME.dusk;
+    g.add(box(1.8, 34, 1.8, 0xd8d8dc, 0, 17, 0)); for (let y = 4; y < 33; y += 4) g.add(box(2.1, 0.25, 2.1, 0xb8b8bc, 0, y, 0));
+    const head = box(7, 3.4, 1.2, 0xe8e8e8, 0, 35, 0.4); if (night) head.material = bmat(0xfff6d0); g.add(head);
+    for (let x = -2.6; x <= 2.6; x += 1.3) for (const y of [34.2, 35.8]) g.add(box(1.0, 1.0, 0.1, night ? 0xffffff : 0xf2f0e0, x, y, 1.05));
+    addm(g, new THREE.Mesh(new THREE.SphereGeometry(0.6, 8, 6), bmat(0xff3333))).position.set(0, 37.2, 0);
+    return g; };
+  P.geissbock = () => { // a white goat grazing on the Jahnwiese, tied to a stake (just a goat: no name, no collar badge)
+    const g = new THREE.Group(), GOAT = 0xf2efe6, HORN = 0x8a7a5a;
+    g.add(box(0.5, 0.5, 1.15, GOAT, 0, 0.88, 0));
+    for (const [lx, lz] of [[-0.17, 0.42], [0.17, 0.42], [-0.17, -0.42], [0.17, -0.42]]) g.add(box(0.11, 0.64, 0.11, GOAT, lx, 0.32, lz));
+    const head = new THREE.Group(); head.position.set(0, 0.75, 0.66); head.rotation.x = 0.7; g.add(head); // the head down in the grass
+    head.add(box(0.26, 0.3, 0.42, GOAT, 0, 0, 0.12)); head.add(box(0.1, 0.16, 0.08, 0xd8d0c0, 0, -0.22, 0.24)); // muzzle and beard
+    for (const sx of [-1, 1]) { const h = box(0.06, 0.34, 0.06, HORN, sx * 0.08, 0.26, -0.02); h.rotation.x = -0.6; head.add(h); head.add(box(0.14, 0.05, 0.08, GOAT, sx * 0.17, 0.08, -0.02)); }
+    g.add(box(0.08, 0.2, 0.06, GOAT, 0, 1.05, -0.6)); // the tail
+    g.add(cyl(0.04, 0.05, 0.7, 0x6a4a2a, 1.6, 0.35, 0.9, 5)); const lead = box(0.02, 0.02, 1.7, 0x8a1a1a, 0.8, 0.5, 0.75); lead.rotation.y = 1.2; g.add(lead);
+    return g; };
+  P.bahnbruecke = () => { // the railway bridge over the Zülpicher Straße at Bahnhof Süd: abutments beside the road, a riveted steel girder over it
+    const g = new THREE.Group(), span = ROAD_W * 2 + 7;
+    for (const x of [-span / 2 - 1.2, span / 2 + 1.2]) g.add(tbox(2.4, 7.5, 12, T.brick(0x7a4636), x, 3.75, 0, 0xffffff, [4, 4]));
+    g.add(box(span + 5, 1.3, 9, 0x3a4048, 0, 6.6, 0)); for (const z of [-4.6, 4.6]) { g.add(box(span + 5, 1.6, 0.25, 0x2c3238, 0, 7.4, z)); for (let x = -span / 2; x <= span / 2; x += 1.6) g.add(box(0.14, 1.5, 0.3, 0x24282e, x, 7.4, z)); }
+    g.add(box(span + 5, 0.3, 8, 0x5a5048, 0, 7.4, 0)); // the ballast bed
+    return g; };
   P.rain = () => { // drizzle for Chicago-am-Rhein nights, follows the camera: thin slanted streaks, not snowflakes
     const N = 1100, LEN = 0.9; const pos = new Float32Array(N * 6);
     for (let i = 0; i < N; i++) { const x = (Math.random() - 0.5) * 80, y = Math.random() * 40, z = (Math.random() - 0.5) * 80; pos.set([x, y, z, x + 0.08, y + LEN, z + 0.05], i * 6); }
@@ -779,7 +854,7 @@
     const g = new THREE.Group();
     const cols = [0xc1121f, 0xffffff, 0xffd400, 0x1c3f95, 0xff5fa2, 0x2d6a4f, 0xff8800];
     const r = mulberry(31);
-    const outfits = THEME.confetti ? CROWD_OUTFITS.concat(JECK_OUTFITS, JECK_OUTFITS) : CROWD_OUTFITS; // on carnival tracks most people are in costume
+    const outfits = THEME.matchday ? FAN_OUTFITS : THEME.confetti ? CROWD_OUTFITS.concat(JECK_OUTFITS, JECK_OUTFITS) : CROWD_OUTFITS; // on carnival tracks most people are in costume; on matchday everyone is in plain red and white
     for (let i = 0; i < 10; i++) { const f = human(Object.assign({ h: 1.6 + r() * 0.3, lite: true }, outfits[Math.floor(r() * outfits.length)])); f.position.set((i - 4.5) * 1.3, 0, (r() - 0.5) * 2); f.rotation.y = (r() - 0.5) * 0.6; g.add(f); }
     if (THEME.confetti) { // carnival: three deep, children in front with their bags up, umbrellas upside down for the Kamelle
       for (let i = 0; i < 9; i++) { const f = human(Object.assign({ h: 1.65 + r() * 0.3, lite: true }, outfits[Math.floor(r() * outfits.length)])); f.position.set((i - 4) * 1.4 + 0.5, 0, -2.2 + (r() - 0.5) * 0.8); f.rotation.y = (r() - 0.5) * 0.5; g.add(f); }
@@ -857,7 +932,7 @@
     const crown = (r, y, dx, dz, col) => { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mat(col)); m.position.set(dx, y, dz); g.add(m); };
     const C = THEME && THEME.autumn ? [0xb8642a, 0xd8a03a, 0x9a4a22, 0xc7882e] : [0x2f7a3a, 0x3f9a48, 0x2a6e34, 0x358a40]; // November on the 11.11.: orange-brown leaves
     crown(1.9 * s, 3.8 * s, 0, 0, C[0]); crown(1.4 * s, 4.9 * s, 0.6 * s, 0.3 * s, C[1]); crown(1.3 * s, 4.4 * s, -0.8 * s, -0.4 * s, C[2]); crown(1.1 * s, 3.4 * s, 0.9 * s, -0.7 * s, C[3]);
-    return g; };
+    g.userData.green = true; return g; };
   P.tram = (o) => { // KVK Stadtbahn: white with the red band, black window strip, pantograph, line number
     const g = new THREE.Group(); const line = (o && o.line) || ['1 WEIDEN WEST', '7 ZÜNDORF', '9 KÖNIGSFORST', '12 MERKENICH', '15 CHORWEILER', '16 NIEHL', '18 THIELENBRUCH'][Math.floor(Math.random() * 7)];
     g.add(box(2.4, 1.0, 14, 0xf4f4f0, 0, 1.0, 0)); g.add(box(2.42, 0.22, 14.02, 0xe30613, 0, 1.45, 0)); g.add(box(2.4, 1.0, 14, 0x1a1a22, 0, 2.05, 0));
@@ -981,7 +1056,7 @@
     const r = tplane(4, len, T.rails(), 1, len / 4); r.rotation.x = -Math.PI / 2; r.position.y = 0.06; g.add(r);
     for (let z = -len / 2; z <= len / 2; z += 30) { g.add(cyl(0.1, 0.12, 6, 0x555555, 2.4, 3, z, 6)); g.add(box(3, 0.1, 0.1, 0x555555, 1, 6, z)); }
     g.add(box(0.05, 0.05, len, 0x333333, 0, 5.4, 0));
-    const tram = P.tram(); tram.userData.tramline = { len, dir: 1, speed: 9 + Math.random() * 3 }; tram.userData.keep = true; g.add(tram); animated.push(tram);
+    const tram = P.tram(o); tram.userData.tramline = { len, dir: 1, speed: 9 + Math.random() * 3 }; tram.userData.keep = true; g.add(tram); animated.push(tram);
     return g;
   };
   P.hansahochhaus = () => { // 1920s brick high-rise on the Hansaring, once the tallest in Europe
@@ -1093,7 +1168,7 @@
   P.kleinkoeln = () => { // Friesenstraße: first Cologne bar with a night licence (1926), boxers weighed in here
     const g = new THREE.Group(); g.add(clubFront(16, 14, 12, 0xd8c8a8, 'gruenderzeit', 21));
     const sign = textPlane('KLEIN KÖLN · SEIT 1926', '#ffd400', '#7a1010', 12, 1.6, THEME.night, { border: '#ffd400' }); sign.position.set(0, 4.6, 6.1); g.add(sign);
-    const n2 = textPlane('BOXER · NACHTLIZENZ · KÖLSCH', THEME.night ? '#ff2d95' : '#ffffff', '#1a1020', 9, 0.9, THEME.night); n2.position.set(0, 3.5, 6.1); g.add(n2);
+    const n2 = textPlane('BOXER · NACHTLIZENZ · KÖLSCH', THEME.night ? neonCss('#ff2d95') : '#ffffff', '#1a1020', 9, 0.9, THEME.night); n2.position.set(0, 3.5, 6.1); g.add(n2);
     // weigh-in scale and a couple of boxers out front
     g.add(box(0.9, 0.15, 0.9, 0x333333, -5, 0.08, 7.2)); g.add(cyl(0.05, 0.05, 1.6, 0x888888, -5, 0.9, 6.9, 6)); g.add(cyl(0.3, 0.3, 0.08, 0xffffff, -5, 1.7, 6.9, 12));
     const b1 = human({ h: 1.82, shirt: 0xe0ac69, pants: 0xc1121f, hat: 'none', skin: 0xe0ac69 }); b1.position.set(-4, 0, 8); b1.rotation.y = 0.6; g.add(b1);
@@ -1102,17 +1177,17 @@
     if (THEME.night) g.add(glow(16, 8, 0xffd400, 0, 8));
     return g; };
   P.loversclub = () => { // the club where dä Lange started as a doorman in the early 60s
-    const g = new THREE.Group(); g.add(clubFront(18, 12, 12, 0x3a2a3a, 'concrete', 8));
-    const sign = textPlane('LOVERS CLUB', '#ff2d95', '#14061a', 12, 2.2, THEME.night, { border: '#ff2d95' }); sign.position.set(0, 7, 6.1); g.add(sign);
-    for (const sx of [-1, 1]) { const heart = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), THEME.night ? bmat(0xff2d95) : mat(0xff2d95)); heart.position.set(sx * 7.5, 7, 6.3); g.add(heart); }
+    const g = new THREE.Group(); g.add(clubFront(18, 12, 12, 0x3a2a3a, 'concrete', 8)); const PK = neonCol(0xff2d95), pk = neonCss('#ff2d95'); // pink neon, on the 1968 Ring snapped to the period colours
+    const sign = textPlane('LOVERS CLUB', pk, '#14061a', 12, 2.2, THEME.night, { border: pk }); sign.position.set(0, 7, 6.1); g.add(sign);
+    for (const sx of [-1, 1]) { const heart = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), THEME.night ? bmat(PK) : mat(PK)); heart.position.set(sx * 7.5, 7, 6.3); g.add(heart); }
     g.add(box(4, 0.05, 6, 0xa01020, 0, 0.13, 9)); // red carpet
     for (const sx of [-1, 1]) for (let k = 0; k < 3; k++) { g.add(cyl(0.05, 0.05, 1, 0xd0b060, sx * 1.6, 0.5, 6.8 + k * 1.6, 6)); g.add(box(0.06, 0.06, 1.6, 0xc1121f, sx * 1.6, 0.95, 7.6 + k * 1.6)); }
-    const door = box(2.4, 3.2, 0.2, 0x2a1020, 0, 1.6, 6.05); g.add(door); addm(g, new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 0.3), bmat(0xff2d95))).position.set(0, 3.3, 6.15);
+    const door = box(2.4, 3.2, 0.2, 0x2a1020, 0, 1.6, 6.05); g.add(door); addm(g, new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 0.3), bmat(PK))).position.set(0, 3.3, 6.15);
     const tuenn = human({ h: 2.08, skin: 0xe0ac69, shirt: 0x14141a, pants: 0x14141a, hat: 'fedora', hatColor: 0x0a0a0a, cigar: true, glasses: true }); tuenn.position.set(2.4, 0, 7.4); tuenn.rotation.y = 0.5; g.add(tuenn);
     const s2 = textPlane('TÜRSTEHER: DÄ LANGE · 2,10 M', '#ffd400', '#111', 3.4, 0.5, THEME.night, { sizeK: 0.5 }); s2.position.set(2.4, 2.6, 7.4); g.add(s2);
     const q = [{ shirt: 0xffffff, dress: 0xff2d95, hair: 0xd9a24a }, { shirt: 0x2a2a30, hat: 'fedora' }, { shirt: 0xffd400 }, { shirt: 0x1c3f95, hat: 'cap' }];
     q.forEach((o, i) => { const hm = human(Object.assign({ h: 1.6 + (i % 2) * 0.2 }, o)); hm.position.set(-2.2 - i * 0.9, 0, 7.6 + i * 0.7); hm.rotation.y = 0.9; g.add(hm); });
-    if (THEME.night) { g.add(glow(20, 12, 0xff2d95, 0, 9)); const pl = new THREE.PointLight(0xff2d95, 1.4, 40); pl.position.set(0, 6, 8); g.add(pl); }
+    if (THEME.night) { g.add(glow(20, 12, PK, 0, 9)); const pl = new THREE.PointLight(PK, 1.4, 40); pl.position.set(0, 6, 8); g.add(pl); }
     return g; };
   P.sartory = () => { // Sartory-Säle on Friesenstraße: ballroom, boxing nights, carnival sessions
     const g = new THREE.Group(); g.add(building(30, 16, 22, 'concrete', 0xe8dcc4, 'flat', 5, { night: THEME.night }));
@@ -1126,7 +1201,7 @@
     const g = new THREE.Group(); g.add(building(22, 15, 18, 'concrete', 0xc9c2b4, 'flat', 12, { night: THEME.night }));
     g.add(box(24, 1.6, 6, 0x2a2a30, 0, 6.5, 11)); for (let k = 0; k < 8; k++) addm(g, new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 6), bmat(0xffe08a))).position.set(-10.5 + k * 3, 7.4, 13.6);
     const m = textPlane('RESIDENZ · HEUTE: CHICAGO AM RHEIN', '#111', '#fff8e0', 22, 1.4, THEME.night, { border: '#c1121f' }); m.position.set(0, 6.5, 14.05); g.add(m);
-    const s2 = textPlane('KINO', '#ff2d95', '#1a1020', 6, 2.2, THEME.night, { border: '#ff2d95' }); s2.position.set(0, 11, 9.1); g.add(s2);
+    const kn = neonCss('#ff2d95'), s2 = textPlane('KINO', kn, '#1a1020', 6, 2.2, THEME.night, { border: kn }); s2.position.set(0, 11, 9.1); g.add(s2);
     for (let k = 0; k < 3; k++) { const p = textPlane(['DER PATE VOM RING', 'ZOCKER', 'FRISCHSE PITTER'][k], '#ffd400', ['#5a1020', '#102a5a', '#2a2a2a'][k], 3, 4, false, { sizeK: 0.35 }); p.position.set(-7 + k * 7, 3.2, 9.1); g.add(p); }
     return g; };
   P.spielclub = () => { // Zocker den
@@ -1134,7 +1209,7 @@
     const sign = textPlane('HERRENCLUB · NUR FÜR MITGLIEDER', '#ffe7b0', '#14100a', 12, 1.4, THEME.night, { border: '#b8862e' }); sign.position.set(0, 5, 6.1); g.add(sign);
     const dice = box(0.9, 0.9, 0.9, 0xffffff, -6, 7.5, 6.2); dice.rotation.set(0.4, 0.6, 0.2); g.add(dice); for (let k = 0; k < 3; k++) g.add(box(0.15, 0.15, 0.1, 0x111111, -6.3 + k * 0.3, 7.5 + (k % 2) * 0.3, 6.7));
     const z = human({ h: 1.75, shirt: 0x8a1a1a, pants: 0x2a2a2a, hat: 'fedora', hatColor: 0x8a1a1a, cigar: true }); z.position.set(3, 0, 7.5); z.rotation.y = -0.4; g.add(z);
-    if (THEME.night) g.add(glow(14, 8, 0x00e5ff, 0, 8));
+    if (THEME.night) g.add(glow(14, 8, neonCol(0x00e5ff), 0, 8));
     return g; };
   P.zockertisch = () => { // card table under a lamp: four Zocker, cards, chips, a Kölsch each
     const g = new THREE.Group();
@@ -1171,13 +1246,15 @@
     const styles = THEME.street === 'altstadt' ? ['altstadt', 'altstadt', 'altstadt', 'wiederaufbau'] : THEME.street === 'industrial' ? ['industrial', 'brick', 'brick', 'concrete'] : THEME.street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'gruenderzeit', 'gruenderzeit', 'wiederaufbau', 'wiederaufbau', 'brick']; const st = styles[Math.floor(r() * styles.length)];
     const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'industrial' ? INDUSTRIAL : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE;
     const w = o.w || (st === 'altstadt' ? 6 + r() * 3 : st === 'wiederaufbau' ? 10 + r() * 6 : 9 + r() * 5), d = o.d || 11 + r() * 5, h = st === 'altstadt' ? 11 + r() * 6 : st === 'wiederaufbau' ? 12.8 + Math.floor(r() * 3) * 3.2 : st === 'brick' ? 12 + r() * 5 : 14.4 + Math.floor(r() * 3) * 3.6;
-    const shops = (THEME.shops || []).concat(SHOPS, GD().TUENN.shops || []);
+    const shops = THEME.era && THEME.shops ? THEME.shops : (THEME.shops || []).concat(SHOPS, GD().TUENN.shops || []); // an era track only has the shops of its year
     const pub = o.pub != null ? !!o.pub : r() < (THEME.street === 'altstadt' ? 0.22 : 0.09);
-    const shop = pub ? PUBS[Math.floor(r() * PUBS.length)] : r() < 0.45 ? shops[Math.floor(r() * shops.length)] : null;
-    const opts = { shop, brauhaus: pub, signBg: pub ? ['#7a1a1a', '#1c3f95', '#2d6a4f', '#111111'][Math.floor(r() * 4)] : null, balconies: st === 'gruenderzeit' && r() < 0.7, night: THEME.night, awning: [0xc1121f, 0x1c3f95, 0x2d6a4f, 0xffd400][Math.floor(r() * 4)] };
+    // the 1968 Ring (theme.canyon): every third house a cinema or a bar, nearly every other one a shop window
+    const venues = THEME.canyon && THEME.venues, venue = venues && !pub && !o.plain && r() < 0.34 ? venues[Math.floor(r() * venues.length)] : null;
+    const shop = pub ? PUBS[Math.floor(r() * PUBS.length)] : venue ? null : r() < (THEME.canyon ? 0.8 : 0.45) ? shops[Math.floor(r() * shops.length)] : null;
+    const opts = { shop, venue, brauhaus: pub, signBg: pub ? ['#7a1a1a', '#1c3f95', '#2d6a4f', '#111111'][Math.floor(r() * 4)] : null, balconies: st === 'gruenderzeit' && r() < 0.7, night: THEME.night, awning: [0xc1121f, 0x1c3f95, 0x2d6a4f, 0xffd400][Math.floor(r() * 4)] };
     const g = building(w, h, d, st, cols[Math.floor(r() * cols.length)], st === 'altstadt' ? (r() < 0.5 ? 'stepped' : 'gable') : st === 'gruenderzeit' ? 'hip' : st === 'brick' ? (r() < 0.5 ? 'gable' : 'flat') : st === 'wiederaufbau' ? (r() < 0.6 ? 'hip' : 'flat') : 'flat', Math.floor(r() * 1000), opts);
     if (THEME.murals && r() < 0.3) for (const sx of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(d * 0.86, h * 0.82), muralMat(Math.floor(r() * 8))); m.position.set(sx * (w / 2 + 0.06), h * 0.45, 0); m.rotation.y = sx * Math.PI / 2; g.add(m); } // Ehrenfeld: murals on the firewalls
-    g.userData.w = w; g.userData.d = d; g.userData.pub = pub; return g; };
+    g.userData.w = w; g.userData.d = d; g.userData.pub = pub; g.userData.venue = venue ? venue.kind : null; return g; };
   // big pixel murals for firewalls (all invented motifs: faces, a goat, a heart, the Dom, waves, stripes)
   const muralMats = [];
   function muralMat(k) {
@@ -1215,7 +1292,7 @@
       addm(g, P.buedchen()).position.set(w / 2 - 6, 0, d / 2 - 6);
     }
     if (r() < 0.3) { const kd = P.parkedcar({ taxi: false, color: 0x2d6a4f }); kd.position.set(-w / 2 + 4, 0, -d / 2 + 5); g.add(kd); }
-    return g; };
+    g.userData.green = true; return g; };
   P.greenstrip = (o) => { // lawn strip with plane trees, a bench and a stroller – the Rheingarten look
     const r = mulberry((o && o.seed) || 5); const g = new THREE.Group();
     const lawn = tplane(10, 13, T.grass(0x5e9a4a, 1), 2, 3); lawn.rotation.x = -Math.PI / 2; lawn.position.y = 0.04; g.add(lawn);
@@ -1223,7 +1300,7 @@
     if (r() < 0.6) { const b = P.bank(); b.position.set(0, 0, 0); b.rotation.y = -Math.PI / 2; g.add(b); }
     if (r() < 0.7) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 6, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
     if (r() < 0.25) addm(g, P.lamp()).position.set(3, 0, -5);
-    return g; };
+    g.userData.green = true; return g; };
   P.grove = (o) => { // a clump of trees with a path, a bench and a stroller (Rheinpark, Stadtwald)
     const r = mulberry((o && o.seed) || 21); const g = new THREE.Group(); const n = 5 + Math.floor(r() * 6);
     for (let i = 0; i < n; i++) { const a = r() * Math.PI * 2, d = 3 + r() * 14; addm(g, P.tree(Math.floor(r() * 3))).position.set(Math.cos(a) * d, 0, Math.sin(a) * d); }
@@ -1231,7 +1308,7 @@
     if (r() < 0.7) { const b = P.bank(); b.position.set(2, 0, 4); b.rotation.y = r() * Math.PI * 2; g.add(b); }
     if (r() < 0.6) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set((r() - 0.5) * 8, 0, (r() - 0.5) * 8); f.rotation.y = r() * Math.PI * 2; g.add(f); }
     if (r() < 0.25) addm(g, P.lamp()).position.set(-3, 0, -3);
-    return g; };
+    g.userData.green = true; return g; };
   P.flowerbed = (o) => { // Flora-style flower beds: coloured rings on a lawn with a hedge
     const r = mulberry((o && o.seed) || 33); const g = new THREE.Group();
     const cols = [0xff5fa2, 0xffd400, 0xc1121f, 0xffffff, 0xff8800, 0xc04dff];
@@ -1239,7 +1316,7 @@
     g.add(cyl(0.9, 0.9, 0.6, 0x2f6b3a, 0, 0.3, 0, 12)); g.add(cone(1.4, 3.5, 0x2f6b3a, 0, 2.3, 0, 8));
     for (const a of [0, 1.57, 3.14, 4.71]) { const b = P.bank(); b.position.set(Math.cos(a) * 9, 0, Math.sin(a) * 9); b.rotation.y = -a + Math.PI / 2; g.add(b); }
     for (let i = 0; i < 2; i++) { const f = P.passant({ k: Math.floor(r() * 20) }); f.position.set(Math.cos(i * 2.5) * 7.5, 0, Math.sin(i * 2.5) * 7.5); f.rotation.y = r() * Math.PI * 2; g.add(f); }
-    return g; };
+    g.userData.green = true; return g; };
   P.pond = (o) => { // a park pond with reeds, ducks and a willow
     const r = mulberry((o && o.seed) || 44); const g = new THREE.Group(); const k = (o && o.scale) || 1, w = (18 + r() * 10) * k, d = (12 + r() * 8) * k;
     if (o && o.lawn) { // a big park lawn round the water (Aachener Weiher): Veedel people grilling, sitting, playing
@@ -1254,7 +1331,7 @@
     for (let i = 0; i < 10; i++) { const a = r() * Math.PI * 2; g.add(cyl(0.05, 0.08, 1.2 + r() * 0.6, 0x4a7a2a, Math.cos(a) * (w / 2 + 0.4), 0.6, Math.sin(a) * (d / 2 + 0.4), 5)); }
     for (let i = 0; i < 4; i++) { const a = r() * Math.PI * 2, dd = r() * 0.6; g.add(box(0.35, 0.2, 0.5, [0xf4f4f4, 0x6a4a2a, 0x3a5a2a][i % 3], Math.cos(a) * w / 2 * dd, 0.3, Math.sin(a) * d / 2 * dd)); }
     addm(g, P.tree(2)).position.set(w / 2 + 3, 0, -2); addm(g, P.bank()).position.set(-w / 2 - 3, 0, 2);
-    return g; };
+    g.userData.green = true; return g; };
   P.platz = (o) => { // a small square in a side street: cobbles, market stand or Kölsch stand, benches, people, a Litfaß
     o = o || {}; const r = mulberry(o.seed || 3); const g = new THREE.Group(); const w = 16, d = 14;
     const pl = tplane(w, d, T.cobble(0xb8b0a4, 2), w / 4, d / 4); pl.rotation.x = -Math.PI / 2; pl.position.y = 0.05; g.add(pl);
@@ -1321,6 +1398,7 @@
     // a jump's landing zone (the landing ramp and the run-out behind its foot): yellow-black chevrons, a red line where it ends
     const zone = new Map(); for (let i = 0; i < n; i++) if (S[i].kind === 'land' && S[(i - 1 + n) % n].kind === 'gap') { let j = i; while (S[j % n].kind === 'land') j++; const end = j + Math.round((TB.LAND_ZONE || 34) / track.ds); for (let k = i; k <= end; k++) zone.set(k % n, k === end ? 'end' : (k - i) % 4 < 2 ? 'y' : 'k'); }
     const cYel = new THREE.Color(theme.night ? 0xc9a400 : 0xffd400), cBlk = new THREE.Color(0x151515);
+    const cRail = new THREE.Color(theme.night ? 0x7a7c88 : 0xa0a0a8);
     for (let i = 0; i < n; i++) {
       const a = S[i], b = S[(i + 1) % n];
       if (zone.has(i)) { const z = zone.get(i), h = 0.15; if (z === 'end') paint(off(a, -ROAD_W, h), off(a, ROAD_W, h), off(b, -ROAD_W, h), off(b, ROAD_W, h), cRed); else for (const sd of [-1, 1]) paint(off(a, sd * (ROAD_W - 1.2), h), off(a, sd * (ROAD_W - 0.2), h), off(b, sd * (ROAD_W - 1.2), h), off(b, sd * (ROAD_W - 0.2), h), z === 'y' ? cYel : cBlk); }
@@ -1344,6 +1422,8 @@
       if (openR && !mouth['1'].has(i - 1)) paint(off(a, ROAD_W - 0.1, h + 0.04), off(a, ROAD_W + 0.25, h + 0.04), off(b, ROAD_W - 0.1, h + 0.04), off(b, ROAD_W + 0.25, h + 0.04), cLine);
       if (zebra.has(i)) { // Zebrastreifen: white bars across the road at the crossings of city straights
         for (let k = -5; k <= 5; k++) paint(off(a, k * 1.05 - 0.28, h + 0.04), off(a, k * 1.05 + 0.28, h + 0.04), off(b, k * 1.05 - 0.28, h + 0.04), off(b, k * 1.05 + 0.28, h + 0.04), cWhite);
+      } else if (theme.canyon && a.kind === 'straight' && !nearStart) { // the 1968 Ring: the tram runs in the middle of the street, its two rails set in the asphalt
+        for (const r of [-0.76, 0.68]) paint(off(a, r, h + 0.04), off(a, r + 0.08, h + 0.04), off(b, r, h + 0.04), off(b, r + 0.08, h + 0.04), cRail);
       } else if (Math.floor(i / 4) % 2 === 0 && !nearStart) paint(off(a, -0.18, h + 0.04), off(a, 0.18, h + 0.04), off(b, -0.18, h + 0.04), off(b, 0.18, h + 0.04), cLine);
       // sidewalks in the city
       const flat = (a.kind === 'straight' || a.kind === 'curve' || a.kind === 'hill' || a.kind === 'dip' || a.kind === 'tunnel') && a.p.y > -0.02 && b.p.y > -0.02;
@@ -1478,6 +1558,7 @@
   function buildScenery(track, theme) {
     animated.length = 0;
     beatFx.mats.clear(); beatFx.glows.clear(); beatFx.lights.length = 0;
+    NEON_USED.clear();
     THEME = theme;
     const g = new THREE.Group();
     // the real street at each segment of the circuit (track.def.signs: [[seg, 'NAME'], ...], valid from that segment on)
@@ -1492,7 +1573,7 @@
     const branchW = (r) => r.halfWidth + (root.RouteExtras ? root.RouteExtras.parking(r) : 0);
     const streetSamples = S.concat(...(track.shortcuts || []).map((r) => r.samples.map((q) => Object.assign({ clearanceWidth: branchW(r) + 3.0, reserveWidth: branchW(r) + 3.4, route: r }, q))));
     // ground
-    const gtex = (theme.street === 'altstadt' ? T.cobble(theme.ground, 1) : theme.street && theme.street !== 'park' ? T.asphalt(theme.ground, 1) : T.grass(theme.ground, 1)).clone();
+    const gtex = (theme.street === 'altstadt' ? T.cobble(theme.ground, 1) : theme.street && theme.street !== 'park' && !theme.lawn ? T.asphalt(theme.ground, 1) : T.grass(theme.ground, 1)).clone(); // theme.lawn: a green suburb (Heimspill: Müngersdorf, Stadtwald, Lindenthal)
     gtex.needsUpdate = true; gtex.repeat.set(1500, 1500);
     // roads that dip below ground level (dips) get a trench cut out of the ground plane, with retaining walls
     const trenchRuns = []; { let run = null; for (let i = 0; i < n; i++) { const below = S[i].kind !== 'loop' && S[i].p.y < -0.02; if (below) { if (!run) { run = [i, i]; trenchRuns.push(run); } run[1] = i; } else run = null; } }
@@ -1526,7 +1607,7 @@
       if (i0 < 0) return 0;
       return ((i0 + (u == null ? 0.5 : u) * (i1 - i0)) * track.ds) / L;
     }
-    const SPANS = /^prop:(jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
+    const SPANS = /^prop:(bahnbruecke|jumphouse|hbarch|seilbahn|suspension|severinsbruecke|viaduct|hahnentor|eigelsteintor|severinstor|zootor|bunting|dom|tramline|neon|rheinsprung|rhine|rhineSide|banner|gantry|hbf)$/;
     // The city's sidewalks are paved 0.22 m above the circuit's base line (buildRoad). Everything that was
     // placed at ground level inside that band (lamps, signs, Ampeln, people, bins, street scenes) is lifted
     // onto the paving, instead of standing knee-deep in it.
@@ -1686,7 +1767,8 @@
         const u = ch.userData;
         if (u.landmarkName || u.keep || u.sky || u.water || (u.kind || '').startsWith('prop:')) continue;
         const fp = footprint(ch); if (!fp || fp.maxX - fp.minX > 700 || fp.maxY < GROUND_Y + 0.3) continue;
-        if (landmarkPlots.some((plot) => overlaps(fp, plot, 1)) || signPlots.some((plot) => overlaps(fp, plot, 0))) { group.remove(ch); engulfed++; }
+        const box = signPlots.length ? new THREE.Box3().setFromObject(ch) : null; // a sign's view is kept free of the filler's whole box (a rotated house's corner too)
+        if (landmarkPlots.some((plot) => overlaps(fp, plot, 1)) || signPlots.some((plot) => overlaps(fp, plot, 0) || (box.max.x > plot.minX && box.min.x < plot.maxX && box.max.z > plot.minZ && box.min.z < plot.maxZ && box.max.y > plot.minY && box.min.y < plot.maxY))) { group.remove(ch); engulfed++; }
       }
       // Water was clipped before the final buildings were moved. Give the
       // occupied city plots dry ground too, while leaving the river beneath
@@ -1815,7 +1897,8 @@
         pd.extent = ext;
       }
       const prop = fn(pd, theme);
-      place(prop, at, pd.side, pd.dist, pd.face != null ? pd.face : !!prop.userData.landmarkName || FACING.includes(pd.type));
+      const onFacade = theme.canyon && pd.type === 'neon'; // on the Ring's canyon a neon sign hangs on the façade line, not on posts out in a front yard
+      place(prop, at, pd.side, onFacade ? Math.min(pd.dist, ROAD_W + 4.4) : pd.dist, pd.face != null ? pd.face : !!prop.userData.landmarkName || FACING.includes(pd.type));
       if (pd.rot) prop.rotation.y += pd.rot;
       if (pd.type === 'hbarch') prop.rotation.y += Math.PI / 2;
       prop.userData.type = pd.type; prop.userData.at = at; if (pd.wz) prop.userData.wz = pd.wz; if (pd.story) { prop.userData.story = pd.story; if (pd.hd) prop.userData.storyHd = pd.hd; if (pd.tag) prop.userData.storyTag = pd.tag; } propList.push(prop);
@@ -1824,7 +1907,14 @@
       if (pd.type === 'rhine' || pd.type === 'rhineSide') clipWater(prop);
       const BIG = /altstadt|row|viaduct|hbf|stmartin|arena|messeturm|chimney|kranhaus|musicaldome|schoko|museum|triangle|lvr|colonius|helios|flora|moschee|vulkanhalle|halle|zootor|tanzbrunnen|tribuene|rathaus|rgm|hyatt|stadion|hansahochhaus|koelnturm|odonien|hafenkran|kleinkoeln|loversclub|sartory|residenz|spielclub|kripo|boxring|eigelsteintor|hahnentor|severinstor|riesenrad|beach|rheinsprung|severinsbruecke|suspension|zoobruecke|seilbahn/;
       const MID = /zockertisch|buedchen|haltestelle|cafe|bude|marktstand|expresskiosk|denkmal|heinzelbrunnen|eaudecologne|reiter|crowd|tramline|koelsch|elephant|giraffe|palm|zochwagen|bus|polizei|tram|kirche|house/;
-      keepOut.push({ x: prop.position.x, z: prop.position.z, r: pd.keep || (pd.type === 'dom' ? 110 : BIG.test(pd.type) ? 50 : MID.test(pd.type) ? 18 : 8) });
+      let keepR = pd.keep || (pd.type === 'dom' ? 110 : BIG.test(pd.type) ? 50 : MID.test(pd.type) ? 18 : 8);
+      if (theme.canyon && pd.dist > 0) { // the Ring's canyon: the street wall stays closed round what stands along it
+        const sz = new THREE.Box3().setFromObject(prop).getSize(new THREE.Vector3()), fr = Math.hypot(sz.x, sz.z) / 2;
+        if (!pd.keep && pd.dist <= 16 && Math.max(sz.x, sz.z) < 20) keepR = Math.min(keepR, onFacade ? 2 : fr + 1); // a kiosk or a patrol car on the sidewalk keeps its own footprint; the houses step back behind it
+        else if (pd.dist < 45) keepR = Math.min(keepR, fr + 2); // a club, a cinema, a gate: part of the row, the next house stands beside it
+        else keepR = Math.min(keepR, Math.max(fr + 6, pd.dist - 30)); // a church behind the row: its ground stays free, the façades in front close the street (the towers show over the roofs)
+      }
+      keepOut.push({ x: prop.position.x, z: prop.position.z, r: keepR });
     }
     // street fillers along the track
     const rnd = mulberry(1234 + track.def.id.length * 77);
@@ -1837,7 +1927,7 @@
       for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < k.r * k.r) return false; }
       return true;
     }
-    const street = theme.street || 'mixed';
+    const street = theme.street || 'mixed', parkSegs = new Set((track.def && track.def.parkSegs) || []); // segments (def.parkSegs) where a park, a meadow or a wood replaces the street walls
     let count = 0;
     // "dä Lange verzällt": anecdotes tied to the places along the road (spaced out so he does not talk all the time)
     const storyAt = []; const placeLines = GD().TUENN.places || {}; const used = {};
@@ -1938,6 +2028,8 @@
       if (!ids.length) return;
       const carnival = !!theme.confetti, night = !!theme.night, park = street === 'park';
       const weight = (m) => {
+        if (theme.era && (m.kind === 'lambogina' || (m.since && m.since > theme.era))) return 0; // an era track only gets the scenes of its year (no LamboGina, no parcel vans in 1968)
+        if (theme.matchday && m.kind === 'karneval') return 0; // a Saturday in the league, not in the Session
         if (park) return ['strasse', 'lambogina'].includes(m.kind) && m.d <= 3.2 ? 1 : m.kind === 'karneval' && carnival ? 1 : 0;
         return m.kind === 'karneval' ? (carnival ? 4 : 0.6) : m.kind === 'chicago' ? (night || /kalk|heist/.test(track.def.id) ? 2.5 : 0.8) : m.kind === 'lambogina' ? 1 : 1.4;
       };
@@ -1991,10 +2083,24 @@
           const i = Math.floor(sPos / track.ds) % n; const s = S[i];
           if (s.kind === 'gap' || s.kind === 'land' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 6; continue; }
           const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
-          const seed = Math.floor(rnd() * 1e6); const house = P.house(seed); const w = house.userData.w, d = house.userData.d;
+          if (parkSegs.has(s.seg)) { // a stadium, a meadow, a wood (def.parkSegs): trees along the road instead of a street wall
+            const lat = ROAD_W + 6 + rnd() * 7, tx = s.p.x + bx / bl * side * lat, tz = s.p.z + bz / bl * side * lat;
+            if (freeAt(tx, tz, 3, i) && !nearScene(tx, tz, 2)) { const t = P.tree(Math.floor(rnd() * 3)); t.position.set(tx, GROUND_Y, tz); t.rotation.y = rnd() * 6.28; t.userData.kind = 'streetTree'; g.add(t); }
+            sPos += 10 + rnd() * 6; continue;
+          }
+          const seed = Math.floor(rnd() * 1e6); let house = P.house(seed), w = house.userData.w, d = house.userData.d;
           const curv = s.curv || 0; const inner = curv * side < 0 && Math.abs(curv) > 0.012;
-          const dist = ROAD_W + (street === 'altstadt' ? 3.6 : 4.8) + d / 2 + (inner ? 3 : 0);
-          const x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
+          let dist = ROAD_W + (street === 'altstadt' ? 3.6 : 4.8) + d / 2 + (inner ? 3 : 0);
+          let x = s.p.x + bx / bl * side * dist, z = s.p.z + bz / bl * side * dist;
+          if (theme.canyon && !freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { // the 1968 Ring is a closed canyon: step the house back behind a kiosk or a sign, or build a shallow front
+            let fit = false;
+            for (const [back, shallow] of [[3, false], [6, false], [0, true], [3, true]]) {
+              if (shallow && !house.userData.shallow) { house = P.house(seed, { d: 6.5, w: Math.min(w, 9) }); house.userData.shallow = true; w = house.userData.w; d = house.userData.d; }
+              dist = ROAD_W + 4.8 + d / 2 + (inner ? 3 : 0) + back; x = s.p.x + bx / bl * side * dist; z = s.p.z + bz / bl * side * dist;
+              if (freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { fit = true; break; }
+            }
+            if (!fit) { sPos += 4; continue; }
+          }
           if (!freeAt(x, z, ROAD_W + 2 + Math.hypot(w, d) / 2, i)) { // the whole footprint must clear every other part of the circuit
             const gx = s.p.x + bx / bl * side * (ROAD_W + 9), gz = s.p.z + bz / bl * side * (ROAD_W + 9);
             if (!theme.canyon && trackFree(gx, gz, 7, i) && !nearScene(gx, gz, 7) && rnd() < 0.7) { const gs = P.greenstrip({ seed: Math.floor(rnd() * 1000) }); gs.position.set(gx, GROUND_Y, gz); gs.rotation.y = Math.atan2(s.T.x, s.T.z); g.add(gs); sPos += 14; } else sPos += 5;
@@ -2006,12 +2112,13 @@
             story('brauhaus', sPos + w / 2, house);
           }
           sPos += w + (inner ? w * 0.25 : 0) + 0.15;
-          if (sinceGap > 4 + rnd() * 5) { // a side street: sign + something in the gap (square, graffiti wall, billboard, Büdchen)
-            sinceGap = 0; const gapLen = 12 + rnd() * 6; const gi = Math.floor(((sPos + gapLen / 2) / track.ds)) % n; const gs = S[gi]; const gbx = gs.B.x, gbz = gs.B.z; const gbl = Math.hypot(gbx, gbz) || 1;
+          if (sinceGap > (theme.canyon ? 7 + rnd() * 6 : 4 + rnd() * 5)) { // a side street: sign + something in the gap (square, graffiti wall, billboard, Büdchen)
+            sinceGap = 0; const gapLen = theme.canyon ? 9 + rnd() * 3 : 12 + rnd() * 6; const gi = Math.floor(((sPos + gapLen / 2) / track.ds)) % n; const gs = S[gi]; const gbx = gs.B.x, gbz = gs.B.z; const gbl = Math.hypot(gbx, gbz) || 1;
             const putGap = (prop, lat, face) => { prop.position.set(gs.p.x + gbx / gbl * side * lat, GROUND_Y, gs.p.z + gbz / gbl * side * lat); if (face) prop.lookAt(gs.p.x, GROUND_Y, gs.p.z); else prop.rotation.y = Math.atan2(gs.T.x, gs.T.z); if (!nearScene(prop.position.x, prop.position.z, 3)) g.add(prop); return prop; };
             if (theme.streets) putGap(P.schild({ text: theme.streets[Math.floor(rnd() * theme.streets.length)] }), ROAD_W + 3.9, true);
-            const gr = rnd();
-            if (gr < 0.3) { putGap(P.platz({ seed: Math.floor(rnd() * 1000) }), ROAD_W + 4.5 + 7, true); story('platz', sPos + gapLen / 2); }
+            const gr = theme.canyon ? 2 : rnd(); // the Ring's side streets stay streets: a Litfaßsäule or a phone box at the corner, no lawn
+            if (gr === 2) putGap(rnd() < 0.5 ? P.litfass({ texts: theme.posters }) : P.telefonzelle(), ROAD_W + 4.6, true);
+            else if (gr < 0.3) { putGap(P.platz({ seed: Math.floor(rnd() * 1000) }), ROAD_W + 4.5 + 7, true); story('platz', sPos + gapLen / 2); }
             else if (gr < 0.5) putGap(P.graffiti({ text: pickR(GD().TUENN.walls || ['KÖLLE'], rnd), color: ['#ff2d95', '#ffd400', '#00e5ff', '#7fff00'][Math.floor(rnd() * 4)] }), ROAD_W + 4.5 + 8, true);
             else if (gr < 0.65) putGap(P.billboard({ text: pickR(GD().TUENN.walls || ['KÖLLE'], rnd) }), ROAD_W + 4.5 + 6, true);
             else if (gr < 0.85) { putGap(P.buedchen(), ROAD_W + 4.5 + 3, true); story('buedchen', sPos + gapLen / 2); }
@@ -2146,7 +2253,7 @@
         if (k % 17 === 9 && street !== 'altstadt') put(P.bus(), k % 2 ? 1 : -1, ROAD_W + 2.9, false);
         if (street === 'altstadt' && k % 11 === 4) put(P.marktstand(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
         if (street === 'altstadt' && rnd() < 0.25) put(P.cafe(), rnd() < 0.5 ? 1 : -1, ROAD_W + 6.5, true);
-        if (k % 2 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false); if (k % 4 === 3 && street !== 'altstadt') put(P.tree(Math.floor(rnd() * 3)), k % 2 ? -1 : 1, ROAD_W + 4.3, false);
+        if (!theme.canyon) { if (k % 2 === 1) put(P.tree(Math.floor(rnd() * 3)), k % 2 ? 1 : -1, ROAD_W + 4.3, false); if (k % 4 === 3 && street !== 'altstadt') put(P.tree(Math.floor(rnd() * 3)), k % 2 ? -1 : 1, ROAD_W + 4.3, false); } // the 1968 Ring: façades, no plane trees
       } else if (street === 'park' && flat && (i / step) % 3 === 0) {
         const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1; const side = (i / step) % 2 ? 1 : -1;
         const l = P.lamp(); l.position.set(s.p.x + bx / bl * side * (ROAD_W + 3.4), GROUND_Y, s.p.z + bz / bl * side * (ROAD_W + 3.4)); l.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(l);
@@ -2164,12 +2271,13 @@
       const cell = street === 'park' ? 52 : 44; const maxPlaced = street === 'park' ? 230 : 420; let placed = 0, parks = 0;
       for (let gx = -rmax - 220; gx <= rmax + 220 && placed < maxPlaced; gx += cell) for (let gz = -rmax - 220; gz <= rmax + 220 && placed < maxPlaced; gz += cell) {
         const x = cx0 + gx + (rnd() - 0.5) * 30, z = cz0 + gz + (rnd() - 0.5) * 30;
-        let dmin = 1e9; for (let i = 0; i < n; i += 4) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < dmin) dmin = d2; }
+        let dmin = 1e9, dseg = -1; for (let i = 0; i < n; i += 4) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < dmin) { dmin = d2; dseg = S[i].seg; } }
         dmin = Math.sqrt(dmin); if (dmin < (street === 'park' ? 26 : 40) || dmin > (street === 'park' ? 240 : 300)) continue;
         let ok = true; for (const k of keepOut) { if ((k.x - x) * (k.x - x) + (k.z - z) * (k.z - z) < (k.r + 12) * (k.r + 12)) { ok = false; break; } } if (!ok) continue;
         if (inRiver(x, z, 16)) continue; // no blocks, parks or ponds in the Rhine
         let b;
-        if (street === 'park') { // Rheinpark / Poller Wiesen: groves, flower beds, ponds, the odd kiosk, Deutz blocks only far out
+        if (parkSegs.has(dseg) && street !== 'park') { b = new THREE.Group(); const k = 4 + Math.floor(rnd() * 6); for (let t = 0; t < k; t++) { const tr = P.tree(Math.floor(rnd() * 3)); const a = rnd() * 6.28, r = 2 + rnd() * 12; tr.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); b.add(tr); } b.userData.green = true; } // behind the stadium, the meadow and the wood: more wood
+        else if (street === 'park') { // Rheinpark / Poller Wiesen: groves, flower beds, ponds, the odd kiosk, Deutz blocks only far out
           const pr = rnd();
           if (dmin > 150 && pr < 0.45) { const st = ['wiederaufbau', 'modern', 'concrete'][Math.floor(rnd() * 3)]; const cols = st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : CONCRETE; b = building(24 + rnd() * 20, 12 + rnd() * 14, 16 + rnd() * 12, st, cols[Math.floor(rnd() * cols.length)], st === 'wiederaufbau' ? 'hip' : 'flat', Math.floor(rnd() * 1000), { night: theme.night }); }
           else if (pr < 0.5) { b = P.pond({ seed: placed + 3 }); }
@@ -2178,7 +2286,7 @@
           else if (pr < 0.78) { b = rnd() < 0.5 ? P.buedchen() : P.bude({ text: ['KÖLSCH · 2 DM', 'RIEVKOOCHE', 'EIS', 'HALVE HAHN'][placed % 4] }); }
           else b = P.grove({ seed: placed + 7 });
         }
-        else if (rnd() < (theme.canyon ? 0.04 : 0.28) && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
+        else if (rnd() < (theme.canyon ? 0 : 0.28) && dmin < 130) { b = P.park({ seed: placed + 11, w: 36 + rnd() * 12, d: 36 + rnd() * 12 }); if (parks++ % 3 === 0) { let best = 0, bd = 1e9; for (let i = 0; i < n; i += 3) { const dx = S[i].p.x - x, dz = S[i].p.z - z; const d2 = dx * dx + dz * dz; if (d2 < bd) { bd = d2; best = i; } } story('park', best * track.ds); } }
         else if (rnd() < 0.06) b = P.kirche({ h: 26 + rnd() * 20, color: [0xc4ad8c, 0xb9a184, 0x9a8a78][placed % 3] });
         else { const styles = street === 'altstadt' ? ['altstadt', 'wiederaufbau', 'gruenderzeit'] : street === 'industrial' ? ['brick', 'industrial', 'concrete'] : street === 'modern' ? ['modern', 'concrete', 'wiederaufbau'] : ['gruenderzeit', 'wiederaufbau', 'brick', 'concrete']; const st = styles[Math.floor(rnd() * styles.length)];
           const cols = st === 'altstadt' ? PASTEL : st === 'gruenderzeit' ? GRUENDER : st === 'brick' ? BRICK : st === 'wiederaufbau' ? WIEDER : st === 'modern' ? [0x9fc4e0, 0x8fb4d0] : st === 'industrial' ? INDUSTRIAL : CONCRETE;
@@ -2218,6 +2326,7 @@
       if (!gaps.length) return; const m = S[gaps[Math.floor(gaps.length / 2)]];
       let b;
       if (sg.over === 'buedchen') { b = new THREE.Group(); for (const sx of [-1, 1]) { const k2 = P.buedchen(); k2.position.set(sx * 4.2, 0, 0); k2.rotation.y = Math.PI / 2; b.add(k2); } }
+      else if (sg.over === 'parkplatz') { b = new THREE.Group(); b.add(box(16, 0.06, 12, 0x5f8a3e, 0, 0.03, 0)); for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) { const car = P.parkedcar({ color: [0xc1121f, 0xf4f4f4, 0x8a8a90, 0x223355, 0xd9a24a][(r * 4 + c + k) % 5] }); car.position.set(-6 + c * 4, 0, -4 + r * 4); car.rotation.y = Math.PI / 2; b.add(car); } } // the Jahnwiese on matchday: a meadow full of parked cars
       else if (sg.over === 'brauhaus') { b = building(12, 2.6, 9, 'gruenderzeit', GRUENDER[k % GRUENDER.length], 'hip', 40 + k, { night: theme.night, shop: 'BRAUHAUS' }); }
       else { b = building(11, 2.8, 9, 'gruenderzeit', PASTEL[(k * 3) % PASTEL.length], 'hip', 70 + k, { night: theme.night, shop: ['KIOSK', 'BÜDCHEN', 'HALVE HAHN'][k % 3] }); }
       b.position.set(m.p.x, GROUND_Y, m.p.z); b.rotation.y = Math.atan2(m.T.x, m.T.z) + Math.PI / 2; b.userData.kind = 'prop:jumphouse'; g.add(b);
@@ -2230,7 +2339,7 @@
         base.add(cyl(0.9, 1.1, 1.2, 0x2a2a30, 0, 0.6, 0, 10));
         const head = new THREE.Group(); head.position.y = 1.4; base.add(head);
         head.add(cyl(0.7, 0.7, 1.1, 0x3a3a44, 0, 0, 0, 10)); const lens = new THREE.Mesh(new THREE.CircleGeometry(0.62, 12), bmat(0xfff6d0)); lens.position.y = 0.56; lens.rotation.x = -Math.PI / 2; head.add(lens);
-        const beam = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 0.5, 160, 12, 1, true), new THREE.MeshBasicMaterial({ color: side < 0 ? 0xff9ad0 : 0x9af4ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+        const beam = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 0.5, 160, 12, 1, true), new THREE.MeshBasicMaterial({ color: neonCol(side < 0 ? 0xff9ad0 : 0x9af4ff), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
         beam.position.y = 80; head.add(beam);
         base.userData.kind = 'searchlight'; base.userData.searchlight = { head, beam, side, night: !!theme.night }; g.add(base); animated.push(base); keepOut.push({ x, z, r: 4 });
       }
@@ -2482,6 +2591,6 @@
     return pts;
   }
 
-  root.World = { buildRoad, buildScenery, collectOccluders, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored, mergeStatic,
+  root.World = { neonUsed: () => [...NEON_USED], neonCol, buildRoad, buildScenery, collectOccluders, buildCar, buildConfetti, textPlane, animate, ROAD_W, GROUND_Y, WATER_Y, P, human, mergeVertexColored, mergeStatic,
     setTheme: (t) => { THEME = t; }, theme: () => THEME, signalState };
 })(window);

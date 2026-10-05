@@ -174,11 +174,13 @@ module.exports = async function () {
   // so the route catalogue must keep its exact path geometry and order unless the snapshot is deliberately renewed
   // (renewed when the invented side streets were replaced by real Cologne streets).
   const crypto = require('crypto');
-  const legacy = D.TRACKS.map((def) => SC.buildRoutes(TB.buildTrack(def)).slice(0, (def.shortcuts || []).length).map((r) => ({ id: r.id, startS: r.startS, endS: r.endS, resetS: r.resetS, samples: r.samples })));
+  // each track keeps its own snapshot: the first ten tracks one together, Heimspill (added later) its own
+  const snap = (defs) => { const legacy = defs.map((def) => SC.buildRoutes(TB.buildTrack(def)).slice(0, (def.shortcuts || []).length).map((r) => ({ id: r.id, startS: r.startS, endS: r.endS, resetS: r.resetS, samples: r.samples })));
   // Round only sub-micrometre noise so CI's Node/CPU math implementation
   // does not turn an unchanged street into a floating-point snapshot diff.
-  const legacySnapshot = JSON.stringify(legacy, (_key, value) => typeof value === 'number' ? Math.round(value * 1e7) / 1e7 : value);
-  assert.strictEqual(crypto.createHash('sha256').update(legacySnapshot).digest('hex'), '0323e263d1e917576c372b6fc727815a0d5d4943fa6cd513e66e724d9709a2ef', 'old ghost route indices and paths must remain stable');
+  const legacySnapshot = JSON.stringify(legacy, (_key, value) => typeof value === 'number' ? Math.round(value * 1e7) / 1e7 : value); return crypto.createHash('sha256').update(legacySnapshot).digest('hex'); };
+  assert.strictEqual(snap(D.TRACKS.filter((def) => def.id !== 'heimspill')), '0323e263d1e917576c372b6fc727815a0d5d4943fa6cd513e66e724d9709a2ef', 'old ghost route indices and paths must remain stable');
+  assert.strictEqual(snap(D.TRACKS.filter((def) => def.id === 'heimspill')), '622dc9abcb7a81520705e9deae2be10eea70ff4cc39f2f238948be4e328d756e', 'Heimspill ghost route indices and paths must remain stable');
   // v2 branch types: a parallel street one block over, and a street round a jump over a Büdchen
   const blocks = [{ t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }, { t: 'straight', len: 160 }, { t: 'curve', r: 40, angle: 90 }];
   const par = TB.buildTrack({ id: 'fx-par', segments: blocks, shortcuts: [{ id: 'p', street: 'Teststraße', type: 'parallel', from: { seg: 0, u: 0.5 }, to: { seg: 2, u: 0.5 }, side: 1, offset: 40 }] });

@@ -49,6 +49,7 @@
 
   // define(id, { name, kind, w, d }, (g, options, K) => {...})
   // kind: 'karneval' | 'chicago' | 'strasse' | 'lambogina'; w × d: footprint in metres (x × z)
+  // since: the year a scene belongs to the city from (an era track such as the 1968 Ring leaves later ones out)
   function define(id, meta, make) {
     catalog[id] = Object.assign({ id }, meta);
     P[id] = (o) => {
@@ -2496,7 +2497,7 @@ Veedel.define('tresorknacker', { name: 'Tresorknacker', kind: 'chicago', w: 7, d
 // Paketdienst: a white-and-yellow RUCKZUCK PAKETE van parked right on the sidewalk (where else), hazard
 // lights blinking, the sliding door open on a load of parcels. The courier balances a tower of three boxes
 // out past the bonnet; the top one, marked ZERBRECHLICH, wobbles. There is a Knöllchen under the wiper.
-Veedel.define('paketdienst', { name: 'Paketdienst', kind: 'strasse', w: 7, d: 2.6 }, (g, o, K) => {
+Veedel.define('paketdienst', { name: 'Paketdienst', kind: 'strasse', since: 1995, w: 7, d: 2.6 }, (g, o, K) => {
   const night = K.theme().night;
   const WHITE = 0xf4f4ef, YEL = 0xffc800, NAVY = 0x1c2a6a, DARK = 0x2a2a30, TIRE = 0x18181c, GLASS = 0x26384a, CARD = 0xc08a4e, CARD2 = 0xa8743c, CARD3 = 0xd4a468, TAPE = 0xe8d9b0;
 
@@ -3562,7 +3563,7 @@ Veedel.define('strassenband', { name: 'Kölsche Straßenband', kind: 'strasse', 
 // hold the "TEAM BRAUT" banner over her head on two poles, one sells Schabau (Kölsch for schnapps) from a
 // Bauchladen, everybody else holds a Kölsch Stange. Behind them the Bollerwagen with a crate and heart balloons.
 // They sway, cheer with their glasses up in turns (everybody at once when the song drops), the banner wobbles.
-Veedel.define('jga', { name: 'Junggesellinnenabschied', kind: 'strasse', w: 6, d: 2.2 }, (g, o, K) => {
+Veedel.define('jga', { name: 'Junggesellinnenabschied', kind: 'strasse', since: 1995, w: 6, d: 2.2 }, (g, o, K) => {
   const night = K.theme().night;
   const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
   const PINK = 0xff4fa3, PINK_L = 0xff9ccc, WHITE = 0xf8f6f2, BLACK = 0x18181c, JEANS = 0x3a5a8a, GOLD = 0xe8b020, SILVER = 0xd0d4dc;
@@ -4354,7 +4355,7 @@ Veedel.define('autohausgina', { name: 'Autohaus Gina', kind: 'lambogina', w: 12,
 
 /* ---- Heimspill: fans in red and white on the way to Müngersdorf, scarves up, one flag, and a goat that
    came along on a lead. No club name, no crest: just the colours of the city. ---- */
-Veedel.define('fanmarsch', { name: 'Fans op dem Wäch noh Müngersdorf', kind: 'strasse', w: 7, d: 2.4, tracks: ['zuelpicher', 'ehrenfeld', 'kalk', 'zoch'] }, (g, o, K) => {
+Veedel.define('fanmarsch', { name: 'Fans op dem Wäch noh Müngersdorf', kind: 'strasse', w: 7, d: 2.4, tracks: ['heimspill', 'zuelpicher', 'ehrenfeld', 'kalk', 'zoch'] }, (g, o, K) => {
   const rnd = K.rnd((o && o.seed) || 1948), night = K.theme().night, RED = 0xc1121f, WHITE = 0xf4f4f2;
   const fans = [];
   for (let i = 0; i < 9; i++) {

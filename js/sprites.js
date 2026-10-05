@@ -445,6 +445,10 @@
     if (id === 'heist') { rect(20, 12, 20, 16); rect(22, 4, 4, 8); rect(34, 4, 4, 8); rect(23, 1, 2, 3); rect(35, 1, 2, 3); rect(60, 20, 22, 8, '#f4f4f0'); rect(64, 17, 10, 4, '#f4f4f0'); rect(66, 15, 4, 2, '#2060ff'); rect(62, 27, 4, 3, '#111'); rect(76, 27, 4, 3, '#111'); for (let i = 0; i < 12; i++) rect(4 + (i * 37) % W, 2 + (i * 11) % 20, 1, 3, '#8090c0'); }
     if (id === 'zuelpicher') { for (let i = 0; i < 8; i++) { const bh = 10 + (i * 5) % 8; rect(i * 12, 28 - bh, 9, bh); } const cols = ['#ff5fa2', '#ffd400', '#00a0ff', '#7fff00', '#ff2d2d']; for (let i = 0; i < 14; i++) { rect(3 + i * 7, 22 + (i % 2), 3, 6, cols[i % 5]); rect(3 + i * 7, 20 + (i % 2), 3, 2, '#f1c27d'); } for (let i = 0; i < 40; i++) rect(Math.floor(Math.random() * W), Math.floor(Math.random() * 20), 1, 1, cols[i % 5]); rect(40, 4, 16, 6, '#ffd400'); rect(42, 5, 12, 4, '#c1121f'); }
     if (id === 'rodenkirchen') { rect(0, 22, W, 8, '#3f8fc8'); rect(0, 27, 40, 3, '#e8d8a0'); for (let i = 0; i < 5; i++) rect(4 + i * 8, 24, 2, 2, '#ff2d2d'); rect(50, 8, 2, 20); rect(78, 8, 2, 20); for (let i = 0; i <= 14; i++) rect(50 + i * 2, 8 + Math.round((1 - Math.pow((i - 7) / 7, 2)) * -4) + 6, 1, 1); rect(48, 14, 34, 2); rect(86, 4, 6, 3, '#f4f4f0'); }
+    if (id === 'heimspill') { // the stadium bowl with its four corner towers, red-white scarves in front
+      x.fillStyle = sil; x.beginPath(); x.ellipse(52, 26, 30, 10, 0, Math.PI, 0); x.fill(); rect(22, 22, 60, 6); rect(26, 20, 52, 2, '#c1121f');
+      for (const tx of [20, 34, 70, 84]) { rect(tx, 4, 2, 22); rect(tx - 2, 3, 6, 2, '#fff6d0'); }
+      for (let i = 0; i < 14; i++) rect(2 + i * 7, 24 + (i % 2), 3, 4, i % 2 ? '#ffffff' : '#c1121f'); }
     // road
     rect(0, 31, W, 5, th.night ? '#2c2e3a' : '#4c4c52'); rect(0, 33, W, 1, '#ffd400');
     canvas.width = w; canvas.height = h;
