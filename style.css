@@ -181,6 +181,13 @@ body.mobile .startCab canvas { width: 40px; height: 40px; } body.mobile .coinLin
 .speedBox { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; background: #050508; border: 2px solid #1a1a2a; padding: 4px 8px; }
 .speedBox b { font-size: 34px; color: var(--red); text-shadow: 0 0 8px rgba(255,42,42,.6); font-variant-numeric: tabular-nums; letter-spacing: 2px; }
 .speedBox span { font-size: 8px; color: #ddd; }
+/* B23: 100 m before a loop or a ramp the speedometer says whether the speed carries you: ZE LANGSAM! / ZE SCHNELL! */
+.speedBox { position: relative; }
+#speedWarn { position: absolute; right: 0; bottom: 100%; margin-bottom: 4px; font-style: normal; font-size: 9px; white-space: nowrap; color: #fff; background: var(--red); border: 2px solid #000; box-shadow: 2px 2px 0 #000; padding: 3px 5px; }
+#speedWarn:empty { display: none; }
+#speedo.warn { border-color: var(--red); animation: speedWarn .5s steps(2) infinite; }
+@keyframes speedWarn { 50% { border-color: var(--yellow); } }
+body.mobile #speedWarn { font-size: 7px; padding: 2px 4px; }
 .barBox { display: grid; grid-template-columns: 62px 1fr; align-items: center; font-size: 8px; color: var(--cream); }
 .bar { display: flex; gap: 2px; }
 .bar i { flex: 1; height: 10px; background: #14141c; border: 1px solid #000; }
@@ -201,6 +208,13 @@ body.mobile .startCab canvas { width: 40px; height: 40px; } body.mobile .coinLin
 #touch button { width: 70px; height: 70px; border: 3px solid #fff; box-shadow: 4px 4px 0 #000; background: rgba(193,18,31,.7); color: #fff; font-size: 26px; touch-action: none; user-select: none; }
 #tGas { background: rgba(40,160,60,.75); } #tNitro { background: rgba(255,210,63,.7); color: #000; font-size: 18px; }
 #rotate { display: none; }
+/* EIN-DAUMEN (B24): gas is always on, the left 45 % is a steering strip, the right keeps ■ BREMS, N (a tap fires nitro), horn and phone */
+#tStrip { display: none; position: fixed; left: 0; top: 0; bottom: 0; width: 45%; touch-action: none; user-select: none; -webkit-user-select: none; }
+body.racing.oneThumb:not(.paused):not(.replaying):not(.resultsOpen) #tStrip { display: block; }
+#tStrip span { position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); font-size: 9px; color: #fff; background: rgba(5,6,14,.55); border: 2px solid rgba(255,255,255,.55); box-shadow: 3px 3px 0 #000; padding: 6px 10px; white-space: nowrap; pointer-events: none; }
+#tStrip i { position: absolute; top: 18%; bottom: 0; right: 0; border-right: 2px dashed rgba(255,255,255,.22); pointer-events: none; }
+#tStrip.on span { background: rgba(193,18,31,.7); }
+body.oneThumb #touch #tLeft, body.oneThumb #touch #tRight, body.oneThumb #touch #tGas { display: none; }
 
 /* ---------- Results ---------- */
 #results { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.6); z-index: 20; }

@@ -151,7 +151,7 @@
     const steeringRun = 20, landingRun = 45;
     for (let d = 0; d <= landingRun; d += track.ds) {
       const q = TB.frameAt(track, startS - d);
-      if (['gap', 'ramp', 'hill', 'dip'].includes(q.kind)) return false;
+      if (['gap', 'ramp', 'land', 'hill', 'dip'].includes(q.kind)) return false;
       if (d <= steeringRun && (!['straight', 'curve'].includes(q.kind) || Math.abs(q.p.y) > 0.15 || q.N.y < 0.995 || Math.abs(q.T.y) > 0.02)) return false;
     }
     return true;

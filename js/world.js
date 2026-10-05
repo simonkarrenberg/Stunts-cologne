@@ -1318,8 +1318,12 @@
     const city = theme.street && theme.street !== 'park';
     const zebra = new Set(); for (const z of zebraSamples(track, theme)) for (let k = 0; k < 4; k++) zebra.add(z + k);
     const mouth = mouthSets(track); // where a real side street joins, the curb and the sidewalk open up
+    // a jump's landing zone (the landing ramp and the run-out behind its foot): yellow-black chevrons, a red line where it ends
+    const zone = new Map(); for (let i = 0; i < n; i++) if (S[i].kind === 'land' && S[(i - 1 + n) % n].kind === 'gap') { let j = i; while (S[j % n].kind === 'land') j++; const end = j + Math.round((TB.LAND_ZONE || 34) / track.ds); for (let k = i; k <= end; k++) zone.set(k % n, k === end ? 'end' : (k - i) % 4 < 2 ? 'y' : 'k'); }
+    const cYel = new THREE.Color(theme.night ? 0xc9a400 : 0xffd400), cBlk = new THREE.Color(0x151515);
     for (let i = 0; i < n; i++) {
       const a = S[i], b = S[(i + 1) % n];
+      if (zone.has(i)) { const z = zone.get(i), h = 0.15; if (z === 'end') paint(off(a, -ROAD_W, h), off(a, ROAD_W, h), off(b, -ROAD_W, h), off(b, ROAD_W, h), cRed); else for (const sd of [-1, 1]) paint(off(a, sd * (ROAD_W - 1.2), h), off(a, sd * (ROAD_W - 0.2), h), off(b, sd * (ROAD_W - 1.2), h), off(b, sd * (ROAD_W - 0.2), h), z === 'y' ? cYel : cBlk); }
       if (a.kind === 'gap') continue;
       const stripe = Math.floor(i / 6) % 2 === 0;
       let color = stripe ? c1 : c2;
@@ -1347,7 +1351,7 @@
         if (!openL) quad(off(a, -ROAD_W - 4.5, h + 0.12), off(a, -ROAD_W - 1.1, h + 0.12), off(b, -ROAD_W - 4.5, h + 0.12), off(b, -ROAD_W - 1.1, h + 0.12), cWalk, 0, 1.4, v0, v1);
         if (!openR) quad(off(a, ROAD_W + 1.1, h + 0.12), off(a, ROAD_W + 4.5, h + 0.12), off(b, ROAD_W + 1.1, h + 0.12), off(b, ROAD_W + 4.5, h + 0.12), cWalk, 0, 1.4, v0, v1);
       }
-      if (a.kind === 'loop' || a.kind === 'ramp' || a.p.y > 1.5) { underRanges.push([vi, a.N]); quad(off(a, ROAD_W, -0.3), off(a, -ROAD_W, -0.3), off(b, ROAD_W, -0.3), off(b, -ROAD_W, -0.3), cUnder, 0, 2, v0, v1); }
+      if (a.kind === 'loop' || a.kind === 'ramp' || a.kind === 'land' || a.p.y > 1.5) { underRanges.push([vi, a.N]); quad(off(a, ROAD_W, -0.3), off(a, -ROAD_W, -0.3), off(b, ROAD_W, -0.3), off(b, -ROAD_W, -0.3), cUnder, 0, 2, v0, v1); }
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -1554,7 +1558,7 @@
       const tall = list.filter((p) => p.parent && (p.userData.type === 'kirche' || (wzOf(p) && TALL.test(wzOf(p).kind))));
       const wrap = (s) => ((s % L) + L) % L, bb = new THREE.Box3();
       const nearest = (p, s) => { const f = TB.frameAt(track, wrap(s)), d = (o) => (o.position.x - f.p.x) ** 2 + (o.position.z - f.p.z) ** 2, own = d(p); return tall.every((o) => o === p || d(o) > own); };
-      const calm = (s) => { const i0 = Math.floor(wrap(s) / track.ds); for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap') return false; } return !(track.routeGroups || []).some((gr) => gr.startS - wrap(s) > -10 && gr.startS - wrap(s) < 90); };
+      const calm = (s) => { const i0 = Math.floor(wrap(s) / track.ds); for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap' || q.kind === 'land') return false; } return !(track.routeGroups || []).some((gr) => gr.startS - wrap(s) > -10 && gr.startS - wrap(s) < 90); };
       // strict: nearest over the whole approach (40 m before, 20 m before, at the trigger); else at least at the trigger
       const good = (p, s, strict, tallOne) => (!tallOne || (!strict || nearest(p, s - 40) && nearest(p, s - 20)) && nearest(p, s)) && [-40, -25, -10, 5].some((b) => calm(s + b));
       for (const p of list) {
@@ -1687,7 +1691,7 @@
       // Water was clipped before the final buildings were moved. Give the
       // occupied city plots dry ground too, while leaving the river beneath
       // bridges and jump gaps intact. Nearby plot margins naturally join.
-      const waterCrossings = S.filter((q) => q.kind === 'gap' || q.kind === 'ramp' || q.kind === 'bridge');
+      const waterCrossings = S.filter((q) => q.kind === 'gap' || q.kind === 'land' || q.kind === 'ramp' || q.kind === 'bridge');
       const landAt = (x, z) => {
         let occupied = false;
         for (const fp of reserved) {
@@ -1767,7 +1771,7 @@
           const x0 = -w / 2 + ix * tile, x1 = Math.min(w / 2, x0 + tile), y0 = -l / 2 + iz * tile, y1 = Math.min(l / 2, y0 + tile);
           wp.set((x0 + x1) / 2, (y0 + y1) / 2, 0).applyMatrix4(m.matrixWorld);
           let near = !!(landAt && landAt(wp.x, wp.z));
-          if (!near) for (let i = 0; i < streetSamples.length; i += 2) { const q = streetSamples[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
+          if (!near) for (let i = 0; i < streetSamples.length; i += 2) { const q = streetSamples[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'land' || q.kind === 'ramp' || q.p.y > 3) continue; const dx = q.p.x - wp.x, dz = q.p.z - wp.z; if (dx * dx + dz * dz < R2) { near = true; break; } }
           if (near) { dropped++; continue; }
           kept.add(ix * 4096 + iz); const b = pos.length / 3; pos.push(x0, y0, 0, x1, y0, 0, x1, y1, 0, x0, y1, 0);
           uv.push((x0 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y0 + l / 2) / l, (x1 + w / 2) / w, (y1 + l / 2) / l, (x0 + w / 2) / w, (y1 + l / 2) / l);
@@ -1803,7 +1807,7 @@
           let d = 20;
           for (; d < 450; d += 10) {
             const x = f.p.x + dirx * d, z = f.p.z + dirz * d; let hit = false;
-            for (let i = 0; i < n; i += 2) { const q = S[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'ramp') continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < 24 * 24) { hit = true; break; } }
+            for (let i = 0; i < n; i += 2) { const q = S[i]; if (q.kind === 'bridge' || q.kind === 'gap' || q.kind === 'land' || q.kind === 'ramp') continue; const dx = q.p.x - x, dz = q.p.z - z; if (dx * dx + dz * dz < 24 * 24) { hit = true; break; } }
             if (hit) break;
           }
           ext[sideI] = Math.max(30, d - 20);
@@ -1868,7 +1872,7 @@
         let sPos = 6 + (side > 0 ? 7 : 0), k = 0;
         while (sPos < L - 8) {
           const i = Math.floor(sPos / track.ds) % n; const s = S[i];
-          if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 14; continue; }
+          if (s.kind === 'gap' || s.kind === 'land' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 14; continue; }
           const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1; const lat = ROAD_W + 4.2 + (k % 3 === 1 ? 1.5 : 0);
           const x = s.p.x + bx / bl * side * lat, z = s.p.z + bz / bl * side * lat;
           if (freeAt(x, z, 5, i)) {
@@ -1884,7 +1888,7 @@
       }
     }
     if (street !== 'park') { let sPos = 30, k = 0; while (sPos < L - 20) { const i = Math.floor(sPos / track.ds) % n; const s = S[i]; const side = k % 2 ? 1 : -1; k++; sPos += 42 + rnd() * 12;
-      if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || s.kind === 'tunnel' || Math.abs(s.p.y) > 0.5) continue;
+      if (s.kind === 'gap' || s.kind === 'land' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || s.kind === 'tunnel' || Math.abs(s.p.y) > 0.5) continue;
       const bl = Math.hypot(s.B.x, s.B.z) || 1; const x = s.p.x + s.B.x / bl * side * (ROAD_W + 2.3), z = s.p.z + s.B.z / bl * side * (ROAD_W + 2.3);
       if (!trackFree(x, z, 3, i)) continue; const b = P.awb(); b.position.set(x, GROUND_Y, z); b.lookAt(s.p.x, GROUND_Y, s.p.z); g.add(b); } }
     // traffic lights, a waiting Kölner and the blue crossing sign at every Zebrastreifen (they also mark the keep-out for houses)
@@ -1985,7 +1989,7 @@
         let sPos = rnd() * 8, houses = 0, sinceGap = 0;
         while (sPos < L - 8 && houses < 320) {
           const i = Math.floor(sPos / track.ds) % n; const s = S[i];
-          if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 6; continue; }
+          if (s.kind === 'gap' || s.kind === 'land' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge' || Math.abs(s.p.y) > 1.5) { sPos += 6; continue; }
           const bx = s.B.x, bz = s.B.z; const bl = Math.hypot(bx, bz) || 1;
           const seed = Math.floor(rnd() * 1e6); const house = P.house(seed); const w = house.userData.w, d = house.userData.d;
           const curv = s.curv || 0; const inner = curv * side < 0 && Math.abs(curv) > 0.012;
@@ -2095,7 +2099,7 @@
     const step = street === 'park' ? 22 : 13;
     for (let i = 0; i < n && count < 700; i += step) {
       const s = S[i];
-      if (s.kind === 'gap' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge') continue;
+      if (s.kind === 'gap' || s.kind === 'land' || s.kind === 'ramp' || s.kind === 'loop' || s.kind === 'bridge') continue;
       for (const side of [-1, 1]) {
         if (street !== 'park') break;
         if (rnd() < (street === 'park' ? 0.4 : 0.12)) continue;
@@ -2210,7 +2214,7 @@
     // Stunts-style jumps over buildings: the thing you fly over sits in the middle of the gap
     (track.def.segments || []).forEach((sg, k) => {
       if (sg.t !== 'jump' || !sg.over) return;
-      const gaps = []; for (let i = 0; i < n; i++) if (S[i].seg === k && S[i].kind === 'gap') gaps.push(i);
+      const gaps = []; for (let i = 0; i < n; i++) if (S[i].seg === k && (S[i].kind === 'gap' || S[i].kind === 'land')) gaps.push(i); // the landing ramp is the gap's end: the middle stays where the roof is
       if (!gaps.length) return; const m = S[gaps[Math.floor(gaps.length / 2)]];
       let b;
       if (sg.over === 'buedchen') { b = new THREE.Group(); for (const sx of [-1, 1]) { const k2 = P.buedchen(); k2.position.set(sx * 4.2, 0, 0); k2.rotation.y = Math.PI / 2; b.add(k2); } }

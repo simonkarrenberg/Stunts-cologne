@@ -10,6 +10,7 @@
   const $ = (s) => document.querySelector(s);
   const ROAD_W = W.ROAD_W;
   const G = 9.81;
+  const FLIGHT_G = 2; // a jump flies on twice the gravity: the landing zone then asks for 90 to 150 km/h, not "full throttle always works"
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
   // on the 1968/1975 tracks nothing from later decades: no opera renovation jokes, no LamboGina radio, no Miami palms
   const ERA_LATER = /Oper|LamboGina|Palme|Miami|KVK|Linie 16|Bahn streik|Hochwasser|Tauben/;
@@ -46,7 +47,7 @@
   const views = [{ pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }, { pos: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0), look: new THREE.Vector3(), mode: 0, tv: null, tvTimer: 0 }];
   const input2 = { gas: 0, brake: 0, steer: 0, turbo: 0 };
   // replay recorder: a typed ring buffer for 30 min at 20 Hz; per frame and racer REC_F values (see recordFrame)
-  const REC_HZ = 20, REC_CAP = 30 * 60 * REC_HZ, REC_F = 8;
+  const REC_HZ = 20, REC_CAP = 30 * 60 * REC_HZ, REC_F = 9;
   const rec = { buf: null, t: new Float64Array(REC_CAP), n: 0, head: 0, stride: REC_F, acc: 0, cars: [] };
   const replay = { on: false, time: 0, speed: 1, paused: false, camIdx: -1, cams: [], mode: 0 };
   let ghost = null, ghostData = null, ghostHidden = false;          // best-lap ghost (G hides it, the splits stay)
@@ -58,6 +59,12 @@
   try { const o = JSON.parse(localStorage.getItem('stuntskoelle.mode') || 'null'); if (o) { raceOpts.mode = clamp(o.mode | 0, 0, 2); raceOpts.laps = o.laps === 1 ? 1 : 3; raceOpts.kluengel = o.kluengel !== false; } } catch (e) { /* ignore */ }
   let raceMode = 0, raceLaps = 3; // the race being driven
   const tourRide = (r) => raceMode === 2 && !!r && !r.isAI && !r.isCop; // the Stadtrundfahrt's own rules apply to the players' cars
+  // LENKHILFE (steering assist): AUTO = on for LEICHT drivers, on touch and in EIN-DAUMEN mode; never in ZEITFAHREN
+  const LENK = ['AUTO', 'AN', 'AUS']; let lenk = 0; try { lenk = Math.max(0, LENK.indexOf(localStorage.getItem('stuntskoelle.lenkhilfe') || 'AUTO')); } catch (e) { /* ignore */ }
+  // DAUMEN (touch only): ZWEI = the buttons, EINS = gas always on, the left 45 % of the screen is a steering strip
+  let thumb = 2; try { thumb = localStorage.getItem('stuntskoelle.thumb') === '1' ? 1 : 2; } catch (e) { /* ignore */ }
+  const oneThumb = () => thumb === 1 && isTouch;
+  function assistOn(p2) { if (raceMode === 1) return false; if (!p2 && oneThumb()) return true; if (lenk) return lenk === 1; return (PLAYABLE[sel.driver].diffN || 0) === 0 || (!p2 && isTouch); }
   // split times: four checkpoints per lap (a quarter, half, three quarters, the line), compared with the ghost or the race's best lap
   const CP = [0.25, 0.5, 0.75, 1]; let splitLog = [], splitShow = null;
   const voice = { on: true, ready: false, de: null, list: [] };
@@ -428,7 +435,7 @@
   function advanceRacer(r, distance) {
     let route = routeFor(r);
     if (!route && distance > 0 && !r.air && !r.finished) {
-      route = track.shortcuts.find((q) => (r.isCop ? r.routePlan === q.index : !r.isAI || r.branchPlan === q.index) && r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.8);
+      route = track.shortcuts.find((q) => (r.isCop ? r.routePlan === q.index : !r.isAI || r.branchPlan === q.index) && r.s <= q.startS && r.s + distance >= q.startS && r.lat * q.side >= 1.6 && Math.abs(r.lat) <= q.halfWidth - 0.2); // up to the street's kerb: a car still turning in (B22) gets in
       if (route) { distance -= route.startS - r.s; r.s = route.startS; r.shortcut = route.index; r.routePlan = null; r.safeS = route.resetS + 18; r.usedSide = true; if (r === player) enterRoute(route); } // respawn() subtracts 18 m
     }
     if (!route) { r.s += distance; return; }
@@ -487,7 +494,8 @@
       steerVis: 0, aiTimer: 0, aiSlow: 1, jumpStartS: 0, bestLap: null, wobblePhase: Math.random() * 10, laneBias: 0,
       turbo: 0.5, turboOn: false, damage: 0, skill: driver.skill, wobble: driver.wobble,
       shortcut: -1, shortcutsDone: new Set(), routeSeed: 0, branchPlan: -1, branchKey: '', routePlan: null,
-      sp: [], cpNext: 0, bestSp: null, usedSide: false, band: 1
+      sp: [], cpNext: 0, bestSp: null, usedSide: false, band: 1,
+      yaw: 0, steerIn: 0, assist: false, airLat: 0, zoneLeft: null // the heading against the road, the wheel, LENKHILFE, air control used, the landing zone still ahead
     };
   }
   // Back on the road after a crash, on the centre line. On the main road: where the car crashed, at least 20 m past
@@ -504,7 +512,14 @@
     if (goal != null) { const c = r.crashS != null ? r.crashS : r.safeS, L = track.length, ahead = ((goal - c) % L + L) % L; if (c + ahead < s + 6) s = Math.max(c, c + ahead - 8); }
     return s; // may lie past the line: the next update counts the lap
   }
-  function respawn(r) { const s = respawnS(r); r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = s; r.lat = 0; r.v = 0; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; r.onVerge = false; if (!r.crashRoute) r.safeS = Math.min(s, track.length - 0.01); r.crashS = null; r.crashRoute = false; r.resetHere = false; }
+  function respawn(r) { const s = respawnS(r); r.shortcut = -1; r.branchKey = ''; r.branchPlan = -1; r.routePlan = null; r.s = s; r.lat = 0; r.v = 0; r.yaw = 0; r.steerIn = 0; r.zoneLeft = null; r.air = false; r.vy = 0; r.crashed = 0; r.prevRoadVy = 0; r.onVerge = false; if (!r.crashRoute) r.safeS = Math.min(s, track.length - 0.01); r.crashS = null; const push = !r.crashRoute && !r.resetHere; r.crashRoute = false; r.resetHere = false; if (push) pushStart(r); }
+  // back on the road just before a loop or a ramp, too close to get up to speed from standing: the marshals give a push
+  // start (B23), else the next crash would only skip the stunt
+  function pushStart(r) {
+    const sa = stunts.length && !tourRide(r) ? stuntAhead(r, 150) : null; if (!sa || sa.d <= 0) return;
+    const sp = stuntSpeeds(sa.t, r.car, r.assist), want = sa.t.kind === 'jump' && isFinite(sp.max) ? (sp.min + sp.max) / 2 : sp.min * 1.15;
+    if (Math.sqrt(2 * r.car.accel * 0.6 * sa.d) < want) r.v = Math.min(r.car.top, want);
+  }
   // the verge (metres of shoulder beyond the road edge) at the racer's sample, on the side it is on
   function vergeAt(r, f, lat) { const route = routeFor(r), q = route ? route.samples[f.index] : track.samples[f.index]; return q && q.vg ? q.vg[lat < 0 ? 0 : 1] : route ? 2 : TB.VERGE; }
   let crashLog = [], crashAt = [], helpSaid = -99; const notesTold = new Set(); // two crashes in half a minute: Dä Lange gives a real tip
@@ -516,13 +531,54 @@
     r.damage = Math.min(1, r.damage + 0.25);
     if (!r.isAI) {
       crashSound(); shake = 1;
-      const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : kind === 'roof' ? tuenn.roof : tuenn.crash;
+      const quotes = kind === 'water' ? tuenn.water : kind === 'loop' ? tuenn.loopFall : kind === 'roof' ? tuenn.roof : kind === 'short' ? tuenn.jumpShort : tuenn.crash;
       if (r.damage >= 1) { sayMust(tuenn, 'TOTALSCHADEN! ' + pickNew(tuenn.damage), 3000); r.damage = 0; r.crashed = 3.5; }
       else say(tuenn, pickNew(quotes), 3000);
       if (Math.random() < 0.6) setTimeout(() => { if (phase === 'race') { const rival = pick(racers.filter((x) => x.isAI)); if (rival && rival.driver.lines.taunt) say(rival.driver, pickNew(rival.driver.lines.taunt), 2400); } }, 3200);
     }
   }
 
+  // Steering (B22): the wheel turns in over 150 ms; the heading against the road (yaw) follows it as fast as the tyres
+  // carry (grip per car and surface, the verge included, a bit less in a fast curve and at speed)
+  // and the car moves sideways at speed × sin(heading). Let go and it straightens out over about a third of a second:
+  // a slide to catch, not a stop dead. LENKHILFE damps the yaw and, while you do not steer, pulls gently to the middle
+  // of the lane (and back off the verge). Player, rivals, Kripo and the autopilot all drive this one model.
+  const STEER_RAMP = 0.15, STEER_BACK = 0.06, YAW_MAX = 0.6, ALIGN_T = 0.35, AIR_LAT = 0.25, LANE = 2.2; // LANE: LENKHILFE holds you on the middle or at ±2.2 m, inside every side street's turn-in window
+  function steerStep(r, steer, gripAcc, need, dt, roadWidth) {
+    const v = Math.abs(r.v), as = r.assist;
+    r.steerIn += clamp(steer - r.steerIn, -dt / (steer * r.steerIn < 0 || Math.abs(steer) < Math.abs(r.steerIn) ? STEER_BACK : STEER_RAMP), dt / (steer * r.steerIn < 0 || Math.abs(steer) < Math.abs(r.steerIn) ? STEER_BACK : STEER_RAMP));
+    const grip = gripAcc * (1 - 0.15 * Math.min(1, Math.abs(need) / gripAcc)) * clamp(1 - (v - 16) * 0.012, 0.75, 1);
+    const wMax = r.car.steer * Math.min(0.24 * v, grip / Math.max(1, v)) * (as ? 1 - 0.25 * clamp((v - 12) / 12, 0, 1) : 1); // yaw rate: grows with speed like a bicycle until the tyres give up; LENKHILFE calms it at speed
+    r.yaw += r.steerIn * wMax * Math.sign(r.v) * dt;
+    r.yaw -= r.yaw * Math.min(1, Math.max(0, 1 - Math.abs(r.steerIn) * 4) * Math.min(1, v / 5) * dt / (as ? 0.2 : ALIGN_T)); // the wheel let go (nearly): the car straightens out
+    r.yaw = clamp(r.yaw, -YAW_MAX, YAW_MAX);
+    let vl = r.v * Math.sin(r.yaw);
+    if (as && Math.abs(steer) < 0.1) { const lane = roadWidth > 5 ? Math.round(clamp(r.lat / LANE, -1, 1)) * LANE : 0, off = Math.abs(r.lat) > roadWidth; vl += clamp((lane - r.lat) * (off ? 1.2 : 0.6), off ? -3 : -1.2, off ? 3 : 1.2); }
+    return vl;
+  }
+  // the AI's (and the autopilot's) wheel for that model: the gap to the line it wants asks for a sideways speed, that for a
+  // heading, and the wheel turns the car towards that heading; the road's outward slide is held off the same way
+  function steerTo(r, wantLat, k) {
+    const ahead = slideAhead(r), slide = Math.abs(ahead) > Math.abs(r.slide || 0) ? ahead : r.slide || 0; // a driver sees the bend coming: half a second ahead
+    const v = Math.max(3, Math.abs(r.v)), vl = clamp((wantLat - r.lat) * (k || 1.1), -0.4 * v, 0.4 * v) - slide;
+    const yawWant = Math.asin(clamp(vl / v, -0.55, 0.55)) * (r.v < 0 ? -1 : 1);
+    return clamp((yawWant - r.yaw) * 5 * (r.v < 0 ? -1 : 1), -1, 1);
+  }
+  // the outward slide a bend half a second ahead will bring at this speed (as updateRacer reckons it, without the verge)
+  function slideAhead(r) {
+    if (r.air) return 0; const f = racerFrame(r, r.s + Math.max(0, r.v) * 0.5 * (routeFor(r) ? (routeFor(r).endS - routeFor(r).startS) / routeFor(r).length : 1)), q = routeFor(r);
+    const grip = 24 * r.car.grip * (1 + Math.min(1, Math.abs(f.roll || 0) / (25 * Math.PI / 180)) * 0.6) * (q && q.surface === 'cobble' ? 0.85 : 1), need = f.curv * r.v * Math.abs(r.v);
+    return Math.sign(need) * Math.max(0, Math.abs(need) - grip) * 0.28;
+  }
+  // Loops (B23): the road holds you while the speed presses you into it, v² / R ≥ g × how far it is upside down, with 20 %
+  // to spare (sqrt(g·R)·1.2 at the top of that loop's radius); LENKHILFE forgives 10 %. Stalled on the wall, you fall too
+  function loopFall(r, f) { const R = f.loopR || 13, k = 1.44 * (r.assist ? 0.81 : 1); return f.N.y < 0.2 && r.v * r.v < Math.max(0.15, -f.N.y) * G * R * k || r.v < 3 && f.N.y < 0.8; }
+  // Jumps (B23): metres from the ramp lip at s to the end of the landing zone behind the landing ramp's foot
+  function zoneAhead(s) {
+    const S = track.samples, n = S.length; let i = Math.floor(((s % track.length) + track.length) % track.length / track.ds) % n, d = 0;
+    while (d < 200 && ['ramp', 'gap', 'land'].includes(S[(i + 1) % n].kind)) { i++; d += track.ds; }
+    return d + TB.LAND_ZONE;
+  }
   function endJump(r) { if (!r.jumpLive) return; (r.jumps || (r.jumps = [])).push({ s: Math.round(r.jumpLive.s), h: r.jumpLive.peak - r.jumpLive.y0 }); if (r.jumps.length > 30) r.jumps.shift(); r.jumpLive = null; }
   function updateRacer(r, dt, ctl) {
     const car = r.car;
@@ -548,7 +604,8 @@
       const slope = tourRide(r) && f.kind === 'loop' ? 0 : f.T.y; // the Stadtrundfahrt rolls through a loop or a corkscrew at 60 km/h
       // on the verge (gravel, grass, sidewalk): wheels spin, heavy drag, 40 % grip; the same rules for every car
       const verge = r.onVerge = Math.abs(r.lat) > roadWidth;
-      let a = ctl.gas * car.accel * (r.turboOn ? 1.9 : 1) * (verge ? 0.5 : 1) - ctl.brake * (r.v > 0.5 ? car.brake : -car.accel * 0.4) - G * slope * 0.9;
+      const up = tourRide(r) ? 1 : f.kind === 'ramp' ? 0 : Math.max(0, f.N.y); // the engine pushes as hard as the wheels are pressed down: no thrust up a vertical wall, a loop is driven on the speed you bring; on a ramp only the run-up counts
+      let a = ctl.gas * car.accel * (r.turboOn ? 1.9 : 1) * (verge ? 0.5 : 1) * up - ctl.brake * (r.v > 0.5 ? car.brake : -car.accel * 0.4) - G * slope * 0.9;
       a -= r.v * Math.abs(r.v) * 0.004 + (ctl.gas > 0 ? 0 : 0.8) * Math.sign(r.v) + (verge ? r.v * 0.35 + 3 * Math.sign(r.v) : 0);
       r.v += a * dt;
       r.v = clamp(r.v, -8, car.top * topMul * (1.0 + (slope < 0 ? 0.15 : 0)));
@@ -558,9 +615,8 @@
       const gripAcc = 24 * car.grip * (1 + bankAssist) * (onRoute && onRoute.surface === 'cobble' ? 0.85 : 1) * (verge ? 0.4 : 1); // Kopfsteinpflaster: less grip
       const need = f.curv * r.v * Math.abs(r.v);
       const centrifugal = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
-      r.slide = centrifugal;
-      const steerV = (ctl.steer + (r === player && promille > 0 ? 0 : 0)) * car.steer * (2.5 + 0.16 * Math.abs(r.v)) * (verge ? 0.7 : 1);
-      r.lat += (steerV + centrifugal) * dt;
+      r.slide = centrifugal; r.airLat = 0;
+      r.lat += (steerStep(r, ctl.steer, gripAcc, need, dt, roadWidth) + centrifugal) * dt;
       if (Math.abs(r.lat) > roadWidth + vergeAt(r, f, r.lat)) { crash(r, 'off'); return; } // past the verge: the wall, the house, the water
       if (onRoute) { // market stall and crate stacks in a Gasse: a bump that costs speed, and a word from the stall
         const d = (r.s - onRoute.startS) * onRoute.length / (onRoute.endS - onRoute.startS);
@@ -569,12 +625,12 @@
         }
         if (r.bumpT > 0) r.bumpT -= dt;
       }
-      if (f.kind === 'loop') { r.wasInLoop = true; if (f.N.y < 0.2 && r.v < 21 && !tourRide(r)) { crash(r, 'loop'); return; } }
+      if (f.kind === 'loop') { r.wasInLoop = true; if (!tourRide(r) && loopFall(r, f)) { crash(r, 'loop'); return; } }
       else if (r.wasInLoop) { r.wasInLoop = false; if (!r.isAI) say(tuenn, pickNew(theme.confetti && tuenn.loopJeck ? tuenn.loopOk.concat(tuenn.loopJeck) : tuenn.loopOk), 2500); if (r === player && !tourRide(r)) { addDeckel(1); bumpStat('loops'); raceStunts++; if (theme.confetti) tusch(); } } // the Stadtrundfahrt carries you round: no Deckel, no Orden
       advanceRacer(r, r.v * dt);
       const f2 = racerFrame(r);
       if (f2.kind === 'gap' && f.kind !== 'gap') {
-        const a0 = f.rampAngle; r.air = true; r.y = Math.max(f.p.y, track.samples[f.index].p.y) + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; if (tourRide(r)) r.vy = Math.max(r.vy, tourHop(r)); // launch from the ramp lip, not from the lerp down into the gap r.v = Math.max(r.v * Math.cos(a0), 4); r.jumpStartS = r.s;
+        const a0 = f.rampAngle; r.air = true; r.y = Math.max(f.p.y, track.samples[f.index].p.y) + 0.1; r.vy = r.v * Math.sin(a0) + 0.5; r.zoneLeft = zoneAhead(r.s); if (tourRide(r)) r.vy = Math.max(r.vy, tourHop(r)); r.jumpStartS = r.s; // launch from the ramp lip, not from the lerp down into the gap
       } else if (f2.kind === 'gap') { r.air = true; r.y = roadY; r.vy = 0; }
       else {
         const roadVy = r.v * f2.T.y;
@@ -585,17 +641,25 @@
     } else {
       if (!r.jumpLive) r.jumpLive = { s: r.s, y0: r.y, peak: r.y }; // the flight's height above its take-off (debug and tests)
       advanceRacer(r, r.v * dt);
-      r.lat += ctl.steer * car.steer * 1.5 * dt;
+      // in the air the heading stays as it left the ground; the wheel moves the car a quarter as much as it once did, a quarter metre a flight at most
+      r.steerIn += clamp(ctl.steer - r.steerIn, -dt / STEER_RAMP, dt / STEER_RAMP);
+      const nudge = clamp(ctl.steer * car.steer * 1.5 * 0.25 * dt, -AIR_LAT - r.airLat, AIR_LAT - r.airLat); r.airLat += nudge;
+      r.lat += r.v * Math.sin(r.yaw) * dt + nudge;
       const f2 = racerFrame(r);
-      const landing = f2.kind !== 'gap' && f2.kind !== 'ramp';
-      r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : 1) * dt; r.jumpLive.peak = Math.max(r.jumpLive.peak, r.y);
+      if (r.zoneLeft != null) r.zoneLeft -= r.v * dt; // a jump: the flight over the gap and its landing zone keeps the jump's gravity
+      const landing = r.zoneLeft != null ? r.zoneLeft < 0 : f2.kind !== 'gap' && f2.kind !== 'ramp';
+      r.y += r.vy * dt; r.vy -= G * (landing ? 2.6 : r.zoneLeft != null ? FLIGHT_G : 1) * dt; r.jumpLive.peak = Math.max(r.jumpLive.peak, r.y);
       const ry = f2.p.y;
       if (f2.kind === 'gap') { if (r.y < W.WATER_Y + 0.4) { crash(r, 'water'); return; } if (f2.over && r.y < f2.over && !tourRide(r)) { crash(r, 'roof'); return; } }
+      else if (f2.kind === 'land' && r.y < ry - 0.8 && !tourRide(r)) { crash(r, 'short'); return; } // too slow: into the face of the landing ramp
       else if (r.y <= ry + 0.12) {
-        r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y; endJump(r);
+        const zone = r.zoneLeft, hard = zone != null && zone < 0 && !tourRide(r); // past the landing zone: a hard landing
+        r.air = false; r.y = ry; r.prevRoadVy = r.v * f2.T.y; r.zoneLeft = null; endJump(r);
         if (Math.abs(r.lat) > roadWidth + vergeAt(r, f2, r.lat)) { crash(r, 'off'); return; } // a landing on the verge is rough but survivable
-        if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
-        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0) { say(tuenn, pickNew(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player && !tourRide(r)) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
+        if (hard) { r.hardLandings = (r.hardLandings || 0) + 1; r.v *= 0.6; r.damage = Math.min(1, r.damage + 0.35); if (!r.isAI) { crashSound(); shake = 0.8; if (r.damage >= 1) { crash(r, 'off'); return; } say(tuenn, pickNew(tuenn.jumpLong), 2600); } }
+        else if (zone != null) r.v *= 0.97; // in the landing zone: the ramp and the run-out take the blow
+        else if (r.vy < -22) { r.v *= 0.55; r.damage = Math.min(1, r.damage + 0.08); if (r.damage >= 1 && !r.isAI) crash(r, 'off'); } else if (r.vy < -14) r.v *= 0.8;
+        if (!r.isAI && r.s - r.jumpStartS > 20 && r.jumpStartS > 0 && !hard) { say(tuenn, pickNew(tuenn.jumpOk), 2500); r.jumpStartS = 0; if (r === player && !tourRide(r)) { addDeckel(1); bumpStat('jumps'); raceStunts++; if (theme.confetti) tusch(); } }
         r.vy = 0;
       }
       if (r.y - ry > 60) { crash(r, 'off'); return; }
@@ -618,7 +682,7 @@
   function tourHop(r) {
     let d = 0; while (d < 240 && TB.frameAt(track, r.s + d).kind === 'gap') d += 1;
     const land = TB.frameAt(track, r.s + d + 3), T = (d + 6) / Math.max(6, r.v);
-    return (land.p.y - r.y + 0.5 * G * T * T) / T;
+    return (land.p.y - r.y + 0.5 * G * FLIGHT_G * T * T) / T; // onto the landing ramp
   }
   // split times: a checkpoint passed this lap (the line itself is counted by lapSplit)
   function splitTick(r) {
@@ -638,6 +702,63 @@
     el.textContent = d == null ? `${k + 1}/4 ${fmtTime(t)}` : `${k + 1}/4 ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(2)}`;
     el.classList.toggle('faster', d != null && d < 0); el.classList.toggle('slower', d != null && d >= 0);
   }
+  // ---------------- stunts (B23) ----------------
+  // every loop and jump of the main road, and the entry speeds that carry a car through it: found by sending a scratch
+  // rival through it at full throttle with the same updateRacer as everyone, so the numbers are what the road asks
+  let stunts = [], stuntMs = 0;
+  function buildStunts() {
+    stunts = []; const S = track.samples, n = S.length, kindOf = (q) => q.kind === 'loop' ? (q.cork ? 'cork' : 'loop') : q.kind === 'ramp' ? 'jump' : null; // a corkscrew and the loop behind it are two stunts
+    for (let i = 0; i < n; i++) { const k = kindOf(S[i]); if (k && kindOf(S[(i - 1 + n) % n]) !== k) stunts.push({ kind: k, s: i * track.ds, v: {} }); }
+    for (const t of stunts) { let j = Math.round(t.s / track.ds); while (j < 2 * n && ['loop', 'ramp', 'gap', 'land'].includes(S[j % n].kind) && (j === Math.round(t.s / track.ds) || kindOf(S[j % n]) !== 'loop' || kindOf(S[(j - 1) % n]) === 'loop')) j++; t.len = j * track.ds - t.s + (t.kind === 'jump' ? TB.LAND_ZONE : 0) + 2; }
+  }
+  const SIM_DRIVER = { name: '', skill: 1, wobble: 0, lines: {} };
+  function stuntRun(t, car, v0, assist) { // 'low' (fell, short, stalled), 'high' (past the landing zone) or 'ok'
+    const r = makeRacer(car, null, SIM_DRIVER, true), L = track.length, ctl = { gas: 1, brake: 0, steer: 0, turbo: 0 };
+    Object.assign(r, { s: t.s, v: v0, safeS: t.s, turbo: 0, assist, lap: -99 }); let went = 0;
+    for (let i = 0; i < 6000; i++) {
+      const s0 = r.s; updateRacer(r, SIM_DT, ctl);
+      if (r.crashed > 0) return 'low';
+      if (r.hardLandings) return 'high';
+      let d = r.s - s0; if (d < -L / 2) d += L; went += d;
+      if (went > t.len && !r.air) return 'ok';
+      if (r.v < 0.5 && !r.air && i > 20) return 'low';
+    }
+    return 'low';
+  }
+  function stuntSpeeds(t, car, assist) { // { min, max } entry speed in m/s (max: Infinity for a loop)
+    const key = car.id + (assist ? '+' : ''); if (t.v[key]) return t.v[key];
+    const run = (v) => stuntRun(t, car, v, assist), top = car.top * 1.05;
+    let ok = 0; for (let v = 12; v <= top; v += 3) if (run(v) === 'ok') { ok = v; break; }
+    if (!ok) return (t.v[key] = { min: top, max: top });
+    let lo = 0, hi = ok; while (hi - lo > 0.25) { const m = (lo + hi) / 2; if (run(m) === 'ok') hi = m; else lo = m; }
+    const out = { min: hi, max: Infinity };
+    if (t.kind === 'jump') { let a = ok, b = car.top * 1.3; if (run(b) !== 'ok') { while (b - a > 0.25) { const m = (a + b) / 2; if (run(m) === 'ok') a = m; else b = m; } out.max = a; } }
+    return (t.v[key] = out);
+  }
+  // a jump whose ramp starts less than 50 m after where this side street rejoins
+  function rampAfter(q) { const L = track.length; return stunts.some((t) => t.kind === 'jump' && ((t.s - q.endS) % L + L) % L < 50); }
+  // the next stunt within `within` metres ({ t, d }: d < 0 while in it); from a side street only the ones after it rejoins
+  function stuntAhead(r, within) {
+    const q = routeFor(r); if (!stunts.length) return null; const L = track.length; let best = null;
+    for (const t of stunts) { let d = t.s - r.s; if (d < -L / 2) d += L; if (d > L / 2) d -= L; if (q && ((t.s - q.endS) % L + L) % L > L / 2) continue; // from a side street only what comes after it
+      if (d <= within && d >= -t.len && (!best || d < best.d)) best = { t, d }; }
+    return best;
+  }
+  // what a rival aims for near a stunt: into a loop with 30 % on its minimum (as far as the curve before allows), onto a
+  // ramp at the speed that lands in the middle of the zone; aiSlow, the rubber band and the Razzia do not count there
+  function stuntTarget(r, target, i) {
+    if (r.air || routeFor(r) || !stunts.length) return target; const L = track.length; let need = 0, nearLoop = Infinity, jump = null;
+    stunts.forEach((t, k) => {
+      let d = t.s - r.s; if (d < -L / 2) d += L; if (d > L / 2) d -= L; if (d > 160 || d < -t.len) return;
+      const sp = stuntSpeeds(t, r.car, r.assist);
+      if (t.kind === 'jump') { if (!jump || d < jump.d) jump = { d, sp }; return; }
+      let n = sp.min * 1.3; const nx = stunts[(k + 1) % stunts.length]; let gap = nx.s - (t.s + t.len); if (gap < -L / 2) gap += L; // a jump right behind the loop: come out fast enough for its ramp (no engine on a ramp)
+      if (nx !== t && nx.kind === 'jump' && gap < 150) n = Math.max(n, stuntSpeeds(nx, r.car, r.assist).min * 1.2);
+      need = Math.max(need, Math.min(r.car.top, n, d > 30 ? track.safe[i] * 1.05 : 1e9)); nearLoop = Math.min(nearLoop, d);
+    });
+    if (jump && jump.d < nearLoop) { const sp = jump.sp; return isFinite(sp.max) ? Math.min(sp.max * 0.93, sp.min * 0.45 + sp.max * 0.55) : Math.max(target, sp.min * 1.2); }
+    return Math.max(target, need);
+  }
   function aiControl(r, dt) {
     const activeRoute = routeFor(r);
     if (activeRoute) {
@@ -652,7 +773,7 @@
       let lane = 0;
       const obstacle = routeObstacles(activeRoute).find((o) => o.d > distance - 3 && o.d < distance + 35);
       if (obstacle) { lane = -Math.sign(obstacle.lat || 1) * Math.min(activeRoute.halfWidth - 1.1, obstacle.r + 1.2); target = Math.min(target, 14); }
-      return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: clamp((lane - r.lat) * 0.6, -1, 1), turbo: 0 };
+      return { gas: r.v < target ? 1 : 0, brake: r.v > target + 2 ? 0.7 : 0, steer: steerTo(r, lane, 1.4), turbo: 0 };
     }
     r.aiTimer -= dt;
     if (r.aiTimer <= 0) { r.aiTimer = 4 + Math.random() * 8; r.aiSlow = Math.random() < r.wobble * 0.6 ? 0.55 + Math.random() * 0.3 : 1; r.laneBias = (Math.random() - 0.5) * 6; }
@@ -661,41 +782,40 @@
     let band = 1; const diffN = PLAYABLE[sel.driver].diffN || 0;
     if (r.isAI && player && !player.finished && phase === 'race' && raceOpts.kluengel && diffN < 2) { const L = track.length; const gap = (r.s + r.lap * L) - (player.s + player.lap * L); const k = [0.22, 0.14][diffN]; band = clamp(1 - gap / 300 * k, 1 - k * 0.9, 1 + k * 0.5); }
     r.band = band;
-    const target = Math.min(r.car.top * r.skill * (r.isCop ? 1.05 : 0.95), track.safe[i] * (0.86 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * (razzia > 0 && r !== player2 ? 0.62 : 1) * band;
-    let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
+    const target = stuntTarget(r, Math.min(r.car.top * r.skill * (r.isCop ? 1.05 : 0.95), track.safe[i] * (0.86 + r.skill * 0.2)) * (r.aiSlow < 1 ? r.aiSlow : 1) * (telefon.active > 0 && r !== player2 ? 0.7 : 1) * (razzia > 0 && r !== player2 ? 0.62 : 1) * band, i);
+    let gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0; r.aiTarget = target;
     let wantLat = Math.sin(raceTime * 0.7 + r.wobblePhase) * r.wobble * 2 + r.laneBias * 0.5;
+    { const sa = stuntAhead(r, 70); if (sa && sa.t.kind === 'jump') wantLat = clamp(r.lat, -ROAD_W / 2 - 0.5, ROAD_W / 2 + 0.5); } // straight onto a ramp: hold the lane (unless a slower car is in it), take the heading out
     // avoid the car ahead
     for (const o of racers) {
       if (o === r || o.crashed > 0 || !sameRoad(o, r)) continue;
       let ds = o.s - r.s; const L = track.length; if (ds > L / 2) ds -= L; if (ds < -L / 2) ds += L;
-      if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v && track.samples[i].kind !== 'ramp') gas = 0.3; } // never lift on a ramp: too slow means the roof
+      if (ds > 0 && ds < 16 && Math.abs(o.lat - r.lat) < 3) { wantLat = r.lat + (r.lat > o.lat ? 3 : -3); if (ds < 7 && o.v < r.v && !stuntAhead(r, 160)) gas = 0.3; } // never lift before or in a stunt: too slow means the water, the roof or the fall
     }
     if (r.yieldT > 0) { r.yieldT -= dt; wantLat = r.lat >= 0 ? ROAD_W - 1.5 : -ROAD_W + 1.5; gas = Math.min(gas, 0.6); }
-    const fork = r.isAI && !r.isCop && track.routeGroups.find((g) => g.startS >= r.s && g.startS - r.s < 100);
+    const fork = r.isAI && !r.isCop && track.routeGroups.find((g) => g.startS >= r.s && g.startS - r.s < 100); let forkLine = false;
     if (fork) {
       const key = r.lap + ':' + fork.startS;
       if (r.branchKey !== key) {
         // Stable choices per rival/lap: some stay on the main road, others take either arm.
         const choice = fork.routes.length === 1 ? (aiWantsRoute(r, fork.routes[0]) ? 1 : 0) : (r.routeSeed + r.lap - 1 + track.routeGroups.indexOf(fork)) % (fork.routes.length + 1);
-        r.branchPlan = choice ? fork.routes[choice - 1].index : -1; r.branchKey = key;
+        r.branchPlan = choice ? fork.routes[choice - 1].index : -1; if (r.branchPlan >= 0 && rampAfter(track.shortcuts[r.branchPlan])) r.branchPlan = -1; r.branchKey = key; // a side street that rejoins right before a ramp leaves no run-up for it
       }
       const approach = TB.frameAt(track, r.s);
-      if (fork.startS - r.s < 50 && !r.air && ['straight', 'curve'].includes(approach.kind)) {
+      if (fork.startS - r.s < 90 && !r.air && ['straight', 'curve', 'tunnel', 'bridge', 'loop'].includes(approach.kind)) { // (Poller: the fork comes 23 m after a loop, so line up in it) // the car needs a few metres to turn in: line up early, brake late
         const planned = track.shortcuts[r.branchPlan];
-        wantLat = planned ? planned.side * 2.2 : 0;
-        if (planned && r.v > 23) { gas = 0; brake = Math.max(brake, 0.8); }
+        wantLat = planned ? planned.side * 2.2 : 0; forkLine = true;
+        if (planned && r.v > 23 && fork.startS - r.s < 50) { gas = 0; brake = Math.max(brake, 0.8); }
       }
     }
     wantLat = clamp(wantLat, -ROAD_W + 1.5, ROAD_W - 1.5);
-    let steer = clamp((wantLat - r.lat) * 0.35, -1, 1);
+    const steer = steerTo(r, wantLat, forkLine ? 1.6 : 1.1);
     const f = TB.frameAt(track, r.s);
-    const need = f.curv * r.v * r.v, gripAcc = 24 * r.car.grip;
-    const slide = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28;
-    steer -= clamp(slide / (2.5 + 0.16 * r.v), -1, 1);
     const turbo = fork ? 0 : r.turbo > 0.6 && f.kind === 'straight' && r.skill > 0.88 && Math.random() < 1.2 * dt ? 1 : (r.turboOn && r.turbo > 0.05 ? 1 : 0);
     return { gas, brake, steer: clamp(steer, -1, 1), turbo };
   }
 
+  const STUNT_KINDS = ['loop', 'ramp', 'gap', 'land'];
   function collide(a, b, dt) {
     const k = (dt || 1 / 60) * 60; // the push and the scratches per second do not depend on the step size
     if (a.crashed > 0 || b.crashed > 0 || a.air !== b.air || !sameRoad(a, b)) return;
@@ -708,6 +828,7 @@
       const push = (dl >= 0 ? 1 : -1) * 4;
       a.lat += push * 0.05 * k; b.lat -= push * 0.05 * k;
       if (Math.abs(ds) < 2.5) { a.lat += push * 0.08 * k; b.lat -= push * 0.08 * k; }
+      else if ([a, b].some((r) => STUNT_KINDS.includes(racerFrame(r).kind) || (stuntAhead(r, 100) || {}).d > 0)) { /* in a loop, on a ramp or on the run-up to one nobody brakes the car behind: the speed is all that carries you (B23) */ }
       else if (ds > 0) { const vb = b.v; b.v = Math.min(b.v, a.v * 0.95); a.v = Math.max(a.v, vb * 0.9); }
       else { const va = a.v; a.v = Math.min(a.v, b.v * 0.95); b.v = Math.max(b.v, va * 0.9); }
       for (const r of [a, b]) if (!r.isAI) { r.damage = Math.min(1, r.damage + 0.01 * k); if (r.damage >= 1) crash(r, 'off'); } // a full damage bar is a Totalschaden, never a silent 100 %
@@ -722,7 +843,7 @@
     const T = new THREE.Vector3(f.T.x, f.T.y, f.T.z), N = new THREE.Vector3(f.N.x, f.N.y, f.N.z), B = new THREE.Vector3(f.B.x, f.B.y, f.B.z);
     const pos = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(B, r.lat).addScaledVector(N, f.surfaceOffset || 0.1);
     if (r.air) pos.y = r.y + 0.1;
-    const yaw = -r.steerVis * 0.18 * Math.sign(r.v || 1);
+    const yaw = -(r.yaw || 0) - r.steerVis * 0.05 * Math.sign(r.v || 1); // the body points where the car goes, the front wheels a little further
     let fwd = T.clone().applyAxisAngle(N, yaw);
     let up = N.clone();
     if (r.air) { const pitch = clamp(Math.atan2(r.vy, Math.max(5, r.v)), -0.6, 0.6); fwd = new THREE.Vector3(T.x, 0, T.z).normalize().applyAxisAngle(B, pitch); up = new THREE.Vector3(0, 1, 0).applyAxisAngle(B, pitch); } // B points right: a turn about it lifts the nose while the car climbs
@@ -778,7 +899,7 @@
     const list = (scenery.occluders || []).slice(); road.traverse((o) => { if (o.userData.occluders) for (const b of o.userData.occluders) list.push(b); });
     // the road deck itself where it leaves the ground (loops, ramps, bridges): the far side of a loop hides the car
     for (let i = 0; i < track.samples.length; i += 2) {
-      const q = track.samples[i]; if (q.kind !== 'loop' && q.kind !== 'ramp' && q.p.y < 1.5) continue;
+      const q = track.samples[i]; if (q.kind !== 'loop' && q.kind !== 'ramp' && q.kind !== 'land' && q.p.y < 1.5) continue;
       const ax = [q.T, q.N, q.B], inv = []; for (const a of ax) inv.push(a.x, a.y, a.z, -(a.x * q.p.x + a.y * q.p.y + a.z * q.p.z));
       const w = ROAD_W + 0.6; list.push({ inv, min: [-1.2, -0.4, -w], max: [1.2, 0.02, w], world: [q.p.x - w - 2, q.p.y - w - 2, q.p.z - w - 2, q.p.x + w + 2, q.p.y + w + 2, q.p.z + w + 2] });
     }
@@ -883,7 +1004,7 @@
     if (mission && mission.onFoot && mission.walker) { const w = mission.walker; const fwd = new THREE.Vector3(Math.sin(w.rotation.y), 0, Math.cos(w.rotation.y)); views[0].pos.lerp(w.position.clone().addScaledVector(fwd, -4.2).add(new THREE.Vector3(0, 3.6, 0)), Math.min(1, dt * 6)); views[0].look.lerp(w.position.clone().addScaledVector(fwd, 3).add(new THREE.Vector3(0, 1.3, 0)), Math.min(1, dt * 10)); views[0].up.set(0, 1, 0); camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look); if (player.mesh) player.mesh.visible = true; return; }
     if (phase === 'intro') { // flyover: from high above the first bend down into the chase position behind the grid
       const k = Math.min(1, (introT + simAcc) / 3.8), e = k * k * (3 - 2 * k); const fr = player.drawFrame || player.frame; // simAcc: smooth between the fixed steps
-      let fs = Math.min(170, track.length * 0.3); { const fk = TB.frameAt(track, fs).kind; if (fk === 'loop' || fk === 'ramp' || fk === 'gap') fs = 90; } const f = TB.frameAt(track, fs); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
+      let fs = Math.min(170, track.length * 0.3); { const fk = TB.frameAt(track, fs).kind; if (fk === 'loop' || fk === 'ramp' || fk === 'gap' || fk === 'land') fs = 90; } const f = TB.frameAt(track, fs); const far = new THREE.Vector3(f.p.x, f.p.y, f.p.z).addScaledVector(new THREE.Vector3(f.N.x, f.N.y, f.N.z), 34).addScaledVector(new THREE.Vector3(f.B.x, f.B.y, f.B.z), 26);
       const near = fr.pos.clone().addScaledVector(fr.fwd, -11).addScaledVector(fr.up, 4.2);
       views[0].pos.copy(far).lerp(near, e); views[0].look.copy(fr.pos).addScaledVector(fr.fwd, 6 * e); views[0].up.set(0, 1, 0);
       camera.position.copy(views[0].pos); camera.up.copy(views[0].up); camera.lookAt(views[0].look);
@@ -962,6 +1083,11 @@
     if (activeRoute) shortcutHint.textContent = `${routeLabel(activeRoute)} · NOCH ${Math.round(activeRoute.length * (activeRoute.endS - player.s) / (activeRoute.endS - activeRoute.startS))} M${routePerks(activeRoute) ? ' · ' + routePerks(activeRoute) : ''}`;
     else if (aheadFork) shortcutHint.textContent = aheadFork.routes.slice().sort((a, b) => a.side - b.side).map((r) => `${r.side < 0 ? '←' : '→'} ${r.name.toUpperCase()} (${routeDelta(r)})`).join(' · ') + (isMobile ? '' : ` · ↑ HAUPTSTRECKE · IN ${Math.round(aheadFork.startS - player.s)} M EINORDNEN`);
     $('#speed').textContent = String(Math.round(Math.abs(player.v) * 3.6)).padStart(3, '0');
+    { // B23: 100 m before a loop or a ramp, is the speed right for it? (not on the Stadtrundfahrt: the tour carries you)
+      const sa = (phase === 'race' || phase === 'countdown') && raceMode !== 2 && !player.air && player.crashed <= 0 ? stuntAhead(player, 100.5) : null; let w = '';
+      if (sa && sa.d > 0) { const sp = stuntSpeeds(sa.t, player.car, player.assist); w = player.v < sp.min ? 'ZE LANGSAM!' : player.v > sp.max ? 'ZE SCHNELL!' : ''; }
+      const el = $('#speedWarn'); if (el.textContent !== w) { el.textContent = w; $('#speedo').classList.toggle('warn', !!w); if (w && phase === 'race') beep(w === 'ZE LANGSAM!' ? 520 : 1040, 0.08, 'square', 0.06); }
+    }
     $('#hudRunde').textContent = `${player.lap} / ${raceLaps}`;
     if (splitShow && isMobile && raceTime > splitShow.until) { splitShow = null; $('#hudSplit').textContent = '–'; } // the phone shows a split for 5 s
     $('#hudZeit').textContent = fmtTime(raceTime);
@@ -1038,6 +1164,8 @@
     // starting grid: 2 columns, player at the back like in Stunts
     racers.forEach((r, i) => { const row = Math.floor(i / 2); r.s = 6 + (racers.length / 2 - row) * 7; r.lat = (i % 2 ? 1 : -1) * 2.8; r.safeS = r.s; });
     player.s = 6; player.lat = -2.8; if (player2) { player2.s = 6; player2.lat = 2.8; }
+    player.assist = assistOn(); if (player2) player2.assist = assistOn(true); strip.id = null; strip.steer = 0; nitroTap = 0; // EIN-DAUMEN: no thumb left over from the last race
+    buildStunts(); { const t0 = performance.now(); for (const r of racers) for (const t of stunts) stuntSpeeds(t, r.car, r.assist); stuntMs = performance.now() - t0; } // the speeds every car of the field needs
     const sz = pixelScale === 1 ? { w: renderer.domElement.width, h: renderer.domElement.height } : (post ? post.size() : { w: 640, h: 360 }); if (camera2) { camera2.aspect = sz.w / (sz.h / 2); camera2.updateProjectionMatrix(); camera.aspect = player2 ? sz.w / (sz.h / 2) : window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); } else { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); }
     for (const v of views) { v.pos.set(0, 5, -15); v.up.set(0, 1, 0); v.look.set(0, 0, 10); v.tv = null; }
     buildMinimap(); lastPos = null;
@@ -1103,7 +1231,7 @@
     let n = 0; try { n = parseInt(localStorage.getItem('stuntskoelle.controlsSeen') || '0') || 0; localStorage.setItem('stuntskoelle.controlsSeen', String(n + 1)); } catch (e) { /* ignore */ }
     if (n >= (isMobile ? 1 : 3) || window.STUNTS_SIMSTEPS) return; // a phone shows it once, as a small card in the top third
     // every key with its Kölsch word and, under it, the Hochdeutsch one (JAS / Gas)
-    const rows = isMobile ? [['▲', 'JAS', 'Gas'], ['■', 'BREMS', 'Bremse'], ['◀ ▶', 'LENKE', 'lenken'], ['N', 'TURBO'], ['☰', 'PAUS', 'Pause']] : [['↑', 'JAS', 'Gas'], ['↓', 'BREMS', 'Bremse'], ['← →', 'LENKE', 'lenken'], ['SHIFT', 'TURBO'], ['R', 'ZERÖCK OP DE STROSS', 'zurück auf die Straße'], ['P', 'PAUS', 'Pause'], ['ESC', 'MENÜ']];
+    const rows = oneThumb() ? [['◀ ▶', 'LINKS WISCHE', 'links wischen = lenken'], ['■', 'BREMS', 'Bremse'], ['N', 'TURBO', 'antippen'], ['☰', 'PAUS', 'Pause']] : isMobile ? [['▲', 'JAS', 'Gas'], ['■', 'BREMS', 'Bremse'], ['◀ ▶', 'LENKE', 'lenken'], ['N', 'TURBO'], ['☰', 'PAUS', 'Pause']] : [['↑', 'JAS', 'Gas'], ['↓', 'BREMS', 'Bremse'], ['← →', 'LENKE', 'lenken'], ['SHIFT', 'TURBO'], ['R', 'ZERÖCK OP DE STROSS', 'zurück auf die Straße'], ['P', 'PAUS', 'Pause'], ['ESC', 'MENÜ']];
     $('#controlsText').innerHTML = rows.map(([k, w, g]) => `<span class="kv">${k} ${w}${g ? `<i>${g}</i>` : ''}</span>`).join('');
     $('#controlsCard').hidden = false;
   }
@@ -1361,6 +1489,8 @@
     } else if (phase === 'race' || phase === 'finished') {
       if (phase === 'race') raceTime = ++raceTicks * SIM_DT; // counts fixed steps, never sums frame times
       if (tilt.mode > 0 && tilt.listening) readKeys();
+      if (nitroTap > 0) nitroTap -= dt;
+      if (oneThumb()) readKeys(); // EIN-DAUMEN: the gas is on from the green light, the nitro tap runs out
       const ctl = player.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : (window.STUNTS_AUTOPILOT || demo) ? aiControl(player, dt) : input;
       if (mission && mission.onFoot) { player.v = 0; walkStep(dt); } else updateRacer(player, dt, ctl);
       if (player2) updateRacer(player2, dt, player2.finished ? { gas: 0, brake: 0.5, steer: 0, turbo: 0 } : window.STUNTS_AUTOPILOT ? aiControl(player2, dt) : input2);
@@ -1473,6 +1603,7 @@
     input.brake = (keys.ArrowDown || (!player2 && keys.KeyS) || keys.Space) ? 1 : 0;
     input.turbo = (keys.ShiftLeft || keys.ShiftRight || keys.KeyN || keys.KeyX) ? 1 : 0;
     if (touch.left) input.steer -= 1; if (touch.right) input.steer += 1; if (touch.gas) input.gas = 1; if (touch.brake) input.brake = 1; if (touch.turbo) input.turbo = 1;
+    if (oneThumb()) { input.steer += strip.steer; if (!touch.brake) input.gas = 1; if (nitroTap > 0) input.turbo = 1; } // EIN-DAUMEN: always gas unless ■ is held
     if (tilt.mode > 0 && !touch.left && !touch.right && input.steer === 0) input.steer = tiltSteer();
     input.steer = clamp(input.steer, -1, 1);
   }
@@ -1542,7 +1673,22 @@
   // (or from ▲ onto ■) switches over without being lifted
   const TKEYS = { tLeft: 'left', tRight: 'right', tGas: 'gas', tBrake: 'brake', tNitro: 'turbo' };
   const fingers = new Map(); let mouseKey = null;
-  function touchSync() { for (const k of Object.values(TKEYS)) touch[k] = false; for (const k of fingers.values()) if (k) touch[k] = true; if (mouseKey) touch[mouseKey] = true; readKeys(); }
+  function touchSync() { for (const k of Object.values(TKEYS)) touch[k] = false; for (const k of fingers.values()) if (k) touch[k] = true; if (mouseKey) touch[mouseKey] = true; if (oneThumb() && touch.turbo && !nitroWas) nitroTap = 1.5; nitroWas = touch.turbo; readKeys(); }
+  // EIN-DAUMEN (B24): where the thumb comes down on the left strip is straight ahead; the sideways distance from there
+  // steers (touchmove), full lock at about a ninth of the screen width. A tap on N fires 1.5 s of nitro
+  const strip = { id: null, x0: 0, steer: 0 }; let nitroTap = 0, nitroWas = false;
+  { const el = $('#tStrip'), scale = () => clamp(window.innerWidth * 0.11, 50, 110);
+    const set = (x) => { strip.steer = strip.id == null ? 0 : clamp((x - strip.x0) / scale(), -1, 1); el.classList.toggle('on', strip.id != null); readKeys(); };
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); if (strip.id != null && ![...e.touches].some((q) => q.identifier === strip.id)) strip.id = null; /* a lift the strip never heard of (hidden by the pause) */ const t = e.changedTouches[0]; if (strip.id == null && t) { strip.id = t.identifier; strip.x0 = t.clientX; set(t.clientX); } }, { passive: false });
+    el.addEventListener('touchmove', (e) => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === strip.id) set(t.clientX); }, { passive: false });
+    const lift = (e) => { for (const t of e.changedTouches) if (t.identifier === strip.id) { strip.id = null; set(0); } };
+    el.addEventListener('touchend', lift); el.addEventListener('touchcancel', lift);
+    el.addEventListener('mousedown', (e) => { e.preventDefault(); strip.id = 'mouse'; strip.x0 = e.clientX; set(e.clientX); }); // desktop testing
+    window.addEventListener('mousemove', (e) => { if (strip.id === 'mouse') set(e.clientX); }); window.addEventListener('mouseup', () => { if (strip.id === 'mouse') { strip.id = null; set(0); } }); }
+  function applyThumb() { document.body.classList.toggle('oneThumb', oneThumb()); labelBtn($('#thumbBtn'), thumb === 1 ? 'DAUMEN: EINS' : 'DAUMEN: ZWEI', thumb === 1 ? 'Einhand-Steuerung' : 'zwei Daumen'); }
+  function setThumb(n) { thumb = n === 1 ? 1 : 2; try { localStorage.setItem('stuntskoelle.thumb', String(thumb)); } catch (e) { /* ignore */ } strip.id = null; strip.steer = 0; applyThumb(); applyLenk(); readKeys(); }
+  function applyLenk() { labelBtn($('#lenkBtn'), 'LENKHILFE: ' + (oneThumb() && lenk !== 1 ? 'AN (EIN DAUME)' : LENK[lenk]), lenk === 1 ? 'Lenkhilfe an' : lenk === 2 ? 'Lenkhilfe aus' : 'Lenkhilfe automatisch'); }
+  function setLenk(i) { lenk = clamp(i | 0, 0, LENK.length - 1); try { localStorage.setItem('stuntskoelle.lenkhilfe', LENK[lenk]); } catch (e) { /* ignore */ } applyLenk(); if (player && phase !== 'menu') { player.assist = assistOn(); if (player2) player2.assist = assistOn(true); } }
   const keyAt = (x, y) => { const el = document.elementFromPoint(x, y); const b = el && el.closest && el.closest('#touch button'); return (b && TKEYS[b.id]) || null; };
   { const pad = $('#touch');
     pad.addEventListener('touchstart', (e) => { let mine = false; for (const t of e.changedTouches) { const k = TKEYS[t.target.id] || keyAt(t.clientX, t.clientY); if (k) { fingers.set(t.identifier, k); mine = true; } } if (mine) { e.preventDefault(); touchSync(); } }, { passive: false });
@@ -1666,7 +1812,7 @@
   // a story is only told where it can be read: no loop, jump or fork within the next 120 m
   function calmRoad() {
     const S = track.samples, n = S.length, i0 = Math.floor(((player.s % track.length) + track.length) % track.length / track.ds);
-    for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap') return false; }
+    for (let k = -4; k < 120 / track.ds; k++) { const q = S[((i0 + k) % n + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap' || q.kind === 'land') return false; }
     return !track.routeGroups.some((g) => g.startS - player.s > -10 && g.startS - player.s < 90);
   }
   // ---------------- Wahrzeichen: a name tag over the landmark while its story is told, the album under REKORDE ----------------
@@ -1908,7 +2054,7 @@
   }
   function walkStep(dt) {
     const w = mission.walker; if (!w) return; const B = tuenn.botengang; walkT += dt;
-    const turn = -input.steer * 2.6 * dt; w.rotation.y += turn; const speed = (input.gas ? 5.2 : 0) - (input.brake ? 2.4 : 0);
+    const turn = -input.steer * 2.6 * dt; w.rotation.y += turn; const speed = (input.gas ? 5.2 : 0) - (input.brake && !oneThumb() ? 2.4 : 0); // EIN-DAUMEN walks on its own, ■ stops
     if (speed) { w.position.x += Math.sin(w.rotation.y) * speed * dt; w.position.z += Math.cos(w.rotation.y) * speed * dt; w.position.y = W.GROUND_Y + Math.abs(Math.sin(walkT * 11)) * 0.06; w.rotation.z = Math.sin(walkT * 11) * 0.04; } else { w.position.y = W.GROUND_Y; w.rotation.z = 0; }
     const car = player.mesh.position; mission.farCool -= dt;
     { // project onto the road: the walker may use the street and both sidewalks, up to 70 m from the car along it
@@ -2047,7 +2193,7 @@
   function roadFrameAhead(fromS, dist, clear) { // a flat, ordinary piece of road at least `dist` ahead of fromS; `clear` = no stunt within that many metres
     const S = track.samples, L = track.length, n = S.length; let i = Math.floor(((fromS + dist) % L) / track.ds), tries = 0;
     const okAt = (k) => { const q = S[((k % n) + n) % n]; return ['straight', 'curve', 'bridge'].includes(q.kind) && Math.abs(q.p.y) < 1.5; };
-    const clearAt = (k) => { if (!clear) return true; const r = Math.round(clear / track.ds); for (let j = -r; j <= r; j += 4) { const q = S[(((k + j) % n) + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap' || q.kind === 'tunnel' || q.p.y > 3) return false; } return true; };
+    const clearAt = (k) => { if (!clear) return true; const r = Math.round(clear / track.ds); for (let j = -r; j <= r; j += 4) { const q = S[(((k + j) % n) + n) % n]; if (q.kind === 'loop' || q.kind === 'ramp' || q.kind === 'gap' || q.kind === 'land' || q.kind === 'tunnel' || q.p.y > 3) return false; } return true; };
     while (tries++ < 400 && !(okAt(i) && clearAt(i))) i += 3;
     i %= n; return { s: i * track.ds, f: TB.frameAt(track, i * track.ds) };
   }
@@ -2251,16 +2397,14 @@
     if (rq) return aiControl(r, 1 / 60); // look ahead in physical branch metres, including cobbles and market obstacles
     if (r.lostT > 0) r.lostT -= 1 / 60;
     if (r.routePlan != null) { const q = track.shortcuts[r.routePlan]; let d = q ? q.startS - r.s : -1; if (d < 0) d += L; if (!q || d > 200 || routeFor(player) == null && d > 60) r.routePlan = null;
-      else { const vIn = Math.sqrt(24 * r.car.grip / routeMaxCurv(q)) * 0.85; const steer = clamp((q.side * Math.min(2.4, q.halfWidth - 1.1) - r.lat) * 0.45, -1, 1); return { gas: r.v < vIn + d * 0.3 ? 1 : 0, brake: r.v > vIn + d * 0.35 ? 0.8 : 0, steer, turbo: 0 }; } }
+      else { const vIn = Math.sqrt(24 * r.car.grip / routeMaxCurv(q)) * 0.85; const steer = steerTo(r, q.side * Math.min(2.4, q.halfWidth - 1.1)); return { gas: r.v < vIn + d * 0.3 ? 1 : 0, brake: r.v > vIn + d * 0.35 ? 0.8 : 0, steer, turbo: 0 }; } }
     const i = Math.floor(((r.s % L) + L) % L / track.ds) % track.samples.length;
     const safe = track.safe[i] * 1.12;
-    const target = (ds > 5 ? Math.min(safe, r.car.top) : Math.max(0, Math.abs(player.v) - 1)) * (r.lostT > 0 ? 0.5 : 1); // lost you in the Veedel: searching
+    const target = stuntTarget(r, (ds > 5 ? Math.min(safe, r.car.top) : Math.max(0, Math.abs(player.v) - 1)) * (r.lostT > 0 ? 0.5 : 1), i); // lost you in the Veedel: searching
     const gas = r.v < target ? 1 : 0, brake = r.v > target + 3 ? 0.8 : 0;
     const wantLat = clamp(player.lat, -ROAD_W + 1.2, ROAD_W - 1.2);
-    let steer = clamp((wantLat - r.lat) * 0.45, -1, 1);
-    const f = TB.frameAt(track, r.s); const need = f.curv * r.v * r.v, gripAcc = 24 * r.car.grip;
-    const slide = Math.sign(need) * Math.max(0, Math.abs(need) - gripAcc) * 0.28; steer -= clamp(slide / (2.5 + 0.16 * r.v), -1, 1);
-    return { gas, brake, steer: clamp(steer, -1, 1), turbo: ds > 40 && r.turbo > 0.1 ? 1 : 0 };
+    const steer = steerTo(r, wantLat);
+    return { gas, brake, steer, turbo: ds > 40 && r.turbo > 0.1 ? 1 : 0 };
   }
   function updateKripo(dt) {
     if (!kripo) return;
@@ -2271,7 +2415,7 @@
     if (sirenT > 0.5) { sirenT = 0; if (Math.abs(ds) < 160) beep(Math.floor(kripoT * 2) % 2 ? 720 : 960, 0.22, 'square', Math.max(0.02, 0.07 - Math.abs(ds) * 0.0003)); }
     const pk = racerFrame(player).kind, sharedRoute = sameRoad(player, kripo) && routeFor(player);
     const collisionDistance = sharedRoute ? ds * sharedRoute.length / (sharedRoute.endS - sharedRoute.startS) : ds;
-    if (sameRoad(player, kripo) && kripoHitCool <= 0 && Math.abs(collisionDistance) < 4.8 && Math.abs(player.lat - kripo.lat) < 2.4 && !player.air && !kripo.air && player.crashed <= 0 && kripo.crashed <= 0 && pk !== 'loop' && pk !== 'ramp') {
+    if (sameRoad(player, kripo) && kripoHitCool <= 0 && Math.abs(collisionDistance) < 4.8 && Math.abs(player.lat - kripo.lat) < 2.4 && !player.air && !kripo.air && player.crashed <= 0 && kripo.crashed <= 0 && pk !== 'loop' && pk !== 'ramp' && pk !== 'land') {
       kripoHitCool = 2.4; player.damage = Math.min(1, player.damage + 0.14); player.v *= 0.82; player.lat += (player.lat >= kripo.lat ? 1 : -1) * 1.3; kripo.v *= 0.9; crashSound(); shake = 0.6;
       if (player.damage >= 1) { kripoCaught = true; crash(player, 'kripo'); sayMust(...kripoLine(tuenn.kripo.caught), 3000); endKripo('caught'); if (mission) missionEnd(false, 'caught'); return; }
       say(...kripoLine(tuenn.kripo.hit), 2200);
@@ -2351,8 +2495,8 @@
     if (!rec.buf) recReset();
     const slot = (rec.head + rec.n) % REC_CAP; if (rec.n < REC_CAP) rec.n++; else rec.head = (rec.head + 1) % REC_CAP; // past 30 min the oldest frame goes
     const f = rec.buf, o = slot * rec.stride; rec.t[slot] = raceTime;
-    // per racer: distance incl. laps, lateral, height in the air (-999 on the road), steering, crashed, side street, speed, vertical speed
-    racers.forEach((r, i) => { const k = o + i * REC_F; f[k] = r.s + r.lap * track.length; f[k + 1] = r.lat; f[k + 2] = r.air ? r.y : -999; f[k + 3] = r.steerVis; f[k + 4] = r.crashed > 0 ? 1 : 0; f[k + 5] = r.shortcut; f[k + 6] = r.v; f[k + 7] = r.vy || 0; });
+    // per racer: distance incl. laps, lateral, height in the air (-999 on the road), steering, crashed, side street, speed, vertical speed, heading
+    racers.forEach((r, i) => { const k = o + i * REC_F; f[k] = r.s + r.lap * track.length; f[k + 1] = r.lat; f[k + 2] = r.air ? r.y : -999; f[k + 3] = r.steerVis; f[k + 4] = r.crashed > 0 ? 1 : 0; f[k + 5] = r.shortcut; f[k + 6] = r.v; f[k + 7] = r.vy || 0; f[k + 8] = r.yaw || 0; });
   }
   function buildReplayCams() { // a camera every 90 m, used while the car is 20 m before it to 100 m past it: it must see that stretch
     replay.cams = [];
@@ -2381,7 +2525,7 @@
     racers.forEach((r, k) => {
       const A = a + k * REC_F, B = b + k * REC_F, mix = (q) => F[A + q] + (F[B + q] - F[A + q]) * u;
       const S = mix(0); r.lap = Math.floor(S / track.length); r.s = S - r.lap * track.length;
-      r.lat = mix(1); const ya = F[A + 2], yb = F[B + 2]; r.air = ya > -900 && yb > -900; r.y = r.air ? mix(2) : 0; r.vy = r.air ? mix(7) : 0; r.steerVis = F[A + 3]; r.crashed = F[A + 4] > 0.5 ? 1 : 0; r.v = mix(6); // the recorded speed, not a fixed 108 km/h
+      r.lat = mix(1); const ya = F[A + 2], yb = F[B + 2]; r.air = ya > -900 && yb > -900; r.y = r.air ? mix(2) : 0; r.vy = r.air ? mix(7) : 0; r.steerVis = F[A + 3]; r.yaw = mix(8); r.crashed = F[A + 4] > 0.5 ? 1 : 0; r.v = mix(6); // the recorded speed, not a fixed 108 km/h
       r.shortcut = playbackRoute(r.s, F[A + 5], F[B + 5]);
       placeRacer(r, dt); if (r.crashed) r.mesh.rotation.z += dt * 6;
     });
@@ -2655,6 +2799,9 @@
     { let on = false; try { on = localStorage.getItem('stuntskoelle.bigtext') === '1'; } catch (e) { /* ignore */ } applyFont(on);
       $('#fontBtn').onclick = () => { on = !on; try { localStorage.setItem('stuntskoelle.bigtext', on ? '1' : '0'); } catch (e) { /* ignore */ } applyFont(on); }; }
     $('#tiltBtn').onclick = toggleTilt; updateTiltUI(); if (!isMobile) $('#tiltBtn').hidden = true;
+    // LENKHILFE (AUTO, AN, AUS) and, on touch, DAUMEN: EINS / ZWEI
+    applyThumb(); applyLenk(); $('#lenkBtn').onclick = () => setLenk((lenk + 1) % LENK.length); if (!isTouch) $('#thumbBtn').hidden = true;
+    $('#thumbBtn').onclick = () => { setThumb(thumb === 1 ? 2 : 1); try { localStorage.setItem('stuntskoelle.controlsSeen', '0'); } catch (e) { /* ignore */ } if (thumb === 1) say(tuenn, tuenn.oneThumb, 3500); }; // the next race shows the controls card for the new mode once
     // GESCHWÄTZ (NORMAL on a desktop, WENIJ on touch until the player picks one) and KÖLSCH-HÜLP
     try { const v = localStorage.getItem('stuntskoelle.chatter'); chat = CHAT.includes(v) ? CHAT.indexOf(v) : isTouch ? 2 : 1; } catch (e) { chat = isTouch ? 2 : 1; }
     applyChat(); $('#chatBtn').onclick = () => setChat((chat + 1) % CHAT.length, true);
@@ -2727,13 +2874,18 @@
   window.STUNTS_STATS = () => renderer && { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries };
   window.STUNTS_PROPS = () => scenery ? scenery.props.map((p) => ({ type: p.userData.type, wz: p.userData.wz || '', story: !!p.userData.story, parent: !!p.parent, x: p.position.x, y: p.position.y, z: p.position.z, rot: p.rotation.y })) : [];
   window.STUNTS_MISSION = (t) => startMission(t != null ? allTracks()[t] : activeTrackDef()); window.STUNTS_CAREER = startCareer; window.STUNTS_CAREER_STATE = careerState; window.STUNTS_ACT = missionAction;
-  window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; player.jumpLive = null; placeRacer(player, 1); } };
+  window.STUNTS_TELEPORT = (s, v, lat) => { if (player) { player.s = s; player.v = v || 0; player.lat = lat || 0; player.safeS = s; player.shortcut = -1; player.air = false; player.vy = 0; player.prevRoadVy = 0; player.crashed = 0; player.jumpLive = null; player.yaw = 0; player.steerIn = 0; player.zoneLeft = null; player.airLat = 0; placeRacer(player, 1); } };
   window.STUNTS_WALK = (x, z) => { if (mission && mission.walker) { mission.walker.position.x = x; mission.walker.position.z = z; } }; window.STUNTS_MISSION_STATE = () => mission && { stage: mission.stage, pickS: mission.pickS, dropS: mission.dropS, timer: Math.round(mission.timer), door: mission.doorPos && [mission.doorPos.x, mission.doorPos.z], car: player.mesh.position.toArray().map(Math.round), walker: mission.walker && mission.walker.position.toArray().map((v) => Math.round(v)) };
   window.STUNTS_DAILY = dailyDef; window.STUNTS_CUP_END = () => { cup.on = true; cup.i = TRACKS.length - 1; cup.pts = { DU: 80, 'Klüngel Tom': 76, 'Schäl': 70, 'Tünnes': 60 }; }; window.STUNTS_ORDEN = () => ({ stats: getStats(), orden: getOrden() });
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;
-  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash, onVerge: !!player.onVerge, vMax: player.vMax || 0, laps: player.laps.slice(), jumps: (player.jumps || []).slice() }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_DEBUG = () => ({ phase, paused, countdown, input: Object.assign({}, input), auftrag: auftrag && { stage: auftrag.stage, timer: Math.round(auftrag.timer), s1: Math.round(auftrag.s1), s2: Math.round(auftrag.s2), where: auftrag.where }, auftragDone, auftragFail, deckel, player: player && { pos: player.frame && [player.frame.pos.x, player.frame.pos.y, player.frame.pos.z], fwd: player.frame && [player.frame.fwd.x, player.frame.fwd.z], s: player.s, lat: player.lat, v: player.v, lap: player.lap, shortcut: player.shortcut, air: player.air, crashed: player.crashed, finished: player.finished, turbo: player.turbo, damage: player.damage, y: player.y, vy: player.vy, lastCrash: player.lastCrash, onVerge: !!player.onVerge, vMax: player.vMax || 0, laps: player.laps.slice(), jumps: (player.jumps || []).slice(), yaw: player.yaw, steerIn: player.steerIn, assist: player.assist, hardLandings: player.hardLandings || 0 }, racers: racers.length, raceTime, trackLen: track && track.length, standings: racers.length ? standings().map((r) => r.name) : [] });
+  window.STUNTS_RACERS_RAW = () => racers; // the live racer objects (debugging)
+  window.STUNTS_AI_CTL = () => player && aiControl(player, SIM_DT); // what the autopilot would do now (a test adds its own noise)
+  window.STUNTS_STUNTS = () => ({ ms: stuntMs, list: stunts.map((t) => Object.assign({ kind: t.kind, s: t.s, len: t.len }, player ? stuntSpeeds(t, player.car, player.assist) : {})) }); // entry speeds in m/s for the player's car
+  window.STUNTS_LENK = (m) => { if (m != null) setLenk(typeof m === 'string' ? LENK.indexOf(m) : m); return { mode: LENK[lenk], on: !!(player && player.assist) }; };
+  window.STUNTS_THUMB = (n) => { if (n != null) setThumb(n); return { thumb, one: oneThumb(), steer: strip.steer, gas: input.gas }; };
   window.STUNTS_ROUTES = () => track ? track.shortcuts.map(({ samples, ...r }) => r) : [];
-  window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; updateRacer(player, SIM_DT, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, SIM_DT) : input)); placeRacer(player, SIM_DT); recordFrame(SIM_DT); } updateHUD(); return window.STUNTS_DEBUG(); }; // n steps of 1/60 s, each as two fixed steps
+  window.STUNTS_DRIVE_STEPS = (n, ctl) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; if (nitroTap > 0) nitroTap -= SIM_DT; if (!ctl && oneThumb()) readKeys(); updateRacer(player, SIM_DT, ctl || (window.STUNTS_AUTOPILOT ? aiControl(player, SIM_DT) : input)); placeRacer(player, SIM_DT); recordFrame(SIM_DT); } updateHUD(); return window.STUNTS_DEBUG(); }; // n steps of 1/60 s, each as two fixed steps
   window.STUNTS_REPLAY_AT = (t) => { startReplay(); replay.time = t; replay.paused = true; replayStep(0); return window.STUNTS_DEBUG(); };
   // cameras and the recorder: n frames of driving with the camera following (no render), a replay at t with `settle` frames of run-up in replay camera mode m,
   // the recorded frame nearest to t (the player), the ghost placed at lap time t, the camera itself and the size of the line-of-sight layer
@@ -2755,8 +2907,8 @@
   window.STUNTS_PROMILLE = () => { promille = 7; sayMust(tuenn, pickNew(tuenn.promille), 3200); };
   window.STUNTS_EXTRAS = () => ({ tilt: { mode: tilt.mode, raw: tilt.raw, zero: tilt.zero, val: tilt.val, steer: input.steer }, razzia, promille, koelschLap, deckel, koelsch, knoellchen, kripo: !!kripo, kripoSeen, kripoCaught, wette: wette && { rival: wette.rival.name, n: wette.n, done: wette.done, won: wette.won }, taken: pickups.filter((p) => p.taken).length, pickups: pickups.length, crashes, cup: { on: cup.on, i: cup.i, pts: cup.pts } });
   window.STUNTS_FRAME = (sPos) => { const f = TB.frameAt(track, sPos); return { p: [f.p.x, f.p.y, f.p.z], T: [f.T.x, f.T.y, f.T.z], N: [f.N.x, f.N.y, f.N.z], len: track.length, kind: f.kind, verge: (track.samples[f.index].vg || []).slice(), edge: ROAD_W + 1.6 }; };
-  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan, band: r.band }));
-  window.STUNTS_FIELD_SETUP = (s, v) => { racers.forEach((r, i) => { r.s = r.isAI ? s - i * 7 : 6; r.v = r.isAI ? v : 0; r.lat = 0; r.shortcut = -1; r.branchPlan = -1; r.routePlan = null; r.branchKey = ''; r.safeS = r.s; r.air = false; r.vy = 0; r.prevRoadVy = 0; r.crashed = 0; r.finished = false; placeRacer(r, 1); }); return window.STUNTS_FIELD(); };
+  window.STUNTS_FIELD = () => racers.map((r) => ({ name: r.name, s: r.s, lap: r.lap, v: r.v, crashed: r.crashed > 0, air: r.air, ai: r.isAI, finished: !!r.finished, damage: r.damage, shortcut: r.shortcut, route: r.shortcut, plan: r.isCop ? r.routePlan : r.branchPlan, routeId: routeFor(r) ? routeFor(r).id : null, branchPlan: r.branchPlan, band: r.band, lastCrash: r.lastCrash || '', hard: r.hardLandings || 0 }));
+  window.STUNTS_FIELD_SETUP = (s, v) => { racers.forEach((r, i) => { r.s = r.isAI ? s - i * 7 : 6; r.v = r.isAI ? v : 0; r.lat = 0; r.shortcut = -1; r.branchPlan = -1; r.routePlan = null; r.branchKey = ''; r.safeS = r.s; r.air = false; r.vy = 0; r.prevRoadVy = 0; r.crashed = 0; r.finished = false; r.yaw = 0; r.steerIn = 0; r.zoneLeft = null; placeRacer(r, 1); }); return window.STUNTS_FIELD(); };
   window.STUNTS_FIELD_STEPS = (n) => { for (let i = 0; i < Math.min(n, 6000) * 2; i++) { raceTime = ++raceTicks * SIM_DT; for (const r of racers) if (r.isAI && !r.finished) { updateRacer(r, SIM_DT, aiControl(r, SIM_DT)); placeRacer(r, SIM_DT); } for (let a = 0; a < racers.length; a++) for (let b = a + 1; b < racers.length; b++) collide(racers[a], racers[b], SIM_DT); } return window.STUNTS_FIELD(); };
   window.STUNTS_NEAR = (r) => { const out = []; const pp = player.frame.pos; scene.traverse((o) => { if (!o.isMesh) return; const wp = new THREE.Vector3(); o.getWorldPosition(wp); if (wp.distanceTo(pp) < r) { const m = Array.isArray(o.material) ? o.material[0] : o.material; out.push({ d: Math.round(wp.distanceTo(pp)), col: m.color ? m.color.getHexString() : '-', parent: o.parent && o.parent.userData && o.parent.userData.type, vc: !!m.vertexColors, n: o.geometry.attributes.position.count }); } }); return out.slice(0, 40); };
   window.STUNTS_KOELSCH = koelschify; window.STUNTS_DRUNK = drunkify;

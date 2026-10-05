@@ -11,11 +11,11 @@ const { serve, launch, waitFor } = require('./helpers');
 const hook = `
   window.STUNTS_VERGE_TEST = (s0, v0, n) => { // the same controls for a rival (in the player's car) and the player
     const ai = racers.find((r) => r.isAI), run = (r) => {
-      Object.assign(r, { s: s0, lat: 0, v: v0, shortcut: -1, air: false, vy: 0, crashed: 0, turbo: 0, damage: 0, prevRoadVy: 0, safeS: s0, steerVis: 0 }); const out = [];
+      Object.assign(r, { s: s0, lat: 0, v: v0, shortcut: -1, air: false, vy: 0, crashed: 0, turbo: 0, damage: 0, prevRoadVy: 0, safeS: s0, steerVis: 0, yaw: 0, steerIn: 0, airLat: 0, zoneLeft: null }); const out = [];
       for (let i = 0; i < n; i++) { updateRacer(r, SIM_DT, { gas: 0, brake: 0, steer: 1, turbo: 0 }); out.push([+r.lat.toFixed(5), +r.v.toFixed(5), r.crashed > 0]); if (r.crashed > 0) break; }
       return out;
     };
-    const car = ai.car; ai.car = player.car; const a = run(ai); ai.car = car; const p = run(player); player.crashed = 0; ai.crashed = 0;
+    const car = ai.car, assist = ai.assist; ai.car = player.car; ai.assist = player.assist; const a = run(ai); ai.car = car; ai.assist = assist; const p = run(player); player.crashed = 0; ai.crashed = 0; // the same car and the same LENKHILFE setting
     return { ai: a, player: p };
   };
 `;

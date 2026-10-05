@@ -79,6 +79,8 @@
         <button id="hdBtn" data-icon="note">KÖLSCH-HÜLP: AUS</button>
         <button id="voicePickBtn" data-icon="speaker" hidden>SPRECHER</button>
         <button id="tiltBtn" data-icon="phone">NEIGEN: AUS</button>
+        <button id="lenkBtn" data-icon="flag">LENKHILFE: AUTO</button>
+        <button id="thumbBtn" data-icon="phone">DAUMEN: ZWEI</button>
         <button id="musicBtn" data-icon="note">MUSIK LADEN</button>
         <span id="musicTitle"></span>
         <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg" hidden>
@@ -165,6 +167,8 @@
 </div>
 
 <!-- ============ HUD ============ -->
+<!-- EIN-DAUMEN: the left 45 % of the screen steers (under the HUD, so its buttons stay on top) -->
+<div id="tStrip" aria-hidden="true"><span>◀ LENKE ▶</span><i></i></div>
 <div id="hud" hidden>
   <div id="hudTrack" class="hudTitle"></div>
   <div id="hudShortcut" hidden></div>
@@ -203,7 +207,7 @@
     <div class="replayKeys"><span><kbd>SPACE</kbd> PAUSE</span> <span><kbd>→</kbd> SCHNELLER</span> <span><kbd>←</kbd> −5 S</span> <span><kbd>C</kbd> KAMERA</span> <span><kbd>ESC</kbd> ENDE</span> <button id="replayPause">⏯ PAUSE</button><button id="replaySpeed">⏩ TEMPO</button><button id="replayCam">🎥 KAMERA</button><button id="replayExit">✕ ENDE</button></div>
   </div>
   <div class="hudDash">
-    <div class="speedBox"><b id="speed">000</b><span>KM/H</span></div>
+    <div class="speedBox" id="speedo"><b id="speed">000</b><span>KM/H</span><em id="speedWarn" aria-live="polite"></em></div>
     <div class="barBox"><span>TURBO</span><div id="turboBar" class="bar turbo"></div></div>
     <div class="barBox"><span>SCHADEN</span><div id="dmgBar" class="bar dmg"></div></div>
   </div>

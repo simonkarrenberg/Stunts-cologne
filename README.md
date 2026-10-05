@@ -97,6 +97,11 @@ Touch-Steuerung: ◀ ▶ lenken, ▲ Gas, ■ Bremse, N Nitro, ☎ Klüngel-Tele
 durch Kippen des Handys wie mit einem Lenkrad (iPhone fragt einmal nach Erlaubnis); die Haltung beim
 Start gilt als geradeaus, ein weiterer Tipp dreht die Richtung um. Der Daumen darf rutschen: von ◀ auf ▶
 (oder von ▲ auf ■) wechselt sofort, ohne abzuheben. ☰ oben links pausiert (LOSS JONN, NEU STARTE, MENÜ).
+**DAUMEN: EINS** (nur auf Touch-Geräten, unter ☰ MEHR) ist die Ein-Daumen-Steuerung, für die Hand mit dem
+Kaffee: Gas ist immer an, ■ halten bremst, N antippen zündet 1,5 s Nitro. Die linken 45 % des Bildschirms sind
+ein Lenkstreifen: Wo der Daumen aufsetzt, ist geradeaus, der seitliche Abstand davon lenkt (volles Einschlagen
+nach etwa einem Neuntel der Bildschirmbreite). ◀ ▶ ▲ verschwinden, die LENKHILFE ist an. Dä Lange dazu: „Ein
+Daume reicht. Dä andere hält dä Kaffe.“
 Jedes Kästchen hat auf dem Handy seinen festen Platz: Dä Langes Spruch läuft als eine Zeile unter dem
 Streckennamen (antippen = ganz lesen), Gabelungsschild und die Tastenkarte (nur vor dem ersten Rennen)
 darunter, die Minikarte ist eingeklappt (antippen = groß), und das Auto bleibt immer über den Knöpfen.
@@ -106,6 +111,25 @@ Läuft das Handy zu langsam (unter 24 Bildern pro Sekunde), regelt Heinzel die G
 erst die Auflösung, dann auf Pixel-Modus. Der HD-Knopf im Rennen schaltet jederzeit zurück.
 
 ### Steuerung
+
+**Lenken mit Gefühl:** Das Auto hat eine Fahrtrichtung gegenüber der Straße. Das Lenkrad dreht in 150 ms
+ein (und springt schneller zurück), die Richtung folgt so schnell, wie die Reifen es tragen: Grip pro Wagen
+und Belag, auf dem Bankett nur 40 %, bei hohem Tempo etwas weniger. Seitwärts geht es mit Tempo × Sinus der
+Richtung; lässt man los, richtet sich der Wagen in gut einer Drittelsekunde wieder gerade, ein Rutscher zum
+Abfangen statt eines Stopps auf der Stelle. In der Luft bleibt die Richtung, wie sie war, und das Lenkrad
+schiebt nur noch ein Viertel so stark, höchstens einen Viertelmeter pro Flug. **LENKHILFE** (Menü: AUTO, AN,
+AUS) dämpft das Drehen bei Tempo und zieht, solange du nicht lenkst, sanft auf die Mitte oder ±2,2 m (und
+zurück vom Bankett); auf AUTO ist sie an für LEICHT, auf Touch-Geräten und mit einem Daumen, im ZEITFAHREN ist
+sie immer aus. Rivalen, Kripo und Autopilot fahren dasselbe Modell.
+
+**Stunts brauchen Anlauf:** Der Motor schiebt nur so stark, wie die Straße die Räder andrückt: senkrecht im
+Looping gar nicht, oben kopfüber auch nicht, und auf der Schanze zählt nur der Anlauf. Ein Looping hält dich,
+solange oben noch sqrt(g·R)·1,2 auf dem Tacho stehen (R ist sein Radius; mit LENKHILFE reichen 10 % weniger),
+sonst fällst du. Jeder Sprung endet in einer Landerampe in den letzten Metern der Lücke und einer gelb-schwarz
+markierten Landezone (rote Linie am Ende): zu langsam geht es in die Rampe oder ins Wasser, zu schnell über die
+Zone hinaus – harte Landung, ein Drittel Schaden. 100 m vor einem Looping oder einer Schanze sagt der Tacho
+**ZE LANGSAM!** oder **ZE SCHNELL!**, wenn das Tempo nicht passt (die Grenzen fährt das Spiel beim Start mit dem
+eigenen Wagen einmal aus). Wer kurz vor einer Schanze wieder auf die Straße gesetzt wird, bekommt Anschieben.
 
 **PÄNZ-MODUS** (im Menü): für Kinder an der Tastatur. Statt Kölsch liegen Kamelle-Tüten auf der Straße, das
 Riesen-Kölschglas am Start wird eine Kamelle-Tüte, Sprüche übers Trinken fallen weg, und aus dem DURSTLÖSCHER
@@ -532,7 +556,7 @@ und der Tipp des Tages vom Türsteher.
   vor jedem Brauhaus. Der Türsteher verzällt an Brauhäusern, Büdchen, Blitzern, Kirchen,
   Haltestellen, Parks, Loopings und Sprüngen – ohne dass ein echter Name fällt.
   Requisiten werden relativ zur Strecke platziert (Segment + Seite + Abstand).
-- `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz), Fliehkraft
+- `js/game.js` — Arcade-Physik relativ zur Strecke (Längsposition + Querversatz + Fahrtrichtung), Fliehkraft
   vs. Grip, Schwerkraft im Looping, Flugphase bei Sprüngen und Hügelkuppen, Bankett, KI-Rivale,
   Kollisionen, Kameras, HUD, Minimap, WebAudio-Motor, Bestzeiten im `localStorage`.
   Das Rennen rechnet in festen Schritten von 1/120 s (höchstens 8 pro Bild, gezeichnet wird zwischen
@@ -569,7 +593,7 @@ dann erzwungenes Ziel, Ergebnis muss erscheinen) und einen kompletten Botengang 
 Paket zu Fuß, einsteigen, Kripo da, abliefern). `CHROME=/pfad/zu/chromium npm test` nimmt einen
 eigenen Browser. Die Skripte liegen in `test/`, jede Datei liefert `{ ok, lines }` zurück.
 `node test/run.js map-routes,streets` startet nur die Dateien mit diesen Namensanfängen. In GitHub
-Actions laufen die langsamen Browser-Prüfungen als fünf parallele Jobs; Pages wird erst
+Actions laufen die langsamen Browser-Prüfungen als sechs parallele Jobs; Pages wird erst
 veröffentlicht, wenn alle grün sind.
 Zwei Prüfungen brauchen keinen Browser: `brands` liest jeden String in `js/*.js` und den Text von
 `index.html` gegen eine Liste echter Marken, Clubs, Firmen und Brauereien (erlaubt sind nur die
@@ -604,6 +628,16 @@ FAHRE, der Geist im eigenen Wagen, G blendet ihn aus, die Titelseite „PÄN SCH
 in einem anderen Browser; ZEITFAHREN über eine Runde Poller Wiesen ohne Rivalen, Blitzer, Kripo, Auftrag, Razzia
 und Fußgänger, mit Rekord unter `….tt1`; STADTRUNDFAHRT über eine Runde Kalk mit jeder Geschichte in
 Streckenreihenfolge, nie über 60 km/h, und der Postkarte.
+`handling` fährt im ersten Karriere-Kapitel: ein 100-ms-Tipper ← bei 100 km/h rutscht über mehr als 0,3 s
+aus (ohne LENKHILFE), ← in der Luft verschiebt höchstens 0,3 m, das Bankett dreht weniger als die Straße, die
+LENKHILFE-Regeln (LEICHT an, AUS aus, ZEITFAHREN immer aus) und der Autopilot mit zittriger Hand (±0,6 Lenkung
+alle Viertelsekunde) schafft mit LENKHILFE alle drei Runden mit höchstens zwei Abflügen. `stunts` prüft, dass
+jede Schanze eine Landerampe hat, ohne dass sich eine Strecke verschiebt, dann auf den Poller Wiesen: 55 km/h
+fällt aus dem Looping, 130 km/h kommt rum, kein Schub an der senkrechten Wand, ZE LANGSAM! 100 m vorher bei
+50 km/h, die Rivalen fahren eine Runde ohne Sturz; am Zoo: 70 km/h zu kurz, erzwungene 200 km/h zu weit
+(Crash oder ≥ 0,3 Schaden), 120 km/h sauber. `one-thumb` spielt auf einem 667×375-Handy mit CDP-Touch:
+DAUMEN: EINS, Gas von allein über 80 km/h, Daumen von x = 100 nach x = 160 lenkt über halb rechts, N antippen
+zündet Nitro, und eine Runde der Ringe nur mit Lenkstreifen und ■.
 
 ## Debug
 

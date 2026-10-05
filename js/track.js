@@ -8,6 +8,7 @@
   'use strict';
 
   const DS = 1.0; // metres per sample
+  const LAND_LEN = 8, LAND_ANGLE = 12, LAND_ZONE = 34; // the landing ramp at the end of a jump's gap (m, deg) and the marked landing zone behind its foot (m)
   const VERGE = 6, VERGE_KINDS = ['straight', 'curve', 'hill', 'dip']; // default shoulder width beyond the road edge
 
   // --- tiny vector helpers ---------------------------------
@@ -35,7 +36,7 @@
    *  { t:'hill', len, pitch(deg) }              symmetric bump
    *  { t:'dip',  len, pitch(deg) }              symmetric dip
    *  { t:'loop', r, shift }                     vertical loop (corkscrew shift sideways)
-   *  { t:'jump', ramp, angle(deg), gap, over } ramp -> gap -> lower landing (over: a building sits in the gap)
+   *  { t:'jump', ramp, angle(deg), gap, over } ramp -> gap -> landing ramp (over: a building sits in the gap; land: false = no landing ramp)
    *  { t:'tunnel', len }                        straight inside a tunnel
    *  { t:'corkscrew', len, r, turns, dir }      the road rolls around a horizontal axis while going straight (Stunts cork screw)
    */
@@ -100,7 +101,7 @@
           const R = seg.r, L = 2 * Math.PI * R, n = Math.round(L / DS), dA = 2 * Math.PI / n;
           const shift = (seg.shift == null ? 14 : seg.shift) / n;
           for (let i = 0; i < n; i++) {
-            push('loop', 0, { loopU: i / n });
+            push('loop', 0, { loopU: i / n, loopR: R });
             stepForward(DS);
             p = add(p, mul(B, shift));
             T = rot(T, B, dA); N = rot(N, B, dA);
@@ -115,7 +116,8 @@
             const u = i / n, phi = turns * 2 * Math.PI * smooth(u); // eased so the ribbon does not kink at the ends
             const d = add(mul(N0, -Math.cos(phi)), mul(B0, -dir * Math.sin(phi))); // axis -> road centre (starts pointing down)
             p = add(add(A, mul(T0, i * DS)), mul(d, R)); N = mul(d, -1); B = cross(T0, N);
-            push('loop', 0, { loopU: u, cork: true });
+            const dphi = turns * 2 * Math.PI * 6 * u * (1 - u) / L; // roll per metre: the car circles the axis at v·R·dphi, as in a loop of radius 1 / (R·dphi²)
+            push('loop', 0, { loopU: u, cork: true, loopR: Math.min(80, 1 / Math.max(1e-6, R * dphi * dphi)) });
             s += DS;
           }
           p = add(add(A, mul(T0, n * DS)), mul(N0, -R)); T = T0; N = N0; B = B0;
@@ -134,7 +136,16 @@
           p = v3(p.x, startY, p.z);
           const g = Math.round(seg.gap / DS);
           const overH = seg.over ? (seg.overH || 4.2) : 0; // the ramp launches from ~4 m, so what you fly over stays a single storey // a building under the flight path: the middle 40% of the gap is its roof
-          for (let i = 0; i < g; i++) { push('gap', 0, { rampAngle: a, over: overH && Math.abs(i / g - 0.5) < 0.2 ? overH : 0 }); stepForward(DS); }
+          // the landing ramp: the last metres of the gap (after a building's roof) rise out of it and run down to the
+          // road, which stays where it was, so the city and its side streets keep their places. Its foot opens the
+          // marked landing zone; too slow and you hit its face (or the water), past the zone it is a hard landing
+          const lr = seg.land === false ? 0 : Math.min(Math.round((seg.landLen || LAND_LEN) / DS), Math.floor(g * 0.28)), la = LAND_ANGLE * DEG;
+          for (let i = 0; i < g; i++) {
+            const k = i - (g - lr);
+            if (k < 0) push('gap', 0, { rampAngle: a, over: overH && Math.abs(i / g - 0.5) < 0.2 ? overH : 0 });
+            else { const p0 = p, T0 = T, N0 = N; p = v3(p.x, startY + (lr - k) * DS * Math.tan(la), p.z); T = rot(T, B, -la); N = rot(N, B, -la); push('land', 0, { rampAngle: -la, landFoot: (g - i) * DS }); p = p0; T = T0; N = N0; }
+            stepForward(DS);
+          }
           break;
         }
         default:
@@ -161,7 +172,7 @@
     for (let i = from; i < n; i++) {
       const nx = samples[(i + 1) % n].p, cur = samples[i].p;
       const t = norm(sub(nx, cur));
-      const lip = samples[i].kind === 'ramp' && samples[(i + 1) % n].kind === 'gap'; // ramp lip: keep the launch tangent, never point it down into the gap
+      const lip = samples[i].kind === 'ramp' && samples[(i + 1) % n].kind === 'gap' || samples[i].kind === 'gap' && samples[(i + 1) % n].kind === 'land'; // ramp lip: keep the launch tangent, never point it down into the gap (nor up the face of the landing ramp)
       if (len(sub(nx, cur)) > 0.01 && !lip) {
         samples[i].T = t;
         samples[i].B = norm(cross(t, samples[i].N));
@@ -251,7 +262,7 @@
       const c = Math.abs(samples[i].curv || 0);
       let v = c > 1e-4 ? Math.sqrt(120 / c) : 999;
       if (samples[i].kind === 'loop') v = Math.max(v, 34);
-      if (samples[i].kind === 'ramp' || samples[i].kind === 'gap') v = Math.max(v, 40);
+      if (samples[i].kind === 'ramp' || samples[i].kind === 'gap' || samples[i].kind === 'land') v = Math.max(v, 40);
       safe[i] = v;
     }
     // smooth backwards so AI brakes before the curve
@@ -273,13 +284,13 @@
     let u = ((s % L) + L) % L;
     const i = Math.floor(u / DS) % n; let f = u / DS - Math.floor(u / DS);
     const a = track.samples[i], b = track.samples[(i + 1) % n];
-    if (a.kind === 'ramp' && b.kind === 'gap') f = 0; // never interpolate down from the ramp lip into the gap
+    if (a.kind === 'ramp' && b.kind === 'gap' || a.kind === 'gap' && b.kind === 'land') f = 0; // never interpolate down from the ramp lip into the gap, nor up the face of the landing ramp
     const lerp = (x, y) => v3(x.x + (y.x - x.x) * f, x.y + (y.y - x.y) * f, x.z + (y.z - x.z) * f);
     return {
       p: lerp(a.p, b.p), T: norm(lerp(a.T, b.T)), N: norm(lerp(a.N, b.N)), B: norm(lerp(a.B, b.B)),
-      kind: a.kind, curv: a.curv || 0, rampAngle: a.rampAngle || 0, roll: a.roll, index: i, loopU: a.loopU, cork: !!a.cork, over: a.over || 0
+      kind: a.kind, curv: a.curv || 0, rampAngle: a.rampAngle || 0, roll: a.roll, index: i, loopU: a.loopU, cork: !!a.cork, over: a.over || 0, loopR: a.loopR || 0
     };
   }
 
-  root.TrackBuilder = { buildTrack, frameAt, closure, CLOSE_GAP, CLOSE_HEADING, v3, add, sub, mul, dot, cross, len, norm, rot, DS, VERGE };
+  root.TrackBuilder = { buildTrack, frameAt, closure, CLOSE_GAP, CLOSE_HEADING, LAND_ZONE, v3, add, sub, mul, dot, cross, len, norm, rot, DS, VERGE };
 })(typeof window !== 'undefined' ? window : module.exports);

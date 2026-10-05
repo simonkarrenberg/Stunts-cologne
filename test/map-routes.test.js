@@ -187,13 +187,20 @@ module.exports = async function () {
     async function enter(route) {
       await page.evaluate(() => { window.STUNTS_AUTOPILOT = false; });
       const key = route.side < 0 ? 'ArrowLeft' : 'ArrowRight';
+      // the car turns in over a few metres (heading and grip, B22), not sideways at once: like a driver, hold the
+      // arrow until the car points into the street, let go, and roll through the gate
       await page.keyboard.down('ArrowUp');
       await page.keyboard.down(key);
-      const state = await page.evaluate((r) => {
-        window.STUNTS_TELEPORT(r.startS - 6, 15, 0);
-        return window.STUNTS_DRIVE_STEPS(24);
+      await page.evaluate((r) => {
+        window.STUNTS_TELEPORT(r.startS - 10, 15, 0);
+        for (let i = 0; i < 40 && window.STUNTS_DRIVE_STEPS(1).player.lat * r.side < 0.9; i++);
       }, route);
       await page.keyboard.up(key);
+      const state = await page.evaluate((r) => {
+        let d = window.STUNTS_DRIVE_STEPS(1);
+        for (let i = 0; i < 60 && d.player.shortcut !== r.index && d.player.s < r.startS + 2 && !(d.player.crashed > 0); i++) d = window.STUNTS_DRIVE_STEPS(1);
+        return d;
+      }, route);
       await page.keyboard.up('ArrowUp');
       assert.strictEqual(state.player.shortcut, route.index, route.name + ': keyboard steering must enter the signed branch');
       assert.strictEqual(state.player.crashed > 0, false, route.name + ': entry must not crash');

@@ -28,9 +28,10 @@ module.exports = async function () {
     const routes = await page.evaluate(() => STUNTS_ROUTES());
     const [cut, scenic] = routes.filter((r) => r.fork);
     async function enter(r) {
-      const state = await page.evaluate((route) => {
-        STUNTS_TELEPORT(route.startS - 6, 15, 0);
-        return STUNTS_DRIVE_STEPS(24, { gas: 1, brake: 0, steer: route.side, turbo: 0 });
+      const state = await page.evaluate((route) => { // the car turns in over a few metres (B22): steer until it points into the street, let go, roll through the gate
+        STUNTS_TELEPORT(route.startS - 10, 15, 0); let d = STUNTS_DEBUG(), held = true;
+        for (let i = 0; i < 100 && d.player.shortcut !== route.index && d.player.s < route.startS + 2; i++) { d = STUNTS_DRIVE_STEPS(1, { gas: 1, brake: 0, steer: held ? route.side : 0, turbo: 0 }); if (d.player.lat * route.side >= 0.9) held = false; }
+        return d;
       }, r);
       assert.strictEqual(state.player.shortcut, r.index, 'steering must enter selected road');
     }
